@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+dist/
+target/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+# Foundry
+contracts/cache/
+contracts/out/

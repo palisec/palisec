@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palisec.dev/schemas/policy/1.0.json",
+  "title": "Palisec policy",
+  "description": "Canonical policy document, schema version 1.0. Integers that can exceed 2^53 are decimal strings. Unknown fields are rejected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode"],
+  "$defs": {
+    "uint": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,77})$", "description": "Non-negative integer as a decimal string. Never a float." },
+    "address": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+    "selector": { "type": "string", "pattern": "^0x[0-9a-fA-F]{8}$" }
+  },
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "policy_id": { "type": "string", "pattern": "^[a-z0-9_]{3,64}$" },
+    "version": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "Assigned on activation. Pending approvals bind to it." },
+    "account": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chain_id", "address"],
+      "properties": {
+        "chain_id": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "address": { "$ref": "#/$defs/address" }
+      }
+    },
+    "status": { "enum": ["draft", "active", "disabled"] },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_transaction_value_wei", "max_gas_cost_wei", "hourly_budget_usd_micros", "max_pending_operations", "max_price_age_seconds"],
+      "properties": {
+        "max_transaction_value_wei": { "$ref": "#/$defs/uint", "description": "Native value per transaction, in wei." },
+        "max_gas_cost_wei": { "$ref": "#/$defs/uint", "description": "Estimated total fee per transaction, in wei." },
+        "hourly_budget_usd_micros": { "$ref": "#/$defs/uint", "description": "Rolling 3600-second budget in USD millionths, covering value plus fees." },
+        "max_pending_operations": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "max_price_age_seconds": { "type": "integer", "minimum": 1, "maximum": 3600, "description": "Older prices fail closed with RW_STATE_001." }
+      }
+    },
+    "cooldowns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identical_calldata_seconds", "identical_intent_seconds"],
+      "properties": {
+        "identical_calldata_seconds": { "type": "integer", "minimum": 0, "maximum": 86400 },
+        "identical_intent_seconds": { "type": "integer", "minimum": 0, "maximum": 86400 }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "allowlist", "denylist"],
+      "properties": {
+        "default": { "const": "deny" },
+        "allowlist": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["address", "selectors", "require_verified_code"],
+            "properties": {
+              "address": { "$ref": "#/$defs/address" },
+              "selectors": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/selector" } },
+              "require_verified_code": { "type": "boolean" }
+            }
+          }
+        },
+        "denylist": { "type": "array", "items": { "$ref": "#/$defs/address" }, "description": "Explicit deny overrides any allow." }
+      }
+    },
+    "human_approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usd_threshold_micros", "require_for_unknown_methods"],
+      "properties": {
+        "usd_threshold_micros": { "$ref": "#/$defs/uint" },
+        "require_for_unknown_methods": { "type": "boolean", "description": "true routes unknown selectors to review; false denies them with RW_METHOD_001." }
+      }
+    },
+    "failure_mode": { "const": "closed" }
+  }
+}
