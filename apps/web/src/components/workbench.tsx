@@ -241,7 +241,7 @@ export function Workbench() {
               type="button"
               onClick={submit}
               disabled={blocked}
-              className="group mt-4 flex h-12 w-full items-center justify-between rounded-[4px] bg-citrine px-4 text-[15px] font-medium text-carbon transition-shadow hover:shadow-[0_0_32px_rgba(229,255,93,0.4)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+              className="group mt-4 flex h-12 w-full items-center justify-between rounded-[4px] bg-citrine px-4 font-action text-[17px] font-bold uppercase tracking-[0.06em] text-carbon transition-shadow hover:shadow-[0_0_32px_rgba(229,255,93,0.4)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Evaluate locally
               <span className="font-mono text-xs">rw_req_sim_{String(history.length + 1).padStart(4, "0")}</span>

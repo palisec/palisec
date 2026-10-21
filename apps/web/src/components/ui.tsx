@@ -46,7 +46,7 @@ const MATURITY_GLYPH: Record<Maturity, string> = { local: "●", specified: "◐
 export function MaturityBadge({ maturity }: { maturity: Maturity }) {
   const tone = maturity === "local" ? "text-citrine border-citrine/40" : "text-stone border-graphite";
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.032em] ${tone}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-0.5 font-pixel text-[9px] uppercase tracking-[0.04em] ${tone}`}>
       <span aria-hidden>{MATURITY_GLYPH[maturity]}</span>
       {MATURITY_LABEL[maturity]}
     </span>
@@ -64,7 +64,7 @@ const DECISION_STYLE: Record<DecisionTone, { cls: string; glyph: string; text: s
 export function DecisionBadge({ decision, className = "" }: { decision: DecisionTone; className?: string }) {
   const s = DECISION_STYLE[decision];
   return (
-    <span key={decision} className={`inline-flex animate-[pop_.45s_ease-out] items-center gap-2 rounded-[4px] border px-2.5 py-1 text-xs font-medium tracking-[0.032em] ${s.cls} ${className}`}>
+    <span key={decision} className={`inline-flex animate-[pop_.45s_ease-out] items-center gap-2 rounded-[4px] border px-2.5 py-1 font-pixel text-[10px] tracking-[0.04em] ${s.cls} ${className}`}>
       <span aria-hidden>{s.glyph}</span>
       {s.text}
     </span>
@@ -81,10 +81,10 @@ export function ButtonLink({
   variant?: "primary" | "ghost" | "dark" | "ghost-dark";
 }) {
   const styles = {
-    primary: "bg-citrine text-carbon px-6 py-3 text-[15px] hover:shadow-[0_0_32px_rgba(229,255,93,0.35)]",
-    dark: "bg-carbon text-bone px-6 py-3 text-[15px] hover:bg-graphite",
-    ghost: "border border-bone/80 text-bone px-5 py-[11px] text-[12px] uppercase tracking-[0.032em] hover:bg-bone hover:text-carbon",
-    "ghost-dark": "border border-carbon text-carbon px-5 py-[11px] text-[12px] uppercase tracking-[0.032em] hover:bg-carbon hover:text-bone",
+    primary: "bg-citrine text-carbon px-6 py-3 font-action text-[17px] font-bold uppercase tracking-[0.06em] hover:shadow-[0_0_32px_rgba(229,255,93,0.35)]",
+    dark: "bg-carbon text-bone px-6 py-3 font-action text-[17px] font-bold uppercase tracking-[0.06em] hover:bg-graphite",
+    ghost: "border border-bone/80 text-bone px-5 py-[11px] font-utility text-[13px] uppercase tracking-[0.1em] hover:bg-bone hover:text-carbon",
+    "ghost-dark": "border border-carbon text-carbon px-5 py-[11px] font-utility text-[13px] uppercase tracking-[0.1em] hover:bg-carbon hover:text-bone",
   }[variant];
   return (
     <Link href={href} className={`group inline-flex items-center gap-3 rounded-[4px] font-medium transition-all duration-300 ${styles}`}>

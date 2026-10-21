@@ -5,7 +5,7 @@ export function Marquee({ items, reverse = false }: { items: string[]; reverse?:
   const row = (hidden: boolean) => (
     <ul aria-hidden={hidden} className="flex shrink-0 items-center gap-12 pr-12">
       {items.map((t) => (
-        <li key={t} className="flex items-center gap-3 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.032em] text-bone/70">
+        <li key={t} className="flex items-center gap-3 whitespace-nowrap font-pixel text-[12px] uppercase tracking-[0.04em] text-bone/70">
           <CubeGlyph size={12} />
           {t}
         </li>

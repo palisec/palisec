@@ -31,7 +31,15 @@
   --color-review: #b7b3a2;
   --color-deny: #ff4d4d;
 
-  --font-sans: var(--font-inter), "Neue Haas Grotesk Text", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-oxanium), var(--font-plex), sans-serif;
+  --font-heading: var(--font-chakra), var(--font-plex), sans-serif;
+  --font-wide: var(--font-michroma), var(--font-plex), sans-serif;
+  --font-utility: var(--font-sharetech), ui-monospace, monospace;
+  --font-pixel: var(--font-silkscreen), ui-monospace, monospace;
+  --font-action: var(--font-rajdhani), var(--font-display), sans-serif;
+  --font-brand: var(--font-tektur), var(--font-display), sans-serif;
+  --font-wordmark: var(--font-majormono), ui-monospace, monospace;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
 
   --text-display: 80px;
@@ -114,6 +122,8 @@
     scroll-behavior: smooth;
   }
   body {
+    line-height: 1.6;
+    letter-spacing: 0.005em;
     background: var(--color-carbon);
     color: var(--color-bone);
     font-family: var(--font-sans);
@@ -134,27 +144,32 @@
 
 /* Uppercase utility mark: 10–12px with positive tracking. */
 @utility label {
-  font-size: 11px;
+  font-family: var(--font-utility);
+  font-size: 12px;
   line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: 0.032em;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-stone);
 }
 
 @utility display {
-  font-size: clamp(44px, 8.4vw, 80px);
-  line-height: 0.9;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 7.6vw, 84px);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
   font-weight: 400;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 @utility heading {
-  font-size: clamp(32px, 5vw, 48px);
-  line-height: 1.05;
+  font-family: var(--font-heading);
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1;
   letter-spacing: -0.01em;
-  font-weight: 400;
+  font-weight: 500;
+  text-wrap: balance;
   text-transform: uppercase;
 }
 
@@ -246,6 +261,7 @@
     line-height: 1.6;
   }
   .prose-rw h2 {
+    font-family: var(--font-heading);
     color: var(--color-bone);
     font-size: 24px;
     line-height: 1.2;
@@ -264,8 +280,8 @@
     background: var(--color-citrine);
     box-shadow: 0 0 12px rgb(229 255 93 / 0.6);
   }
-  .prose-rw h3 { color: var(--color-bone); font-size: 18px; font-weight: 500; margin: 2rem 0 0.5rem; }
-  .prose-rw p { margin-bottom: 1rem; max-width: 68ch; }
+  .prose-rw h3 { font-family: var(--font-heading); color: var(--color-bone); font-size: 18px; font-weight: 500; margin: 2rem 0 0.5rem; }
+  .prose-rw p { margin-bottom: 1rem; max-width: 68ch; text-wrap: pretty; }
   .prose-rw ul, .prose-rw ol { margin-bottom: 1rem; padding-left: 1.25rem; max-width: 68ch; }
   .prose-rw ul { list-style: square; }
   .prose-rw ol { list-style: decimal; }
@@ -291,6 +307,7 @@
   .prose-rw table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 14px; }
   .prose-rw th {
     text-align: left;
+    font-family: var(--font-utility);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.032em;

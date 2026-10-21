@@ -60,10 +60,10 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
         />
       ))}
 
-      <div className="absolute inset-0 origin-[50%_30%] scale-[0.58] sm:scale-[0.8] lg:scale-[0.92]">
+      <div className="absolute inset-0 origin-center scale-[0.62] opacity-45 sm:scale-[0.85] lg:scale-100">
       <div
         ref={ref}
-        className="absolute left-1/2 top-[30%] -translate-x-1/2 -translate-y-1/2 transition-transform duration-500 ease-out"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-500 ease-out"
         style={{ transform: "translate(-50%, -50%) perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))" } as CSSProperties}
       >
         <Ring size={560} items={OUTER} seconds={90} reverse dashed />
@@ -115,7 +115,7 @@ function Ring({ size, items, seconds, reverse = false, dashed = false }: { size:
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-graphite bg-carbon">
                   <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-citrine shadow-[0_0_10px_#e5ff5d]" : "bg-bone/70"}`} />
                 </div>
-                <span className="absolute left-1/2 top-11 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium tracking-[0.08em] text-stone">{label}</span>
+                <span className="absolute left-1/2 top-11 -translate-x-1/2 whitespace-nowrap font-utility text-[10px] tracking-[0.1em] text-stone">{label}</span>
               </div>
             </div>
           </div>

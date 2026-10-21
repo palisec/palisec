@@ -113,8 +113,10 @@ export default function Home() {
       {/* ───────── Hero: cube above headline, orbiting check nodes ───────── */}
       <section aria-labelledby="hero-title" className="relative -mt-[76px] min-h-[100svh] overflow-hidden">
         <HeroScene videoSrc={media("hero-cube.mp4")} />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-carbon from-40% via-carbon/80 to-transparent" />
-        <Container className="relative flex min-h-[100svh] flex-col items-center pb-16 pt-[60vh] text-center sm:pb-20 sm:pt-[52vh] lg:pt-[56vh]">
+        {/* Vignette keeps the headline legible over the translucent object */}
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_50%,rgb(17_17_17/0.55),transparent_75%)]" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-carbon to-transparent" />
+        <Container className="relative flex min-h-[100svh] flex-col items-center justify-center pb-16 pt-28 text-center sm:pt-32">
           <p className="label mb-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 animate-[fade-up_.8s_ease-out_both]">
             {["Robinhood Chain", "Chain ID 4663", "EVM authorization layer"].map((t, i) => (
               <span key={t} className="flex items-center gap-2 !text-citrine">
@@ -123,21 +125,21 @@ export default function Home() {
               </span>
             ))}
           </p>
-          <h1 id="hero-title" className="display text-bone">
+          <h1 id="hero-title" className="display text-bone [text-shadow:0_2px_30px_rgb(17_17_17/0.9)]">
             {HEADLINE.map((line, i) => (
               <span key={line} className="line-mask" style={{ "--d": `${150 + i * 110}ms` } as CSSProperties}>
                 <span>{line}</span>
               </span>
             ))}
           </h1>
-          <p className="mt-8 max-w-[560px] text-base leading-relaxed text-stone animate-[fade-up_.9s_ease-out_.7s_both] sm:text-lg">
+          <p className="mt-7 max-w-[560px] text-base leading-relaxed text-chalk animate-[fade-up_.9s_ease-out_.7s_both] [text-wrap:pretty] [text-shadow:0_1px_16px_rgb(17_17_17)] sm:text-lg">
             Enforce transaction policies, spending limits, and approval requirements before autonomous agents execute on Robinhood Chain.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3 animate-[fade-up_.9s_ease-out_.9s_both]">
             <ButtonLink href="/architecture">Read the Architecture</ButtonLink>
             <ButtonLink href="/docs/sdk/typescript" variant="ghost">Explore the SDK</ButtonLink>
           </div>
-          <a href="#enforcement" className="mt-14 flex flex-col items-center gap-2 text-[10px] font-medium uppercase tracking-[0.08em] text-stone hover:text-citrine">
+          <a href="#enforcement" className="mt-12 flex flex-col items-center gap-2 font-utility text-[11px] uppercase tracking-[0.12em] text-stone hover:text-citrine">
             Scroll
             <span className="relative h-10 w-px overflow-hidden bg-graphite">
               <span className="absolute inset-x-0 top-0 h-1/2 bg-citrine animate-[scan_1.8s_ease-in-out_infinite]" />
@@ -208,17 +210,17 @@ export default function Home() {
                 <span className="text-[12px] font-medium tracking-[0.032em] text-smoke transition-colors group-hover:text-citrine">{String(i + 1).padStart(2, "0")}</span>
                 <MaturityBadge maturity={capability(p.cap).maturity} />
               </div>
-              <h3 className="text-[24px] font-medium leading-[1.2] tracking-[-0.01em] text-bone">{p.title}</h3>
+              <h3 className="font-heading text-[26px] font-medium leading-[1.15] text-bone">{p.title}</h3>
               <p className="mt-4 leading-relaxed text-stone">{p.body}</p>
               <ul className="mt-6 space-y-2">
                 {p.spec.map((s) => (
-                  <li key={s} className="flex items-center gap-3 text-[12px] font-medium uppercase tracking-[0.032em] text-citrine">
+                  <li key={s} className="flex items-center gap-3 font-utility text-[12px] uppercase tracking-[0.08em] text-citrine">
                     <span className="h-1 w-1 bg-citrine" />
                     {s}
                   </li>
                 ))}
               </ul>
-              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 text-[12px] font-medium uppercase tracking-[0.032em] text-bone hover:text-citrine">
+              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 font-utility text-[12px] uppercase tracking-[0.08em] text-bone hover:text-citrine">
                 Implementation detail
                 <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
@@ -248,9 +250,9 @@ export default function Home() {
       {/* ───────── The one cream reversal ───────── */}
       <ReversalBand clusterImages={clusters}>
         <Reveal>
-          <p className="mb-8 text-[12px] font-medium uppercase tracking-[0.032em] text-ash">Smart-account enforcement</p>
+          <p className="mb-8 font-utility text-[12px] uppercase tracking-[0.12em] text-ash">Smart-account enforcement</p>
         </Reveal>
-        <h2 className="display mx-auto max-w-[15ch] text-carbon">
+        <h2 className="mx-auto max-w-[18ch] font-wide text-[clamp(28px,4.6vw,56px)] uppercase leading-[1.08] tracking-[-0.01em] text-carbon [text-wrap:balance]">
           {["A gateway", "can't guard", "a key it", "doesn't hold."].map((l, i) => (
             <Reveal key={l} as="span" delay={i * 90} className="block">{l}</Reveal>
           ))}
@@ -274,7 +276,7 @@ export default function Home() {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
           <Reveal>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-[24px] font-medium text-bone">One protected execution call.</h2>
+              <h2 className="font-heading text-[28px] font-medium text-bone">One protected execution call.</h2>
               <MaturityBadge maturity={capability("sdk-ts").maturity} />
             </div>
             <p className="max-w-[560px] leading-relaxed text-stone">
@@ -340,13 +342,13 @@ export default function Home() {
       <Section index="06" label="Network">
         <div className="grid gap-16 lg:grid-cols-2">
           <Reveal>
-            <p className="text-[12px] font-medium uppercase tracking-[0.032em] text-sand">◆ Metrics unavailable</p>
-            <h2 className="mt-6 text-[24px] font-medium leading-tight text-bone">No deployment, so no numbers.</h2>
+            <p className="font-pixel text-[11px] uppercase tracking-[0.06em] text-sand">◆ Metrics unavailable</p>
+            <h2 className="mt-6 font-heading text-[28px] font-medium leading-tight text-bone">No deployment, so no numbers.</h2>
             <p className="mt-4 max-w-[480px] leading-relaxed text-stone">
               Block height, latency and transaction counts appear here only when backed by real telemetry and a published
               measurement definition.
             </p>
-            <Link href="/status" className="mt-8 inline-block text-[12px] font-medium uppercase tracking-[0.032em] text-bone hover:text-citrine">Status page →</Link>
+            <Link href="/status" className="mt-8 inline-block font-utility text-[12px] uppercase tracking-[0.08em] text-bone hover:text-citrine">Status page →</Link>
           </Reveal>
           <Reveal delay={150}>
             <dl className="divide-y divide-graphite border-y border-graphite text-sm">

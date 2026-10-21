@@ -9,7 +9,7 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
       <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
         <CubeGlyph size={size === "lg" ? 22 : 18} />
       </span>
-      <span className="text-[18px] font-medium tracking-[0.027em] text-bone">PALISEC</span>
+      <span className="font-brand text-[19px] font-semibold tracking-[0.02em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
     </Link>
   );
 }
@@ -32,7 +32,7 @@ export function SiteHeader() {
         <Wordmark />
         <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="group relative text-[12px] font-medium uppercase tracking-[0.027em] text-bone">
+            <Link key={n.href} href={n.href} className="group relative font-utility text-[13px] uppercase tracking-[0.1em] text-bone">
               {n.label}
               <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-citrine transition-transform duration-300 group-hover:scale-x-100" />
             </Link>
@@ -90,7 +90,7 @@ export function SiteFooter() {
         ))}
       </Container>
       <div aria-hidden className="select-none overflow-hidden px-4">
-        <p className="translate-y-[18%] whitespace-nowrap text-center text-[13.2vw] font-normal uppercase leading-[0.8] tracking-[-0.03em] text-graphite">
+        <p className="translate-y-[18%] whitespace-nowrap text-center font-wordmark text-[11.5vw] font-normal leading-[0.8] tracking-[-0.04em] text-graphite">
           Palisec
         </p>
       </div>
