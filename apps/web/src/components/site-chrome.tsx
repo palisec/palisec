@@ -40,7 +40,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline-flex">
-            <ButtonLink href="/login">Open Console</ButtonLink>
+            <ButtonLink href="/console">Open Console</ButtonLink>
           </span>
           <details className="group relative lg:hidden">
             <summary className="btn btn-ghost h-10 cursor-pointer list-none !px-3 !py-0 [&::-webkit-details-marker]:hidden">
@@ -48,7 +48,7 @@ export function SiteHeader() {
               <span className="hidden group-open:inline">Close</span>
             </summary>
             <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
-              {[...NAV, { href: "/login", label: "Open Console" }].map((n) => (
+              {[...NAV, { href: "/console", label: "Open Console" }].map((n) => (
                 <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-bone last:border-b-0 hover:bg-raised hover:text-citrine">
                   {n.label}
                 </Link>

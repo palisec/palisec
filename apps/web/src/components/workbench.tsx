@@ -19,21 +19,8 @@ import {
 } from "@palisec/policy-schema";
 import { DecisionBadge } from "./ui";
 import { CopyButton } from "./copy-button";
+import { formatUnits, parseUnits } from "@/lib/units";
 
-/** Parse a decimal string into an integer of `decimals` places, without floats. */
-function parseUnits(input: string, decimals: number): bigint | null {
-  const m = /^\s*(\d{1,30})(?:\.(\d*))?\s*$/.exec(input);
-  if (!m) return null;
-  const frac = (m[2] ?? "").slice(0, decimals).padEnd(decimals, "0");
-  return BigInt(m[1]!) * 10n ** BigInt(decimals) + BigInt(frac || "0");
-}
-
-function formatUnits(v: string | bigint, decimals: number): string {
-  const n = BigInt(v);
-  const base = 10n ** BigInt(decimals);
-  const frac = (n % base).toString().padStart(decimals, "0").replace(/0+$/, "");
-  return frac ? `${n / base}.${frac}` : `${n / base}`;
-}
 
 interface Controls {
   maxValueEth: string;
@@ -323,7 +310,7 @@ export function Workbench() {
   );
 }
 
-function NumField({ id, label, unit, value, onChange }: { id: string; label: string; unit: string; value: string; onChange: (v: string) => void }) {
+export function NumField({ id, label, unit, value, onChange }: { id: string; label: string; unit: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label htmlFor={id} className="label mb-1.5 block">{label}</label>
@@ -343,7 +330,7 @@ function NumField({ id, label, unit, value, onChange }: { id: string; label: str
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-soft">
       {label}
@@ -365,7 +352,7 @@ const STATUS_STYLE: Record<CheckResult["status"], { glyph: string; cls: string; 
   skipped: { glyph: "·", cls: "text-dim", text: "SKIP" },
 };
 
-function ChecksView({ checks }: { checks: CheckResult[] | null }) {
+export function ChecksView({ checks }: { checks: CheckResult[] | null }) {
   if (!checks) return <Empty text="The evaluation sequence appears here, in the order the engine runs it." />;
   const local = checks.filter((c) => c.enforcement === "local");
   const live = checks.filter((c) => c.enforcement === "live");
@@ -402,7 +389,7 @@ function CheckRow({ check, index }: { check: CheckResult; index: number }) {
   );
 }
 
-function JsonView({ json, label }: { json: string; label: string }) {
+export function JsonView({ json, label }: { json: string; label: string }) {
   return (
     <div className="relative">
       <div className="absolute right-3 top-3">
@@ -443,6 +430,6 @@ function LedgerView({ ledger, now }: { ledger: LedgerState; now: number }) {
   );
 }
 
-function Empty({ text }: { text: string }) {
+export function Empty({ text }: { text: string }) {
   return <p className="max-w-[52ch] p-4 text-sm leading-relaxed text-muted">{text}</p>;
 }

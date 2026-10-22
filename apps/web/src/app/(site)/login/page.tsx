@@ -4,6 +4,7 @@ import { Container } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Sign in",
+  alternates: { canonical: "/login" },
   description: "Sign in to the Palisec developer console.",
   robots: { index: false, follow: false },
 };
@@ -29,7 +30,8 @@ export default function LoginPage() {
         <div className="border-t border-line px-6 py-4">
           <p className="font-mono text-[11px] tracking-[0.08em] text-review">◆ AUTHENTICATION SERVICE NOT DEPLOYED</p>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Sign-in is disabled until the control plane exists. Meanwhile, try the{" "}
+            Sign-in is disabled until the control plane exists. Meanwhile, explore the console as a{" "}
+            <Link href="/console" className="text-fg underline decoration-line-strong underline-offset-4">local simulation workspace</Link> or try the{" "}
             <Link href="/#workbench" className="text-fg underline decoration-line-strong underline-offset-4">policy workbench</Link>.
           </p>
         </div>

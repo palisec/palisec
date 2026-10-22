@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import {
@@ -20,6 +21,10 @@ import { ReversalBand } from "@/components/reversal-band";
 import { ButtonLink, Container, DecisionBadge, MaturityBadge, Section } from "@/components/ui";
 import { Workbench } from "@/components/workbench";
 import { capability } from "@/lib/capabilities";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 /** Brand media is optional: use it only if it has been added to /public/media. */
 const media = (file: string) => (existsSync(join(process.cwd(), "public", "media", file)) ? `/media/${file}` : undefined);
@@ -318,9 +323,17 @@ export default function Home() {
 
       {/* ───────── Lifecycle ───────── */}
       <Section index="05" label="Request lifecycle">
-        <Reveal>
-          <h2 className="heading max-w-[18ch] text-bone">Off-chain decision. On-chain enforcement.</h2>
-        </Reveal>
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <Reveal>
+            <h2 className="heading max-w-[18ch] text-bone">Off-chain decision. On-chain enforcement.</h2>
+          </Reveal>
+          <Reveal delay={120}>
+            <p className="max-w-[440px] text-sm leading-relaxed text-stone">
+              Trust boundaries, the enclave&apos;s role, smart-account enforcement and the chain submission path are specified in the{" "}
+              <Link href="/architecture" className="text-bone underline decoration-citrine/60 underline-offset-4 hover:text-citrine">architecture document</Link>.
+            </p>
+          </Reveal>
+        </div>
         <div className="relative mt-16">
         <div aria-hidden className="absolute left-0 right-0 top-[19px] hidden h-px bg-graphite xl:block">
           <Reveal className="draw-x relative h-full w-full bg-gradient-to-r from-citrine/70 via-citrine/40 to-citrine/10">
