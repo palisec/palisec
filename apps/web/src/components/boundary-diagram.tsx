@@ -24,8 +24,8 @@ const PATHS = {
 
 const PACKETS = [
   { id: "allow", color: "#e5ff5d", begin: 0 },
-  { id: "deny", color: "#ff4d4d", begin: 1.1 },
-  { id: "review", color: "#b7b3a2", begin: 2.2 },
+  { id: "deny", color: "#ff5247", begin: 1.1 },
+  { id: "review", color: "#bdb8a0", begin: 2.2 },
 ] as const;
 
 const DURATION = 2.2;
@@ -74,7 +74,7 @@ export function BoundaryDiagram() {
   const showStatic = reduced || run === 0;
 
   return (
-    <figure className="relative overflow-hidden rounded-[12px] border border-graphite bg-surface">
+    <figure className="panel panel-beam overflow-hidden">
       <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
         <p className="label">Fig. 1 · Authorization boundary</p>
         <button
@@ -101,41 +101,54 @@ export function BoundaryDiagram() {
           are never broadcast.
         </desc>
 
-        {/* entry channel */}
-        <path d="M0 150 H250 M0 170 H250" stroke="#565656" strokeWidth="1" fill="none" />
-        <text x="0" y="138" className="fill-[#9c9c9c] font-mono text-[10px] tracking-[0.08em]">PROPOSED INTENT</text>
+        <defs>
+          <filter id="rw-glow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="3.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <radialGradient id="rw-engine-light" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#e5ff5d" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#e5ff5d" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* entry channel, with current flowing toward the engine */}
+        <path d="M0 150 H250 M0 170 H250" stroke="#5a5d4e" strokeWidth="1" fill="none" />
+        <path d="M0 160 H242" stroke="#e5ff5d" strokeOpacity="0.4" strokeDasharray="2 14" fill="none" className="animate-dash" />
+        <text x="0" y="138" className="fill-[#a0a391] font-mono text-[10px] tracking-[0.08em]">PROPOSED INTENT</text>
 
         {/* engine */}
+        <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#rw-engine-light)" />
         <rect x="242" y="104" width="136" height="112" fill="none" stroke="#e5ff5d" strokeOpacity="0.25" rx="6">
           <animate attributeName="stroke-opacity" values="0.05;0.45;0.05" dur="2.4s" repeatCount="indefinite" />
         </rect>
-        <rect x="250" y="112" width="120" height="96" fill="#111111" stroke="#e5ff5d" rx="4" />
-        <text x="310" y="150" textAnchor="middle" className="fill-[#f9f9f9] font-mono text-[10px] tracking-[0.08em]">POLICY</text>
-        <text x="310" y="164" textAnchor="middle" className="fill-[#f9f9f9] font-mono text-[10px] tracking-[0.08em]">ENGINE</text>
-        <text x="310" y="190" textAnchor="middle" className="fill-[#565656] font-mono text-[9px]">v7 · 15 checks</text>
+        <rect x="250" y="112" width="120" height="96" fill="#0d0e0a" stroke="#e5ff5d" rx="4" />
+        <text x="310" y="150" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[10px] tracking-[0.08em]">POLICY</text>
+        <text x="310" y="164" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[10px] tracking-[0.08em]">ENGINE</text>
+        <text x="310" y="190" textAnchor="middle" className="fill-[#5a5d4e] font-mono text-[9px]">v7 · 15 checks</text>
         {[124, 132, 140].map((x) => (
           <line key={x} x1={250 + (x - 112)} y1="112" x2={250 + (x - 112)} y2="118" stroke="#e5ff5d" />
         ))}
 
         {/* exits */}
         <path d="M370 160 H556" stroke="rgba(229,255,93,0.45)" fill="none" />
-        <path d="M410 160 V60 H556" stroke="rgba(183,179,162,0.45)" fill="none" strokeDasharray="3 3" />
-        <path d="M410 160 V260 H514" stroke="rgba(255,77,77,0.45)" fill="none" />
+        <path d="M410 160 V60 H556" stroke="rgba(189,184,160,0.45)" fill="none" strokeDasharray="3 3" />
+        <path d="M410 160 V260 H514" stroke="rgba(255,82,71,0.45)" fill="none" />
 
         {/* allow → account */}
-        <rect x="556" y="136" width="150" height="48" fill="#111111" stroke="rgba(229,255,93,0.5)" />
+        <rect x="556" y="136" width="150" height="48" fill="#0d0e0a" stroke="rgba(229,255,93,0.5)" />
         <text x="568" y="156" className="fill-[#e5ff5d] font-mono text-[10px] tracking-[0.08em]">→ ALLOW</text>
-        <text x="568" y="172" className="fill-[#9c9c9c] font-mono text-[9px]">ERC-4337 smart account</text>
+        <text x="568" y="172" className="fill-[#a0a391] font-mono text-[9px]">ERC-4337 smart account</text>
 
         {/* review */}
-        <rect x="556" y="36" width="150" height="48" fill="#111111" stroke="rgba(183,179,162,0.5)" strokeDasharray="3 3" />
-        <text x="568" y="56" className="fill-[#b7b3a2] font-mono text-[10px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
-        <text x="568" y="72" className="fill-[#9c9c9c] font-mono text-[9px]">Pending · unsigned</text>
+        <rect x="556" y="36" width="150" height="48" fill="#0d0e0a" stroke="rgba(189,184,160,0.5)" strokeDasharray="3 3" />
+        <text x="568" y="56" className="fill-[#bdb8a0] font-mono text-[10px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
+        <text x="568" y="72" className="fill-[#a0a391] font-mono text-[9px]">Pending · unsigned</text>
 
         {/* deny wall */}
-        <rect x="514" y="226" width="8" height="68" fill="#ff4d4d" />
-        <text x="534" y="256" className="fill-[#ff4d4d] font-mono text-[10px] tracking-[0.08em]">■ DENY</text>
-        <text x="534" y="272" className="fill-[#9c9c9c] font-mono text-[9px]">No signature · no broadcast</text>
+        <rect x="514" y="226" width="8" height="68" fill="#ff5247" filter="url(#rw-glow)" />
+        <text x="534" y="256" className="fill-[#ff5247] font-mono text-[10px] tracking-[0.08em]">■ DENY</text>
+        <text x="534" y="272" className="fill-[#a0a391] font-mono text-[9px]">No signature · no broadcast</text>
 
         {/* packets */}
         {PACKETS.map((p) => {
@@ -144,9 +157,9 @@ export function BoundaryDiagram() {
           return (
             <g key={p.id}>
               {showStatic ? (
-                <rect x={end[0]! - 4} y={end[1]! - 4} width="8" height="8" fill={p.color} />
+                <rect x={end[0]! - 4} y={end[1]! - 4} width="8" height="8" fill={p.color} filter="url(#rw-glow)" />
               ) : (
-                <rect data-packet x="-4" y="-4" width="8" height="8" fill={p.color} opacity="0">
+                <rect data-packet x="-4" y="-4" width="8" height="8" fill={p.color} opacity="0" filter="url(#rw-glow)">
                   <animate attributeName="opacity" values="0;1" dur="0.01s" begin="indefinite" fill="freeze" />
                   <animateMotion
                     path={path}
@@ -163,7 +176,7 @@ export function BoundaryDiagram() {
           );
         })}
       </svg>
-      <figcaption className="grid grid-cols-3 border-t border-line text-[10px] font-medium tracking-[0.08em]">
+      <figcaption className="grid grid-cols-3 border-t border-line font-utility text-[10px] tracking-[0.08em]">
         <span className="border-r border-line px-4 py-2.5 text-allow">→ ALLOW</span>
         <span className="border-r border-line px-4 py-2.5 text-review">◆ REVIEW</span>
         <span className="px-4 py-2.5 text-deny">■ DENY</span>

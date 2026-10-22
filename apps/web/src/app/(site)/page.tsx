@@ -110,42 +110,49 @@ export default function Home() {
 
   return (
     <>
-      {/* ───────── Hero: cube above headline, orbiting check nodes ───────── */}
-      <section aria-labelledby="hero-title" className="relative -mt-[76px] min-h-[100svh] overflow-hidden">
+      {/* ───────── Hero: lit capitals over the cube; the ground meets the boundary below ───────── */}
+      <section aria-labelledby="hero-title" className="relative -mt-[76px] flex min-h-[100svh] flex-col overflow-hidden">
         <HeroScene videoSrc={media("hero-cube.mp4")} />
         {/* Vignette keeps the headline legible over the translucent object */}
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_50%,rgb(17_17_17/0.55),transparent_75%)]" />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-carbon to-transparent" />
-        <Container className="relative flex min-h-[100svh] flex-col items-center justify-center pb-16 pt-28 text-center sm:pt-32">
-          <p className="label mb-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 animate-[fade-up_.8s_ease-out_both]">
-            {["Robinhood Chain", "Chain ID 4663", "EVM authorization layer"].map((t, i) => (
-              <span key={t} className="flex items-center gap-2 !text-citrine">
-                {i > 0 && <span className="text-smoke">·</span>}
-                {t}
-              </span>
-            ))}
-          </p>
-          <h1 id="hero-title" className="display text-bone [text-shadow:0_2px_30px_rgb(17_17_17/0.9)]">
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_58%_42%_at_50%_44%,rgb(13_14_10/0.6),transparent_75%)]" />
+        <Container className="relative flex flex-1 flex-col items-center justify-center pb-36 pt-28 text-center">
+          <h1 id="hero-title" className="display text-[clamp(50px,9.4vw,96px)] text-bone">
             {HEADLINE.map((line, i) => (
-              <span key={line} className="line-mask" style={{ "--d": `${150 + i * 110}ms` } as CSSProperties}>
-                <span>{line}</span>
+              <span key={line} className="line-mask wide" style={{ "--d": `${120 + i * 120}ms` } as CSSProperties}>
+                <span className={i === HEADLINE.length - 1 ? "text-signal" : "text-lit"}>{line}</span>
               </span>
             ))}
           </h1>
-          <p className="mt-7 max-w-[560px] text-base leading-relaxed text-chalk animate-[fade-up_.9s_ease-out_.7s_both] [text-wrap:pretty] [text-shadow:0_1px_16px_rgb(17_17_17)] sm:text-lg">
+          <p className="mt-8 max-w-[600px] text-base leading-relaxed text-chalk animate-[fade-up_.9s_var(--ease-out-quint)_.8s_both] [text-wrap:pretty] sm:text-lg">
             Enforce transaction policies, spending limits, and approval requirements before autonomous agents execute on Robinhood Chain.
           </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3 animate-[fade-up_.9s_ease-out_.9s_both]">
+          <div className="mt-10 flex flex-wrap justify-center gap-3 animate-[fade-up_.9s_var(--ease-out-quint)_1s_both]">
             <ButtonLink href="/architecture">Read the Architecture</ButtonLink>
             <ButtonLink href="/docs/sdk/typescript" variant="ghost">Explore the SDK</ButtonLink>
           </div>
-          <a href="#enforcement" className="mt-12 flex flex-col items-center gap-2 font-utility text-[11px] uppercase tracking-[0.12em] text-stone hover:text-citrine">
-            Scroll
-            <span className="relative h-10 w-px overflow-hidden bg-graphite">
-              <span className="absolute inset-x-0 top-0 h-1/2 bg-citrine animate-[scan_1.8s_ease-in-out_infinite]" />
-            </span>
-          </a>
         </Container>
+
+        {/* Spec strip: the facts the old kicker carried, set where the ground meets the page */}
+        <div className="relative border-t border-line/80 bg-carbon/55 backdrop-blur-md animate-[fade-up_.9s_var(--ease-out-quint)_1.2s_both]">
+          <Container>
+            <dl className="grid grid-cols-2 sm:grid-cols-4">
+              {[
+                ["Network", "Robinhood Chain"],
+                ["Chain ID", "4663"],
+                ["Layer", "EVM authorization"],
+                ["Status", "Pre-release"],
+              ].map(([k, v], i) => (
+                <div key={k} className={`flex flex-col gap-1 py-4 sm:py-5 ${i % 2 === 1 ? "border-l border-line pl-4" : ""} ${i > 0 ? "sm:border-l sm:border-line sm:pl-6" : ""}`}>
+                  <dt className="label !text-[10px] !text-smoke">{k}</dt>
+                  <dd className="flex items-center gap-2 font-mono text-[12px] text-bone">
+                    {k === "Status" && <span aria-hidden className="tick-dot" />}
+                    {v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Container>
+        </div>
       </section>
 
       {/* ───────── Invariants marquee (no customer logos: there are none yet) ───────── */}
@@ -203,24 +210,26 @@ export default function Home() {
           </div>
         </div>
 
-        <ol className="mt-24 grid gap-x-12 gap-y-16 border-t border-graphite pt-16 md:grid-cols-3">
+        <ol className="mt-24 grid gap-x-12 gap-y-16 border-t border-graphite pt-6 md:grid-cols-3">
           {PROOF.map((p, i) => (
-            <Reveal key={p.title} as="li" delay={i * 120} className="group flex flex-col">
+            <Reveal key={p.title} as="li" delay={i * 120} className="group relative flex flex-col pt-10">
+              <span aria-hidden className="absolute inset-x-0 -top-px h-px origin-left scale-x-0 bg-gradient-to-r from-citrine via-citrine/40 to-transparent transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
+              <span aria-hidden className="pointer-events-none absolute -top-16 left-0 h-32 w-48 rounded-full bg-citrine/10 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
               <div className="mb-8 flex items-center justify-between gap-3">
-                <span className="text-[12px] font-medium tracking-[0.032em] text-smoke transition-colors group-hover:text-citrine">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-[12px] text-smoke transition-colors group-hover:text-citrine">{String(i + 1).padStart(2, "0")}</span>
                 <MaturityBadge maturity={capability(p.cap).maturity} />
               </div>
-              <h3 className="font-heading text-[26px] font-medium leading-[1.15] text-bone">{p.title}</h3>
+              <h3 className="font-heading text-[27px] font-bold leading-[1.08] tracking-[-0.005em] text-bone">{p.title}</h3>
               <p className="mt-4 leading-relaxed text-stone">{p.body}</p>
               <ul className="mt-6 space-y-2">
                 {p.spec.map((s) => (
-                  <li key={s} className="flex items-center gap-3 font-utility text-[12px] uppercase tracking-[0.08em] text-citrine">
-                    <span className="h-1 w-1 bg-citrine" />
+                  <li key={s} className="flex items-center gap-3 font-utility text-[11px] uppercase tracking-[0.07em] text-citrine">
+                    <span className="h-1 w-1 bg-citrine shadow-[0_0_6px_#e5ff5d]" />
                     {s}
                   </li>
                 ))}
               </ul>
-              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 font-utility text-[12px] uppercase tracking-[0.08em] text-bone hover:text-citrine">
+              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 font-utility text-[11px] uppercase tracking-[0.08em] text-bone transition-colors hover:text-citrine">
                 Implementation detail
                 <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
@@ -250,9 +259,9 @@ export default function Home() {
       {/* ───────── The one cream reversal ───────── */}
       <ReversalBand clusterImages={clusters}>
         <Reveal>
-          <p className="mb-8 font-utility text-[12px] uppercase tracking-[0.12em] text-ash">Smart-account enforcement</p>
+          <p className="mb-8 font-utility text-[11px] uppercase tracking-[0.12em] text-ash">Smart-account enforcement</p>
         </Reveal>
-        <h2 className="mx-auto max-w-[18ch] font-wide text-[clamp(28px,4.6vw,56px)] uppercase leading-[1.08] tracking-[-0.01em] text-carbon [text-wrap:balance]">
+        <h2 className="mx-auto max-w-[18ch] font-wide text-[clamp(28px,4.6vw,56px)] font-semibold uppercase leading-[1.04] tracking-[-0.02em] text-carbon [text-wrap:balance]">
           {["A gateway", "can't guard", "a key it", "doesn't hold."].map((l, i) => (
             <Reveal key={l} as="span" delay={i * 90} className="block">{l}</Reveal>
           ))}
@@ -276,7 +285,7 @@ export default function Home() {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
           <Reveal>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-heading text-[28px] font-medium text-bone">One protected execution call.</h2>
+              <h2 className="font-heading text-[30px] font-bold leading-none text-bone">One protected execution call.</h2>
               <MaturityBadge maturity={capability("sdk-ts").maturity} />
             </div>
             <p className="max-w-[560px] leading-relaxed text-stone">
@@ -299,7 +308,7 @@ export default function Home() {
               {sample.checks.filter((c) => c.enforcement === "local").map((c, i) => (
                 <Reveal key={c.id} as="li" delay={i * 40} className="flex justify-between gap-4 border-b border-graphite py-1.5 text-[12px]">
                   <span className="truncate text-stone">{c.label}</span>
-                  <span className="font-medium tracking-[0.032em] text-citrine">{c.status.toUpperCase()}</span>
+                  <span className="font-mono text-[11px] text-citrine">{c.status.toUpperCase()}</span>
                 </Reveal>
               ))}
             </ol>
@@ -314,15 +323,17 @@ export default function Home() {
         </Reveal>
         <div className="relative mt-16">
         <div aria-hidden className="absolute left-0 right-0 top-[19px] hidden h-px bg-graphite xl:block">
-          <Reveal className="draw-x h-full w-full bg-citrine/70">
-            <span />
+          <Reveal className="draw-x relative h-full w-full bg-gradient-to-r from-citrine/70 via-citrine/40 to-citrine/10">
+            <span className="absolute inset-0 animate-[travel_6s_var(--ease-out-quint)_1.8s_infinite]">
+              <span className="absolute -top-[3px] left-0 h-[7px] w-[140px] rounded-full bg-[radial-gradient(closest-side,#f6ffc2,rgb(229_255_93/0.6)_40%,transparent)] blur-[1px]" />
+            </span>
           </Reveal>
         </div>
         <ol className="relative grid gap-12 md:grid-cols-2 xl:grid-cols-4 xl:gap-8">
           {LIFECYCLE.map((p, i) => (
             <Reveal key={p.plane} as="li" delay={i * 180} className="relative">
               <div className="mb-6 flex items-center gap-4">
-                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-graphite bg-carbon">
+                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-carbon shadow-[inset_0_0_0_1px_var(--color-line-strong),inset_0_1px_0_rgb(255_255_240/0.1),0_0_24px_-6px_rgb(229_255_93/0.45)]">
                   <CubeGlyph size={14} />
                 </span>
                 <span className="label relative z-10 bg-carbon pr-4 !text-bone">{String.fromCharCode(65 + i)} · {p.plane}</span>
@@ -342,16 +353,16 @@ export default function Home() {
       <Section index="06" label="Network">
         <div className="grid gap-16 lg:grid-cols-2">
           <Reveal>
-            <p className="font-pixel text-[11px] uppercase tracking-[0.06em] text-sand">◆ Metrics unavailable</p>
-            <h2 className="mt-6 font-heading text-[28px] font-medium leading-tight text-bone">No deployment, so no numbers.</h2>
+            <p className="font-utility text-[11px] uppercase tracking-[0.08em] text-sand">◆ Metrics unavailable</p>
+            <h2 className="mt-6 font-heading text-[30px] font-bold leading-none text-bone">No deployment, so no numbers.</h2>
             <p className="mt-4 max-w-[480px] leading-relaxed text-stone">
               Block height, latency and transaction counts appear here only when backed by real telemetry and a published
               measurement definition.
             </p>
-            <Link href="/status" className="mt-8 inline-block font-utility text-[12px] uppercase tracking-[0.08em] text-bone hover:text-citrine">Status page →</Link>
+            <Link href="/status" className="mt-8 inline-block font-utility text-[11px] uppercase tracking-[0.08em] text-bone transition-colors hover:text-citrine">Status page →</Link>
           </Reveal>
           <Reveal delay={150}>
-            <dl className="divide-y divide-graphite border-y border-graphite text-sm">
+            <dl className="panel divide-y divide-line px-5 text-sm">
               {[
                 ["Network", "Robinhood Chain"],
                 ["Mainnet chain ID", "4663"],
@@ -371,10 +382,14 @@ export default function Home() {
       </Section>
 
       {/* ───────── Final CTA ───────── */}
-      <Section>
-        <div className="flex flex-col items-center text-center">
+      <Section className="overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="aurora left-1/2 top-[18%] h-[420px] w-[760px] -translate-x-1/2 bg-citrine/[0.09] animate-[drift-c_24s_ease-in-out_infinite]" />
+          <div className="horizon bottom-[14%] opacity-70" />
+        </div>
+        <div className="relative flex flex-col items-center text-center">
           <Reveal>
-            <h2 className="display max-w-[14ch] text-bone">Read how it works before you trust it.</h2>
+            <h2 className="display max-w-[14ch] text-bone"><span className="text-lit">Read how it works before you </span><span className="text-signal">trust it.</span></h2>
           </Reveal>
           <Reveal delay={200}>
             <div className="mt-12 flex flex-wrap justify-center gap-3">

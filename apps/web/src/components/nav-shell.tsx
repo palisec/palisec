@@ -13,8 +13,10 @@ export function NavShell({ children }: { children: ReactNode }) {
   }, []);
   return (
     <div
-      className={`mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-6 rounded-[8px] border px-4 transition-all duration-500 sm:px-6 ${
-        scrolled ? "border-graphite bg-carbon/85 backdrop-blur-md" : "border-transparent bg-transparent"
+      className={`mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-6 rounded-[10px] px-4 transition-all duration-500 ease-[var(--ease-out-quint)] sm:px-6 ${
+        scrolled
+          ? "bg-[linear-gradient(180deg,rgb(35_37_28/0.82),rgb(13_14_10/0.82))] shadow-[inset_0_0_0_1px_var(--color-line-strong),inset_0_1px_0_rgb(255_255_240/0.08),0_18px_40px_-20px_rgb(0_0_0/0.9)] backdrop-blur-xl backdrop-saturate-150"
+          : "bg-transparent shadow-[inset_0_0_0_1px_transparent]"
       }`}
     >
       {children}

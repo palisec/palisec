@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <Container className="flex min-h-[70vh] items-center justify-center py-16">
-      <div className="w-full max-w-[400px] border border-line bg-surface">
+      <div className="panel panel-beam w-full max-w-[400px] overflow-hidden">
         <div className="border-b border-line px-6 py-4">
           <p className="label">Developer console</p>
           <h1 className="mt-2 text-xl font-medium text-fg">Sign in</h1>

@@ -25,7 +25,7 @@ export default function AttestationPage() {
         lede="This page will publish expected enclave measurements and the latest verification result, with its scope and timestamp."
       />
       <Section index="01" label="Current measurements">
-        <div className="border border-line bg-surface">
+        <div className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="label">Enclave · production</p>
             <p className="font-mono text-[11px] tracking-[0.08em] text-review">◆ NO ENCLAVE DEPLOYED</p>

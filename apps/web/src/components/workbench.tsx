@@ -150,11 +150,11 @@ export function Workbench() {
   const blocked = inputErrors.length > 0;
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-graphite bg-surface shadow-[0_0_80px_-40px_rgba(229,255,93,0.35)]">
+    <div className="panel panel-beam overflow-hidden">
       {/* toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <p className="flex items-center gap-2 text-[12px] font-medium tracking-[0.032em] text-bone"><span className="h-1.5 w-1.5 animate-pulse bg-citrine shadow-[0_0_8px_#e5ff5d]" />POLICY WORKBENCH</p>
+          <p className="flex items-center gap-2.5 font-utility text-[11px] tracking-[0.08em] text-bone"><span aria-hidden className="tick-dot" />POLICY WORKBENCH</p>
           <p className="label !text-sand">◆ Simulation · example data · nothing is signed or broadcast</p>
         </div>
         <div className="flex items-center gap-1 font-mono text-xs">
@@ -241,7 +241,7 @@ export function Workbench() {
               type="button"
               onClick={submit}
               disabled={blocked}
-              className="group mt-4 flex h-12 w-full items-center justify-between rounded-[4px] bg-citrine px-4 font-action text-[17px] font-bold uppercase tracking-[0.06em] text-carbon transition-shadow hover:shadow-[0_0_32px_rgba(229,255,93,0.4)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn btn-solid btn-primary group mt-4 h-12 w-full justify-between !px-4 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
               Evaluate locally
               <span className="font-mono text-xs">rw_req_sim_{String(history.length + 1).padStart(4, "0")}</span>

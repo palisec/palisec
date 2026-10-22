@@ -20,6 +20,9 @@ const RIGHT = [
 export function ReversalBand({ children, clusterImages }: { children: ReactNode; clusterImages?: { left: string; right: string } }) {
   return (
     <section className="relative overflow-hidden bg-cream text-carbon">
+      {/* Daylight from above, falling off toward the dark bands either side */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_70%_at_50%_0%,#fbfcf4,transparent_70%),linear-gradient(180deg,transparent_60%,rgb(13_14_10/0.06))]" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-citrine to-transparent" />
       <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 hidden w-[26%] md:block">
         {clusterImages ? (
           // eslint-disable-next-line @next/next/no-img-element

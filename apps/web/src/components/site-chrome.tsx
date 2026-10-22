@@ -9,7 +9,7 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
       <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
         <CubeGlyph size={size === "lg" ? 22 : 18} />
       </span>
-      <span className="font-brand text-[19px] font-semibold tracking-[0.02em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
+      <span className="font-brand text-[18px] font-extrabold tracking-[-0.01em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
     </Link>
   );
 }
@@ -32,9 +32,9 @@ export function SiteHeader() {
         <Wordmark />
         <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="group relative font-utility text-[13px] uppercase tracking-[0.1em] text-bone">
+            <Link key={n.href} href={n.href} className="group relative font-utility text-[11.5px] uppercase tracking-[0.1em] text-bone/85 transition-colors hover:text-bone">
               {n.label}
-              <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-citrine transition-transform duration-300 group-hover:scale-x-100" />
+              <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-citrine shadow-[0_0_8px_#e5ff5d] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
             </Link>
           ))}
         </nav>
@@ -43,13 +43,13 @@ export function SiteHeader() {
             <ButtonLink href="/login">Open Console</ButtonLink>
           </span>
           <details className="group relative lg:hidden">
-            <summary className="flex h-10 cursor-pointer list-none items-center rounded-[4px] border border-bone/70 px-3 text-[12px] font-medium uppercase tracking-[0.032em] text-bone [&::-webkit-details-marker]:hidden">
+            <summary className="btn btn-ghost h-10 cursor-pointer list-none !px-3 !py-0 [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">Menu</span>
               <span className="hidden group-open:inline">Close</span>
             </summary>
-            <nav aria-label="Mobile" className="absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden rounded-[8px] border border-graphite bg-carbon">
+            <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
               {[...NAV, { href: "/login", label: "Open Console" }].map((n) => (
-                <Link key={n.href} href={n.href} className="block border-b border-graphite px-4 py-3 text-[12px] font-medium uppercase tracking-[0.032em] text-bone last:border-b-0 hover:bg-graphite hover:text-citrine">
+                <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-bone last:border-b-0 hover:bg-raised hover:text-citrine">
                   {n.label}
                 </Link>
               ))}
@@ -70,6 +70,7 @@ const FOOTER = [
 export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-graphite">
+      <div aria-hidden className="aurora bottom-[-30%] left-1/2 h-[360px] w-[900px] -translate-x-1/2 bg-citrine/[0.07]" />
       <Container className="grid gap-12 py-20 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="space-y-5">
           <Wordmark />
@@ -90,7 +91,7 @@ export function SiteFooter() {
         ))}
       </Container>
       <div aria-hidden className="select-none overflow-hidden px-4">
-        <p className="translate-y-[18%] whitespace-nowrap text-center font-wordmark text-[11.5vw] font-normal leading-[0.8] tracking-[-0.04em] text-graphite">
+        <p className="footer-mark translate-y-[16%] whitespace-nowrap text-center font-wordmark text-[7.8vw] font-black uppercase leading-[0.8] tracking-[-0.03em]">
           Palisec
         </p>
       </div>

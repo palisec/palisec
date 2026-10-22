@@ -36,7 +36,7 @@ const TRUST = [
 function FlowDiagram() {
   const box = "border border-line-strong bg-ink px-4 py-3";
   return (
-    <figure className="border border-line bg-surface p-4 sm:p-8" aria-label="Execution architecture">
+    <figure className="panel p-4 sm:p-8" aria-label="Execution architecture">
       <ol className="mx-auto flex max-w-[640px] flex-col items-stretch font-mono text-xs">
         <li className={box}><p className="text-fg">AI agent / application</p><p className="mt-1 text-muted">Proposed action · typed intent</p></li>
         <li aria-hidden className="mx-auto h-6 w-px bg-line-strong" />

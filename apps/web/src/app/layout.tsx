@@ -1,30 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Chakra_Petch,
-  IBM_Plex_Sans,
-  JetBrains_Mono,
-  Major_Mono_Display,
-  Michroma,
-  Oxanium,
-  Rajdhani,
-  Share_Tech_Mono,
-  Silkscreen,
-  Tektur,
-} from "next/font/google";
+import { Anybody, Hanken_Grotesk, Martian_Mono } from "next/font/google";
 import "./globals.css";
 
-// One family per typographic role; see globals.css for the role tokens.
-const display = Oxanium({ variable: "--font-oxanium", subsets: ["latin"], weight: ["400", "500"] });
-const heading = Chakra_Petch({ variable: "--font-chakra", subsets: ["latin"], weight: ["400", "500", "600"] });
-const wide = Michroma({ variable: "--font-michroma", subsets: ["latin"], weight: "400" });
-const body = IBM_Plex_Sans({ variable: "--font-plex", subsets: ["latin"], weight: ["400", "500"] });
-const utility = Share_Tech_Mono({ variable: "--font-sharetech", subsets: ["latin"], weight: "400" });
-const pixel = Silkscreen({ variable: "--font-silkscreen", subsets: ["latin"], weight: "400" });
-const code = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
-const wordmark = Major_Mono_Display({ variable: "--font-majormono", subsets: ["latin"], weight: "400" });
-const brand = Tektur({ variable: "--font-tektur", subsets: ["latin"], weight: ["600"] });
-const action = Rajdhani({ variable: "--font-rajdhani", subsets: ["latin"], weight: ["700"] });
-const FONT_VARS = [action, display, heading, wide, body, utility, pixel, code, wordmark, brand].map((f) => f.variable).join(" ");
+// Three families, many voices. Anybody's width axis carries display (condensed rampart),
+// brand and the reversal band (expanded); Martian Mono carries labels, data and code.
+const display = Anybody({ variable: "--font-anybody", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
+const body = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], weight: "variable" });
+const mono = Martian_Mono({ variable: "--font-martian", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
+const FONT_VARS = [display, body, mono].map((f) => f.variable).join(" ");
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -46,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: "#0d0e0a",
   colorScheme: "dark",
 };
 
