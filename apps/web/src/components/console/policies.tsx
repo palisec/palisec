@@ -251,7 +251,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
 
       <ol aria-label="Activation workflow" className="mb-4 flex flex-wrap gap-2">
         {steps.map((s, i) => (
-          <li key={s.label} className={`flex items-center gap-2 rounded-[4px] px-2 py-1 font-utility text-[10.5px] uppercase tracking-[0.06em] ${s.done ? "text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.35)]" : "text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)]"}`}>
+          <li key={`${s.label}-${s.done}`} className={`flex animate-[c-pop_.4s_var(--ease-out-quint)_both] items-center gap-2 rounded-[4px] px-2 py-1 font-utility transition-shadow duration-500 text-[10.5px] uppercase tracking-[0.06em] ${s.done ? "text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.35)]" : "text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)]"}`}>
             <span className="tabular-nums text-dim">{i + 1}</span>
             {s.label}
             <span aria-hidden>{s.done ? "✓" : ""}</span>
@@ -351,7 +351,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
             title="Generated policy"
             actions={
               <>
-                <Pill tone={valid ? "allow" : "deny"}>{valid ? "✓ Schema valid" : `■ ${inputErrors.length + schemaErrors.length} errors`}</Pill>
+                <Pill key={String(valid)} tone={valid ? "allow" : "deny"} className="animate-[c-pop_.4s_var(--ease-out-quint)]">{valid ? "✓ Schema valid" : `■ ${inputErrors.length + schemaErrors.length} errors`}</Pill>
                 <CopyButton text={draftJson} label="Copy policy JSON" />
                 <Btn variant="quiet" onClick={exportJson}>Export</Btn>
               </>
@@ -372,7 +372,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
                 ]}
               />
             </div>
-            <div className="max-h-[620px] min-h-[320px] overflow-auto">
+            <div key={tab} className="max-h-[620px] min-h-[320px] animate-[c-fade_.3s_var(--ease-out-quint)] overflow-auto">
               {tab === "json" && <pre className="p-4 font-mono text-[12px] leading-relaxed text-soft"><code>{draftJson}</code></pre>}
               {tab === "validation" && <Validation inputErrors={inputErrors} schemaErrors={schemaErrors} meta={{ policy_id: policy.policy_id, schema: policy.schema_version, base: sim.draft?.based_on ?? sim.active_policy.version, next: Math.max(...sim.versions.map((v) => v.version)) + 1 }} />}
               {tab === "rules" && <Rules policy={policy} />}
@@ -449,7 +449,7 @@ function Num({ uid, k, label, unit, form, set, errors }: { uid: string; k: keyof
 function Errors({ list, id }: { list: string[]; id?: string }) {
   if (!list.length) return null;
   return (
-    <ul id={id} className="mt-1.5 space-y-0.5 font-mono text-[11px] text-deny">
+    <ul key={list.join("|")} id={id} className="mt-1.5 animate-[c-shake_.4s] space-y-0.5 font-mono text-[11px] text-deny">
       {list.map((e) => <li key={e}>■ {e}</li>)}
     </ul>
   );
@@ -503,7 +503,7 @@ function Diff({ from, to, activeVersion }: { from: string; to: string; activeVer
       <p className="border-b border-line px-4 py-2 font-mono text-[11px] text-muted">active v{activeVersion} → draft · {changes} changed lines (status and version omitted)</p>
       <pre className="p-0 font-mono text-[12px] leading-relaxed">
         {lines.map((l, i) => (
-          <div key={i} className={l.kind === "+" ? "bg-citrine/[0.08] text-citrine" : l.kind === "-" ? "bg-deny/[0.08] text-deny" : "text-muted"}>
+          <div key={i} className={`${l.kind === "+" ? "animate-[c-notice_.4s_var(--ease-out-quint)_both] bg-citrine/[0.08] text-citrine" : l.kind === "-" ? "animate-[c-notice_.4s_var(--ease-out-quint)_both] bg-deny/[0.08] text-deny" : "text-muted"}`}>
             <span aria-hidden className="inline-block w-6 select-none text-center">{l.kind}</span>
             <span className="sr-only">{l.kind === "+" ? "added: " : l.kind === "-" ? "removed: " : ""}</span>
             {l.text}
@@ -552,7 +552,7 @@ function Versions({ sim, onLoad }: { sim: SimState; onLoad: (p: Policy) => void 
         <li key={v.version} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <p className="text-[13.5px] text-bone">
-              v{v.version} {v.version === sim.active_policy.version && <Pill tone="allow" className="ml-1">active</Pill>}
+              v{v.version} {v.version === sim.active_policy.version && <Pill tone="allow" className="c-burst ml-1">active</Pill>}
             </p>
             <p className="text-[12px] text-muted">{formatSimTime(v.activated_at)} · {v.activated_by} · “{v.note}”</p>
           </div>

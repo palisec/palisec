@@ -92,7 +92,7 @@ export function AgentsView() {
 
         {agent ? (
           <Panel title="Agent detail" className="self-start xl:sticky xl:top-16">
-            <div className="px-4 pt-3">
+            <div key={agent.id} className="animate-[c-fade_.4s_var(--ease-out-quint)] px-4 pt-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[17px] font-semibold text-bone">{agent.name}</p>
@@ -148,8 +148,8 @@ export function AgentsView() {
 
 function StatusPill({ status }: { status: SimAgent["status"] }) {
   return (
-    <Pill tone={status === "active" ? "allow" : status === "paused" ? "review" : "deny"}>
-      <span aria-hidden>{status === "active" ? "●" : status === "paused" ? "❚❚" : "■"}</span>
+    <Pill key={status} tone={status === "active" ? "allow" : status === "paused" ? "review" : "deny"} className="animate-[c-pop_.4s_var(--ease-out-quint)]">
+      <span aria-hidden className={status === "active" ? "animate-pulse" : ""}>{status === "active" ? "●" : status === "paused" ? "❚❚" : "■"}</span>
       {status}
     </Pill>
   );

@@ -7,7 +7,7 @@ import { DENIAL_WINDOW_SECONDS, createCredential, recentDenials, revokeCredentia
 import { commit, randomHex, useSim, useSimNow } from "@/lib/console-store";
 import { formatSimTime } from "@/lib/units";
 import { CopyButton } from "../copy-button";
-import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "./kit";
+import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill, ScrambleText } from "./kit";
 
 export function SecurityView() {
   const sim = useSim();
@@ -52,10 +52,10 @@ export function SecurityView() {
               <Btn type="submit" variant="primary">Create credential</Btn>
             </form>
             {secret && (
-              <div role="status" className="rounded-[6px] border border-citrine/40 bg-citrine/[0.04] p-3">
+              <div role="status" className="c-burst animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[6px] border border-citrine/40 bg-citrine/[0.04] p-3">
                 <p className="text-[13px] text-soft">Copy this secret now. It is shown once and only a hint is kept. It is a simulation value and authenticates nothing.</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <code className="min-w-0 flex-1 break-all rounded-[4px] bg-ink px-2 py-1.5 font-mono text-[11.5px] text-citrine">{secret.value}</code>
+                  <ScrambleText key={secret.id} text={secret.value} className="min-w-0 flex-1 break-all rounded-[4px] bg-ink px-2 py-1.5 font-mono text-[11.5px] text-citrine" />
                   <CopyButton text={secret.value} label="Copy new secret" />
                 </div>
                 <Btn variant="quiet" className="mt-2" onClick={() => setSecret(null)}>I stored it · hide</Btn>
@@ -128,7 +128,7 @@ export function SecurityView() {
           <div className="space-y-3 bg-surface px-4 py-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[14px] font-semibold text-bone">Disable new authorizations globally</p>
-              <Pill tone={sim.breakers.global_stop ? "deny" : "allow"}>{sim.breakers.global_stop ? "■ Engaged" : "● Released"}</Pill>
+              <Pill key={String(sim.breakers.global_stop)} tone={sim.breakers.global_stop ? "deny" : "allow"} className={`animate-[c-pop_.4s_var(--ease-out-quint)] ${sim.breakers.global_stop ? "c-urgent" : ""}`}>{sim.breakers.global_stop ? "■ Engaged" : "● Released"}</Pill>
             </div>
             <p className="text-[12.5px] leading-relaxed text-muted">Every new protected execution is denied with RW_PAUSED_001 and pending approvals cannot be approved.</p>
             {!sim.breakers.global_stop ? (

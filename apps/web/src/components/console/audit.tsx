@@ -143,7 +143,7 @@ export function AuditView() {
                 </thead>
                 <tbody>
                   {rows.map((e) => (
-                    <tr key={e.id} className={`cursor-pointer border-b border-line align-top transition-colors ${e.id === selected?.id ? "bg-raised/80" : "hover:bg-raised/40"}`} onClick={() => select(e.id)}>
+                    <tr key={e.id} className={`cursor-pointer border-b border-line align-top transition-colors ${e.id === selected?.id ? "is-selected bg-raised/80" : "hover:bg-raised/40"}`} onClick={() => select(e.id)}>
                       <td className="px-3 py-2"><button type="button" onClick={() => select(e.id)} className="font-mono text-[11.5px] text-bone hover:text-citrine" aria-label={`Open ${e.id}`}>{e.id}</button></td>
                       <td className="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-dim">{formatSimTime(e.at).slice(5, 19)}</td>
                       <td className="px-3 py-2"><TypePill e={e} /></td>
@@ -158,7 +158,7 @@ export function AuditView() {
         </Panel>
 
         <div className="min-w-0 xl:sticky xl:top-16 xl:self-start">
-          {selected ? <Detail e={selected} sim={sim} /> : <Panel title="Record detail"><Empty title="Select a record to open it." >Records linked from the dashboard open here directly.</Empty></Panel>}
+          {selected ? <Detail key={selected.id} e={selected} sim={sim} /> : <Panel title="Record detail"><Empty title="Select a record to open it." >Records linked from the dashboard open here directly.</Empty></Panel>}
         </div>
       </div>
     </>
@@ -175,7 +175,7 @@ function Detail({ e, sim }: { e: AuditEvent; sim: SimState }) {
   const reservation = op?.reservation_id ? sim.ledger.reservations.find((r) => r.reservation_id === op.reservation_id) : undefined;
   const related = op ? sim.audit.filter((x) => x.request_id === op.id) : [];
   return (
-    <Panel title={`Record · ${e.id}`} actions={<TypePill e={e} />}>
+    <Panel title={`Record · ${e.id}`} actions={<TypePill e={e} />} className="animate-[c-fade_.4s_var(--ease-out-quint)]">
       <div className="px-4 py-3">
         <KV
           rows={[

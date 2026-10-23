@@ -133,7 +133,7 @@ export function OperationsView() {
                   </thead>
                   <tbody>
                     {rows.map((o) => (
-                      <tr key={o.id} id={o.id} className={`cursor-pointer border-b border-line transition-colors ${o.id === selected?.id ? "bg-raised/80" : "hover:bg-raised/40"}`} onClick={() => select(o.id)}>
+                      <tr key={o.id} id={o.id} className={`cursor-pointer border-b border-line transition-colors ${o.id === selected?.id ? "is-selected bg-raised/80" : "hover:bg-raised/40"}`} onClick={() => select(o.id)}>
                         <td className="px-3 py-2"><button type="button" onClick={() => select(o.id)} className="font-mono text-[12px] text-bone hover:text-citrine" aria-label={`Inspect ${o.id}`}>{o.id.replace("rw_req_sim_", "#")}</button></td>
                         <td className="px-3 py-2 text-soft">{o.label}</td>
                         <td className="px-3 py-2 text-muted">{agentName(sim, o.agent_id)}</td>
@@ -150,7 +150,7 @@ export function OperationsView() {
         </div>
 
         <div className="min-w-0 xl:sticky xl:top-16 xl:self-start">
-          {selected ? <Inspector op={selected} sim={sim} now={now} /> : <Panel title="Operation"><Empty title="Submit an operation to inspect it." /></Panel>}
+          {selected ? <Inspector key={selected.id} op={selected} sim={sim} now={now} /> : <Panel title="Operation"><Empty title="Submit an operation to inspect it." /></Panel>}
         </div>
       </div>
     </>
@@ -192,7 +192,7 @@ export function Lifecycle({ op }: { op: SimOperation }) {
     <ol className="space-y-0">
       {lifecycle(op).map((s, i) => (
         <li key={s.name} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2 py-1.5">
-          <span aria-hidden className={`font-mono text-[12px] ${STAGE_STYLE[s.state].cls}`}>{STAGE_STYLE[s.state].glyph}</span>
+          <span aria-hidden className={`inline-block animate-[c-pop_.45s_var(--ease-out-quint)_both] font-mono text-[12px] ${STAGE_STYLE[s.state].cls} ${s.state === "waiting" ? "animate-pulse" : ""}`} style={{ animationDelay: `${i * 90 + 100}ms` }}>{STAGE_STYLE[s.state].glyph}</span>
           <span>
             <span className="block text-[13px] text-soft">
               <span className="text-dim">{i + 1}. </span>
@@ -220,7 +220,7 @@ function Inspector({ op, sim, now }: { op: SimOperation; sim: SimState; now: num
     message: op.message,
   };
   return (
-    <Panel title="Operation · GET /v1/operations/{id}" actions={<OpStatusPill status={op.status} />}>
+    <Panel title="Operation · GET /v1/operations/{id}" actions={<OpStatusPill status={op.status} />} className="animate-[c-fade_.4s_var(--ease-out-quint)]">
       <div className="px-4 pt-3">
         <div className="flex flex-wrap items-center gap-2">
           <DecisionBadge decision={op.decision} />
@@ -246,7 +246,7 @@ function Inspector({ op, sim, now }: { op: SimOperation; sim: SimState; now: num
       <div className="mt-3 border-y border-line px-4 py-2">
         <Segmented label="Operation detail" value={tab} onChange={setTab} options={[{ value: "lifecycle", label: "Lifecycle" }, { value: "checks", label: "Checks" }, { value: "response", label: "Response" }]} />
       </div>
-      <div className="max-h-[440px] overflow-auto">
+      <div key={tab} className="max-h-[440px] animate-[c-fade_.3s_var(--ease-out-quint)] overflow-auto">
         {tab === "lifecycle" && <div className="px-4 py-3"><Lifecycle op={op} /></div>}
         {tab === "checks" && <ChecksView checks={op.checks} />}
         {tab === "response" && <JsonView json={JSON.stringify(response, null, 2)} label="Copy response JSON" />}

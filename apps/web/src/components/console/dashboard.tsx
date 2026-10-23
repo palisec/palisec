@@ -6,7 +6,8 @@ import { formatUsd, type Decision } from "@palisec/policy-schema";
 import { agentName, type SimState } from "@/lib/console-sim";
 import { useSim, useSimNow } from "@/lib/console-store";
 import { formatDuration, formatSimTime } from "@/lib/units";
-import { Empty, KV, Mono, PageTitle, Panel, Pill, Segmented } from "./kit";
+import { useInView } from "../motion";
+import { CountUp, Empty, KV, Meter, Mono, PageTitle, Panel, Pill, Segmented } from "./kit";
 
 const HOUR = 3600;
 
@@ -41,7 +42,7 @@ export function DashboardView() {
               ] as const).map(([k, v, cls], i) => (
                 <div key={k} className={`px-4 py-3 ${i > 0 ? "border-l border-line" : ""}`}>
                   <dt className="label !text-[10px]">{k}</dt>
-                  <dd className={`mt-1 font-mono text-[22px] leading-none ${cls}`}>{v}</dd>
+                  <dd className={`mt-1 font-mono text-[22px] leading-none ${cls}`}><CountUp value={v} /></dd>
                 </div>
               ))}
             </dl>
@@ -87,12 +88,10 @@ export function DashboardView() {
           <Panel title="Budget · rolling hour">
             <div className="px-4 py-3">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="font-mono text-[20px] text-bone">{formatUsd(reserved)}</span>
+                <CountUp className="font-mono text-[20px] text-bone" value={Number(reserved)} duration={1100} format={(n) => formatUsd(BigInt(Math.round(n)))} />
                 <span className="font-mono text-[11px] text-muted">of {formatUsd(budget)} reserved</span>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, pct)} aria-label="Hourly budget reserved">
-                <div className={`h-full rounded-full ${pct >= 100 ? "bg-deny" : "bg-citrine"}`} style={{ width: `${Math.min(100, pct)}%` }} />
-              </div>
+              <div className="mt-2"><Meter fraction={pct / 100} danger={pct >= 100} label="Hourly budget reserved" /></div>
               <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
                 Spent (finalized): <Mono className="text-soft">{formatUsd(finalized)}</Mono>. Nothing finalizes in simulation because nothing is submitted;
                 reservations release when they expire.
@@ -111,7 +110,7 @@ export function DashboardView() {
                       <span className="block truncate text-[13.5px] text-bone">{o.label}</span>
                       <Mono className="text-dim">{o.id}</Mono>
                     </span>
-                    <Mono className="text-sand">{formatDuration((o.approval_expires_at ?? now) - now)}</Mono>
+                    <Mono className={(o.approval_expires_at ?? now) - now < 60 ? "c-urgent text-deny" : "text-sand"}>{formatDuration((o.approval_expires_at ?? now) - now)}</Mono>
                   </li>
                 ))}
               </ul>
@@ -128,8 +127,8 @@ export function DashboardView() {
               ].map(([k, v, ok]) => (
                 <li key={k as string} className="flex items-start justify-between gap-3 px-4 py-2.5">
                   <span className="text-muted">{k}</span>
-                  <span className={`text-right ${ok ? "text-citrine" : "text-stone"}`}>
-                    <span aria-hidden>{ok ? "● " : "○ "}</span>
+                  <span className={`flex items-center gap-2 text-right ${ok ? "text-citrine" : "text-stone"}`}>
+                    <span aria-hidden className={ok ? "tick-dot" : ""}>{ok ? "" : "○"}</span>
                     {v}
                   </span>
                 </li>
@@ -147,6 +146,7 @@ type Bucket = { start: number; allow: number; deny: number; review: number };
 function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
   const [view, setView] = useState<"chart" | "table">("chart");
   const [hover, setHover] = useState<number | null>(null);
+  const [chartRef, chartIn] = useInView<HTMLDivElement>(0.3);
   const buckets = useMemo<Bucket[]>(() => {
     const end = Math.floor(now / HOUR) * HOUR + HOUR;
     const list = Array.from({ length: 24 }, (_, i) => ({ start: end - (24 - i) * HOUR, allow: 0, deny: 0, review: 0 }));
@@ -178,6 +178,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
         <Segmented label="Chart or table" value={view} onChange={setView} options={[{ value: "chart", label: "Chart" }, { value: "table", label: "Table" }]} />
       </div>
 
+      <div key={view} className="animate-[c-fade_.35s_var(--ease-out-quint)]">
       {total === 0 ? (
         <Empty title="No operations in the last 24 hours.">Submit one from Operations; it appears here in its hour.</Empty>
       ) : view === "table" ? (
@@ -199,7 +200,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
           </table>
         </div>
       ) : (
-        <div className="relative">
+        <div ref={chartRef} className={`relative ${chartIn ? "chart-in" : ""}`}>
           <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={`Hourly outcomes for the last 24 hours: ${total} operations. Use the table view for exact values.`} onMouseLeave={() => setHover(null)}>
             <defs>
               <pattern id="rw-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -209,8 +210,8 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
             </defs>
             {[0, max / 2, max].map((v) => (
               <g key={v}>
-                <line x1={PL} x2={W} y1={y(v)} y2={y(v)} stroke="#22241b" />
-                <text x={PL - 6} y={y(v) + 3} textAnchor="end" className="fill-[#5a5d4e] font-mono text-[9px]">{Math.round(v)}</text>
+                <line className="c-grid" x1={PL} x2={W} y1={y(v)} y2={y(v)} stroke="#2a2c22" />
+                <text x={PL - 6} y={y(v) + 3} textAnchor="end" className="c-axis fill-[#5a5d4e] font-mono text-[9px]">{Math.round(v)}</text>
               </g>
             ))}
             {buckets.map((b, i) => {
@@ -229,9 +230,10 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
                     const top = y(acc + s.v);
                     const h = y(acc) - top - (k > 0 ? 2 : 0);
                     acc += s.v;
-                    return <rect key={k} x={x} y={top} width={w} height={Math.max(1, h)} rx={k === segs.length - 1 ? 3 : 0} fill={s.fill} opacity={hover === null || hover === i ? 1 : 0.45} />;
+                    return <rect key={k} className="c-bar" style={{ "--i": i } as React.CSSProperties} x={x} y={top} width={w} height={Math.max(1, h)} rx={k === segs.length - 1 ? 3 : 0} fill={s.fill} opacity={hover === null || hover === i ? 1 : 0.4} />;
                   })}
-                  {i % 4 === 0 && <text x={PL + i * bw + bw / 2} y={H - 6} textAnchor="middle" className="fill-[#5a5d4e] font-mono text-[9px]">{hh(b.start)}</text>}
+                  {hover === i && <rect x={PL + i * bw} y={PT} width={bw} height={H - PT - PB} fill="rgb(229 255 93 / 0.05)" className="animate-[c-fade_.2s]" />}
+                  {i % 4 === 0 && <text x={PL + i * bw + bw / 2} y={H - 6} textAnchor="middle" className="c-axis fill-[#5a5d4e] font-mono text-[9px]">{hh(b.start)}</text>}
                 </g>
               );
             })}
@@ -239,7 +241,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
           {hover !== null && (() => {
             const b = buckets[hover]!;
             return (
-              <div className="pointer-events-none absolute top-0 rounded-[6px] border border-line-strong bg-carbon/95 px-2.5 py-1.5 font-mono text-[11px] text-soft shadow-[0_10px_24px_-10px_rgb(0_0_0/0.9)]" style={{ left: `clamp(0px, calc(${((PL + hover * bw) / W) * 100}% - 40px), calc(100% - 150px))` }}>
+              <div key={hover} className="pointer-events-none absolute top-0 animate-[c-pop_.22s_var(--ease-out-quint)] rounded-[6px] border border-line-strong bg-carbon/95 px-2.5 py-1.5 font-mono text-[11px] text-soft shadow-[0_10px_24px_-10px_rgb(0_0_0/0.9)]" style={{ left: `clamp(0px, calc(${((PL + hover * bw) / W) * 100}% - 40px), calc(100% - 150px))` }}>
                 <p className="text-bone">{hh(b.start)}–{hh(b.start + HOUR)} UTC</p>
                 <p>Allow {b.allow} · Deny {b.deny} · Review {b.review}</p>
               </div>
@@ -247,6 +249,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
           })()}
         </div>
       )}
+      </div>
     </div>
   );
 }

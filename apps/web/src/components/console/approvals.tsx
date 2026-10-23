@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { REASON_CODES, formatUsd, selectorOf } from "@palisec/policy-schema";
-import { agentName, approvalBlocker, approveOperation, rejectOperation, type OpStatus, type SimOperation, type SimState } from "@/lib/console-sim";
+import { APPROVAL_TTL_SECONDS, agentName, approvalBlocker, approveOperation, rejectOperation, type OpStatus, type SimOperation, type SimState } from "@/lib/console-sim";
 import { commit, useSim, useSimNow } from "@/lib/console-store";
 import { formatDuration, formatSimTime, formatUnits } from "@/lib/units";
 import { CopyButton } from "../copy-button";
@@ -64,11 +64,19 @@ export function ApprovalsView() {
                     <span className="text-right">
                       <span className="block font-mono text-[12px] text-soft">{formatUsd(BigInt(o.exposure_usd_micros))}</span>
                       {o.status === "pending_approval" && o.approval_expires_at ? (
-                        <span className="block font-mono text-[11px] text-sand" aria-label={`Expires in ${formatDuration(o.approval_expires_at - now)}`}>{formatDuration(o.approval_expires_at - now)}</span>
+                        <span className={`block font-mono text-[11px] ${o.approval_expires_at - now < 60 ? "c-urgent text-deny" : "text-sand"}`} aria-label={`Expires in ${formatDuration(o.approval_expires_at - now)}`}>{formatDuration(o.approval_expires_at - now)}</span>
                       ) : (
                         <span className="block font-mono text-[11px] text-dim">{formatSimTime(o.created_at).slice(11, 16)}</span>
                       )}
                     </span>
+                    {o.status === "pending_approval" && o.approval_expires_at && (
+                      <span aria-hidden className="col-span-2 mt-1 block h-px overflow-hidden bg-line">
+                        <span
+                          className={`c-drain block h-full w-full ${o.approval_expires_at - now < 60 ? "bg-deny" : "bg-sand"}`}
+                          style={{ transform: `scaleX(${Math.max(0, (o.approval_expires_at - now) / APPROVAL_TTL_SECONDS)})` }}
+                        />
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
@@ -114,7 +122,7 @@ function Detail({ op, sim, now, notice, setNotice, onResolved }: { op: SimOperat
     : null;
 
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 animate-[c-fade_.4s_var(--ease-out-quint)] space-y-4">
       <Panel title="Review the exact operation" actions={<OpStatusPill status={op.status} />}>
         <div className="grid gap-x-6 px-4 py-3 lg:grid-cols-2">
           <KV
@@ -204,7 +212,7 @@ function Detail({ op, sim, now, notice, setNotice, onResolved }: { op: SimOperat
       </Panel>
 
       {record && (
-        <Panel title="Approval record · append-only" actions={<CopyButton text={JSON.stringify(record, null, 2)} label="Copy approval record" />}>
+        <Panel title="Approval record · append-only" className="c-burst" actions={<CopyButton text={JSON.stringify(record, null, 2)} label="Copy approval record" />}>
           <pre className="overflow-auto p-4 font-mono text-[11.5px] leading-relaxed text-soft">{JSON.stringify(record, null, 2)}</pre>
         </Panel>
       )}

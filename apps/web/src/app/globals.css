@@ -714,6 +714,121 @@
   .prose-rw td { padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--color-line); vertical-align: top; }
 }
 
+/* ---------- Console motion: fast, explanatory, never blocking ---------- */
+@keyframes c-row-in {
+  from { opacity: 0; transform: translateY(8px); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes c-fade {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes c-pop {
+  0% { opacity: 0; transform: scale(0.96); }
+  60% { opacity: 1; transform: scale(1.015); }
+  100% { transform: none; }
+}
+@keyframes c-notice {
+  from { opacity: 0; transform: translateY(-6px); clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+@keyframes c-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes c-bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes c-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes c-drop {
+  from { opacity: 0; transform: translateY(-100%); }
+}
+@keyframes c-alarm {
+  0%, 100% { box-shadow: inset 0 -1px 0 rgb(255 82 71 / 0.5), 0 0 0 rgb(255 82 71 / 0); }
+  50% { box-shadow: inset 0 -1px 0 rgb(255 82 71 / 0.9), 0 8px 30px -8px rgb(255 82 71 / 0.45); }
+}
+@keyframes c-badge {
+  0% { box-shadow: 0 0 0 0 rgb(189 184 160 / 0.6); }
+  70%, 100% { box-shadow: 0 0 0 6px rgb(189 184 160 / 0); }
+}
+@keyframes c-urgent {
+  50% { opacity: 0.45; }
+}
+@keyframes c-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes c-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes c-flash {
+  from { color: var(--color-citrine); text-shadow: 0 0 8px rgb(229 255 93 / 0.6); }
+}
+@keyframes c-burst {
+  from { box-shadow: 0 0 0 0 rgb(229 255 93 / 0.7); }
+  to { box-shadow: 0 0 0 14px rgb(229 255 93 / 0); }
+}
+
+/* Panels reveal faster than marketing sections: this is a tool. */
+.console [data-reveal] {
+  transition-duration: 0.6s;
+  transform: translateY(14px);
+  filter: blur(4px);
+}
+.console [data-reveal="visible"] { transform: none; filter: none; }
+
+/* Rows cascade in once their panel is on screen; rows added later slide in on mount. */
+.console .panel :is(tbody, ul, ol) > * {
+  animation: c-row-in 0.45s var(--ease-out-quint) both;
+  animation-delay: min(calc(var(--row, 0) * 1ms), 420ms);
+}
+.console .panel:not([data-reveal="visible"]) :is(tbody, ul, ol) > * { animation-play-state: paused; }
+.console .panel :is(tbody, ul, ol) > :nth-child(1) { --row: 40; }
+.console .panel :is(tbody, ul, ol) > :nth-child(2) { --row: 80; }
+.console .panel :is(tbody, ul, ol) > :nth-child(3) { --row: 120; }
+.console .panel :is(tbody, ul, ol) > :nth-child(4) { --row: 160; }
+.console .panel :is(tbody, ul, ol) > :nth-child(5) { --row: 200; }
+.console .panel :is(tbody, ul, ol) > :nth-child(6) { --row: 240; }
+.console .panel :is(tbody, ul, ol) > :nth-child(7) { --row: 280; }
+.console .panel :is(tbody, ul, ol) > :nth-child(8) { --row: 320; }
+.console .panel :is(tbody, ul, ol) > :nth-child(9) { --row: 360; }
+.console .panel :is(tbody, ul, ol) > :nth-child(n + 10) { --row: 400; }
+.console tbody tr { transition: background-color 0.25s, box-shadow 0.25s; }
+.console tbody tr[aria-selected="true"], .console tbody tr.is-selected { box-shadow: inset 0 0 0 1px rgb(229 255 93 / 0.25); }
+
+/* Chart: gridlines draw, then bars grow from the baseline in sequence. */
+.c-bar { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); transition: opacity 0.2s; }
+.chart-in .c-bar { animation: c-bar-grow 0.75s var(--ease-out-quint) both; animation-delay: calc(var(--i, 0) * 32ms + 200ms); }
+.c-grid { stroke-dasharray: 800; stroke-dashoffset: 800; }
+.chart-in .c-grid { animation: c-draw 0.9s var(--ease-out-quint) forwards; }
+.c-axis { opacity: 0; transition: opacity 0.6s 0.5s; }
+.chart-in .c-axis { opacity: 1; }
+
+/* Meters and drains are transforms, so they stay on the compositor. */
+.c-meter { transform-origin: left; transition: transform 1.1s var(--ease-out-quint); }
+.c-drain { transform-origin: left; transition: transform 1s linear, background-color 0.4s; }
+
+.c-badge { animation: c-badge 2s ease-out infinite; }
+.c-urgent { animation: c-urgent 1s steps(2) infinite; }
+.c-burst { animation: c-burst 0.9s var(--ease-out-quint) 2; }
+.c-alarm { animation: c-drop 0.45s var(--ease-out-quint) both, c-alarm 2.4s ease-in-out 0.45s infinite; }
+.c-shimmer {
+  background: linear-gradient(100deg, var(--color-surface) 30%, var(--color-raised) 50%, var(--color-surface) 70%) 0 0 / 200% 100%;
+  animation: c-shimmer 1.6s linear infinite;
+}
+
+/* Scroll progress along the console top bar. */
+.c-progress { transform: scaleX(0); transform-origin: left; }
+@supports (animation-timeline: scroll()) {
+  .c-progress { animation: c-progress linear both; animation-timeline: scroll(root); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
