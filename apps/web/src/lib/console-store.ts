@@ -106,10 +106,16 @@ export function useSimNow(): number {
       tick();
       setNow(simNow());
     };
-    step();
-    const id = window.setInterval(step, 1000);
+    // Defer the first sweep: an expiry swept mid-hydration would change store data while React is
+    // still hydrating a streamed segment, which surfaces as a hydration mismatch.
+    let id = 0;
+    const start = window.setTimeout(() => {
+      step();
+      id = window.setInterval(step, 1000);
+    }, 1200);
     const unsub = subscribe(() => setNow(simNow()));
     return () => {
+      clearTimeout(start);
       clearInterval(id);
       unsub();
     };

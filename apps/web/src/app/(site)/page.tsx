@@ -288,7 +288,7 @@ export default function Home() {
       {/* ───────── Integration ───────── */}
       <Section index="04" label="Integration">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
-          <Reveal>
+          <Reveal className="min-w-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-heading text-[30px] font-bold leading-none text-bone">One protected execution call.</h2>
               <MaturityBadge maturity={capability("sdk-ts").maturity} />
@@ -299,7 +299,7 @@ export default function Home() {
             </p>
             <CodeBlock code={SDK_SNIPPET} title="agent.ts · proposed @palisec/sdk" pseudo />
           </Reveal>
-          <Reveal delay={150}>
+          <Reveal delay={150} className="min-w-0">
             <div className="mb-6 flex items-center justify-between gap-3">
               <p className="label">Evaluation result</p>
               <DecisionBadge decision={sample.decision} />
@@ -349,7 +349,7 @@ export default function Home() {
                 <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-carbon shadow-[inset_0_0_0_1px_var(--color-line-strong),inset_0_1px_0_rgb(255_255_240/0.1),0_0_24px_-6px_rgb(229_255_93/0.45)]">
                   <CubeGlyph size={14} />
                 </span>
-                <span className="label relative z-10 bg-carbon pr-4 !text-bone">{String.fromCharCode(65 + i)} · {p.plane}</span>
+                <span className="label relative z-10 -ml-2 bg-carbon px-2 pr-4 !text-bone">{String.fromCharCode(65 + i)} · {p.plane}</span>
               </div>
               <ol className="space-y-2.5">
                 {p.steps.map((s) => (
@@ -385,7 +385,7 @@ export default function Home() {
                 ["Fee model", "Pending RPC fee confirmation"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-6 py-3.5">
-                  <dt className="text-stone">{k}</dt>
+                  <dt className="whitespace-nowrap text-stone">{k}</dt>
                   <dd className={`text-right font-mono text-[13px] ${v.startsWith("Pending") ? "text-sand" : "text-bone"}`}>{v}</dd>
                 </div>
               ))}

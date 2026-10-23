@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatUsd, type Decision } from "@palisec/policy-schema";
 import { agentName, type SimState } from "@/lib/console-sim";
+import { Codes } from "../ui";
 import { useSim, useSimNow } from "@/lib/console-store";
 import { formatDuration, formatSimTime } from "@/lib/units";
-import { useInView } from "../motion";
-import { CountUp, Empty, KV, Meter, Mono, PageTitle, Panel, Pill, Segmented } from "./kit";
+import { AgentStatusPill, CountUp, Empty, EventPill, KV, Meter, Mono, PageTitle, Panel, Segmented } from "./kit";
 
 const HOUR = 3600;
 
@@ -31,7 +31,7 @@ export function DashboardView() {
     <>
       <PageTitle title="Dashboard" description="Agents, policy state, decisions and budget for this workspace. Every number below is computed from operations the local evaluator actually decided." />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <div className="min-w-0 space-y-4">
           <Panel title="Execution outcomes · last 24 hours" actions={<span className="font-mono text-[10.5px] text-dim">UTC · 1 h buckets · by decision at evaluation</span>}>
             <dl className="grid grid-cols-3 border-b border-line">
@@ -52,6 +52,43 @@ export function DashboardView() {
           <Panel title="Recent security events" actions={<Link href="/console/audit" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Full audit →</Link>}>
             <SecurityEvents sim={sim} />
           </Panel>
+
+          <Panel title="Pending approvals" actions={<Link href="/console/approvals" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Queue →</Link>}>
+            {pending.length === 0 ? (
+              <Empty title="No operations are waiting for a human." />
+            ) : (
+              <ul className="divide-y divide-line">
+                {pending.map((o) => (
+                  <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                    <span className="min-w-0">
+                      <span className="block truncate text-[13.5px] text-bone"><Codes text={o.label} /></span>
+                      <Mono className="text-dim">{o.id}</Mono>
+                    </span>
+                    <Mono className={(o.approval_expires_at ?? now) - now < 60 ? "c-urgent text-deny" : "text-sand"}>{formatDuration((o.approval_expires_at ?? now) - now)}</Mono>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="Connectivity">
+            <ul className="divide-y divide-line text-[13px]">
+              {[
+                ["Policy engine", "Local reference evaluator", true],
+                ["Signing service", "Not deployed: no enclave, no signer", false],
+                ["Chain / bundler", "Not connected: nothing is submitted", false],
+                ["Telemetry", "Off: events stay in this browser", false],
+              ].map(([k, v, ok]) => (
+                <li key={k as string} className="flex items-start justify-between gap-3 px-4 py-2.5">
+                  <span className="text-muted">{k}</span>
+                  <span className={`text-right ${ok ? "text-citrine" : "text-stone"}`}>
+                    <span aria-hidden className="mr-1.5">{ok ? "●" : "○"}</span>
+                    {v}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
         </div>
 
         <div className="min-w-0 space-y-4">
@@ -63,10 +100,7 @@ export function DashboardView() {
                     <span className="block truncate text-[13.5px] text-bone">{a.name}</span>
                     <Mono className="text-dim">{a.id}</Mono>
                   </span>
-                  <Pill tone={a.status === "active" ? "allow" : a.status === "paused" ? "review" : "deny"}>
-                    <span aria-hidden>{a.status === "active" ? "●" : a.status === "paused" ? "❚❚" : "■"}</span>
-                    {a.status}
-                  </Pill>
+                  <AgentStatusPill status={a.status} />
                 </li>
               ))}
             </ul>
@@ -99,42 +133,6 @@ export function DashboardView() {
             </div>
           </Panel>
 
-          <Panel title="Pending approvals" actions={<Link href="/console/approvals" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Queue →</Link>}>
-            {pending.length === 0 ? (
-              <Empty title="No operations are waiting for a human." />
-            ) : (
-              <ul className="divide-y divide-line">
-                {pending.map((o) => (
-                  <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13.5px] text-bone">{o.label}</span>
-                      <Mono className="text-dim">{o.id}</Mono>
-                    </span>
-                    <Mono className={(o.approval_expires_at ?? now) - now < 60 ? "c-urgent text-deny" : "text-sand"}>{formatDuration((o.approval_expires_at ?? now) - now)}</Mono>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
-          <Panel title="Connectivity">
-            <ul className="divide-y divide-line text-[13px]">
-              {[
-                ["Policy engine", "Local reference evaluator", true],
-                ["Signing service", "Not deployed: no enclave, no signer", false],
-                ["Chain / bundler", "Not connected: nothing is submitted", false],
-                ["Telemetry", "Off: events stay in this browser", false],
-              ].map(([k, v, ok]) => (
-                <li key={k as string} className="flex items-start justify-between gap-3 px-4 py-2.5">
-                  <span className="text-muted">{k}</span>
-                  <span className={`flex items-center gap-2 text-right ${ok ? "text-citrine" : "text-stone"}`}>
-                    <span aria-hidden className={ok ? "tick-dot" : ""}>{ok ? "" : "○"}</span>
-                    {v}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
         </div>
       </div>
     </>
@@ -146,7 +144,6 @@ type Bucket = { start: number; allow: number; deny: number; review: number };
 function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
   const [view, setView] = useState<"chart" | "table">("chart");
   const [hover, setHover] = useState<number | null>(null);
-  const [chartRef, chartIn] = useInView<HTMLDivElement>(0.3);
   const buckets = useMemo<Bucket[]>(() => {
     const end = Math.floor(now / HOUR) * HOUR + HOUR;
     const list = Array.from({ length: 24 }, (_, i) => ({ start: end - (24 - i) * HOUR, allow: 0, deny: 0, review: 0 }));
@@ -160,7 +157,10 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
     return list;
   }, [sim.operations, now]);
   const total = buckets.reduce((a, b) => a + b.allow + b.deny + b.review, 0);
-  const max = Math.max(2, ...buckets.map((b) => b.allow + b.deny + b.review));
+  const peak = Math.max(1, ...buckets.map((b) => b.allow + b.deny + b.review));
+  const step = Math.max(1, Math.ceil(peak / 4));
+  const max = Math.ceil(peak / step) * step;
+  const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step);
   const hh = (t: number) => new Date(t * 1000).toISOString().slice(11, 16);
 
   const W = 720, H = 180, PL = 28, PB = 22, PT = 10;
@@ -200,7 +200,8 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
           </table>
         </div>
       ) : (
-        <div ref={chartRef} className={`relative ${chartIn ? "chart-in" : ""}`}>
+        <div className="overflow-x-auto">
+        <div className="relative min-w-[640px]">
           <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={`Hourly outcomes for the last 24 hours: ${total} operations. Use the table view for exact values.`} onMouseLeave={() => setHover(null)}>
             <defs>
               <pattern id="rw-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -208,10 +209,10 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
                 <rect width="2" height="4" fill="#bdb8a0" />
               </pattern>
             </defs>
-            {[0, max / 2, max].map((v) => (
+            {ticks.map((v) => (
               <g key={v}>
                 <line className="c-grid" x1={PL} x2={W} y1={y(v)} y2={y(v)} stroke="#2a2c22" />
-                <text x={PL - 6} y={y(v) + 3} textAnchor="end" className="c-axis fill-[#5a5d4e] font-mono text-[9px]">{Math.round(v)}</text>
+                <text x={PL - 6} y={y(v) + 3} textAnchor="end" className="c-axis fill-[#8d907f] font-mono text-[11px]">{v}</text>
               </g>
             ))}
             {buckets.map((b, i) => {
@@ -233,7 +234,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
                     return <rect key={k} className="c-bar" style={{ "--i": i } as React.CSSProperties} x={x} y={top} width={w} height={Math.max(1, h)} rx={k === segs.length - 1 ? 3 : 0} fill={s.fill} opacity={hover === null || hover === i ? 1 : 0.4} />;
                   })}
                   {hover === i && <rect x={PL + i * bw} y={PT} width={bw} height={H - PT - PB} fill="rgb(229 255 93 / 0.05)" className="animate-[c-fade_.2s]" />}
-                  {i % 4 === 0 && <text x={PL + i * bw + bw / 2} y={H - 6} textAnchor="middle" className="c-axis fill-[#5a5d4e] font-mono text-[9px]">{hh(b.start)}</text>}
+                  {i % 4 === 0 && <text x={PL + i * bw + bw / 2} y={H - 6} textAnchor="middle" className="c-axis fill-[#8d907f] font-mono text-[11px]">{hh(b.start)}</text>}
                 </g>
               );
             })}
@@ -247,6 +248,7 @@ function OutcomesChart({ sim, now }: { sim: SimState; now: number }) {
               </div>
             );
           })()}
+        </div>
         </div>
       )}
       </div>
@@ -262,9 +264,9 @@ function SecurityEvents({ sim }: { sim: SimState }) {
       {events.map((e) => (
         <li key={e.id}>
           <Link href={`/console/audit#${e.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 transition-colors hover:bg-raised/50">
-            <Pill tone={e.decision === "DENY" || e.type.startsWith("breaker.engaged") || e.type === "agent.revoked" ? "deny" : e.type.startsWith("approval") || e.type === "agent.paused" ? "review" : "muted"}>{e.type}</Pill>
-            <span className="min-w-0 truncate text-[13px] text-soft">
-              {e.summary}
+            <EventPill type={e.type} decision={e.decision} />
+            <span className="line-clamp-2 min-w-0 text-[13px] text-soft sm:truncate">
+              <Codes text={e.summary} />
               {e.agent_id && <span className="text-dim"> · {agentName(sim, e.agent_id)}</span>}
             </span>
             <Mono className="text-dim">{formatSimTime(e.at).slice(11, 19)}</Mono>

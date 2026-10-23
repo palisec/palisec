@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import { Note, PageHeader, Section } from "@/components/ui";
 
+const INCIDENT: [string, string][] = [
+  ["Contain", "Engage the global stop or pause the affected agent through the independent control path. New authorizations are denied immediately; nothing already denied can be signed."],
+  ["Revoke", "Revoke compromised API credentials and, where needed, the signing identity registered with the smart account. Revocation of a signer is an on-chain action."],
+  ["Investigate", "Reconstruct the timeline from the append-only audit trail by request ID, policy version and reason code. Reservations show what was authorized but not finalized."],
+  ["Recover", "Release the stop only after health checks pass and an authorized operator confirms. Enclave or measurement changes are re-attested before signing resumes."],
+  ["Disclose", "Notify affected organizations with the scope, the window and the audit references. Publish a post-incident note in the changelog."],
+  ["Learn", "Add an adversarial test that reproduces the incident and a release gate that blocks its regression."],
+];
+
 export const metadata: Metadata = {
   title: "Security model",
   description: "Threats Palisec addresses, what the TEE does and does not guarantee, key design and release gates.",
@@ -57,6 +66,7 @@ export default function SecurityPage() {
   return (
     <>
       <PageHeader
+        compat="Schema 1.0 · pre-release · not deployed"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature."
@@ -101,15 +111,26 @@ export default function SecurityPage() {
         </p>
         <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {GATES.map((g) => (
-            <li key={g} className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-soft">
+            <li key={g} className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-soft lg:last:[&:nth-child(3n+2)]:col-span-2 sm:max-lg:last:[&:nth-child(odd)]:col-span-2">
               {g}
-              <span className="shrink-0 font-mono text-[10px] tracking-[0.08em] text-review">OPEN</span>
+              <span className="shrink-0 font-mono text-[10px] tracking-[0.08em] text-review">□ OPEN</span>
             </li>
           ))}
         </ul>
+      </Section>
+      <Section index="05" label="Incident response">
+        <ol className="grid gap-px border border-line bg-line md:grid-cols-2">
+          {INCIDENT.map(([k, v], i) => (
+            <li key={k} className="bg-ink p-5">
+              <p className="flex items-baseline gap-3 text-fg"><span className="font-mono text-xs text-dim">{String(i + 1).padStart(2, "0")}</span>{k}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{v}</p>
+            </li>
+          ))}
+        </ol>
         <p className="mt-8 text-sm text-muted">
-          Report vulnerabilities as described in <code className="font-mono text-soft">SECURITY.md</code>. Do not test against
-          systems you do not own.
+          The repository is private during pre-release, so report suspected vulnerabilities directly to the maintainers, following{" "}
+          <code className="font-mono text-soft">SECURITY.md</code>. A public private-disclosure channel is a release gate and will be published
+          before the first public release. Do not test against systems you do not own.
         </p>
       </Section>
     </>

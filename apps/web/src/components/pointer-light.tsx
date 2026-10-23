@@ -6,6 +6,9 @@ import { useEffect } from "react";
 /** Distance (px) at which a panel's edge starts catching the pointer's light. */
 const REACH = 160;
 
+/** React attaches a fiber key to every node it has hydrated. Writing styles before that causes a hydration mismatch. */
+const hydrated = (el: Element) => Object.keys(el).some((k) => k.startsWith("__reactFiber$"));
+
 /**
  * One listener lights every on-screen `.panel`: as the pointer approaches, the nearest edge
  * catches a citrine spotlight and the surface a faint sheen, so light moves across the
@@ -35,6 +38,7 @@ export function PointerLight() {
     const paint = () => {
       raf = 0;
       for (const el of visible) {
+        if (!hydrated(el)) continue;
         const r = el.getBoundingClientRect();
         const d = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
         el.style.setProperty("--mx", `${Math.round(x - r.left)}px`);

@@ -153,7 +153,7 @@ export function evaluate(
     if (!entry) return { status: "fail", code: "RW_TARGET_001", detail: "Target is not on the allowlist; default is deny." };
     if (entry.require_verified_code && env.verified_code[intent.to.toLowerCase()] !== true)
       return { status: "fail", code: "RW_TARGET_001", detail: "Target requires verified code, and verification is missing or failed." };
-    return { status: "pass", detail: entry.require_verified_code ? "Allowlisted; code verified." : "Allowlisted." };
+    return { status: "pass", detail: entry.require_verified_code ? "Allowlisted; code verified per the chain environment's report." : "Allowlisted." };
   });
 
   run("method", "Function selector", () => {

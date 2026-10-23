@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import type { OpStatus } from "@/lib/console-sim";
+import type { AgentStatus, AuditType, OpStatus } from "@/lib/console-sim";
+import type { Decision } from "@palisec/policy-schema";
+import { Codes } from "../ui";
 import { useInView } from "../motion";
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -14,33 +16,17 @@ export function PageTitle({ title, description, actions }: { title: string; desc
         <h1 className="line-mask font-heading text-[26px] font-bold leading-none text-bone">
           <span>{title}</span>
         </h1>
-        {description && <p className="mt-2 max-w-[72ch] animate-[c-fade_.5s_var(--ease-out-quint)_.15s_both] text-sm leading-relaxed text-muted">{description}</p>}
+        {description && <p className="mt-2 max-w-[72ch] animate-[c-fade_.5s_var(--ease-out-quint)_.15s_both] text-sm leading-relaxed text-muted">{typeof description === "string" ? <Codes text={description} /> : description}</p>}
       </div>
       {actions && <div className="flex animate-[c-fade_.5s_var(--ease-out-quint)_.25s_both] flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-/** A lit panel that rises into view once; its rows cascade in after it (see globals.css). */
+/** A lit panel; it and its rows rise in on a CSS scroll timeline (see globals.css). */
 export function Panel({ title, actions, children, className = "", bodyClassName = "", id }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string; id?: string }) {
-  const ref = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e?.isIntersecting) {
-          el.dataset.reveal = "visible";
-          io.disconnect();
-        }
-      },
-      { threshold: 0.06 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
   return (
-    <section ref={ref} id={id} data-reveal="" className={`panel overflow-hidden ${className}`} aria-label={typeof title === "string" ? title : undefined}>
+    <section id={id} className={`panel overflow-hidden ${className}`} aria-label={typeof title === "string" ? title : undefined}>
       {(title || actions) && (
         <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-line bg-[linear-gradient(180deg,rgb(255_255_240/0.025),transparent)] px-4 py-2">
           {title && <h2 className="label !text-bone">{title}</h2>}
@@ -89,7 +75,7 @@ const STATUS: Record<OpStatus, { tone: Tone; glyph: string; text: string }> = {
   pending_approval: { tone: "review", glyph: "◆", text: "Pending approval" },
   approved: { tone: "allow", glyph: "✓", text: "Approved" },
   rejected: { tone: "muted", glyph: "×", text: "Rejected" },
-  expired: { tone: "muted", glyph: "○", text: "Expired" },
+  expired: { tone: "muted", glyph: "–", text: "Expired" },
   failed: { tone: "deny", glyph: "!", text: "Invalidated" },
 };
 export const STATUS_LABEL = (s: OpStatus) => STATUS[s].text;
@@ -137,13 +123,13 @@ export function Field({ id, label, hint, children }: { id: string; label: string
     <div>
       <label htmlFor={id} className="label mb-1.5 block">{label}</label>
       {children}
-      {hint && <p className="mt-1 text-[11.5px] leading-snug text-muted">{hint}</p>}
+      {hint && <p className="mt-1 text-[11.5px] leading-snug text-muted">{typeof hint === "string" ? <Codes text={hint} /> : hint}</p>}
     </div>
   );
 }
 
 export const inputCls =
-  "w-full rounded-[4px] border border-graphite bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-dim focus:border-citrine focus:shadow-[0_0_0_3px_rgb(229_255_93/0.12)]";
+  "w-full rounded-[4px] border border-graphite bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg transition-[border-color,box-shadow] duration-300 placeholder:text-dim focus:border-citrine focus:shadow-[0_0_0_3px_rgb(229_255_93/0.12)]";
 
 /** Two-step confirmation for consequential actions, inline rather than modal. */
 export function Confirm({
@@ -196,8 +182,64 @@ export function Notice({ tone = "review", children }: { tone?: "review" | "deny"
   // Keyed on the message so every new notice slides in, not just the first.
   return (
     <div role="status" key={typeof children === "string" ? children : undefined} className={`rounded-[6px] border px-3 py-2 text-[13px] leading-relaxed ${cls}`}>
-      {children}
+      {typeof children === "string" ? <Codes text={children} /> : children}
     </div>
+  );
+}
+
+const AGENT: Record<AgentStatus, { tone: Tone; glyph: string }> = { active: { tone: "allow", glyph: "●" }, paused: { tone: "muted", glyph: "❚❚" }, revoked: { tone: "deny", glyph: "■" } };
+
+/** One status component for agents everywhere: glyph and word, never colour alone. */
+export function AgentStatusPill({ status }: { status: AgentStatus }) {
+  const s = AGENT[status];
+  return (
+    <Pill key={status} tone={s.tone} className="animate-[c-pop_.4s_var(--ease-out-quint)]">
+      <span aria-hidden className={status === "active" ? "animate-pulse" : ""}>{s.glyph}</span>
+      {status}
+    </Pill>
+  );
+}
+
+const DECISION_CHIP: Record<Decision, [Tone, string, string]> = {
+  ALLOW: ["allow", "→", "Allow"],
+  DENY: ["deny", "■", "Deny"],
+  REQUIRES_HUMAN_SIGNATURE: ["review", "◆", "Review"],
+};
+const EVENT_CHIP: Partial<Record<AuditType, [Tone, string]>> = {
+  "approval.approved": ["allow", "✓"],
+  "approval.rejected": ["muted", "×"],
+  "approval.expired": ["muted", "–"],
+  "approval.invalidated": ["muted", "!"],
+  "agent.paused": ["muted", "❚❚"],
+  "agent.resumed": ["muted", "▸"],
+  "agent.revoked": ["deny", "■"],
+  "breaker.engaged": ["deny", "■"],
+  "breaker.released": ["muted", "▸"],
+  "credential.revoked": ["deny", "■"],
+  "credential.created": ["muted", "+"],
+  "policy.activated": ["muted", "↑"],
+};
+
+/**
+ * Audit event chip. One vocabulary site-wide: → allow, ■ deny / emergency, ◆ held for review, ✓ approved.
+ * Decisions show the decision word; colour is reserved for decisions, approvals and emergency actions.
+ */
+export function EventPill({ type, decision }: { type: AuditType; decision?: Decision }) {
+  if (type === "operation.evaluated" && decision) {
+    const [tone, glyph, word] = DECISION_CHIP[decision];
+    return (
+      <Pill tone={tone}>
+        <span aria-hidden>{glyph}</span>
+        {word} · evaluated
+      </Pill>
+    );
+  }
+  const [tone, glyph] = EVENT_CHIP[type] ?? ["muted", "·"];
+  return (
+    <Pill tone={tone}>
+      <span aria-hidden>{glyph}</span>
+      {type}
+    </Pill>
   );
 }
 
@@ -216,7 +258,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
     return () => ro.disconnect();
   }, [value, options.length]);
   return (
-    <div ref={wrap} role="radiogroup" aria-label={label} className="relative inline-flex flex-wrap overflow-hidden rounded-[4px] border border-graphite">
+    <div ref={wrap} role="radiogroup" aria-label={label} className="relative inline-flex max-w-full overflow-x-auto rounded-[4px] border border-graphite [scrollbar-width:none]">
       {thumb && (
         <span
           aria-hidden
@@ -233,7 +275,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`relative px-2.5 py-1.5 font-utility text-[10.5px] uppercase tracking-[0.05em] transition-colors duration-300 active:scale-[0.97] ${on ? `text-carbon ${thumb ? "" : "bg-citrine"}` : "text-soft hover:bg-raised"}`}
+            className={`relative shrink-0 whitespace-nowrap px-2.5 py-1.5 font-utility text-[10.5px] uppercase tracking-[0.05em] transition-colors duration-300 active:scale-[0.97] ${on ? `text-carbon ${thumb ? "" : "bg-citrine"}` : "text-soft hover:bg-raised"}`}
           >
             {o.label}
             {o.count !== undefined && <span className={`ml-1.5 tabular-nums transition-colors ${on ? "text-carbon/70" : "text-dim"}`}>{o.count}</span>}
@@ -244,11 +286,13 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
   );
 }
 
-/** Counts from the previous value to the new one once on screen; live updates animate too. */
+/** Tweens from the previous value to the new one; never renders a placeholder zero. */
 export function CountUp({ value, format = (n: number) => String(Math.round(n)), duration = 900, className = "" }: { value: number; format?: (n: number) => string; duration?: number; className?: string }) {
+  // Starts at the real value so the first paint (and any slow hydration) never shows a false zero;
+  // later changes tween from the previous value once the number is on screen.
   const [ref, seen] = useInView<HTMLSpanElement>(0.4);
-  const [shown, setShown] = useState(0);
-  const from = useRef(0);
+  const [shown, setShown] = useState(value);
+  const from = useRef(value);
   useEffect(() => {
     if (!seen) return;
     const start = from.current;

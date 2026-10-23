@@ -35,7 +35,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${FONT_VARS} antialiased`}>
+    // suppressHydrationWarning: the inline script adds "js" to <html> before React hydrates.
+    <html lang="en" className={`${FONT_VARS} antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Reveal animations only hide content once script is known to run; without it, everything renders in place. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

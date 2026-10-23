@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader, Section } from "@/components/ui";
+import { Codes, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -8,6 +8,16 @@ export const metadata: Metadata = {
 };
 
 const ENTRIES = [
+  {
+    version: "0.2.0",
+    date: "2026-10-23",
+    tag: "Pre-release",
+    changes: [
+      "Developer console as a simulation workspace: dashboard, agents, policy editor, operations, approval queue, audit, keys and circuit breakers, and organization settings.",
+      "Console decisions come from the canonical evaluator and validator; data stays in the browser and nothing is signed or submitted.",
+      "Policy reference gains version migration; the errors guide gains recovery procedures, RPC outages and debugging; the security model gains incident response.",
+    ],
+  },
   {
     version: "0.1.0",
     date: "2026-10-21",
@@ -35,7 +45,7 @@ export default function ChangelogPage() {
                 <p className="label mt-1">{e.date} · {e.tag}</p>
               </div>
               <ul className="space-y-2 border-l border-line pl-6 text-sm leading-relaxed text-soft">
-                {e.changes.map((c) => <li key={c}>{c}</li>)}
+                {e.changes.map((c) => <li key={c}><Codes text={c} /></li>)}
               </ul>
             </li>
           ))}

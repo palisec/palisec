@@ -17,7 +17,7 @@ import {
   type LedgerState,
   type Policy,
 } from "@palisec/policy-schema";
-import { DecisionBadge } from "./ui";
+import { Codes, DecisionBadge } from "./ui";
 import { CopyButton } from "./copy-button";
 import { formatUnits, parseUnits } from "@/lib/units";
 
@@ -322,7 +322,7 @@ export function NumField({ id, label, unit, value, onChange }: { id: string; lab
           spellCheck={false}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-2.5 py-1.5 font-mono text-sm text-fg outline-none"
+          className="min-w-0 flex-1 bg-transparent px-2.5 py-1.5 font-mono text-sm text-fg"
         />
         <span className="flex items-center border-l border-line px-2 font-mono text-[11px] text-muted">{unit}</span>
       </div>
@@ -353,7 +353,7 @@ const STATUS_STYLE: Record<CheckResult["status"], { glyph: string; cls: string; 
 };
 
 export function ChecksView({ checks }: { checks: CheckResult[] | null }) {
-  if (!checks) return <Empty text="The evaluation sequence appears here, in the order the engine runs it." />;
+  if (!checks) return <OrderPreview />;
   const local = checks.filter((c) => c.enforcement === "local");
   const live = checks.filter((c) => c.enforcement === "live");
   return (
@@ -383,9 +383,29 @@ function CheckRow({ check, index }: { check: CheckResult; index: number }) {
       </span>
       <span className="min-w-0">
         <span className={`block text-[13px] ${check.status === "skipped" ? "text-muted" : "text-fg"}`}>{check.label}</span>
-        <span className="block break-words text-xs text-muted">{check.detail}</span>
+        <span className="block break-words text-xs text-muted"><Codes text={check.detail} /></span>
       </span>
     </li>
+  );
+}
+
+// The evaluation order, derived from the evaluator itself so it can never drift from what runs.
+const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "rw_req_preview", deadline: SIM_EPOCH + 120 }, EMPTY_STATE, EXAMPLE_ENV).checks;
+
+function OrderPreview() {
+  return (
+    <div>
+      <p className="px-4 pb-2 pt-4 text-sm text-muted">Press Evaluate locally to run the queued checks, in this order. Checks marked not run need a live protected account and never run here.</p>
+      <ol className="divide-y divide-line">
+        {ORDER.map((c, i) => (
+          <li key={c.id} className="grid grid-cols-[2rem_4.5rem_minmax(0,1fr)] gap-x-2 px-4 py-2">
+            <span className="font-mono text-[11px] text-dim">{String(i + 1).padStart(2, "0")}</span>
+            <span className="font-mono text-[11px] text-dim"><span aria-hidden>{c.enforcement === "live" ? "— " : "· "}</span>{c.enforcement === "live" ? "NOT RUN" : "QUEUED"}</span>
+            <span className={`text-[13px] ${c.enforcement === "live" ? "text-muted" : "text-soft"}`}>{c.label}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 

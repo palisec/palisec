@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Note, PageHeader, Section } from "@/components/ui";
+import { Codes, Note, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Attestation",
@@ -20,6 +20,7 @@ export default function AttestationPage() {
   return (
     <>
       <PageHeader
+        compat="Schema 1.0 · pre-release · not deployed"
         eyebrow="Attestation"
         title="Measurements, and what they do and do not prove."
         lede="This page will publish expected enclave measurements and the latest verification result, with its scope and timestamp."
@@ -33,7 +34,7 @@ export default function AttestationPage() {
           <dl className="grid grid-cols-[auto_1fr] font-mono text-xs">
             {["PCR0 · image", "PCR1 · kernel", "PCR2 · application", "Signer public key", "Last verified"].map((k) => (
               <div key={k} className="contents">
-                <dt className="border-b border-line px-4 py-3 text-muted">{k}</dt>
+                <dt className="border-b border-line px-4 py-3 text-muted"><Codes text={k} /></dt>
                 <dd className="border-b border-line px-4 py-3 text-dim">— unavailable</dd>
               </div>
             ))}
@@ -50,7 +51,7 @@ export default function AttestationPage() {
             <li key={k} className="grid gap-2 py-4 md:grid-cols-[3rem_220px_1fr]">
               <span className="font-mono text-xs text-dim">{String(i + 1).padStart(2, "0")}</span>
               <span className="text-fg">{k}</span>
-              <span className="text-sm text-muted">{v}</span>
+              <span className="text-sm text-muted"><Codes text={v} /></span>
             </li>
           ))}
         </ol>

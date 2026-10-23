@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { REASON_CODES, RETRYABLE, type ReasonCode } from "@palisec/policy-schema";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
-import { Note } from "@/components/ui";
+import { Codes, Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Errors and operations",
@@ -102,7 +103,7 @@ export default function ErrorsPage() {
         <thead><tr><th>Failure</th><th>Required behaviour</th></tr></thead>
         <tbody>
           {FAILURES.map(([f, b]) => (
-            <tr key={f}><td className="text-fg">{f}</td><td>{b}</td></tr>
+            <tr key={f}><td className="text-fg">{f}</td><td><Codes text={b} /></td></tr>
           ))}
         </tbody>
       </table>
@@ -110,6 +111,39 @@ export default function ErrorsPage() {
         Failed, ambiguous, timed-out or unverifiable authorization always results in no signature. Availability problems never
         turn into permissive decisions.
       </Note>
+
+      <h2 id="recovery">Recovery procedures</h2>
+      <ol>
+        <li><strong>Denied (terminal).</strong> Read <code>reason_code</code> and <code>message</code>. Change the intent or the policy;
+          never retry the same request. Nothing was signed, so there is nothing to reconcile.</li>
+        <li><strong>Retryable denial.</strong> If <code>retryable</code> is true (budget, rate, fee, state, chain), wait for the condition to
+          clear and resubmit with the same idempotency key. A repeat with the same key returns the original result.</li>
+        <li><strong>Pending approval.</strong> Poll the approval or subscribe to its status. If it expires or the policy version changes, the
+          pending authorization is invalidated and its reservation released; submit a new request.</li>
+        <li><strong>Submitted, outcome unknown.</strong> Do not resubmit. Query the operation until it reaches a final state; the reservation
+          is held until the receipt is reconciled, so a retry cannot create a second execution.</li>
+        <li><strong>Emergency stop.</strong> New operations are denied with <code>RW_PAUSED_001</code>. Resume only after the stop is
+          released by an authorized operator and health checks pass.</li>
+      </ol>
+
+      <h2 id="rpc-outages">RPC and bundler outages</h2>
+      <p>
+        When the RPC endpoint, fee estimator or bundler is unavailable, new authorizations fail closed (<code>RW_FEE_001</code>,{" "}
+        <code>RW_CHAIN_001</code>). Already-submitted operations keep their state and reservation until a receipt is verified; an
+        unverified or disputed receipt never finalizes spend. Retries use bounded exponential backoff and the original idempotency key.
+      </p>
+
+      <h2 id="debugging">Debugging</h2>
+      <ul>
+        <li>Every response carries a <code>request_id</code>. Use it to find the audit record, which lists every check in evaluation
+          order with its result and detail.</li>
+        <li>Reproduce a decision locally: the reference evaluator is deterministic, so the same policy, request and state give the same
+          result. The <Link href="/#workbench">workbench</Link> and the console simulation run it in the browser.</li>
+        <li>Check the policy version in the response against the version you expect to be active. Approvals and authorizations are bound
+          to the version they were evaluated under.</li>
+        <li><code>transaction_hash</code> is null whenever nothing was broadcast. A non-null hash with a failed status is an EVM revert,
+          which is different from a denial.</li>
+      </ul>
     </DocArticle>
   );
 }

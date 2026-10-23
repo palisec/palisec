@@ -5,8 +5,10 @@ import { useId, useState } from "react";
 import { formatUsd } from "@palisec/policy-schema";
 import { LOCAL_ACTOR, registerAgent, setAgentStatus, type SimAgent } from "@/lib/console-sim";
 import { commit, useSim } from "@/lib/console-store";
-import { formatSimTime, formatUnits } from "@/lib/units";
-import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, OpStatusPill, PageTitle, Panel, Pill } from "./kit";
+import { formatSimTime, formatUnits, shortHex } from "@/lib/units";
+import { CopyButton } from "../copy-button";
+import { Codes } from "../ui";
+import { AgentStatusPill, Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, OpStatusPill, PageTitle, Panel, Pill } from "./kit";
 
 export function AgentsView() {
   const sim = useSim();
@@ -28,7 +30,7 @@ export function AgentsView() {
     <>
       <PageTitle title="Agents" description="Registered agents, the account and policy each is bound to, and the controls that stop them. A paused agent's new operations are denied with RW_PAUSED_001." />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]">
         <div className="min-w-0 space-y-4">
           <Panel title={`Registered agents · ${sim.agents.length}`}>
             <div className="overflow-x-auto">
@@ -51,7 +53,7 @@ export function AgentsView() {
                         <td className="px-4 py-2.5"><StatusPill status={a.status} /></td>
                         <td className="px-4 py-2.5 text-muted">{a.owner}</td>
                         <td className="px-4 py-2.5 font-mono text-soft">{ops.length}</td>
-                        <td className="px-4 py-2.5 font-mono text-[11.5px] text-muted">{last ? formatSimTime(last.created_at).slice(5, 16) : "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-2.5 font-mono text-[11.5px] text-muted">{last ? formatSimTime(last.created_at).slice(5, 16) : "—"}</td>
                       </tr>
                     );
                   })}
@@ -104,12 +106,12 @@ export function AgentsView() {
                 className="mt-3"
                 rows={[
                   ["Owner", agent.owner],
-                  ["Smart account", <Mono key="a">{agent.account}</Mono>],
-                  ["Chain", <span key="c">Robinhood Chain · <Mono>{agent.chain_id}</Mono> <Pill tone="review" className="ml-1">simulated</Pill></span>],
+                  ["Smart account", <span key="a" title={agent.account} className="inline-flex items-center gap-2"><Mono className="whitespace-nowrap">{shortHex(agent.account, 10, 8)}</Mono><CopyButton text={agent.account} label="Copy smart account address" /></span>],
+                  ["Chain", <span key="c">Robinhood Chain · <Mono>{agent.chain_id}</Mono> <Pill tone="info" className="ml-1">simulated</Pill></span>],
                   ["Active policy", <Mono key="p">{sim.active_policy.policy_id} · v{sim.active_policy.version}</Mono>],
                   ["Signer identities", <span key="s" className="text-muted">None registered. Protected signing is not deployed, so no signer can be bound to this account.</span>],
-                  ["Rate limit", <Mono key="r">{agent.rate_limit_per_min} req / min</Mono>],
-                  ["Budget allocation", <span key="b"><Mono>{agent.budget_share_pct}%</Mono> of {formatUsd(BigInt(sim.active_policy.limits.hourly_budget_usd_micros))} / hour</span>],
+                  ["Rate limit", <span key="r"><Mono>{agent.rate_limit_per_min} req / min</Mono> <Pill tone="muted" className="ml-1">○ not enforced by schema 1.0</Pill></span>],
+                  ["Budget allocation", <span key="b"><Mono>{agent.budget_share_pct}%</Mono> of {formatUsd(BigInt(sim.active_policy.limits.hourly_budget_usd_micros))} / hour <Pill tone="muted" className="ml-1">○ planned · not enforced</Pill><br /><span className="text-[12px] text-muted">Schema 1.0 enforces the hourly budget per account, shared by every agent on it.</span></span>],
                   ["Per-transaction cap", <Mono key="m">{formatUnits(sim.active_policy.limits.max_transaction_value_wei, 18)} ETH</Mono>],
                   ["API credentials", <span key="k">{sim.credentials.filter((c) => c.status === "active").length} active · <Link href="/console/security" className="underline decoration-line-strong underline-offset-4 hover:text-citrine">manage</Link></span>],
                   ["Registered", formatSimTime(agent.created_at)],
@@ -121,7 +123,7 @@ export function AgentsView() {
               <p className="label !text-[10px]">Controls · acting as {LOCAL_ACTOR}</p>
               <div className="flex flex-wrap gap-2">
                 {agent.status === "active" && (
-                  <Confirm label="Pause agent" prompt={<>Pause <strong className="text-bone">{agent.name}</strong>? New operations are denied with RW_PAUSED_001 until it is resumed. Pending approvals for it can no longer be approved.</>} confirmLabel="Pause agent" onConfirm={() => change(agent, "paused")} />
+                  <Confirm label="Pause agent" prompt={<>Pause <strong className="text-bone">{agent.name}</strong>? New operations are denied with <code className="font-mono text-[0.9em]">RW_PAUSED_001</code> until it is resumed. Pending approvals for it can no longer be approved.</>} confirmLabel="Pause agent" onConfirm={() => change(agent, "paused")} />
                 )}
                 {agent.status === "paused" && (
                   <Confirm variant="primary" label="Resume agent" prompt={<>Resume <strong className="text-bone">{agent.name}</strong>? Checks before resuming: policy v{sim.active_policy.version} is valid, the global stop is {sim.breakers.global_stop ? "ENGAGED (operations will still be denied)" : "released"}.</>} confirmLabel="Resume agent" onConfirm={() => change(agent, "active")} />
@@ -147,12 +149,7 @@ export function AgentsView() {
 }
 
 function StatusPill({ status }: { status: SimAgent["status"] }) {
-  return (
-    <Pill key={status} tone={status === "active" ? "allow" : status === "paused" ? "review" : "deny"} className="animate-[c-pop_.4s_var(--ease-out-quint)]">
-      <span aria-hidden className={status === "active" ? "animate-pulse" : ""}>{status === "active" ? "●" : status === "paused" ? "❚❚" : "■"}</span>
-      {status}
-    </Pill>
-  );
+  return <AgentStatusPill status={status} />;
 }
 
 function RecentOps({ agentId }: { agentId: string }) {
@@ -165,7 +162,7 @@ function RecentOps({ agentId }: { agentId: string }) {
         <li key={o.id}>
           <Link href={`/console/operations#${o.id}`} className="flex items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-raised/50">
             <span className="min-w-0">
-              <span className="block truncate text-[13px] text-soft">{o.label}</span>
+              <span className="block truncate text-[13px] text-soft"><Codes text={o.label} /></span>
               <Mono className="text-dim">{o.id}{o.reason_code ? ` · ${o.reason_code}` : ""}</Mono>
             </span>
             <OpStatusPill status={o.status} />

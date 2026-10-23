@@ -106,12 +106,26 @@ export function ButtonLink({
   );
 }
 
+// Reason codes, hex, request/reservation/credential IDs, API paths, method calls, decisions, PCRs, snake_case fields.
+const CODE_TOKENS = /(RW_[A-Z]+_\d{3}|0x[0-9a-fA-F…]{8,}|\brw_[a-z]+_[0-9a-zA-Z_…]+|\b(?:GET|POST) \/v1\/[\w/{}]+|\b[a-z][A-Za-z]*\(\)|\b(?:ALLOW|DENY|REQUIRES_HUMAN_SIGNATURE)\b|\bPCR\d\b|\b[a-z]+(?:_[a-z]+)+\b)/g;
+
+/** Renders codes and identifiers inside prose in the data face, so a code always looks like a code. */
+export function Codes({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(CODE_TOKENS).map((part, i) =>
+        i % 2 ? <code key={i} className="font-mono text-[0.86em] text-soft">{part}</code> : part,
+      )}
+    </>
+  );
+}
+
 export function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <span className={`font-mono text-[0.92em] ${className}`}>{children}</span>;
 }
 
 /** Interior page header: condensed lit capitals under a pool of light, with a spinning cube. */
-export function PageHeader({ eyebrow, title, lede, children }: { eyebrow: string; title: string; lede?: ReactNode; children?: ReactNode }) {
+export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow: string; title: string; lede?: ReactNode; compat?: string; children?: ReactNode }) {
   return (
     <header className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -140,6 +154,11 @@ export function PageHeader({ eyebrow, title, lede, children }: { eyebrow: string
               <p className="mt-8 max-w-[560px] text-base leading-relaxed text-stone sm:text-lg">{lede}</p>
             </Reveal>
           )}
+          {compat && (
+            <Reveal delay={380}>
+              <p className="label mt-6 [text-wrap:balance]">{compat}</p>
+            </Reveal>
+          )}
           {children}
         </div>
         <div className="hidden justify-center lg:flex">
@@ -156,8 +175,8 @@ export function PageHeader({ eyebrow, title, lede, children }: { eyebrow: string
 /** Callout for limits, caveats and corrections. */
 export function Note({ kind = "note", title, children }: { kind?: "note" | "warning"; title: string; children: ReactNode }) {
   return (
-    <aside className={`panel my-6 px-5 py-4 ${kind === "warning" ? "bg-deny/[0.04] [--panel-ring:rgb(255_82_71/0.4)]" : ""}`}>
-      <p className={`label mb-1.5 ${kind === "warning" ? "!text-deny" : "!text-citrine"}`}>{kind === "warning" ? "■ " : "● "}{title}</p>
+    <aside className={`panel my-6 px-5 py-4 ${kind === "warning" ? "bg-raised/60 [--panel-ring:rgb(248_249_241/0.28)]" : ""}`}>
+      <p className={`label mb-1.5 ${kind === "warning" ? "!text-bone" : "!text-citrine"}`}>{kind === "warning" ? "▲ " : "● "}{title}</p>
       <div className="text-sm leading-relaxed text-stone [&_code]:text-bone">{children}</div>
     </aside>
   );

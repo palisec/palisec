@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DocsNavLink } from "@/components/docs-nav-link";
 import { Container } from "@/components/ui";
 
 const DOCS_NAV = [
@@ -47,9 +47,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 <ul className="space-y-1 border-l border-line">
                   {g.items.map((i) => (
                     <li key={i.href}>
-                      <Link href={i.href} className="-ml-px block border-l border-transparent py-1 pl-3 text-[13px] text-muted hover:border-fg hover:text-fg">
-                        {i.label}
-                      </Link>
+                      <DocsNavLink href={i.href}>{i.label}</DocsNavLink>
                     </li>
                   ))}
                 </ul>

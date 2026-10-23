@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/quickstart" },
 };
 
-const LOCAL = `git clone <repository> palisec && cd palisec
+const LOCAL = `# from a checkout of the Palisec repository (access is currently private)
 pnpm install
 pnpm --filter @palisec/policy-schema test`;
 

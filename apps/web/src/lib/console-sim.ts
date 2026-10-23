@@ -28,7 +28,7 @@ import {
  * evaluator output rather than hand-written rows.
  */
 
-export const SIM_VERSION = 2;
+export const SIM_VERSION = 4;
 export const APPROVAL_TTL_SECONDS = 300;
 export const DENIAL_WINDOW_SECONDS = 3600;
 export const LOCAL_ACTOR = "you · simulation owner";
@@ -244,7 +244,7 @@ export function submitOperation(s: SimState, input: SubmitInput, now: number): {
     policy_version: r.policy_version,
     authorization_id: r.authorization_id,
     reservation_id: reservation?.reservation_id ?? null,
-    exposure_usd_micros: weiToUsdMicros(value, BigInt(env.eth_usd!.price_micros)).toString(),
+    exposure_usd_micros: weiToUsdMicros(value + BigInt(env.fee_estimate_wei ?? "0"), BigInt(env.eth_usd!.price_micros)).toString(),
     fee_estimate_wei: env.fee_estimate_wei,
     operation_hash: fingerprint(JSON.stringify(intent)),
     checks: r.checks,

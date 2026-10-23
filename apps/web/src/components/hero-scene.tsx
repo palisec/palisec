@@ -82,7 +82,7 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
       <div className="horizon bottom-[172px]" />
       <div className="absolute inset-x-0 bottom-[172px] h-40 bg-[radial-gradient(50%_100%_at_50%_100%,rgb(229_255_93/0.12),transparent_70%)]" />
 
-      <div className="absolute inset-0 origin-center scale-[0.62] opacity-50 sm:scale-[0.85] lg:scale-100">
+      <div className="absolute inset-0 origin-center scale-[0.62] opacity-30 sm:scale-[0.85] lg:scale-100">
         <div
           className="absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 transition-transform duration-500 ease-out"
           style={{ transform: "translate(-50%, -50%) perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))" } as CSSProperties}
@@ -138,7 +138,7 @@ function Ring({ size, items, seconds, reverse = false, dashed = false }: { size:
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-carbon shadow-[inset_0_0_0_1px_var(--color-graphite),inset_0_1px_0_rgb(255_255_240/0.08)]">
                   <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-citrine shadow-[0_0_10px_#e5ff5d]" : "bg-bone/70"}`} />
                 </div>
-                <span className="absolute left-1/2 top-11 -translate-x-1/2 whitespace-nowrap font-utility text-[9.5px] tracking-[0.1em] text-stone">{label}</span>
+                <span className="sr-only">{label}</span>
               </div>
             </div>
           </div>

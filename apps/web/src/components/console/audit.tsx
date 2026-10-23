@@ -6,8 +6,9 @@ import { agentName, type AuditEvent, type SimState } from "@/lib/console-sim";
 import { useSim, useSimNow } from "@/lib/console-store";
 import { formatSimTime } from "@/lib/units";
 import { ChecksView } from "../workbench";
-import { Btn, Empty, Field, inputCls, KV, Mono, OpStatusPill, PageTitle, Panel, Pill, STATUS_LABEL } from "./kit";
-import { Lifecycle, methodName } from "./operations";
+import { Btn, Empty, EventPill, Field, inputCls, KV, Mono, OpStatusPill, PageTitle, Panel, STATUS_LABEL } from "./kit";
+import { Codes } from "../ui";
+import { DecodedArgs, Lifecycle, MethodLabel } from "./operations";
 import { useHashSelection } from "./use-hash";
 
 const RANGES = [
@@ -30,7 +31,7 @@ interface Filters {
 }
 const NONE: Filters = { range: "all", agent: "", decision: "", reason: "", version: "", status: "", contract: "", selector: "", txHash: "", requestId: "" };
 
-const selectCls = "w-full rounded-[4px] border border-graphite bg-ink px-2 py-1.5 text-[12.5px] text-fg outline-none focus:border-citrine";
+const selectCls = "w-full rounded-[4px] border border-graphite bg-ink px-2 py-1.5 text-[12.5px] text-fg focus:border-citrine";
 
 export function AuditView() {
   const sim = useSim();
@@ -58,7 +59,7 @@ export function AuditView() {
     });
   }, [sim.audit, f, now, opById]);
 
-  const selected = sim.audit.find((e) => e.id === hash) ?? null;
+  const selected = sim.audit.find((e) => e.id === hash) ?? rows[0] ?? null;
   const active = Object.entries(f).filter(([k, v]) => v && !(k === "range" && v === "all")).length;
 
   function exportJson() {
@@ -131,7 +132,7 @@ export function AuditView() {
         </div>
       </Panel>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(380px,480px)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)]">
         <Panel title={`Records · ${rows.length}`}>
           {rows.length === 0 ? (
             <Empty title="No records match these filters.">{f.txHash ? "No record has a transaction hash because the simulation never broadcasts." : "Clear a filter to widen the search."}</Empty>
@@ -147,7 +148,7 @@ export function AuditView() {
                       <td className="px-3 py-2"><button type="button" onClick={() => select(e.id)} className="font-mono text-[11.5px] text-bone hover:text-citrine" aria-label={`Open ${e.id}`}>{e.id}</button></td>
                       <td className="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-dim">{formatSimTime(e.at).slice(5, 19)}</td>
                       <td className="px-3 py-2"><TypePill e={e} /></td>
-                      <td className="px-3 py-2 text-soft">{e.summary}</td>
+                      <td className="px-3 py-2 text-soft"><Codes text={e.summary} /></td>
                       <td className="px-3 py-2 text-muted">{e.actor}</td>
                     </tr>
                   ))}
@@ -166,8 +167,7 @@ export function AuditView() {
 }
 
 function TypePill({ e }: { e: AuditEvent }) {
-  const tone = e.decision === "DENY" || e.type === "breaker.engaged" || e.type === "agent.revoked" || e.type === "credential.revoked" ? "deny" : e.decision === "REQUIRES_HUMAN_SIGNATURE" || e.type.startsWith("approval") || e.type === "agent.paused" ? "review" : e.decision === "ALLOW" ? "allow" : "muted";
-  return <Pill tone={tone}>{e.type}</Pill>;
+  return <EventPill type={e.type} decision={e.decision} />;
 }
 
 function Detail({ e, sim }: { e: AuditEvent; sim: SimState }) {
@@ -181,7 +181,7 @@ function Detail({ e, sim }: { e: AuditEvent; sim: SimState }) {
           rows={[
             ["Time", <Mono key="t">{formatSimTime(e.at)}</Mono>],
             ["Actor", e.actor],
-            ["Summary", e.summary],
+            ["Summary", <Codes key="s" text={e.summary} />],
             ...(e.agent_id ? [["Agent", `${agentName(sim, e.agent_id)} · ${e.agent_id}`] as [string, string]] : []),
             ...(e.policy_version != null ? [["Policy version", <Mono key="v">v{e.policy_version}</Mono>] as [string, React.ReactNode]] : []),
             ...(e.reason_code ? [["Reason", <span key="r"><Mono>{e.reason_code}</Mono> · {REASON_CODES[e.reason_code]}</span>] as [string, React.ReactNode]] : []),
@@ -199,7 +199,8 @@ function Detail({ e, sim }: { e: AuditEvent; sim: SimState }) {
             <KV
               rows={[
                 ["Target", <Mono key="t">{op.intent.to}</Mono>],
-                ["Method", <Mono key="m">{methodName(op.intent.data)}</Mono>],
+                ["Method", <MethodLabel key="m" data={op.intent.data} />],
+                ["Decoded", <DecodedArgs key="d" data={op.intent.data} />],
                 ["Authorization", <Mono key="a">{op.authorization_id ?? "none issued"}</Mono>],
                 ["Transaction hash", <Mono key="h">null · never broadcast</Mono>],
                 ["Enclave measurement", <span key="e" className="text-muted">none · no enclave deployed</span>],

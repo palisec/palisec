@@ -63,7 +63,7 @@ export function SiteHeader() {
 
 const FOOTER = [
   { title: "Product", links: [{ href: "/product", label: "Capabilities" }, { href: "/architecture", label: "Architecture" }, { href: "/pricing", label: "Pricing" }, { href: "/changelog", label: "Changelog" }] },
-  { title: "Developers", links: [{ href: "/docs/quickstart", label: "Quickstart" }, { href: "/docs/policies", label: "Policy reference" }, { href: "/docs/sdk/typescript", label: "TypeScript SDK" }, { href: "/docs/errors", label: "Error codes" }] },
+  { title: "Developers", links: [{ href: "/docs/quickstart", label: "Quickstart" }, { href: "/docs/policies", label: "Policy reference" }, { href: "/docs/sdk/typescript", label: "TypeScript SDK" }, { href: "/docs/errors", label: "Error codes" }, { href: "/login", label: "Sign in" }] },
   { title: "Trust", links: [{ href: "/security", label: "Security model" }, { href: "/attestation", label: "Attestation" }, { href: "/status", label: "Status" }] },
 ];
 
@@ -71,8 +71,8 @@ export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-graphite">
       <div aria-hidden className="aurora bottom-[-30%] left-1/2 h-[360px] w-[900px] -translate-x-1/2 bg-citrine/[0.07]" />
-      <Container className="grid gap-12 py-20 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div className="space-y-5">
+      <Container className="grid grid-cols-2 gap-x-6 gap-y-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)] md:py-20">
+        <div className="col-span-2 space-y-5 md:col-span-1">
           <Wordmark />
           <p className="max-w-[34ch] text-sm leading-relaxed text-stone">Deterministic transaction security for autonomous agents on Robinhood Chain.</p>
           <p className="label">Chain ID 4663 · Testnet 46630</p>
@@ -90,11 +90,6 @@ export function SiteFooter() {
           </nav>
         ))}
       </Container>
-      <div aria-hidden className="select-none overflow-hidden px-4">
-        <p className="footer-mark translate-y-[16%] whitespace-nowrap text-center font-wordmark text-[7.8vw] font-black uppercase leading-[0.8] tracking-[-0.03em]">
-          Palisec
-        </p>
-      </div>
       <Container className="relative flex flex-col gap-2 border-t border-graphite bg-carbon py-6 sm:flex-row sm:justify-between">
         <p className="label">Pre-release · No production deployment</p>
         <p className="label">No third-party tracking</p>

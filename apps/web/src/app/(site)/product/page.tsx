@@ -14,8 +14,8 @@ const PRODUCTS = [
   { n: "02", name: "Protected signing service", body: "Policy-bound signing inside a TEE. The parent host cannot request a signature that skips evaluation.", cap: "enclave" },
   { n: "03", name: "On-chain account enforcement", body: "Smart-account validation that rejects operations without a valid Palisec authorization.", cap: "account" },
   { n: "04", name: "Developer SDK", body: "Typed clients for TypeScript (viem first, then ethers) and Python, with no security logic of their own.", cap: "sdk-ts" },
-  { n: "05", name: "Security control plane", body: "Policy management, human approvals, API credentials, emergency stops and attestation verification.", cap: "console" },
-  { n: "06", name: "Developer platform", body: "This site, architecture and API documentation, audit console and operational dashboard.", cap: "schema" },
+  { n: "05", name: "Security control plane", body: "Policy management, human approvals, API credentials, emergency stops and attestation verification, enforced server-side.", cap: "api" },
+  { n: "06", name: "Developer platform", body: "This site and its documentation, the policy workbench, and the console as a browser simulation workspace.", cap: "console" },
 ];
 
 const RULES = [
@@ -77,8 +77,8 @@ export default function ProductPage() {
         <Container className="!px-0">
           <ul className="grid gap-px border border-line bg-line md:grid-cols-2">
             {NON_GOALS.map((g) => (
-              <li key={g} className="flex gap-3 bg-ink p-5 text-sm leading-relaxed text-muted">
-                <span aria-hidden className="font-mono text-deny">■</span>
+              <li key={g} className="flex gap-3 bg-ink p-5 text-sm leading-relaxed text-muted md:last:[&:nth-child(odd)]:col-span-2">
+                <span aria-hidden className="font-mono text-dim">×</span>
                 {g}
               </li>
             ))}

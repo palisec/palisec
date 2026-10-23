@@ -28,7 +28,7 @@ export default function PythonSdk() {
       title="Python SDK"
       lede="An async-first client for Python agents. It will be published only once its security semantics match the canonical API exactly."
       maturity="planned"
-      compat="Planned · after TypeScript SDK"
+      compat="Schema 1.0 · planned · after the TypeScript SDK"
     >
       <Note title="Planned">
         No Python package exists yet. A Python wrapper must never become a route around the policy engine, so it ships after the

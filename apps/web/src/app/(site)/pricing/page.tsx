@@ -11,8 +11,8 @@ const PLANS = [
   {
     name: "Sandbox",
     price: "Free",
-    body: "Local policy simulation, sample transactions, schema validation and optional testnet integration.",
-    items: ["Browser workbench", "Reference evaluator", "Testnet only"],
+    body: "Local policy simulation, sample transactions and schema validation in the browser. Testnet integration is planned and not available yet.",
+    items: ["Browser workbench", "Reference evaluator", "Console simulation workspace"],
     note: "Local simulation is not live enclave execution.",
     available: true,
   },

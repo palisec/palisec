@@ -243,7 +243,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
         description={<>Edit a draft of <Mono>{sim.active_policy.policy_id}</Mono>. Drafts are never enforced: a validated version is activated explicitly, recorded as a new version, and written to the audit trail.</>}
         actions={
           <>
-            {sim.draft && <Pill tone="review">◆ Draft from v{sim.draft.based_on} · saved {formatSimTime(sim.draft.saved_at).slice(11, 19)}</Pill>}
+            {sim.draft && <Pill tone="info">◇ Draft from v{sim.draft.based_on} · saved {formatSimTime(sim.draft.saved_at).slice(11, 19)}</Pill>}
             {unsaved && <Pill tone="info">Unsaved changes</Pill>}
           </>
         }
@@ -340,7 +340,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
             </Section>
 
             <Section id={`${uid}-Failuremode`} title="Failure mode" rule="R-FAI">
-              <p className="text-[13px] text-soft"><Mono className="text-citrine">closed</Mono> · the only supported mode. Failed, ambiguous, timed-out or unverifiable checks end in no signature.</p>
+              <p className="text-[13px] text-soft"><Mono className="text-bone">failure_mode: closed</Mono> · the only supported mode. Failed, ambiguous, timed-out or unverifiable checks end in no signature.</p>
             </Section>
           </div>
         </Panel>
@@ -372,7 +372,7 @@ function Editor({ sim, flash, setFlash }: { sim: SimState; flash: Flash; setFlas
                 ]}
               />
             </div>
-            <div key={tab} className="max-h-[620px] min-h-[320px] animate-[c-fade_.3s_var(--ease-out-quint)] overflow-auto">
+            <div key={tab} className="max-h-[620px] animate-[c-fade_.3s_var(--ease-out-quint)] overflow-auto">
               {tab === "json" && <pre className="p-4 font-mono text-[12px] leading-relaxed text-soft"><code>{draftJson}</code></pre>}
               {tab === "validation" && <Validation inputErrors={inputErrors} schemaErrors={schemaErrors} meta={{ policy_id: policy.policy_id, schema: policy.schema_version, base: sim.draft?.based_on ?? sim.active_policy.version, next: Math.max(...sim.versions.map((v) => v.version)) + 1 }} />}
               {tab === "rules" && <Rules policy={policy} />}
@@ -438,7 +438,7 @@ function Num({ uid, k, label, unit, form, set, errors }: { uid: string; k: keyof
     <div>
       <label htmlFor={id} className="label mb-1.5 block">{label}</label>
       <div className={`flex overflow-hidden rounded-[4px] border transition-colors focus-within:border-citrine ${errors.length ? "border-deny/70" : "border-graphite"}`}>
-        <input id={id} inputMode="decimal" autoComplete="off" spellCheck={false} value={form[k] as string} aria-invalid={errors.length > 0} aria-describedby={errors.length ? `${id}-err` : undefined} onChange={(e) => set(k, e.target.value as never)} className="min-w-0 flex-1 bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg outline-none" />
+        <input id={id} inputMode="decimal" autoComplete="off" spellCheck={false} value={form[k] as string} aria-invalid={errors.length > 0} aria-describedby={errors.length ? `${id}-err` : undefined} onChange={(e) => set(k, e.target.value as never)} className="min-w-0 flex-1 bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg" />
         <span className="flex items-center border-l border-line px-2 font-mono text-[11px] text-muted">{unit}</span>
       </div>
       <Errors id={`${id}-err`} list={errors} />
@@ -521,7 +521,7 @@ function Tests({ tests, valid }: { tests: { s: (typeof SCENARIOS)[number]; activ
   return (
     <div>
       <p className="border-b border-line px-4 py-2 text-[12.5px] text-muted">
-        Each illustrative transaction evaluated from empty state under the active version and the draft. {valid ? "" : "The draft is invalid, so it evaluates as a missing policy (RW_POLICY_001)."}
+        Each illustrative transaction evaluated from empty state under the active version and the draft. {valid ? "" : <>The draft is invalid, so it evaluates as a missing policy (<code className="font-mono text-[0.9em]">RW_POLICY_001</code>).</>}
       </p>
       <table className="w-full text-[12.5px]">
         <thead className="text-left">
@@ -535,7 +535,7 @@ function Tests({ tests, valid }: { tests: { s: (typeof SCENARIOS)[number]; activ
                 <td className="px-3 py-2"><span className="text-soft">{s.label}</span><br /><span className="text-[11.5px] text-muted">{s.summary}</span></td>
                 <td className={`px-3 py-2 font-mono text-[11px] ${decisionCls(active.decision)}`}>{DECISION_SHORT[active.decision]}<br /><span className="text-dim">{active.reason_code ?? "—"}</span></td>
                 <td className={`px-3 py-2 font-mono text-[11px] ${decisionCls(draft.decision)}`}>{DECISION_SHORT[draft.decision]}<br /><span className="text-dim">{draft.reason_code ?? "—"}</span></td>
-                <td className="px-3 py-2">{diff && <Pill tone="review">changed</Pill>}</td>
+                <td className="px-3 py-2">{diff && <Pill tone="info">△ changed</Pill>}</td>
               </tr>
             );
           })}

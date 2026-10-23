@@ -46,7 +46,7 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk is a typed client for the canonical authorization protocol. It holds no security logic of its own: every decision is made server-side."
       maturity="specified"
-      compat="Proposed interface · not published"
+      compat="Schema 1.0 · proposed interface · not published"
     >
       <Note kind="warning" title="Interface under design">
         The package is not published and these signatures may change. Snippets on this page are pseudocode until the SDK and API

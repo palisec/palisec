@@ -1,17 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
 import { ROLES, addMember, changeRole, renameOrg, type Role } from "@/lib/console-sim";
 import { commit, resetWorkspace, useSim } from "@/lib/console-store";
 import { formatSimTime } from "@/lib/units";
 import { Btn, Confirm, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "./kit";
 
-const selectCls = "rounded-[4px] border border-graphite bg-ink px-2 py-1.5 text-[12.5px] text-fg outline-none focus:border-citrine";
+const selectCls = "rounded-[4px] border border-graphite bg-ink px-2 py-1.5 text-[12.5px] text-fg focus:border-citrine";
 
 export function SettingsView() {
   const sim = useSim();
   const uid = useId();
-  const [orgName, setOrgName] = useState(sim.org.name);
   const [name, setName] = useState("");
   const [identity, setIdentity] = useState("");
   const [role, setRole] = useState<Role>("Viewer");
@@ -57,7 +57,7 @@ export function SettingsView() {
                           </select>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-[11.5px] text-dim">{formatSimTime(m.added_at).slice(0, 10)}</td>
+                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-[11.5px] text-dim">{formatSimTime(m.added_at).slice(0, 10)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -106,23 +106,7 @@ export function SettingsView() {
 
         <div className="min-w-0 space-y-4">
           <Panel title="Organization">
-            <form
-              className="space-y-3 px-4 py-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                run((s, t) => {
-                  const r = renameOrg(s, orgName, t);
-                  result(r.ok, r.ok ? "Organization renamed." : r.error);
-                  return r.ok ? r.state : s;
-                });
-              }}
-            >
-              <Field id={`${uid}-org`} label="Organization name">
-                <input id={`${uid}-org`} value={orgName} onChange={(e) => setOrgName(e.target.value)} maxLength={64} className={inputCls} />
-              </Field>
-              <KV rows={[["Organization ID", <Mono key="o">{sim.org.id}</Mono>], ["Environment", <Pill key="e" tone="review">◆ Simulation</Pill>], ["Tenancy", "Isolated per organization, enforced server-side in production"]]} />
-              <Btn type="submit" variant="ghost" disabled={orgName.trim() === sim.org.name}>Save name</Btn>
-            </form>
+            <OrgForm key={sim.org.name} name={sim.org.name} orgId={sim.org.id} />
           </Panel>
 
           <Panel title="Sign-in and sessions">
@@ -139,17 +123,50 @@ export function SettingsView() {
                 </li>
               ))}
             </ul>
-            <p className="border-t border-line px-4 py-3 text-[12.5px] text-muted">No sessions exist: this workspace runs without an account. Signing out is not applicable.</p>
+            <p className="border-t border-line px-4 py-3 text-[12.5px] text-muted">
+              No sessions exist: this workspace runs without an account, so signing out does not apply. The{" "}
+              <Link href="/login" className="text-soft underline decoration-line-strong underline-offset-4 hover:text-citrine">sign-in page</Link> shows the methods that will be offered.
+            </p>
           </Panel>
 
           <Panel title="Workspace data">
             <div className="space-y-3 px-4 py-4">
               <p className="text-[12.5px] leading-relaxed text-muted">All simulation data lives in this browser&apos;s local storage and is never uploaded. Resetting restores the seeded example data.</p>
-              <Confirm label="Reset simulation workspace" prompt="Discard every change made in this browser and restore the seeded example data?" confirmLabel="Reset workspace" onConfirm={() => { resetWorkspace(); setOrgName("Example Organization"); result(true, "Workspace reset to the seeded example data."); }} />
+              <Confirm variant="quiet" label="Reset simulation workspace" prompt="Discard every change made in this browser and restore the seeded example data?" confirmLabel="Reset workspace" onConfirm={() => { resetWorkspace(); result(true, "Workspace reset to the seeded example data."); }} />
             </div>
           </Panel>
         </div>
       </div>
     </>
+  );
+}
+
+/** Keyed on the saved name, so it always starts from what the store holds. */
+function OrgForm({ name, orgId }: { name: string; orgId: string }) {
+  const uid = useId();
+  const [value, setValue] = useState(name);
+  const [msg, setMsg] = useState<{ tone: "allow" | "deny"; text: string } | null>(null);
+  const clean = value.trim();
+  const problem = clean.length < 2 ? "Enter at least 2 characters." : clean.length > 64 ? "Use at most 64 characters." : null;
+  return (
+    <form
+      className="space-y-3 px-4 py-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (problem) return setMsg({ tone: "deny", text: problem });
+        commit((s, t) => {
+          const r = renameOrg(s, value, t);
+          setMsg(r.ok ? { tone: "allow", text: `Organization renamed to ${clean}.` } : { tone: "deny", text: r.error });
+          return r.ok ? r.state : s;
+        });
+      }}
+    >
+      <Field id={`${uid}-org`} label="Organization name" hint={problem && value !== name ? problem : undefined}>
+        <input id={`${uid}-org`} value={value} onChange={(e) => setValue(e.target.value)} maxLength={64} aria-invalid={Boolean(problem)} className={inputCls} />
+      </Field>
+      <KV rows={[["Organization ID", <Mono key="o">{orgId}</Mono>], ["Environment", <Pill key="e" tone="info">◆ Simulation</Pill>], ["Tenancy", "Isolated per organization, enforced server-side in production"]]} />
+      <Btn type="submit" variant="ghost" disabled={clean === name || Boolean(problem)} title={problem ?? (clean === name ? "No change to save" : undefined)}>Save name</Btn>
+      {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
+    </form>
   );
 }

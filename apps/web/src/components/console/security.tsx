@@ -6,8 +6,9 @@ import { validatePolicy } from "@palisec/policy-schema";
 import { DENIAL_WINDOW_SECONDS, createCredential, recentDenials, revokeCredential, setDenialThreshold, setGlobalStop } from "@/lib/console-sim";
 import { commit, randomHex, useSim, useSimNow } from "@/lib/console-store";
 import { formatSimTime } from "@/lib/units";
+import { Codes } from "../ui";
 import { CopyButton } from "../copy-button";
-import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill, ScrambleText } from "./kit";
+import { AgentStatusPill, Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill, ScrambleText } from "./kit";
 
 export function SecurityView() {
   const sim = useSim();
@@ -70,12 +71,12 @@ export function SecurityView() {
                 <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                   <span className="min-w-0">
                     <span className="block text-[13.5px] text-bone">{c.label}</span>
-                    <Mono className="text-dim">{c.id} · {c.hint} · created {formatSimTime(c.created_at).slice(5, 16)}</Mono>
+                    <Mono className="text-dim">{c.id} · {c.hint} · <span className="whitespace-nowrap">created {formatSimTime(c.created_at).slice(5, 16)}</span></Mono>
                   </span>
                   {c.status === "active" ? (
                     <span className="flex flex-wrap gap-2">
-                      <Btn variant="quiet" onClick={() => create(c.id)}>Rotate</Btn>
-                      <Confirm variant="danger" label="Revoke" prompt={<>Revoke <strong className="text-bone">{c.label}</strong>? Requests using it fail with RW_AUTH_001 immediately.</>} confirmLabel="Revoke credential" onConfirm={() => commit((s, t) => { const r = revokeCredential(s, c.id, t); return r.ok ? r.state : s; })} />
+                      <Confirm variant="quiet" label="Rotate" prompt={<>Rotate <strong className="text-bone">{c.label}</strong>? A new secret is issued and the current one is revoked immediately; clients using it fail with <code className="font-mono">RW_AUTH_001</code> until updated.</>} confirmLabel="Rotate credential" onConfirm={() => create(c.id)} />
+                      <Confirm variant="danger" label="Revoke" prompt={<>Revoke <strong className="text-bone">{c.label}</strong>? Requests using it fail with <code className="font-mono text-[0.9em]">RW_AUTH_001</code> immediately.</>} confirmLabel="Revoke credential" onConfirm={() => commit((s, t) => { const r = revokeCredential(s, c.id, t); return r.ok ? r.state : s; })} />
                     </span>
                   ) : (
                     <Pill tone="muted">revoked {c.revoked_at ? formatSimTime(c.revoked_at).slice(5, 16) : ""}</Pill>
@@ -93,7 +94,7 @@ export function SecurityView() {
                 ["Authorized signer keys", <span key="s" className="text-muted">None registered. Keys would be generated inside the enclave and registered with the smart account.</span>],
                 ["Current measurements", <Mono key="c" className="text-dim">PCR0 · PCR1 · PCR2 — unavailable</Mono>],
                 ["Previous measurements", <Mono key="p" className="text-dim">none</Mono>],
-                ["Attestation status", <Pill key="a" tone="review">◆ Not verified · no enclave deployed</Pill>],
+                ["Attestation status", <Pill key="a" tone="muted" className="!whitespace-normal">○ Not verified · no enclave deployed</Pill>],
                 ["Verified at", <Mono key="v" className="text-dim">never</Mono>],
                 ["Deployment version", <Mono key="d" className="text-dim">no enclave image published</Mono>],
               ]}
@@ -112,8 +113,8 @@ export function SecurityView() {
                 {keyEvents.map((e) => (
                   <li key={e.id}>
                     <Link href={`/console/audit#${e.id}`} className="flex justify-between gap-3 px-4 py-2 text-[12.5px] text-soft hover:bg-raised/50">
-                      <span className="min-w-0 truncate">{e.summary}</span>
-                      <Mono className="text-dim">{formatSimTime(e.at).slice(5, 16)}</Mono>
+                      <span className="min-w-0 truncate"><Codes text={e.summary} /></span>
+                      <Mono className="shrink-0 whitespace-nowrap text-dim">{formatSimTime(e.at).slice(5, 16)}</Mono>
                     </Link>
                   </li>
                 ))}
@@ -130,7 +131,7 @@ export function SecurityView() {
               <p className="text-[14px] font-semibold text-bone">Disable new authorizations globally</p>
               <Pill key={String(sim.breakers.global_stop)} tone={sim.breakers.global_stop ? "deny" : "allow"} className={`animate-[c-pop_.4s_var(--ease-out-quint)] ${sim.breakers.global_stop ? "c-urgent" : ""}`}>{sim.breakers.global_stop ? "■ Engaged" : "● Released"}</Pill>
             </div>
-            <p className="text-[12.5px] leading-relaxed text-muted">Every new protected execution is denied with RW_PAUSED_001 and pending approvals cannot be approved.</p>
+            <p className="text-[12.5px] leading-relaxed text-muted">Every new protected execution is denied with <code className="font-mono text-[0.9em]">RW_PAUSED_001</code> and pending approvals cannot be approved.</p>
             {!sim.breakers.global_stop ? (
               <Confirm label="Engage global stop" prompt="Deny every new operation for every agent until the stop is released?" confirmLabel="Engage global stop" onConfirm={() => commit((s, t) => setGlobalStop(s, true, t))} />
             ) : (
@@ -187,7 +188,7 @@ export function SecurityView() {
               {sim.agents.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3">
                   <span className="text-soft">{a.name}</span>
-                  <Pill tone={a.status === "active" ? "allow" : a.status === "paused" ? "review" : "deny"}>{a.status}</Pill>
+                  <AgentStatusPill status={a.status} />
                 </li>
               ))}
             </ul>

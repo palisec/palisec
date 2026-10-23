@@ -36,7 +36,7 @@ export default function AccountAbstraction() {
       title="Account abstraction"
       lede="The first release has one protected execution path: an ERC-4337 smart account with a Palisec validation module. Off-chain approval alone is never enough."
       maturity="specified"
-      compat="ERC-4337 · entry point to be confirmed for Robinhood Chain"
+      compat="Schema 1.0 · ERC-4337 · entry point to be confirmed for Robinhood Chain"
     >
       <h2 id="why">Why on-chain enforcement</h2>
       <p>

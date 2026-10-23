@@ -4,7 +4,7 @@ import { EXAMPLE_POLICY } from "@palisec/policy-schema";
 import schema from "@palisec/policy-schema/policy.schema.json";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
-import { Note } from "@/components/ui";
+import { Codes, Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Policy schema",
@@ -90,17 +90,18 @@ export default function PoliciesPage() {
 
       <h2 id="fields">Field reference</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-[640px]">
+        <table className="min-w-[760px] table-fixed [&_th]:whitespace-nowrap">
+          <colgroup><col className="w-[30%]" /><col className="w-[12%]" /><col className="w-[26%]" /><col /></colgroup>
           <thead>
             <tr><th>Field</th><th>Type</th><th>Constraint</th><th>Notes</th></tr>
           </thead>
           <tbody>
             {fieldRows.map((r) => (
               <tr key={r.path}>
-                <td className="font-mono text-[12px] text-fg">{r.path}{!r.required && <span className="text-dim">?</span>}</td>
+                <td className="font-mono text-[12px] text-fg">{r.path.split(/(?<=[._])/).map((seg, k) => <span key={k}>{seg}<wbr /></span>)}{!r.required && <span className="text-dim">?</span>}</td>
                 <td className="font-mono text-[12px] text-soft">{r.type}</td>
-                <td className="font-mono text-[11px] text-muted">{r.rule}</td>
-                <td className="text-[13px] text-muted">{r.desc}</td>
+                <td className="whitespace-pre-wrap break-words font-mono text-[11px] text-muted [overflow-wrap:anywhere]">{r.rule}</td>
+                <td className="text-[13px] text-muted"><Codes text={r.desc} /></td>
               </tr>
             ))}
           </tbody>
@@ -139,7 +140,7 @@ export default function PoliciesPage() {
               <tr key={name}>
                 <td className="font-mono text-[12px] text-dim">{String(i + 1).padStart(2, "0")}</td>
                 <td className="text-fg">{name}</td>
-                <td className="text-[13px] text-muted">{rule}</td>
+                <td className="text-[13px] text-muted"><Codes text={rule} /></td>
                 <td className="font-mono text-[11px] text-soft">{code}</td>
               </tr>
             ))}
@@ -162,6 +163,24 @@ export default function PoliciesPage() {
         If five requests race for the last slot, exactly one reserves it. In-memory counters and analytics aggregates are never
         used for this decision.
       </Note>
+
+      <h2 id="migration">Version migration</h2>
+      <p>
+        <code>schema_version</code> names the document format; <code>version</code> numbers each activated policy. They move
+        independently.
+      </p>
+      <ul>
+        <li><strong>Policy versions.</strong> Every activation creates a new integer version. The previous version is kept and can be loaded
+          back into a draft; nothing is edited in place. Pending approvals evaluated under an older version are invalidated on activation.</li>
+        <li><strong>Schema versions.</strong> A schema change ships with a new <code>schema_version</code>. Unknown fields are rejected, so
+          a document written for a newer schema fails validation on an older evaluator instead of being half-applied.</li>
+        <li><strong>Migrating a document.</strong> Convert the old document, validate it against the new schema, run your test transactions
+          against it as a draft, compare the decisions with the active version, then activate it explicitly.</li>
+      </ul>
+      <p>
+        Schema 1.0 is the first version, so no migrations exist yet. Each future schema version will list its changes and a conversion
+        table in the <Link href="/changelog">changelog</Link>.
+      </p>
 
       <h2 id="validation">Validation errors</h2>
       <p>

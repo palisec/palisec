@@ -64,6 +64,7 @@ export default function ArchitecturePage() {
   return (
     <>
       <PageHeader
+        compat="Schema 1.0 · pre-release · not deployed"
         eyebrow="Architecture"
         title="Decide off chain. Enforce on chain. Fail closed everywhere."
         lede="Four planes with explicit boundaries. Compromise of the control plane must not expose signing keys or permit unauthorized policy changes."

@@ -87,10 +87,11 @@ export function BoundaryDiagram() {
           ↻ Replay
         </button>
       </div>
+      <div className="overflow-x-auto">
       <svg
         ref={svgRef}
         viewBox="0 0 720 320"
-        className="block h-auto w-full"
+        className="block h-auto w-full min-w-[640px]"
         role="img"
         aria-labelledby="fig1-title fig1-desc"
       >
@@ -115,7 +116,7 @@ export function BoundaryDiagram() {
         {/* entry channel, with current flowing toward the engine */}
         <path d="M0 150 H250 M0 170 H250" stroke="#5a5d4e" strokeWidth="1" fill="none" />
         <path d="M0 160 H242" stroke="#e5ff5d" strokeOpacity="0.4" strokeDasharray="2 14" fill="none" className="animate-dash" />
-        <text x="0" y="138" className="fill-[#a0a391] font-mono text-[10px] tracking-[0.08em]">PROPOSED INTENT</text>
+        <text x="0" y="138" className="fill-[#a0a391] font-mono text-[11px] tracking-[0.08em]">PROPOSED INTENT</text>
 
         {/* engine */}
         <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#rw-engine-light)" />
@@ -123,9 +124,9 @@ export function BoundaryDiagram() {
           <animate attributeName="stroke-opacity" values="0.05;0.45;0.05" dur="2.4s" repeatCount="indefinite" />
         </rect>
         <rect x="250" y="112" width="120" height="96" fill="#0d0e0a" stroke="#e5ff5d" rx="4" />
-        <text x="310" y="150" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[10px] tracking-[0.08em]">POLICY</text>
-        <text x="310" y="164" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[10px] tracking-[0.08em]">ENGINE</text>
-        <text x="310" y="190" textAnchor="middle" className="fill-[#5a5d4e] font-mono text-[9px]">v7 · 15 checks</text>
+        <text x="310" y="150" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[11px] tracking-[0.08em]">POLICY</text>
+        <text x="310" y="164" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[11px] tracking-[0.08em]">ENGINE</text>
+        <text x="310" y="190" textAnchor="middle" className="fill-[#8d907f] font-mono text-[10px]">v7 · 15 checks</text>
         {[124, 132, 140].map((x) => (
           <line key={x} x1={250 + (x - 112)} y1="112" x2={250 + (x - 112)} y2="118" stroke="#e5ff5d" />
         ))}
@@ -137,18 +138,18 @@ export function BoundaryDiagram() {
 
         {/* allow → account */}
         <rect x="556" y="136" width="150" height="48" fill="#0d0e0a" stroke="rgba(229,255,93,0.5)" />
-        <text x="568" y="156" className="fill-[#e5ff5d] font-mono text-[10px] tracking-[0.08em]">→ ALLOW</text>
-        <text x="568" y="172" className="fill-[#a0a391] font-mono text-[9px]">ERC-4337 smart account</text>
+        <text x="568" y="156" className="fill-[#e5ff5d] font-mono text-[11px] tracking-[0.08em]">→ ALLOW</text>
+        <text x="568" y="172" className="fill-[#a0a391] font-mono text-[10px]">ERC-4337 smart account</text>
 
         {/* review */}
         <rect x="556" y="36" width="150" height="48" fill="#0d0e0a" stroke="rgba(189,184,160,0.5)" strokeDasharray="3 3" />
-        <text x="568" y="56" className="fill-[#bdb8a0] font-mono text-[10px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
-        <text x="568" y="72" className="fill-[#a0a391] font-mono text-[9px]">Pending · unsigned</text>
+        <text x="568" y="56" className="fill-[#bdb8a0] font-mono text-[11px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
+        <text x="568" y="72" className="fill-[#a0a391] font-mono text-[10px]">Pending · unsigned</text>
 
         {/* deny wall */}
         <rect x="514" y="226" width="8" height="68" fill="#ff5247" filter="url(#rw-glow)" />
-        <text x="534" y="256" className="fill-[#ff5247] font-mono text-[10px] tracking-[0.08em]">■ DENY</text>
-        <text x="534" y="272" className="fill-[#a0a391] font-mono text-[9px]">No signature · no broadcast</text>
+        <text x="534" y="256" className="fill-[#ff5247] font-mono text-[11px] tracking-[0.08em]">■ DENY</text>
+        <text x="534" y="272" className="fill-[#a0a391] font-mono text-[10px]">No signature · no broadcast</text>
 
         {/* packets */}
         {PACKETS.map((p) => {
@@ -176,6 +177,7 @@ export function BoundaryDiagram() {
           );
         })}
       </svg>
+      </div>
       <figcaption className="grid grid-cols-3 border-t border-line font-utility text-[10px] tracking-[0.08em]">
         <span className="border-r border-line px-4 py-2.5 text-allow">→ ALLOW</span>
         <span className="border-r border-line px-4 py-2.5 text-review">◆ REVIEW</span>
