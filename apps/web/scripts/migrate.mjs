@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 /**
  * Applies db/migrations/*.sql in filename order, each in its own transaction, exactly once.
- * Runs before `next build`. Without a database URL it exits cleanly so the site still builds;
- * the API then fails closed with RW_STATE_001.
+ * Runs when the server starts (`pnpm start`), where the database is reachable; build environments
+ * often cannot reach a private database. Without a database URL it exits cleanly; the API then fails
+ * closed with RW_STATE_001.
+ *
+ * --soft: log a failure but exit 0, so a database outage at boot cannot take the static site down.
+ * The API still fails closed, and /api/v1/health reports the applied schema version.
  */
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import postgres from "postgres";
 
+const soft = process.argv.includes("--soft");
 const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!url) {
   console.log("[migrate] DATABASE_URL not set; skipping migrations.");
@@ -16,8 +21,8 @@ if (!url) {
 }
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "db", "migrations");
-const sql = postgres(url, { max: 1, onnotice: () => {} });
-// Concurrent builds (production + preview) must not race on the same database.
+const sql = postgres(url, { max: 1, connect_timeout: 15, onnotice: () => {} });
+// Overlapping starts (replicas, or old and new deployments) must not race on the same database.
 const LOCK_KEY = 4663_0001;
 
 try {
@@ -39,8 +44,8 @@ try {
   }
   console.log(`[migrate] up to date (${count} applied, ${files.length} total).`);
 } catch (err) {
-  console.error("[migrate] failed:", err.message);
-  process.exitCode = 1;
+  console.error("[migrate] FAILED:", err.message);
+  process.exitCode = soft ? 0 : 1;
 } finally {
   await sql`SELECT pg_advisory_unlock(${LOCK_KEY})`.catch(() => {});
   await sql.end({ timeout: 5 });

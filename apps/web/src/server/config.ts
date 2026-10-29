@@ -33,10 +33,10 @@ export function allowedHosts(): string[] {
       // Ignore malformed configuration rather than widening the allowlist.
     }
   };
-  // The canonical domain's apex and www forms are both ours, whichever one Vercel makes primary.
-  for (const v of [process.env.NEXT_PUBLIC_SITE_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
+  // The canonical domain's apex and www forms are both ours, whichever one the host makes primary.
+  for (const v of [process.env.NEXT_PUBLIC_SITE_URL, process.env.RAILWAY_PUBLIC_DOMAIN, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
     add(v);
-    if (!v || /vercel\.app/.test(v)) continue;
+    if (!v || /(vercel|railway)\.app/.test(v)) continue;
     try {
       const host = new URL(v.includes("://") ? v : `https://${v}`).hostname;
       add(host.startsWith("www.") ? host.slice(4) : `www.${host}`);

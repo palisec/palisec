@@ -42,7 +42,7 @@ export async function readJson(req: Request): Promise<Record<string, unknown>> {
 }
 
 /**
- * The host the browser addressed. Vercel's edge sets X-Forwarded-Host and Host to the requested
+ * The host the browser addressed. The hosting proxy (Railway, Vercel) sets Host and/or X-Forwarded-Host to the requested
  * domain; req.url can carry the internal origin when self-hosted.
  */
 function requestHost(req: Request): string {

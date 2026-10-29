@@ -5,8 +5,12 @@
   "scripts": {
     "dev:web": "pnpm --filter @palisec/web dev",
     "build": "pnpm -r build",
+    "start": "pnpm --filter @palisec/web start",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
