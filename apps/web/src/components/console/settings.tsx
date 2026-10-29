@@ -111,21 +111,21 @@ export function SettingsView() {
 
           <Panel title="Sign-in and sessions">
             <ul className="divide-y divide-line text-[13px]">
-              {[
-                ["Wallet sign-in", "Signed challenge with nonce, domain and expiry (SIWE)"],
-                ["GitHub OAuth", "Optional identity provider"],
-                ["Sessions", "Secure HttpOnly cookies with CSRF protection and revocation"],
-                ["Multi-factor", "Optional, for sensitive administrative actions"],
-              ].map(([k, v]) => (
+              {([
+                ["Wallet sign-in", "Signed challenge with nonce, domain and expiry (SIWE)", true],
+                ["GitHub OAuth", "Optional identity provider", false],
+                ["Sessions", "Secure HttpOnly cookies with CSRF protection and revocation", true],
+                ["Multi-factor", "Optional, for sensitive administrative actions", false],
+              ] as const).map(([k, v, built]) => (
                 <li key={k} className="flex items-start justify-between gap-3 px-4 py-2.5">
                   <span><span className="block text-soft">{k}</span><span className="block text-[12px] text-muted">{v}</span></span>
-                  <Pill tone="muted">Not deployed</Pill>
+                  {built ? <Pill tone="info">Built · needs database</Pill> : <Pill tone="muted">Not deployed</Pill>}
                 </li>
               ))}
             </ul>
             <p className="border-t border-line px-4 py-3 text-[12.5px] text-muted">
-              No sessions exist: this workspace runs without an account, so signing out does not apply. The{" "}
-              <Link href="/login" className="text-soft underline decoration-line-strong underline-offset-4 hover:text-citrine">sign-in page</Link> shows the methods that will be offered.
+              This simulation workspace runs without an account. Wallet sign-in works on the{" "}
+              <Link href="/login" className="text-soft underline decoration-line-strong underline-offset-4 hover:text-citrine">sign-in page</Link> once the deployment is connected to its database; the console reads live data in a later release.
             </p>
           </Panel>
 

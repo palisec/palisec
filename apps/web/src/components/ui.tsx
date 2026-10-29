@@ -41,12 +41,12 @@ export function Section({
   );
 }
 
-const MATURITY_GLYPH: Record<Maturity, string> = { local: "●", specified: "◐", planned: "○" };
+const MATURITY_GLYPH: Record<Maturity, string> = { local: "●", service: "●", specified: "◐", planned: "○" };
 
 /** Text always accompanies the glyph: status is never conveyed by colour alone. */
 export function MaturityBadge({ maturity }: { maturity: Maturity }) {
   const tone =
-    maturity === "local"
+    maturity === "local" || maturity === "service"
       ? "text-citrine bg-citrine/[0.07] shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4),0_0_18px_-6px_rgb(229_255_93/0.5)]"
       : "text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)]";
   return (

@@ -1,0 +1,80 @@
+import "server-only";
+import { unstable_rethrow } from "next/navigation";
+import { allowedHosts } from "./config";
+import { StateUnavailable } from "./db";
+
+export const MAX_BODY_BYTES = 16 * 1024;
+
+export function requestId(): string {
+  return `rw_req_${crypto.randomUUID().replaceAll("-", "")}`;
+}
+
+/** Error envelope shared by every endpoint: a stable code plus a safe explanation. */
+export function apiError(status: number, code: string, message: string, retryable = false) {
+  return Response.json(
+    { request_id: requestId(), error: { code, message, retryable } },
+    { status, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+export function ok(body: unknown, init: ResponseInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("Cache-Control", "no-store");
+  return Response.json(body, { ...init, headers });
+}
+
+export class BadRequest extends Error {}
+
+/** Parses a bounded JSON object body. */
+export async function readJson(req: Request): Promise<Record<string, unknown>> {
+  const len = Number(req.headers.get("content-length") || 0);
+  if (len > MAX_BODY_BYTES) throw new BadRequest("Request body too large");
+  const text = await req.text();
+  if (text.length > MAX_BODY_BYTES) throw new BadRequest("Request body too large");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new BadRequest("Body must be JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new BadRequest("Body must be a JSON object");
+  return parsed as Record<string, unknown>;
+}
+
+/** The request's host, if it is one this deployment answers for. */
+export function trustedHost(req: Request): string | null {
+  const host = new URL(req.url).host;
+  return allowedHosts().includes(host) ? host : null;
+}
+
+/**
+ * CSRF guard for cookie-authenticated state changes: the Origin must be this deployment.
+ * SameSite=Lax on the cookie is the second layer.
+ */
+export function sameOrigin(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  try {
+    const o = new URL(origin);
+    return o.host === new URL(req.url).host && allowedHosts().includes(o.host);
+  } catch {
+    return false;
+  }
+}
+
+/** Maps thrown errors to fail-closed responses. Unknown errors never leak internals. */
+export function handle(fn: (req: Request) => Promise<Response>) {
+  return async (req: Request) => {
+    try {
+      return await fn(req);
+    } catch (err) {
+      // Next signals prerender bailouts and redirects by throwing; those are not failures.
+      unstable_rethrow(err);
+      if (err instanceof BadRequest) return apiError(400, "RW_REQUEST_001", err.message);
+      if (err instanceof StateUnavailable) return apiError(503, "RW_STATE_001", "Authoritative state unavailable", true);
+      // Name and message only: request bodies and headers may carry credentials.
+      console.error("[api] unhandled", err instanceof Error ? `${err.name}: ${err.message.slice(0, 200)}` : "error");
+      return apiError(503, "RW_STATE_001", "Authoritative state unavailable", true);
+    }
+  };
+}

@@ -4,16 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate.mjs && next build",
+    "db:migrate": "node scripts/migrate.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@palisec/policy-schema": "workspace:*",
     "next": "16.4.2",
+    "postgres": "3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@palisec/policy-schema": "workspace:*"
+    "server-only": "0.0.1",
+    "viem": "2.57.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

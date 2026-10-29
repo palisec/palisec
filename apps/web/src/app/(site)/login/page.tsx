@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Container } from "@/components/ui";
+import { WalletSignIn } from "@/components/wallet-sign-in";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -17,24 +17,7 @@ export default function LoginPage() {
           <p className="label">Developer console</p>
           <h1 className="mt-2 text-xl font-medium text-fg">Sign in</h1>
         </div>
-        <div className="space-y-3 px-6 py-6">
-          <button type="button" disabled className="flex h-11 w-full items-center justify-between border border-line-strong px-4 text-sm text-soft disabled:cursor-not-allowed disabled:opacity-50">
-            Sign in with wallet
-            <span className="font-mono text-[10px] text-dim">SIWE</span>
-          </button>
-          <button type="button" disabled className="flex h-11 w-full items-center justify-between border border-line px-4 text-sm text-soft disabled:cursor-not-allowed disabled:opacity-50">
-            Continue with GitHub
-            <span className="font-mono text-[10px] text-dim">OAUTH</span>
-          </button>
-        </div>
-        <div className="border-t border-line px-6 py-4">
-          <p className="font-mono text-[11px] tracking-[0.08em] text-review">◆ AUTHENTICATION SERVICE NOT DEPLOYED</p>
-          <p className="mt-2 text-sm leading-relaxed text-muted">
-            Sign-in is disabled until the control plane exists. Meanwhile, explore the console as a{" "}
-            <Link href="/console" className="text-fg underline decoration-line-strong underline-offset-4">local simulation workspace</Link> or try the{" "}
-            <Link href="/#workbench" className="text-fg underline decoration-line-strong underline-offset-4">policy workbench</Link>.
-          </p>
-        </div>
+        <WalletSignIn />
       </div>
     </Container>
   );

@@ -9,6 +9,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.3.0",
+    date: "2026-10-29",
+    tag: "Pre-release",
+    changes: [
+      "Control-plane foundation: Postgres schema with an append-only audit log, applied by versioned migrations.",
+      "Wallet sign-in (SIWE, EIP-4361) at /login: server-issued one-time challenges bound to the domain, EOA and ERC-1271 signature verification, HttpOnly sessions with revocation and an Origin check on state changes.",
+      "First sign-in creates an organization with the signer as owner. GET /v1/health reports which components are reachable and which are not deployed.",
+      "Without a configured database every state-dependent endpoint fails closed with RW_STATE_001.",
+    ],
+  },
+  {
     version: "0.2.0",
     date: "2026-10-23",
     tag: "Pre-release",
