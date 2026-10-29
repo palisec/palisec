@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anybody, Hanken_Grotesk, Martian_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 // Three families, many voices. Anybody's width axis carries display (condensed rampart),
 // brand and the reversal band (expanded); Martian Mono carries labels, data and code.
@@ -9,7 +10,6 @@ const body = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], wei
 const mono = Martian_Mono({ variable: "--font-martian", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
 const FONT_VARS = [display, body, mono].map((f) => f.variable).join(" ");
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

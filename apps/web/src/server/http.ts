@@ -41,9 +41,18 @@ export async function readJson(req: Request): Promise<Record<string, unknown>> {
   return parsed as Record<string, unknown>;
 }
 
+/**
+ * The host the browser addressed. Vercel's edge sets X-Forwarded-Host and Host to the requested
+ * domain; req.url can carry the internal origin when self-hosted.
+ */
+function requestHost(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  return (forwarded || req.headers.get("host") || new URL(req.url).host).toLowerCase();
+}
+
 /** The request's host, if it is one this deployment answers for. */
 export function trustedHost(req: Request): string | null {
-  const host = new URL(req.url).host;
+  const host = requestHost(req);
   return allowedHosts().includes(host) ? host : null;
 }
 
@@ -56,7 +65,7 @@ export function sameOrigin(req: Request): boolean {
   if (!origin) return false;
   try {
     const o = new URL(origin);
-    return o.host === new URL(req.url).host && allowedHosts().includes(o.host);
+    return o.host === requestHost(req) && allowedHosts().includes(o.host);
   } catch {
     return false;
   }
