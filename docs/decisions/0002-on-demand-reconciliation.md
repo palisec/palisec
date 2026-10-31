@@ -30,9 +30,9 @@ Adopt on-demand reconciliation, with three amendments that keep it correct.
 
 **Amendment 3: visibility.** Because nothing reconciles while nobody is looking, the dashboard and `/api/v1/health` report the **count and age of the oldest unreconciled operation** (spec §7.4 "reservation reconciliation failures"), so a stuck operation is visible rather than silent.
 
-## Update, 2026-10-31: GoDaddy VPS
+## Update, 2026-10-31: GoDaddy Node.js Hosting and Neon
 
-Hosting moved to an always-on VPS, so idle-sleep savings no longer apply. The decision stands because it still avoids needless RPC and bundler calls and its correctness does not depend on hosting. A periodic sweep can now be added cheaply as a systemd timer if unreconciled operations linger.
+The database scales to zero with a limited free allowance, so avoiding timers saves real quota. The app process is persistent, so the one-shot in-process check still works.
 
 ## Consequences
 
