@@ -1,0 +1,37 @@
+name: Database backup
+# Off until the repository variable BACKUP_ENABLED is "true". Neon's free plan keeps only 6 hours of
+# restore history, so this keeps an encrypted dump for 14 days as a private workflow artifact.
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    if: vars.BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install the Postgres 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -o pipefail
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --no-owner --no-privileges \
+            | gzip \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" --symmetric --cipher-algo AES256 -o palisec.sql.gz.gpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: palisec-db-${{ github.run_id }}
+          path: palisec.sql.gz.gpg
+          retention-days: 14
+          if-no-files-found: error

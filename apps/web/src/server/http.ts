@@ -41,19 +41,24 @@ export async function readJson(req: Request): Promise<Record<string, unknown>> {
   return parsed as Record<string, unknown>;
 }
 
-/**
- * The host the browser addressed. The hosting proxy (Railway, Vercel) sets Host and/or X-Forwarded-Host to the requested
- * domain; req.url can carry the internal origin when self-hosted.
- */
-function requestHost(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  return (forwarded || req.headers.get("host") || new URL(req.url).host).toLowerCase();
+/** Host names for this request, most specific first. Proxies differ in which they forward. */
+function requestHosts(req: Request): string[] {
+  const originHost = () => {
+    try {
+      return new URL(req.headers.get("origin") ?? "").host;
+    } catch {
+      return "";
+    }
+  };
+  return [req.headers.get("x-forwarded-host")?.split(",")[0]?.trim(), req.headers.get("host"), originHost()]
+    .filter((h): h is string => Boolean(h))
+    .map((h) => h.toLowerCase());
 }
 
-/** The request's host, if it is one this deployment answers for. */
+/** The host a sign-in message may name: only ever a value from the allowlist. */
 export function trustedHost(req: Request): string | null {
-  const host = requestHost(req);
-  return allowedHosts().includes(host) ? host : null;
+  const allowed = allowedHosts();
+  return requestHosts(req).find((h) => allowed.includes(h)) ?? null;
 }
 
 /**
@@ -65,11 +70,36 @@ export function sameOrigin(req: Request): boolean {
   if (!origin) return false;
   try {
     const o = new URL(origin);
-    return o.host === requestHost(req) && allowedHosts().includes(o.host);
+    return allowedHosts().includes(o.host.toLowerCase());
   } catch {
     return false;
   }
 }
+
+const buckets = new Map<string, { count: number; resetAt: number }>();
+
+/**
+ * Per-address limit, in this process's memory. It protects the database's free quota from abuse; it is
+ * not a security boundary, and resets on restart. Requests with no visible address share one bucket.
+ */
+export function rateLimited(req: Request, name: string, limit: number, windowMs = 60_000): boolean {
+  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const key = `${name}:${ip}`;
+  const now = Date.now();
+  if (buckets.size > 10_000) {
+    for (const [k, b] of buckets) if (b.resetAt <= now) buckets.delete(k);
+    if (buckets.size > 10_000) buckets.clear();
+  }
+  const bucket = buckets.get(key);
+  if (!bucket || bucket.resetAt <= now) {
+    buckets.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  bucket.count += 1;
+  return bucket.count > limit;
+}
+
+export const tooManyRequests = () => apiError(429, "RW_RATE_001", "Too many requests. Try again in a minute.", true);
 
 /** Maps thrown errors to fail-closed responses. Unknown errors never leak internals. */
 export function handle(fn: (req: Request) => Promise<Response>) {

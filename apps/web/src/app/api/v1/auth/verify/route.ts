@@ -1,8 +1,9 @@
-import { apiError, handle, ok, readJson, sameOrigin, trustedHost } from "@/server/http";
+import { apiError, handle, ok, rateLimited, readJson, sameOrigin, tooManyRequests, trustedHost } from "@/server/http";
 import { createSession, sessionCookie } from "@/server/session";
 import { verifyChallenge } from "@/server/siwe";
 
 export const POST = handle(async (req) => {
+  if (rateLimited(req, "auth", 30)) return tooManyRequests();
   const host = trustedHost(req);
   if (!host || !sameOrigin(req)) return apiError(403, "RW_AUTH_001", "Cross-origin sign-in rejected");
   const result = await verifyChallenge(await readJson(req), host);

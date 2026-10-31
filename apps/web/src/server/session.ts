@@ -15,8 +15,9 @@ function toHex(buf: ArrayBuffer) {
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sha256(token: string): Promise<Buffer> {
-  return Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)));
+/** Hex, not bytes, so the value passes through every database driver unchanged. */
+async function sha256Hex(token: string): Promise<string> {
+  return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)));
 }
 
 function newToken(): string {
@@ -47,7 +48,7 @@ export async function createSession(userId: string): Promise<string> {
   const token = newToken();
   await db()`
     INSERT INTO sessions (token_hash, user_id, expires_at)
-    VALUES (${await sha256(token)}, ${userId}, now() + make_interval(secs => ${SESSION_TTL_SECONDS}))`;
+    VALUES (decode(${await sha256Hex(token)}, 'hex'), ${userId}, now() + make_interval(secs => ${SESSION_TTL_SECONDS}::int))`;
   return token;
 }
 
@@ -58,7 +59,7 @@ export async function currentUser(req: Request): Promise<SessionUser | null> {
   const rows = await db()`
     SELECT s.id AS session_id, u.id AS user_id, u.address
     FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ${await sha256(token)} AND s.revoked_at IS NULL AND s.expires_at > now()`;
+    WHERE s.token_hash = decode(${await sha256Hex(token)}, 'hex') AND s.revoked_at IS NULL AND s.expires_at > now()`;
   if (rows.length === 0) return null;
   const { session_id, user_id, address } = rows[0];
   const memberships = await db()`

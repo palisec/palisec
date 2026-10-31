@@ -69,9 +69,10 @@ export function WalletSignIn() {
   useEffect(() => {
     let live = true;
     (async () => {
-      const h = await api<{ components?: { database?: Health } }>("/api/v1/health").catch(() => null);
+      // Shallow: viewing this page must not wake the database. A real outage surfaces on sign-in.
+      const h = await api<{ components?: { database?: string } }>("/api/v1/health?shallow=1").catch(() => null);
       const db = h?.body.components?.database;
-      const state: Health = db === "ok" ? "ok" : db === "unconfigured" ? "unconfigured" : "unreachable";
+      const state: Health = db === "configured" || db === "ok" ? "ok" : db === "unconfigured" ? "unconfigured" : "unreachable";
       if (!live) return;
       setHealth(state);
       if (state === "ok") {

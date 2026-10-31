@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "db:migrate": "node scripts/migrate.mjs",
-    "start": "node scripts/migrate.mjs --soft && next start",
+    "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@neondatabase/serverless": "1.2.0",
     "@palisec/policy-schema": "workspace:*",
     "next": "16.4.2",
     "postgres": "3.4.9",

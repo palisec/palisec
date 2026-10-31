@@ -4,6 +4,7 @@ out/
 dist/
 target/
 coverage/
+.godaddy/
 *.tsbuildinfo
 .env
 .env.*

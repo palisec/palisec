@@ -54,7 +54,7 @@ export async function issueChallenge(body: Record<string, unknown>, host: string
   await sql`DELETE FROM auth_challenges WHERE expires_at < now() - interval '1 day'`;
   await sql`
     INSERT INTO auth_challenges (nonce, address, domain, chain_id, message, issued_at, expires_at)
-    VALUES (${n}, ${address}, ${host}, ${chainId}, ${message}, ${issuedAt}, ${expirationTime})`;
+    VALUES (${n}, ${address}, ${host}, ${chainId}::int, ${message}, ${issuedAt.toISOString()}::timestamptz, ${expirationTime.toISOString()}::timestamptz)`;
   return { nonce: n, message, expires_at: expirationTime.toISOString() };
 }
 
@@ -88,20 +88,27 @@ export async function verifyChallenge(body: Record<string, unknown>, host: strin
   const address = getAddress(challenge.address);
   if (!(await signatureValid(address, challenge.message, signature as Hex))) return { ok: false, reason: "Signature does not match the challenge" };
 
-  return sql.begin(async (tx) => {
-    const [user] = await tx`
+  // One statement, so it is atomic on every driver: the user, a first-time organization and the audit trail.
+  const orgName = `Organization ${address.slice(0, 6)}…${address.slice(-4)}`;
+  const [user] = await sql`
+    WITH u AS (
       INSERT INTO users (address, last_login) VALUES (${address}, now())
       ON CONFLICT ((lower(address))) DO UPDATE SET last_login = now()
-      RETURNING id, (xmax = 0) AS created`;
-    const [{ count }] = await tx`SELECT count(*)::int AS count FROM memberships WHERE user_id = ${user.id}`;
-    let orgId: string | null = null;
-    if (count === 0) {
-      const [org] = await tx`INSERT INTO organizations (name) VALUES (${`Organization ${address.slice(0, 6)}…${address.slice(-4)}`}) RETURNING id`;
-      orgId = org.id;
-      await tx`INSERT INTO memberships (org_id, user_id, role) VALUES (${org.id}, ${user.id}, 'owner')`;
-      await tx`INSERT INTO audit_events (org_id, actor_user_id, type, detail) VALUES (${org.id}, ${user.id}, 'org.created', ${tx.json({ name_set_by: "sign_in" })})`;
-    }
-    await tx`INSERT INTO audit_events (org_id, actor_user_id, type, detail) VALUES (${orgId}, ${user.id}, 'auth.sign_in', ${tx.json({ method: "siwe", domain: host })})`;
-    return { ok: true as const, userId: user.id, address, created: user.created };
-  });
+      RETURNING id, (xmax = 0) AS created
+    ), new_org AS (
+      INSERT INTO organizations (name)
+      SELECT ${orgName}::text WHERE NOT EXISTS (SELECT 1 FROM memberships m JOIN u ON m.user_id = u.id)
+      RETURNING id
+    ), member AS (
+      INSERT INTO memberships (org_id, user_id, role)
+      SELECT new_org.id, u.id, 'owner' FROM new_org, u
+    ), org_audit AS (
+      INSERT INTO audit_events (org_id, actor_user_id, type, detail)
+      SELECT new_org.id, u.id, 'org.created', ${JSON.stringify({ name_set_by: "sign_in" })}::jsonb FROM new_org, u
+    ), sign_in_audit AS (
+      INSERT INTO audit_events (org_id, actor_user_id, type, detail)
+      SELECT (SELECT id FROM new_org), u.id, 'auth.sign_in', ${JSON.stringify({ method: "siwe", domain: host })}::jsonb FROM u
+    )
+    SELECT id, created FROM u`;
+  return { ok: true, userId: user.id, address, created: user.created };
 }
