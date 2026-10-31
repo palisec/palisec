@@ -1,7 +1,7 @@
 /**
  * The canonical public origin, used for metadata, canonical links, robots and the sitemap.
- * An explicit NEXT_PUBLIC_SITE_URL wins (set it to https://palisec.tech); otherwise the host's
- * own public domain (Railway, or Vercel if deployed there), else localhost for development.
+ * An explicit NEXT_PUBLIC_SITE_URL wins (set it to https://palisec.tech); otherwise a platform
+ * host's public domain if one is provided, else localhost for development.
  */
 function resolveSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
