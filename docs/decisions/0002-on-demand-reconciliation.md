@@ -30,9 +30,9 @@ Adopt on-demand reconciliation, with three amendments that keep it correct.
 
 **Amendment 3: visibility.** Because nothing reconciles while nobody is looking, the dashboard and `/api/v1/health` report the **count and age of the oldest unreconciled operation** (spec §7.4 "reservation reconciliation failures"), so a stuck operation is visible rather than silent.
 
-## Update, 2026-10-31: GoDaddy Node.js Hosting and Neon
+## Update, 2026-11-04: Vercel and Neon
 
-The database scales to zero with a limited free allowance, so avoiding timers saves real quota. The app process is persistent, so the one-shot in-process check still works.
+The API runs as serverless functions and the database scales to zero with a limited free allowance, so avoiding timers saves real quota. A serverless function can be stopped after it responds, so the one-shot delayed check may not run; correctness never depended on it.
 
 ## Consequences
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Applies db/migrations/*.sql in filename order, each in its own transaction, exactly once.
- * Runs when the server starts (`pnpm start`), where the database is reachable; build environments
- * often cannot reach a private database. Without a database URL it exits cleanly; the API then fails
- * closed with RW_STATE_001.
+ * Runs before `next build` on Vercel, and by hand with `pnpm --filter @palisec/web db:migrate`.
+ * A failure fails the build, so the previous deployment stays live. Without a database URL it exits
+ * cleanly; the API then fails closed with RW_STATE_001.
  *
- * --soft: log a failure but exit 0, so a database outage at boot cannot take the static site down.
- * The API still fails closed, and /api/v1/health reports the applied schema version.
+ * --soft: log a failure but exit 0. The API still fails closed, and /api/v1/health reports the
+ * applied schema version.
  */
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";

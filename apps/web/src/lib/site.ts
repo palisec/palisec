@@ -1,7 +1,7 @@
 /**
  * The canonical public origin, used for metadata, canonical links, robots, the sitemap and sign-in.
- * NEXT_PUBLIC_SITE_URL can override it; production otherwise uses the real domain, because hosting
- * secrets may not be available while static pages are built.
+ * NEXT_PUBLIC_SITE_URL can override it; production otherwise uses the real domain, so canonical links
+ * never depend on a host setting.
  */
 function resolveSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;

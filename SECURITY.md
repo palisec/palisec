@@ -15,7 +15,7 @@ In scope today:
 - `packages/policy-schema`: the canonical schema, validator and deterministic reference evaluator.
 - `apps/web`: the public site, documentation, policy workbench and console simulation workspace.
 - `apps/web/src/server` and `apps/web/src/app/api/v1`: the control-plane API (wallet sign-in, sessions, organizations) and `apps/web/db/migrations`.
-- `infra/godaddy` and `.github/workflows`: deployment packaging, CI and backups.
+- `.github/workflows`: CI, security scans and backups.
 
 The authorization and operation endpoints, protected signing service, chain workers and contracts described in the specification are not built yet. Findings about their design are welcome as design feedback.
 

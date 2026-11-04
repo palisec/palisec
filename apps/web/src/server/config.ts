@@ -39,6 +39,9 @@ export function allowedHosts(): string[] {
   const apex = new URL(SITE_URL).host.replace(/^www\./, "");
   add(apex);
   add(`www.${apex}`);
+  // Vercel deployment and branch URLs, so preview deployments can be tested. Vercel sets these.
+  add(process.env.VERCEL_URL);
+  add(process.env.VERCEL_BRANCH_URL);
   for (const h of (process.env.PALISEC_EXTRA_HOSTS || "").split(",")) add(h.trim());
   if (process.env.NODE_ENV !== "production") {
     hosts.add("localhost:3000");

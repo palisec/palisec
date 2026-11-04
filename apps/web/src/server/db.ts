@@ -11,9 +11,9 @@ const globalForDb = globalThis as unknown as { __rwQuery?: Query };
 /**
  * Every statement is sent on its own, so a change that must be atomic has to be one statement.
  *
- * GoDaddy Node.js Hosting only allows outbound HTTP and HTTPS, so production reaches Neon through its
- * HTTPS driver, which has no interactive transactions. Other hosts (local Postgres) use a plain
- * connection; `prepare: false` keeps it compatible with transaction-mode poolers.
+ * Neon is reached through its HTTPS driver, which suits short-lived serverless functions and has no
+ * interactive transactions. Other databases (local Postgres) use a plain connection; `prepare: false`
+ * keeps it compatible with transaction-mode poolers.
  */
 export function db(): Query {
   if (!globalForDb.__rwQuery) {
