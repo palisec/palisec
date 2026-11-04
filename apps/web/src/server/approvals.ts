@@ -185,6 +185,8 @@ export async function listOperations(ctx: MemberContext, params: URLSearchParams
   if (agentId !== null && !/^[0-9a-f-]{36}$/i.test(agentId)) throw new BadRequest("agent_id is malformed");
   if (decision !== null && !["ALLOW", "DENY", "REQUIRES_HUMAN_SIGNATURE"].includes(decision)) throw new BadRequest("decision is malformed");
   if (reason !== null && !/^RW_[A-Z]+_\d{3}$/.test(reason)) throw new BadRequest("reason_code is malformed");
+  const requestId = params.get("request_id");
+  if (requestId !== null && !/^[A-Za-z0-9_.:-]{1,128}$/.test(requestId)) throw new BadRequest("request_id is malformed");
   const rows = await db()`
     SELECT o.*, p.policy_key, a.name AS agent_name, u.address AS decided_by_address
     FROM operations o JOIN agents a ON a.id = o.agent_id
@@ -194,6 +196,7 @@ export async function listOperations(ctx: MemberContext, params: URLSearchParams
       AND (${agentId}::uuid IS NULL OR o.agent_id = ${agentId}::uuid)
       AND (${decision}::text IS NULL OR o.decision = ${decision}::text)
       AND (${reason}::text IS NULL OR o.reason_code = ${reason}::text)
+      AND (${requestId}::text IS NULL OR o.request_id = ${requestId}::text)
     ORDER BY o.created_at DESC LIMIT ${limit}::int`;
   const operations = rows.map(toDecision);
   return { operations, next_before: rows.length === limit ? operations[operations.length - 1]!.created_at : null };

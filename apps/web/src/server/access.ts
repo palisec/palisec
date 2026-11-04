@@ -48,6 +48,7 @@ export async function requireMember(req: Request, permission: Permission): Promi
   if (mutating && !sameOrigin(req)) throw new HttpError(403, "RW_AUTH_001", "Cross-origin request rejected");
   const user = await currentUser(req);
   if (!user) throw new HttpError(401, "RW_AUTH_001", "Not signed in");
+  if (mutating && rateLimited(req, `member:${user.userId}`, 60)) throw new HttpError(429, "RW_RATE_001", "Too many changes. Try again in a minute.", true);
   const wanted = req.headers.get("x-rw-org") ?? new URL(req.url).searchParams.get("org");
   const membership = wanted ? user.memberships.find((m) => m.orgId === wanted) : user.memberships[0];
   if (!membership) throw new HttpError(403, "RW_AUTH_001", "You are not a member of this organization");

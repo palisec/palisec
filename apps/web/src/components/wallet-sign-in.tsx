@@ -33,6 +33,15 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ ok: boolean; 
   return { ok: res.ok, status: res.status, body: (await res.json().catch(() => ({}))) as T };
 }
 
+/**
+ * Where to go after sign-in. Only console paths are accepted, so a crafted ?next= link cannot send a
+ * freshly signed-in user to another site (open redirect).
+ */
+function nextPath(): string {
+  const next = new URLSearchParams(window.location.search).get("next") ?? "";
+  return /^\/console(\/[A-Za-z0-9/_-]*)?(\?[A-Za-z0-9_=&%-]*)?$/.test(next) ? next : "/console";
+}
+
 /** EIP-6963 discovery: every installed wallet announces itself; window.ethereum is the fallback. */
 function useWallets(): WalletInfo[] {
   const [wallets, setWallets] = useState<WalletInfo[]>([]);
@@ -76,14 +85,18 @@ export function WalletSignIn() {
       if (!live) return;
       setHealth(state);
       if (state === "ok") {
+        // Already signed in: go straight to the console.
         const m = await api<{ address: string }>("/api/v1/me").catch(() => null);
-        if (live && m?.ok) setMe(m.body);
+        if (live && m?.ok) {
+          setMe(m.body);
+          router.replace(nextPath());
+        }
       }
     })();
     return () => {
       live = false;
     };
-  }, []);
+  }, [router]);
 
   async function signIn(w: WalletInfo) {
     setError("");
@@ -111,7 +124,7 @@ export function WalletSignIn() {
       if (!v.ok) throw new Error(v.body.error?.message ?? "Signature verification failed.");
       setMe({ address: v.body.address });
       setStep("idle");
-      router.push("/console");
+      router.replace(nextPath());
     } catch (e) {
       const code = (e as { code?: number }).code;
       setError(code === 4001 ? "Request rejected in the wallet. Nothing was signed." : e instanceof Error ? e.message : "Sign-in failed.");
@@ -119,22 +132,14 @@ export function WalletSignIn() {
     }
   }
 
-  async function signOut() {
-    await api("/api/v1/auth/logout", { method: "POST" }).catch(() => null);
-    setMe(null);
-  }
-
   const busy = step === "connecting" || step === "signing" || step === "verifying";
 
   if (me) {
     return (
-      <div className="space-y-3 px-6 py-6">
+      <div className="space-y-2 px-6 py-6" role="status">
         <p className="font-mono text-[11px] tracking-[0.08em] text-allow">→ SIGNED IN</p>
         <p className="break-all font-mono text-xs text-soft">{me.address}</p>
-        <div className="flex gap-2 pt-1">
-          <Link href="/console" className="flex h-10 flex-1 items-center justify-center border border-line-strong text-sm text-fg hover:border-citrine/60">Open console</Link>
-          <button type="button" onClick={signOut} className="h-10 border border-line px-4 text-sm text-soft hover:text-fg">Sign out</button>
-        </div>
+        <p className="text-sm text-muted">Opening the console…</p>
       </div>
     );
   }
@@ -165,10 +170,6 @@ export function WalletSignIn() {
               <span className="font-mono text-[10px] text-dim">SIWE</span>
             </button>
           )}
-        <button type="button" disabled className="flex h-11 w-full items-center justify-between border border-line px-4 text-sm text-soft disabled:cursor-not-allowed disabled:opacity-50">
-          Continue with GitHub
-          <span className="font-mono text-[10px] text-dim">NOT CONFIGURED</span>
-        </button>
         <p aria-live="polite" className="min-h-5 text-xs text-muted">
           {step === "error" ? <span className="text-deny">■ {error}</span> : STEP_TEXT[step]}
         </p>
@@ -182,8 +183,8 @@ export function WalletSignIn() {
               ◆ AUTHENTICATION SERVICE {health === "unconfigured" ? "NOT CONFIGURED" : "UNREACHABLE"}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Sign-in needs the control-plane database, which {health === "unconfigured" ? "this deployment has not been connected to" : "is not responding"}. Meanwhile, explore the console as a{" "}
-              <Link href="/console" className="text-fg underline decoration-line-strong underline-offset-4">local simulation workspace</Link>.
+              Sign-in needs the control-plane database, which {health === "unconfigured" ? "this deployment has not been connected to" : "is not responding"}. Nothing can be authorized while it is down. Check{" "}
+              <Link href="/status" className="text-fg underline decoration-line-strong underline-offset-4">status</Link> and try again shortly.
             </p>
           </>
         ) : wallets.length === 0 ? (

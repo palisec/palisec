@@ -3,8 +3,8 @@ import { SITE_URL } from "@/lib/site";
 
 
 const ROUTES = [
-  "/", "/product", "/architecture", "/security", "/attestation", "/status", "/pricing", "/changelog",
-  "/docs", "/docs/quickstart", "/docs/policies", "/docs/errors", "/docs/account-abstraction",
+  "/overview", "/product", "/architecture", "/security", "/attestation", "/status", "/pricing", "/changelog",
+  "/docs", "/docs/quickstart", "/docs/api", "/docs/policies", "/docs/errors", "/docs/account-abstraction",
   "/docs/sdk/typescript", "/docs/sdk/python",
 ];
 

@@ -5,7 +5,7 @@ import { ButtonLink, Container } from "./ui";
 
 export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
   return (
-    <Link href="/" className="group flex items-center gap-2.5" aria-label="Palisec home">
+    <Link href="/overview" className="group flex items-center gap-2.5" aria-label="Palisec overview">
       <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
         <CubeGlyph size={size === "lg" ? 22 : 18} />
       </span>

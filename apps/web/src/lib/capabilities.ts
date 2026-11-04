@@ -30,7 +30,7 @@ export const CAPABILITIES: Capability[] = [
   { id: "approvals", name: "Human approvals", maturity: "service", note: "Approvers sign EIP-712 data bound to the exact operation and policy version with their own wallet." },
   { id: "sdk-ts", name: "TypeScript SDK (viem)", maturity: "specified", note: "@palisec/sdk. Not published; call the REST API directly for now." },
   { id: "sdk-py", name: "Python SDK", maturity: "planned", note: "Published only once its semantics match the canonical API." },
-  { id: "console", name: "Developer console", maturity: "service", note: "Signed-in members manage live testnet agents, policies, approvals and audit. Visitors get a browser simulation workspace." },
+  { id: "console", name: "Developer console", maturity: "service", note: "Wallet sign-in, then agents, policies with a rule builder and test cases, approvals, audit and emergency controls on testnet. Real data only." },
 ];
 
 export const capability = (id: string) => CAPABILITIES.find((c) => c.id === id)!;

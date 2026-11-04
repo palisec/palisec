@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { shortHex } from "@/lib/units";
+import { formatUnits, shortHex } from "@/lib/units";
 import { CopyButton } from "../../copy-button";
 import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
-import { ago, LoadError, Loading, thCls, usd, useAction, utc } from "./common";
+import { ago, DecisionPill, LoadError, Loading, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 interface AgentRow {
@@ -32,6 +32,7 @@ interface Credential {
 }
 interface AgentDetail extends AgentRow {
   created_at: string;
+  created_by: string | null;
   status_changed_at: string | null;
   status_changed_by: string | null;
   credentials: Credential[];
@@ -181,6 +182,10 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
   const uid = useId();
   const { org } = useConsoleSession();
   const detail = useLive<AgentDetail>(`/agents/${id}`);
+  const policy = useLive<{ active_document: { limits: Record<string, string | number>; cooldowns: Record<string, number>; human_approval: Record<string, string | boolean> } | null }>(
+    detail.data?.policy_id ? `/policies/${detail.data.policy_id}` : null,
+  );
+  const recent = useLive<{ operations: LiveOperation[] }>(`/operations?agent_id=${id}&limit=8`);
   const { run, busy, notice } = useAction();
   const [label, setLabel] = useState("");
   const [secret, setSecret] = useState<string | null>(null);
@@ -202,11 +207,13 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
         <KV
           rows={[
             ["Agent ID", <Mono key="id" className="text-soft">{a.id}</Mono>],
+            ["Owner", a.created_by ? <Mono key="o" className="text-soft">{shortHex(a.created_by)}</Mono> : "—"],
             ["Account", <Mono key="acct" className="text-soft">{a.account}</Mono>],
             ["Chain", `Robinhood Chain Testnet · ${a.chain_id}`],
             ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-citrine"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
             ["Last hour", `${a.last_hour.allowed} allowed · ${a.last_hour.denied} denied · ${a.last_hour.reviewed} review · ${usd(a.last_hour.reserved_usd_micros)} reserved`],
             ["Status changed", a.status_changed_at ? `${utc(a.status_changed_at)}${a.status_changed_by ? ` by ${shortHex(a.status_changed_by)}` : ""}` : "—"],
+            ["Signer identities", <span key="sig" className="text-muted">None: protected signing is not deployed</span>],
           ]}
         />
         {a.status !== "revoked" && (
@@ -300,6 +307,47 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
           </div>
         )}
         {a.status === "paused" && <Notice>This agent is paused: its keys authenticate, but every new operation is denied.</Notice>}
+      </Panel>
+
+      <Panel title="Budget and rate limits" bodyClassName="p-4">
+        {!a.policy_id ? (
+          <p className="text-[13px] text-muted">No policy bound: every request is denied with RW_POLICY_001.</p>
+        ) : !policy.data ? (
+          <Loading what="limits" />
+        ) : !policy.data.active_document ? (
+          <p className="text-[13px] text-muted">The bound policy has no active version yet.</p>
+        ) : (
+          <KV
+            rows={[
+              ["Hourly budget", `${usd(String(policy.data.active_document.limits.hourly_budget_usd_micros))} (shared by every agent on this policy)`],
+              ["Per transaction", `${formatUnits(String(policy.data.active_document.limits.max_transaction_value_wei), 18)} ETH`],
+              ["Gas cost bound", `${formatUnits(String(policy.data.active_document.limits.max_gas_cost_wei), 18)} ETH`],
+              ["Pending operations", String(policy.data.active_document.limits.max_pending_operations)],
+              ["Cooldowns", `${policy.data.active_document.cooldowns.identical_calldata_seconds}s same calldata · ${policy.data.active_document.cooldowns.identical_intent_seconds}s same intent`],
+              ["Human approval at", usd(String(policy.data.active_document.human_approval.usd_threshold_micros))],
+            ]}
+          />
+        )}
+      </Panel>
+
+      <Panel title="Recent operations" actions={<Link href="/console/operations" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">All →</Link>}>
+        {!recent.data ? (
+          <Loading what="operations" />
+        ) : recent.data.operations.length === 0 ? (
+          <Empty title="No operations yet" />
+        ) : (
+          <ul className="divide-y divide-line">
+            {recent.data.operations.map((o) => (
+              <li key={o.operation_id}>
+                <Link href={`/console/operations?id=${o.operation_id}`} className="flex items-center gap-2 px-4 py-2 text-[12.5px] hover:bg-raised/40">
+                  <DecisionPill decision={o.decision} />
+                  <Mono className="text-muted">{o.reason_code ?? o.request_id}</Mono>
+                  <Mono className="ml-auto text-[11px] text-dim">{ago(o.created_at)}</Mono>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </Panel>
     </div>
   );

@@ -110,7 +110,7 @@ export default function Quickstart() {
       <p>
         <code>evaluate()</code> is pure. It takes the time, fee estimate and price as inputs, never mutates state, and returns the
         next ledger snapshot. The same inputs always produce the same decision. Prefer a UI? The{" "}
-        <Link href="/#workbench">workbench</Link> runs the same function in your browser.
+        <Link href="/overview#workbench">workbench</Link> runs the same function in your browser.
       </p>
 
       <h2 id="next">Next</h2>

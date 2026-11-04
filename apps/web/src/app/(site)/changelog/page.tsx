@@ -9,6 +9,19 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.5.0",
+    date: "2026-11-04",
+    tag: "Pre-release · testnet",
+    changes: [
+      "palisec.tech opens the app: visitors without a session go to wallet sign-in, members go straight to the console. The overview moved to /overview.",
+      "The console shows real data only. The example-data simulation is gone; an expired session returns you to sign-in and an unreachable control plane is shown as such.",
+      "Dashboard: 24-hour outcome chart (UTC, hourly), policy status and last activation, connectivity, and recent security events that open their exact record.",
+      "Policy editor split into a rule builder and the generated policy, with test cases that evaluate the unsaved draft against live fee and price inputs.",
+      "Agent detail shows owner, budget and rate limits and recent operations; operations and audit gain agent, request ID and time-range filters and deep links; approvals can be sorted.",
+      "Sign-in returns you to the page you asked for, accepting only console paths. Console changes are rate-limited per member.",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-11-04",
     tag: "Pre-release · testnet",

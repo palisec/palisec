@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
-import { Btn, Confirm, Empty, KV, Mono, PageTitle, Panel, Segmented } from "../kit";
+import { Btn, Confirm, Empty, inputCls, KV, Mono, PageTitle, Panel, Segmented } from "../kit";
 import { CheckList, DecisionPill, LoadError, Loading, StatePill, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
@@ -13,16 +13,25 @@ type Filter = "all" | "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
 export function LiveOperations() {
   const params = useSearchParams();
   const reason = params.get("reason_code");
-  const [filter, setFilter] = useState<Filter>("all");
+  const focusId = params.get("id");
+  const initial = params.get("decision");
+  const [filter, setFilter] = useState<Filter>(initial === "ALLOW" || initial === "DENY" || initial === "REQUIRES_HUMAN_SIGNATURE" ? initial : "all");
+  const [agentId, setAgentId] = useState("");
+  const [requestId, setRequestId] = useState("");
   const [pages, setPages] = useState<string[]>([]);
   const query = new URLSearchParams({ limit: "50" });
   if (filter !== "all") query.set("decision", filter);
   if (reason && /^RW_[A-Z]+_\d{3}$/.test(reason)) query.set("reason_code", reason);
+  if (agentId) query.set("agent_id", agentId);
+  if (/^[A-Za-z0-9_.:-]{1,128}$/.test(requestId.trim())) query.set("request_id", requestId.trim());
   if (pages.length) query.set("before", pages[pages.length - 1]!);
   const list = useLive<{ operations: LiveOperation[]; next_before: string | null }>(`/operations?${query}`);
+  const agents = useLive<{ agents: { id: string; name: string }[] }>("/agents");
+  // A link to one operation (from the dashboard or audit) opens it even if it is not on this page.
+  const focused = useLive<LiveOperation>(focusId && /^[0-9a-f-]{36}$/i.test(focusId) ? `/operations/${focusId}` : null);
   const [selected, setSelected] = useState<string | null>(null);
   const ops = list.data?.operations ?? [];
-  const current = ops.find((o) => o.operation_id === selected) ?? ops[0] ?? null;
+  const current = ops.find((o) => o.operation_id === selected) ?? (!selected ? focused.data : null) ?? ops[0] ?? null;
 
   return (
     <>
@@ -32,7 +41,8 @@ export function LiveOperations() {
         actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
       />
       <LoadError error={list.error} />
-      <div className="mb-4">
+      <LoadError error={focused.error} />
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <Segmented
           label="Decision"
           value={filter}
@@ -47,6 +57,11 @@ export function LiveOperations() {
             { value: "REQUIRES_HUMAN_SIGNATURE", label: "Review" },
           ]}
         />
+        <select aria-label="Agent" className={`${inputCls} !w-auto`} value={agentId} onChange={(e) => { setAgentId(e.target.value); setPages([]); }}>
+          <option value="">All agents</option>
+          {(agents.data?.agents ?? []).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+        <input aria-label="Request ID" className={`${inputCls} !w-56`} placeholder="Request ID" value={requestId} onChange={(e) => { setRequestId(e.target.value); setPages([]); }} spellCheck={false} />
       </div>
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)]">
         <Panel title="Operations">

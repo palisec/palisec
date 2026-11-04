@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
-import { Btn, Confirm, Empty, KV, Mono, Notice, PageTitle, Panel, Segmented } from "../kit";
+import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented } from "../kit";
 import { CheckList, LoadError, Loading, StatePill, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
@@ -25,10 +25,21 @@ function Countdown({ until }: { until: string | null }) {
   return <Mono className={s < 60 ? "text-deny" : "text-sand"}>{s === 0 ? "expired" : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s left`}</Mono>;
 }
 
+type Sort = "expiry" | "newest" | "oldest" | "exposure" | "agent";
+const time = (v: string | null) => (v ? new Date(v).getTime() : 0);
+const SORTS: Record<Sort, { label: string; fn: (a: Approval, b: Approval) => number }> = {
+  expiry: { label: "Expires soonest", fn: (a, b) => time(a.expires_at) - time(b.expires_at) },
+  newest: { label: "Newest", fn: (a, b) => time(b.created_at) - time(a.created_at) },
+  oldest: { label: "Oldest", fn: (a, b) => time(a.created_at) - time(b.created_at) },
+  exposure: { label: "Highest exposure", fn: (a, b) => (BigInt(b.details.exposure_usd_micros) > BigInt(a.details.exposure_usd_micros) ? 1 : -1) },
+  agent: { label: "Agent", fn: (a, b) => a.details.agent_name.localeCompare(b.details.agent_name) },
+};
+
 export function LiveApprovals() {
   const [status, setStatus] = useState<"pending" | "decided">("pending");
+  const [sort, setSort] = useState<Sort>("expiry");
   const list = useLive<{ approvals: Approval[] }>(`/approvals?status=${status}`);
-  const items = list.data?.approvals ?? [];
+  const items = [...(list.data?.approvals ?? [])].sort(SORTS[sort].fn);
   return (
     <>
       <PageTitle
@@ -37,8 +48,11 @@ export function LiveApprovals() {
         actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
       />
       <LoadError error={list.error} />
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <Segmented label="Status" value={status} onChange={setStatus} options={[{ value: "pending", label: "Pending" }, { value: "decided", label: "Decided and expired" }]} />
+        <select aria-label="Sort" className={`${inputCls} !w-auto`} value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+          {(Object.keys(SORTS) as Sort[]).map((k) => <option key={k} value={k}>{SORTS[k].label}</option>)}
+        </select>
       </div>
       {!list.data ? (
         <Loading what="approvals" />

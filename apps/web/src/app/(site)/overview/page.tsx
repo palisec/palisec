@@ -23,7 +23,8 @@ import { Workbench } from "@/components/workbench";
 import { capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  title: "Overview",
+  alternates: { canonical: "/overview" },
 };
 
 /** Brand media is optional: use it only if it has been added to /public/media. */

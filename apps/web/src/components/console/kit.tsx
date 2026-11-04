@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import type { AgentStatus, AuditType, OpStatus } from "@/lib/console-sim";
-import type { Decision } from "@palisec/policy-schema";
 import { Codes } from "../ui";
 import { useInView } from "../motion";
 
@@ -67,28 +65,6 @@ const TONE: Record<Tone, string> = {
 
 export function Pill({ tone = "muted", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
   return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[4px] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.06em] transition-colors duration-300 ${TONE[tone]} ${className}`}>{children}</span>;
-}
-
-const STATUS: Record<OpStatus, { tone: Tone; glyph: string; text: string }> = {
-  denied: { tone: "deny", glyph: "■", text: "Denied" },
-  authorized: { tone: "allow", glyph: "→", text: "Authorized" },
-  pending_approval: { tone: "review", glyph: "◆", text: "Pending approval" },
-  approved: { tone: "allow", glyph: "✓", text: "Approved" },
-  rejected: { tone: "muted", glyph: "×", text: "Rejected" },
-  expired: { tone: "muted", glyph: "–", text: "Expired" },
-  failed: { tone: "deny", glyph: "!", text: "Invalidated" },
-};
-export const STATUS_LABEL = (s: OpStatus) => STATUS[s].text;
-
-/** Keyed on status, so a state change pops the pill instead of swapping silently. */
-export function OpStatusPill({ status }: { status: OpStatus }) {
-  const s = STATUS[status];
-  return (
-    <Pill key={status} tone={s.tone} className="animate-[c-pop_.4s_var(--ease-out-quint)]">
-      <span aria-hidden className={status === "pending_approval" ? "animate-pulse" : ""}>{s.glyph}</span>
-      {s.text}
-    </Pill>
-  );
 }
 
 export function KV({ rows, className = "" }: { rows: [ReactNode, ReactNode][]; className?: string }) {
@@ -184,62 +160,6 @@ export function Notice({ tone = "review", children }: { tone?: "review" | "deny"
     <div role="status" key={typeof children === "string" ? children : undefined} className={`rounded-[6px] border px-3 py-2 text-[13px] leading-relaxed ${cls}`}>
       {typeof children === "string" ? <Codes text={children} /> : children}
     </div>
-  );
-}
-
-const AGENT: Record<AgentStatus, { tone: Tone; glyph: string }> = { active: { tone: "allow", glyph: "●" }, paused: { tone: "muted", glyph: "❚❚" }, revoked: { tone: "deny", glyph: "■" } };
-
-/** One status component for agents everywhere: glyph and word, never colour alone. */
-export function AgentStatusPill({ status }: { status: AgentStatus }) {
-  const s = AGENT[status];
-  return (
-    <Pill key={status} tone={s.tone} className="animate-[c-pop_.4s_var(--ease-out-quint)]">
-      <span aria-hidden className={status === "active" ? "animate-pulse" : ""}>{s.glyph}</span>
-      {status}
-    </Pill>
-  );
-}
-
-const DECISION_CHIP: Record<Decision, [Tone, string, string]> = {
-  ALLOW: ["allow", "→", "Allow"],
-  DENY: ["deny", "■", "Deny"],
-  REQUIRES_HUMAN_SIGNATURE: ["review", "◆", "Review"],
-};
-const EVENT_CHIP: Partial<Record<AuditType, [Tone, string]>> = {
-  "approval.approved": ["allow", "✓"],
-  "approval.rejected": ["muted", "×"],
-  "approval.expired": ["muted", "–"],
-  "approval.invalidated": ["muted", "!"],
-  "agent.paused": ["muted", "❚❚"],
-  "agent.resumed": ["muted", "▸"],
-  "agent.revoked": ["deny", "■"],
-  "breaker.engaged": ["deny", "■"],
-  "breaker.released": ["muted", "▸"],
-  "credential.revoked": ["deny", "■"],
-  "credential.created": ["muted", "+"],
-  "policy.activated": ["muted", "↑"],
-};
-
-/**
- * Audit event chip. One vocabulary site-wide: → allow, ■ deny / emergency, ◆ held for review, ✓ approved.
- * Decisions show the decision word; colour is reserved for decisions, approvals and emergency actions.
- */
-export function EventPill({ type, decision }: { type: AuditType; decision?: Decision }) {
-  if (type === "operation.evaluated" && decision) {
-    const [tone, glyph, word] = DECISION_CHIP[decision];
-    return (
-      <Pill tone={tone}>
-        <span aria-hidden>{glyph}</span>
-        {word} · evaluated
-      </Pill>
-    );
-  }
-  const [tone, glyph] = EVENT_CHIP[type] ?? ["muted", "·"];
-  return (
-    <Pill tone={tone}>
-      <span aria-hidden>{glyph}</span>
-      {type}
-    </Pill>
   );
 }
 

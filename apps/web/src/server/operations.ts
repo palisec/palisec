@@ -74,6 +74,59 @@ interface Prepared {
 const LIVE_DETAIL =
   "Not performed by this deployment yet. Palisec records the decision; your agent submits the transaction itself, and nothing on-chain enforces it until the account module ships.";
 
+/** Fee bound, price and code check for one request. Each lookup may be null, and the evaluator fails closed. */
+async function liveEnvironment(input: Pick<IntentInput, "chain_id" | "to" | "gas_limit">, now: number, emergencyStop: boolean, pausedAgents: string[]) {
+  const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
+  const [gasPrice, price, code] = await Promise.all([
+    chainEnabled ? gasPriceWei(input.chain_id) : null,
+    ethUsd(),
+    chainEnabled ? hasDeployedCode(input.chain_id, input.to) : null,
+  ]);
+  const feeWei = gasPrice === null ? null : gasPrice * BigInt(input.gas_limit);
+  const env: Environment = {
+    now,
+    fee_estimate_wei: feeWei === null ? null : feeWei.toString(),
+    eth_usd: price,
+    verified_code: code ? { [input.to.toLowerCase()]: true } : {},
+    emergency_stop: emergencyStop,
+    paused_agents: pausedAgents,
+  };
+  return { env, feeWei };
+}
+
+/** Disabled chains deny, and live-only checks say plainly that this deployment does not perform them. */
+function finish(r: ReturnType<typeof evaluate>, chainId: number) {
+  let result = r;
+  if (CHAINS[chainId as ChainId]?.enabled !== true && result.decision !== "DENY") {
+    result = {
+      ...result,
+      decision: "DENY",
+      reason_code: "RW_CHAIN_001",
+      retryable: RETRYABLE.RW_CHAIN_001,
+      authorization_id: null,
+      message: `Chain ${chainId} is not enabled on this deployment.`,
+    };
+  }
+  const checks: CheckResult[] = result.checks.map((c) => (c.enforcement === "live" ? { ...c, detail: LIVE_DETAIL } : c));
+  return { result, checks };
+}
+
+/**
+ * Runs a policy draft against one test transaction with live fee and price inputs and an empty
+ * ledger (no budget used, no cooldowns). Nothing is recorded. Used by the policy editor's test panel.
+ */
+export async function testDraft(doc: Record<string, unknown>, body: Record<string, unknown>) {
+  const account = doc.account as { chain_id?: number; address?: string } | undefined;
+  if (!account?.address || typeof account.chain_id !== "number") throw new BadRequest("The draft needs an account before it can be tested");
+  const now = Math.floor(Date.now() / 1000);
+  const input = parseIntent({ request_id: "draft_test", chain_id: account.chain_id, deadline: now + 60, gas_limit: 100000, data: "0x", value_wei: "0", ...body });
+  const intent: Intent = { ...input, agent_id: "draft_test", from: getAddress(account.address) };
+  const policy = { ...doc, version: 1, status: "active" } as unknown as Policy;
+  const { env } = await liveEnvironment(input, now, false, []);
+  const { result, checks } = finish(evaluate(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env), input.chain_id);
+  return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
+}
+
 /** Snapshot of authoritative state, then the reference evaluator. Pure read: nothing is recorded. */
 async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepared> {
   const selector = selectorOf(input.data);
@@ -128,34 +181,8 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
     intent_seen: snap.intent_at != null ? { [intentFp]: Number(snap.intent_at) } : {},
   };
 
-  const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
-  const [gasPrice, price, code] = await Promise.all([
-    chainEnabled ? gasPriceWei(input.chain_id) : null,
-    ethUsd(),
-    chainEnabled ? hasDeployedCode(input.chain_id, input.to) : null,
-  ]);
-  const feeWei = gasPrice === null ? null : gasPrice * BigInt(input.gas_limit);
-  const env: Environment = {
-    now,
-    fee_estimate_wei: feeWei === null ? null : feeWei.toString(),
-    eth_usd: price,
-    verified_code: code ? { [input.to.toLowerCase()]: true } : {},
-    emergency_stop: agent.emergencyStop,
-    paused_agents: agent.agentStatus === "active" ? [] : [agent.agentId],
-  };
-
-  let result = evaluate(policy, intent, state, env);
-  if (!chainEnabled && result.decision !== "DENY") {
-    result = {
-      ...result,
-      decision: "DENY",
-      reason_code: "RW_CHAIN_001",
-      retryable: RETRYABLE.RW_CHAIN_001,
-      authorization_id: null,
-      message: `Chain ${input.chain_id} is not enabled on this deployment.`,
-    };
-  }
-  const checks: CheckResult[] = result.checks.map((c) => (c.enforcement === "live" ? { ...c, detail: LIVE_DETAIL } : c));
+  const { env, feeWei } = await liveEnvironment(input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId]);
+  const { result, checks } = finish(evaluate(policy, intent, state, env), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {
     intent,

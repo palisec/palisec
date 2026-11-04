@@ -1,12 +1,12 @@
 "use client";
 
-import { EXAMPLE_POLICY, validatePolicy, type ValidationError } from "@palisec/policy-schema";
+import { EXAMPLE_POLICY, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { formatUnits, parseUnits } from "@/lib/units";
 import { CopyButton } from "../../copy-button";
 import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
-import { LoadError, Loading, thCls, useAction, utc } from "./common";
+import { CheckList, DecisionPill, LoadError, Loading, thCls, usd, useAction, utc } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 interface PolicyRow {
@@ -198,44 +198,11 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
   };
 
   return (
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
-      <Panel
-        title={`${p.name} · draft`}
-        actions={<Pill tone={errors.length ? "deny" : "allow"}>{errors.length ? `${errors.length} error${errors.length > 1 ? "s" : ""}` : "valid"}</Pill>}
-        bodyClassName="p-4 space-y-3"
-      >
-        <label htmlFor={`${uid}-json`} className="sr-only">Policy JSON</label>
-        <textarea
-          id={`${uid}-json`}
-          value={value}
-          onChange={(e) => setText(e.target.value)}
-          readOnly={!manage}
-          spellCheck={false}
-          rows={28}
-          className={`${inputCls} min-h-[28rem] resize-y leading-relaxed`}
-        />
-        {errors.length > 0 && (
-          <ul className="space-y-1 text-[12px]">
-            {errors.slice(0, 8).map((e, i) => (
-              <li key={i} className="text-deny"><Mono>{e.path}</Mono> <span className="text-soft">{e.message}</span></li>
-            ))}
-          </ul>
-        )}
-        {manage && (
-          <div className="flex flex-wrap items-center gap-2">
-            <Btn variant="primary" disabled={busy || !dirty || !parsed.doc} onClick={() => run(() => api(`/policies/${id}`, { method: "PUT", body: { document: parsed.doc } }), "Draft saved.").then(after)}>
-              Save draft
-            </Btn>
-            <Btn variant="quiet" disabled={!dirty} onClick={() => setText(null)}>Discard changes</Btn>
-            <CopyButton text={value} label="Copy JSON" />
-          </div>
-        )}
-        {notice}
-      </Panel>
-
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(340px,460px)_minmax(0,1fr)]">
       <div className="space-y-4">
+        <p className="label">Configuration</p>
         {manage && parsed.doc && <QuickEdits doc={parsed.doc} edit={edit} />}
-
+        {parsed.doc && errors.length === 0 && <TestPanel doc={parsed.doc} />}
         <Panel title={p.active_version ? `Changes from v${p.active_version}` : "Changes (no active version)"} bodyClassName="p-4 space-y-3">
           {changes.length === 0 ? (
             <p className="text-[13px] text-muted">The draft matches the active version.</p>
@@ -274,6 +241,43 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
           )}
         </Panel>
 
+      </div>
+
+      <div className="min-w-0 space-y-4">
+        <p className="label">Generated policy</p>
+        <Panel
+          title={`${p.name} · draft`}
+          actions={<Pill tone={errors.length ? "deny" : "allow"}>{errors.length ? `${errors.length} error${errors.length > 1 ? "s" : ""}` : "valid"}</Pill>}
+          bodyClassName="p-4 space-y-3"
+        >
+          <label htmlFor={`${uid}-json`} className="sr-only">Policy JSON</label>
+          <textarea
+            id={`${uid}-json`}
+            value={value}
+            onChange={(e) => setText(e.target.value)}
+            readOnly={!manage}
+            spellCheck={false}
+            rows={28}
+            className={`${inputCls} min-h-[28rem] resize-y leading-relaxed`}
+          />
+          {errors.length > 0 && (
+            <ul className="space-y-1 text-[12px]">
+              {errors.slice(0, 8).map((e, i) => (
+                <li key={i} className="text-deny"><Mono>{e.path}</Mono> <span className="text-soft">{e.message}</span></li>
+              ))}
+            </ul>
+          )}
+          {manage && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Btn variant="primary" disabled={busy || !dirty || !parsed.doc} onClick={() => run(() => api(`/policies/${id}`, { method: "PUT", body: { document: parsed.doc } }), "Draft saved.").then(after)}>
+                Save draft
+              </Btn>
+              <Btn variant="quiet" disabled={!dirty} onClick={() => setText(null)}>Discard changes</Btn>
+              <CopyButton text={value} label="Copy JSON" />
+            </div>
+          )}
+          {notice}
+        </Panel>
         <Panel title="Versions" bodyClassName="p-4">
           {p.versions.length === 0 ? (
             <p className="text-[13px] text-muted">Not activated yet.</p>
@@ -300,66 +304,206 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
   );
 }
 
-/** Common edits in human units, written into the JSON so the editor stays the single source. */
+/** Rule builder (spec §11.4): edits in human units, written into the JSON so the editor stays the single source. */
 function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Record<string, any>) => void) => void }) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const uid = useId();
   const [contract, setContract] = useState("");
   const [selectors, setSelectors] = useState("0xa9059cbb");
-  const usdField = (label: string, get: () => string | undefined, set: (d: Record<string, any>, v: string) => void, hint: string) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const current = get();
-    return (
-      <Field id={`${uid}-${label}`} label={label} hint={hint}>
-        <input
-          id={`${uid}-${label}`}
-          className={inputCls}
-          defaultValue={current ? formatUnits(current, 6) : ""}
-          key={current}
-          onBlur={(e) => {
-            const v = parseUnits(e.target.value, 6);
-            if (v !== null) edit((d) => set(d, v.toString()));
-          }}
-        />
-      </Field>
-    );
-  };
+  const [deny, setDeny] = useState("");
+  const [requireCode, setRequireCode] = useState(true);
+  const unitField = (label: string, decimals: number, current: string | undefined, set: (d: Record<string, any>, v: string) => void, hint?: string) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+    <Field id={`${uid}-${label}`} label={label} hint={hint}>
+      <input
+        id={`${uid}-${label}`}
+        className={inputCls}
+        inputMode="decimal"
+        defaultValue={current ? formatUnits(current, decimals) : ""}
+        key={current}
+        onBlur={(e) => {
+          const v = parseUnits(e.target.value, decimals);
+          if (v !== null) edit((d) => set(d, v.toString()));
+        }}
+      />
+    </Field>
+  );
+  const intField = (label: string, current: number | undefined, set: (d: Record<string, any>, v: number) => void, hint?: string) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+    <Field id={`${uid}-${label}`} label={label} hint={hint}>
+      <input
+        id={`${uid}-${label}`}
+        className={inputCls}
+        inputMode="numeric"
+        defaultValue={current ?? ""}
+        key={String(current)}
+        onBlur={(e) => {
+          const v = Number(e.target.value);
+          if (Number.isInteger(v) && v >= 0) edit((d) => set(d, v));
+        }}
+      />
+    </Field>
+  );
+  const allow = (doc.contracts?.allowlist ?? []) as { address: string; selectors: string[]; require_verified_code: boolean }[];
+  const denylist = (doc.contracts?.denylist ?? []) as string[];
+  const section = "space-y-3 border-t border-line pt-3";
   return (
-    <Panel title="Quick edits" bodyClassName="grid gap-3 p-4">
-      {usdField("Hourly budget (USD)", () => doc.limits?.hourly_budget_usd_micros, (d, v) => (d.limits.hourly_budget_usd_micros = v), "Value plus estimated fee, across every agent on this policy.")}
-      {usdField("Human approval at (USD)", () => doc.human_approval?.usd_threshold_micros, (d, v) => (d.human_approval.usd_threshold_micros = v), "Operations at or above this exposure wait for an approver's signature.")}
-      <Field id={`${uid}-maxeth`} label="Max value per transaction (ETH)">
-        <input
-          id={`${uid}-maxeth`}
-          className={inputCls}
-          key={doc.limits?.max_transaction_value_wei}
-          defaultValue={doc.limits?.max_transaction_value_wei ? formatUnits(doc.limits.max_transaction_value_wei, 18) : ""}
-          onBlur={(e) => {
-            const v = parseUnits(e.target.value, 18);
-            if (v !== null) edit((d) => (d.limits.max_transaction_value_wei = v.toString()));
-          }}
-        />
-      </Field>
-      <div className="space-y-2 border-t border-line pt-3">
-        <p className="label">Allow a contract</p>
+    <Panel title="Rule builder" bodyClassName="grid gap-3 p-4">
+      <p className="label">Transaction limits</p>
+      {unitField("Max value per transaction (ETH)", 18, doc.limits?.max_transaction_value_wei, (d, v) => (d.limits.max_transaction_value_wei = v))}
+      {unitField("Max gas cost (ETH)", 18, doc.limits?.max_gas_cost_wei, (d, v) => (d.limits.max_gas_cost_wei = v), "Bound = gas limit × current gas price. Unknown fees are denied, never treated as zero.")}
+      <div className={section}>
+        <p className="label">Budget window · rolling hour</p>
+        {unitField("Hourly budget (USD)", 6, doc.limits?.hourly_budget_usd_micros, (d, v) => (d.limits.hourly_budget_usd_micros = v), "Value plus fee bound, shared by every agent on this policy.")}
+        {intField("Max pending operations", doc.limits?.max_pending_operations, (d, v) => (d.limits.max_pending_operations = Math.min(v, 1000)))}
+        {intField("Max price age (seconds)", doc.limits?.max_price_age_seconds, (d, v) => (d.limits.max_price_age_seconds = Math.min(Math.max(v, 1), 3600)), "Older ETH/USD prices fail closed. 30 or more is recommended.")}
+      </div>
+      <div className={section}>
+        <p className="label">Cooldowns · loop detection</p>
+        {intField("Same calldata (seconds)", doc.cooldowns?.identical_calldata_seconds, (d, v) => (d.cooldowns.identical_calldata_seconds = Math.min(v, 86400)))}
+        {intField("Same intent (seconds)", doc.cooldowns?.identical_intent_seconds, (d, v) => (d.cooldowns.identical_intent_seconds = Math.min(v, 86400)), "Same agent, target, method and value.")}
+      </div>
+      <div className={section}>
+        <p className="label">Human approval</p>
+        {unitField("Approval at or above (USD)", 6, doc.human_approval?.usd_threshold_micros, (d, v) => (d.human_approval.usd_threshold_micros = v))}
+        <Field id={`${uid}-unknown`} label="Unknown methods on allowed contracts">
+          <select id={`${uid}-unknown`} className={inputCls} value={doc.human_approval?.require_for_unknown_methods ? "review" : "deny"} onChange={(e) => edit((d) => (d.human_approval.require_for_unknown_methods = e.target.value === "review"))}>
+            <option value="review">Send to a human (RW_HUMAN_001)</option>
+            <option value="deny">Deny (RW_METHOD_001)</option>
+          </select>
+        </Field>
+        <p className="text-[11.5px] text-muted">Failure mode is always <Mono>closed</Mono>: a missing policy, price or fee never allows.</p>
+      </div>
+      <div className={section}>
+        <p className="label">Contracts and methods · default deny</p>
+        {allow.length === 0 ? (
+          <p className="text-[12px] text-muted">Nothing is allowed yet.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {allow.map((c) => (
+              <li key={c.address} className="flex items-start justify-between gap-2 text-[12px]">
+                <span className="min-w-0">
+                  <Mono className="block break-all text-soft">{c.address}</Mono>
+                  <Mono className="text-dim">{c.selectors.join(", ") || "no methods"}{c.require_verified_code ? " · code required" : ""}</Mono>
+                </span>
+                <Btn variant="quiet" aria-label={`Remove ${c.address}`} onClick={() => edit((d) => (d.contracts.allowlist = allow.filter((x) => x.address !== c.address)))}>Remove</Btn>
+              </li>
+            ))}
+          </ul>
+        )}
         <input aria-label="Contract address" className={inputCls} value={contract} onChange={(e) => setContract(e.target.value.trim())} placeholder="0x… contract" spellCheck={false} />
         <input aria-label="Function selectors" className={inputCls} value={selectors} onChange={(e) => setSelectors(e.target.value)} placeholder="0xa9059cbb, 0x095ea7b3" spellCheck={false} />
-        <p className="text-[11.5px] text-muted">Selectors are the first 4 bytes of the call data. <Mono>0xa9059cbb</Mono> is ERC-20 transfer.</p>
+        <label className="flex items-start gap-2 text-[12px] text-soft">
+          <input type="checkbox" checked={requireCode} onChange={(e) => setRequireCode(e.target.checked)} className="mt-0.5 accent-[#e5ff5d]" />
+          <span>Require deployed contract code. Denies the call if no contract exists at the address on the chain (for example a typo or an undeployed address).</span>
+        </label>
+        <p className="text-[11.5px] text-muted">Selectors are the first 4 bytes of the call data. <Mono>0xa9059cbb</Mono> is ERC-20 transfer, <Mono>0x095ea7b3</Mono> is approve.</p>
         <Btn
           variant="quiet"
           disabled={!/^0x[0-9a-fA-F]{40}$/.test(contract)}
           onClick={() => {
             edit((d) => {
-              const list = d.contracts.allowlist as { address: string; selectors: string[]; require_verified_code: boolean }[];
-              const sels = selectors.split(/[\s,]+/).filter(Boolean).map((s) => s.toLowerCase());
+              const list = d.contracts.allowlist as typeof allow;
+              const sels = selectors.split(/[\s,]+/).filter((x) => /^0x[0-9a-fA-F]{8}$/.test(x)).map((x) => x.toLowerCase());
               const existing = list.find((x) => x.address.toLowerCase() === contract.toLowerCase());
               if (existing) existing.selectors = [...new Set([...existing.selectors, ...sels])];
-              else list.push({ address: contract, selectors: sels, require_verified_code: true });
+              if (existing) existing.require_verified_code = requireCode;
+              else list.push({ address: contract, selectors: sels, require_verified_code: requireCode });
             });
             setContract("");
           }}
         >
-          Add to allowlist
+          Allow contract
         </Btn>
       </div>
+      <div className={section}>
+        <p className="label">Explicit deny · overrides allow</p>
+        {denylist.map((d) => (
+          <div key={d} className="flex items-center justify-between gap-2 text-[12px]">
+            <Mono className="break-all text-deny">{d}</Mono>
+            <Btn variant="quiet" aria-label={`Remove ${d}`} onClick={() => edit((x) => (x.contracts.denylist = denylist.filter((y) => y !== d)))}>Remove</Btn>
+          </div>
+        ))}
+        <input aria-label="Address to deny" className={inputCls} value={deny} onChange={(e) => setDeny(e.target.value.trim())} placeholder="0x… address" spellCheck={false} />
+        <Btn
+          variant="quiet"
+          disabled={!/^0x[0-9a-fA-F]{40}$/.test(deny)}
+          onClick={() => {
+            edit((d) => {
+              if (!d.contracts.denylist.includes(deny)) d.contracts.denylist.push(deny);
+            });
+            setDeny("");
+          }}
+        >
+          Deny address
+        </Btn>
+      </div>
+    </Panel>
+  );
+}
+
+interface TestResult {
+  decision: "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
+  reason_code: string | null;
+  message: string;
+  checks: CheckResult[];
+  inputs: { fee_estimate_wei: string | null; eth_usd: { price_micros: string } | null };
+}
+
+/** Runs the editor's current document against one transaction with live fee and price. Records nothing. */
+function TestPanel({ doc }: { doc: Record<string, unknown> }) {
+  const uid = useId();
+  const [to, setTo] = useState("");
+  const [value, setValue] = useState("0");
+  const [data, setData] = useState("0x");
+  const [gas, setGas] = useState("100000");
+  const [result, setResult] = useState<TestResult | null>(null);
+  const { run, busy, notice } = useAction();
+  const wei = parseUnits(value, 18);
+  const ready = /^0x[0-9a-fA-F]{40}$/.test(to) && wei !== null && /^0x([0-9a-fA-F]{2})*$/.test(data) && /^\d+$/.test(gas);
+  return (
+    <Panel title="Test cases" bodyClassName="grid gap-3 p-4">
+      <p className="text-[12px] leading-relaxed text-muted">
+        Evaluate this draft against one transaction with the live fee and ETH price and an empty ledger (no budget used yet). Nothing is recorded.
+      </p>
+      <Field id={`${uid}-to`} label="Target">
+        <input id={`${uid}-to`} className={inputCls} value={to} onChange={(e) => setTo(e.target.value.trim())} placeholder="0x…" spellCheck={false} />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field id={`${uid}-v`} label="Value (ETH)">
+          <input id={`${uid}-v`} className={inputCls} value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" />
+        </Field>
+        <Field id={`${uid}-g`} label="Gas limit">
+          <input id={`${uid}-g`} className={inputCls} value={gas} onChange={(e) => setGas(e.target.value)} inputMode="numeric" />
+        </Field>
+      </div>
+      <Field id={`${uid}-d`} label="Calldata">
+        <input id={`${uid}-d`} className={inputCls} value={data} onChange={(e) => setData(e.target.value.trim())} spellCheck={false} />
+      </Field>
+      <Btn
+        variant="ghost"
+        disabled={busy || !ready}
+        onClick={async () => {
+          const r = await run(() =>
+            api<TestResult>("/policies/test", { method: "POST", body: { document: doc, transaction: { to, value_wei: wei!.toString(), data, gas_limit: Number(gas) } } }),
+          );
+          if (r) setResult(r);
+        }}
+      >
+        Run test
+      </Btn>
+      {notice}
+      {result && (
+        <div className="space-y-2 border-t border-line pt-3">
+          <p className="flex flex-wrap items-center gap-2 text-[13px]">
+            <DecisionPill decision={result.decision} />
+            {result.reason_code && <Mono className="text-soft">{result.reason_code}</Mono>}
+          </p>
+          <p className="text-[12.5px] text-soft">{result.message}</p>
+          <p className="text-[11.5px] text-muted">
+            Fee bound {result.inputs.fee_estimate_wei ? `${formatUnits(result.inputs.fee_estimate_wei, 18)} ETH` : "unavailable"} · ETH/USD{" "}
+            {result.inputs.eth_usd ? usd(result.inputs.eth_usd.price_micros) : "unavailable"}
+          </p>
+          <CheckList checks={result.checks.filter((c) => c.enforcement === "local")} />
+        </div>
+      )}
     </Panel>
   );
 }

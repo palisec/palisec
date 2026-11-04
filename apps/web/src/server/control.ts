@@ -287,8 +287,9 @@ export async function listAgents(ctx: MemberContext) {
 export async function getAgent(ctx: MemberContext, id: string) {
   const [agent] = await db()`
     SELECT a.*, p.policy_key, p.active_version AS policy_version, (p.disabled_at IS NOT NULL) AS policy_disabled,
-      u.address AS status_changed_by_address
+      u.address AS status_changed_by_address, cu.address AS created_by_address
     FROM agents a LEFT JOIN policies p ON p.id = a.policy_id LEFT JOIN users u ON u.id = a.status_changed_by
+    LEFT JOIN users cu ON cu.id = a.created_by
     WHERE a.id = ${id}::uuid AND a.org_id = ${ctx.orgId}::uuid`;
   if (!agent) throw notFound("Agent");
   const credentials = await db()`
@@ -301,10 +302,10 @@ export async function getAgent(ctx: MemberContext, id: string) {
       count(*) FILTER (WHERE decision = 'DENY')::int AS denied,
       count(*) FILTER (WHERE decision = 'REQUIRES_HUMAN_SIGNATURE')::int AS reviewed
     FROM operations WHERE agent_id = ${id}::uuid AND created_at > now() - interval '1 hour'`;
-  const { status_changed_by_address, status_changed_by: _drop, created_by: _c, ...rest } = agent;
+  const { status_changed_by_address, created_by_address, status_changed_by: _drop, created_by: _c, ...rest } = agent;
   void _drop;
   void _c;
-  return { ...rest, status_changed_by: status_changed_by_address, credentials, last_hour: usage };
+  return { ...rest, created_by: created_by_address, status_changed_by: status_changed_by_address, credentials, last_hour: usage };
 }
 
 async function checkPolicyBinding(ctx: MemberContext, policyId: string | null, chain: number, account: string) {
@@ -432,6 +433,11 @@ export async function listAudit(ctx: MemberContext, params: URLSearchParams) {
   if (before !== null && !/^\d{1,18}$/.test(before)) throw new BadRequest("before must be a sequence number");
   if (type !== null && !/^[a-z_.]{1,64}$/.test(type)) throw new BadRequest("type is malformed");
   if (agentId !== null && !/^[0-9a-f-]{36}$/i.test(agentId)) throw new BadRequest("agent_id is malformed");
+  const from = params.get("from");
+  const to = params.get("to");
+  for (const t of [from, to]) if (t !== null && Number.isNaN(Date.parse(t))) throw new BadRequest("from and to must be ISO timestamps");
+  // Security events: denials, holds, pauses, revocations, stops and approval decisions.
+  const security = params.get("kind") === "security";
   const rows = await db()`
     SELECT e.seq, e.event_id, e.type, e.detail, e.created_at, e.schema_version, u.address AS actor_address,
       e.actor_agent_id, a.name AS actor_agent_name
@@ -440,6 +446,10 @@ export async function listAudit(ctx: MemberContext, params: URLSearchParams) {
       AND (${before}::bigint IS NULL OR e.seq < ${before}::bigint)
       AND (${type}::text IS NULL OR e.type = ${type}::text OR e.type LIKE ${type ? `${type}.%` : null}::text)
       AND (${agentId}::uuid IS NULL OR e.actor_agent_id = ${agentId}::uuid)
+      AND (${from}::timestamptz IS NULL OR e.created_at >= ${from}::timestamptz)
+      AND (${to}::timestamptz IS NULL OR e.created_at < ${to}::timestamptz)
+      AND (NOT ${security}::boolean OR e.type IN ('operation.denied', 'operation.pending_approval', 'operation.approved', 'operation.rejected',
+        'agent.paused', 'agent.revoked', 'credential.revoked', 'policy.disabled', 'policy.activated', 'org.emergency_stop.activated', 'org.emergency_stop.lifted'))
     ORDER BY e.seq DESC LIMIT ${limit}::int`;
   const events = rows.map((r: Row) => ({ ...r, seq: String(r.seq) }));
   return { events, next_before: rows.length === limit ? String(rows[rows.length - 1]!.seq) : null };
