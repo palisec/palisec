@@ -25,12 +25,24 @@ export function ok(body: unknown, init: ResponseInit = {}) {
 
 export class BadRequest extends Error {}
 
+/** A refusal with a stable code, thrown from deep inside a handler. */
+export class HttpError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+    public retryable = false,
+  ) {
+    super(message);
+  }
+}
+
 /** Parses a bounded JSON object body. */
-export async function readJson(req: Request): Promise<Record<string, unknown>> {
+export async function readJson(req: Request, maxBytes = MAX_BODY_BYTES): Promise<Record<string, unknown>> {
   const len = Number(req.headers.get("content-length") || 0);
-  if (len > MAX_BODY_BYTES) throw new BadRequest("Request body too large");
+  if (len > maxBytes) throw new BadRequest("Request body too large");
   const text = await req.text();
-  if (text.length > MAX_BODY_BYTES) throw new BadRequest("Request body too large");
+  if (text.length > maxBytes) throw new BadRequest("Request body too large");
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -102,14 +114,15 @@ export function rateLimited(req: Request, name: string, limit: number, windowMs 
 export const tooManyRequests = () => apiError(429, "RW_RATE_001", "Too many requests. Try again in a minute.", true);
 
 /** Maps thrown errors to fail-closed responses. Unknown errors never leak internals. */
-export function handle(fn: (req: Request) => Promise<Response>) {
-  return async (req: Request) => {
+export function handle<C = unknown>(fn: (req: Request, ctx: C) => Promise<Response>) {
+  return async (req: Request, ctx: C) => {
     try {
-      return await fn(req);
+      return await fn(req, ctx);
     } catch (err) {
       // Next signals prerender bailouts and redirects by throwing; those are not failures.
       unstable_rethrow(err);
       if (err instanceof BadRequest) return apiError(400, "RW_REQUEST_001", err.message);
+      if (err instanceof HttpError) return apiError(err.status, err.code, err.message, err.retryable);
       if (err instanceof StateUnavailable) return apiError(503, "RW_STATE_001", "Authoritative state unavailable", true);
       // Name and message only: request bodies and headers may carry credentials.
       console.error("[api] unhandled", err instanceof Error ? `${err.name}: ${err.message.slice(0, 200)}` : "error");

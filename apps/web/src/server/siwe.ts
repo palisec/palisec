@@ -104,10 +104,10 @@ export async function verifyChallenge(body: Record<string, unknown>, host: strin
       SELECT new_org.id, u.id, 'owner' FROM new_org, u
     ), org_audit AS (
       INSERT INTO audit_events (org_id, actor_user_id, type, detail)
-      SELECT new_org.id, u.id, 'org.created', ${JSON.stringify({ name_set_by: "sign_in" })}::jsonb FROM new_org, u
+      SELECT new_org.id, u.id, 'org.created', ${JSON.stringify({ name_set_by: "sign_in" })}::text::jsonb FROM new_org, u
     ), sign_in_audit AS (
       INSERT INTO audit_events (org_id, actor_user_id, type, detail)
-      SELECT (SELECT id FROM new_org), u.id, 'auth.sign_in', ${JSON.stringify({ method: "siwe", domain: host })}::jsonb FROM u
+      SELECT (SELECT id FROM new_org), u.id, 'auth.sign_in', ${JSON.stringify({ method: "siwe", domain: host })}::text::jsonb FROM u
     )
     SELECT id, created FROM u`;
   return { ok: true, userId: user.id, address, created: user.created };

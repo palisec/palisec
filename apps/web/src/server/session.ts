@@ -1,6 +1,7 @@
 import "server-only";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "./config";
 import { db } from "./db";
+import { randomHex, sha256Hex } from "./tokens";
 
 export type Role = "owner" | "admin" | "operator" | "approver" | "viewer";
 
@@ -11,20 +12,7 @@ export interface SessionUser {
   memberships: { orgId: string; orgName: string; role: Role }[];
 }
 
-function toHex(buf: ArrayBuffer) {
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/** Hex, not bytes, so the value passes through every database driver unchanged. */
-async function sha256Hex(token: string): Promise<string> {
-  return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)));
-}
-
-function newToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return toHex(bytes.buffer);
-}
+const newToken = () => randomHex(32);
 
 function readCookie(req: Request, name: string): string | null {
   const header = req.headers.get("cookie");
