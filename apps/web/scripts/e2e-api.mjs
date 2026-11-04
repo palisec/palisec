@@ -167,13 +167,19 @@ r = await call("GET", `/operations/${pendingOp}`, { key: KEY });
 check("agent reads its approved operation", r.status === 200 && r.body.state === "approved", r.body);
 
 // ---------------------------------------------------------------- cancel releases budget
+// An agent must not be able to execute, cancel and spend again: only a person may release an ALLOW.
 r = await call("POST", `/operations/${allowedOp}/cancel`, { key: KEY });
-check("agent cancels an unused authorization", r.status === 200 && r.body.state === "cancelled", r.body);
-r = await call("POST", `/operations/${pendingOp}/cancel`, { key: KEY });
-check("cancel the approved one too", r.status === 200, r.body);
+check("agent cannot release an authorization's budget", r.status === 409, r.body);
+r = await call("POST", "/operations", { key: KEY, body: intent({ data: approveData(rand()) }) });
+r = await call("POST", `/operations/${r.body.operation_id}/cancel`, { key: KEY });
+check("agent can withdraw a pending approval", r.status === 200 && r.body.state === "cancelled", r.body);
+r = await call("POST", `/operations/${allowedOp}/cancel`, { cookie: o.cookie });
+check("operator releases an unused authorization", r.status === 200 && r.body.state === "cancelled", r.body);
+r = await call("POST", `/operations/${pendingOp}/cancel`, { cookie: o.cookie });
+check("operator releases the approved one too", r.status === 200, r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "150000000000000" }) });
 check("released budget can be used again", r.body.decision === "ALLOW", r.body);
-await call("POST", `/operations/${r.body.operation_id}/cancel`, { key: KEY });
+await call("POST", `/operations/${r.body.operation_id}/cancel`, { cookie: o.cookie });
 
 // ---------------------------------------------------------------- concurrency: one slot, many requests
 const p2 = await call("POST", "/policies", { cookie: o.cookie, body: { name: "Race", policy_key: "race_test", chain_id: CHAIN, account: ACCOUNT } });

@@ -2,7 +2,10 @@ import { hasBearer, idParam, requireAgent, requireMember } from "@/server/access
 import { cancel } from "@/server/approvals";
 import { handle, ok } from "@/server/http";
 
-/** Releases an unused, unexpired authorization (or a pending approval) and its budget. */
+/**
+ * Agents may withdraw a pending approval. Releasing an authorization's budget needs a console
+ * operator, because only a person can vouch that the transaction was not sent.
+ */
 export const POST = handle<RouteContext<"/api/v1/operations/[id]/cancel">>(async (req, ctx) => {
   const id = await idParam(ctx);
   if (hasBearer(req)) {

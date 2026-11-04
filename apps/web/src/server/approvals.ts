@@ -141,17 +141,22 @@ export async function reject(ctx: MemberContext, id: string, body: Record<string
 }
 
 /**
- * Releases an unused authorization so its budget returns to the window. Either the agent that owns
- * the operation or a console operator may cancel. Only an unexpired authorization can be cancelled:
- * after expiry nobody can prove it was not executed, so its amount stays counted.
+ * Cancels an operation and releases its reservation.
+ *
+ * An agent may only withdraw a request still waiting for approval. It may not release an ALLOW: until
+ * receipt reconciliation exists nobody can prove the transaction was not sent, so an agent could
+ * execute, cancel, and spend past its budget. A console operator may release an unexpired
+ * authorization they know was not used; that is recorded with their identity. After expiry nobody can
+ * cancel, and the amount stays counted.
  */
 export async function cancel(orgId: string, id: string, actor: { agent?: AgentContext; userId?: string }) {
   const agentId = actor.agent?.agentId ?? null;
+  const states = agentId ? ["pending_approval"] : ["authorized", "approved", "pending_approval"];
   const rows = await db()`
     WITH o AS (
       UPDATE operations SET state = 'cancelled', decided_at = now(), decided_by = ${actor.userId ?? null}::uuid
       WHERE id = ${id}::uuid AND org_id = ${orgId}::uuid AND (${agentId}::uuid IS NULL OR agent_id = ${agentId}::uuid)
-        AND state IN ('authorized', 'approved', 'pending_approval') AND expires_at > now()
+        AND state = ANY(${states}::text[]) AND expires_at > now()
       RETURNING id, org_id, agent_id, request_id
     ), e AS (
       INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
@@ -159,7 +164,14 @@ export async function cancel(orgId: string, id: string, actor: { agent?: AgentCo
       FROM o
     )
     SELECT id FROM o`;
-  if (rows.length === 0) throw new HttpError(409, "RW_REPLAY_001", "Operation cannot be cancelled: it is not an unexpired authorization");
+  if (rows.length === 0)
+    throw new HttpError(
+      409,
+      "RW_REPLAY_001",
+      agentId
+        ? "Agents can only withdraw operations pending approval; an authorization keeps its budget until it expires"
+        : "Operation cannot be cancelled: it is not an unexpired authorization or pending approval",
+    );
   return getOperation(orgId, id);
 }
 
