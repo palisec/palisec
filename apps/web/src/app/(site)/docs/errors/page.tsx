@@ -138,7 +138,7 @@ export default function ErrorsPage() {
         <li>Every response carries a <code>request_id</code>. Use it to find the audit record, which lists every check in evaluation
           order with its result and detail.</li>
         <li>Reproduce a decision locally: the reference evaluator is deterministic, so the same policy, request and state give the same
-          result. The <Link href="/overview#workbench">workbench</Link> runs it in the browser, and the hosted API runs it on the server.</li>
+          result. The <Link href="/#workbench">workbench</Link> runs it in the browser, and the hosted API runs it on the server.</li>
         <li>Check the policy version in the response against the version you expect to be active. Approvals and authorizations are bound
           to the version they were evaluated under.</li>
         <li><code>transaction_hash</code> is null whenever nothing was broadcast. A non-null hash with a failed status is an EVM revert,

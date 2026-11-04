@@ -47,7 +47,7 @@ export default function LoginPage() {
 
       <footer className="flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-line px-6 py-4 font-utility text-[10.5px] uppercase tracking-[0.08em]">
         {[
-          ["/overview", "Overview"],
+          ["/", "Overview"],
           ["/docs/quickstart", "Quickstart"],
           ["/docs", "Docs"],
           ["/security", "Security model"],

@@ -186,7 +186,7 @@ export default function PoliciesPage() {
       <p>
         Validation returns a list of <code>{"{ path, message }"}</code> pairs using JSONPath-style paths, for example{" "}
         <code>$.limits.max_transaction_value_wei: must be a non-negative integer string</code>. A policy with any validation error
-        cannot be activated. Try it: edit a limit in the <Link href="/overview#workbench">workbench</Link> to an invalid value.
+        cannot be activated. Try it: edit a limit in the <Link href="/#workbench">workbench</Link> to an invalid value.
       </p>
     </DocArticle>
   );

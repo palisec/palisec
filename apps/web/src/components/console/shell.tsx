@@ -63,7 +63,7 @@ function Shell({ children }: { children: ReactNode }) {
       {/* Top bar: environment, network, account, system health (spec §11.1) */}
       <header className="sticky top-0 z-40 animate-[c-drop_.5s_var(--ease-out-quint)] border-b border-line bg-[linear-gradient(180deg,rgb(35_37_28/0.92),rgb(13_14_10/0.92))] backdrop-blur-xl">
         <div className="flex h-12 items-center gap-4 px-4">
-          <Link href="/console" className="flex items-center gap-2" aria-label="Palisec console">
+          <Link href="/" className="flex items-center gap-2" aria-label="Palisec overview">
             <CubeGlyph size={16} />
             <span className="font-brand text-[15px] font-extrabold tracking-[-0.01em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
           </Link>

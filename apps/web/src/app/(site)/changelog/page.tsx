@@ -13,7 +13,7 @@ const ENTRIES = [
     date: "2026-11-04",
     tag: "Pre-release · testnet",
     changes: [
-      "palisec.tech opens the app: visitors without a session go to wallet sign-in, members go straight to the console. The overview moved to /overview.",
+      "The console requires wallet sign-in: opening any console page without a session leads to /login and back to that page afterwards. palisec.tech itself stays the public overview, and the console logo returns to it.",
       "The console shows real data only. The example-data simulation is gone; an expired session returns you to sign-in and an unreachable control plane is shown as such.",
       "Dashboard: 24-hour outcome chart (UTC, hourly), policy status and last activation, connectivity, and recent security events that open their exact record.",
       "Policy editor split into a rule builder and the generated policy, with test cases that evaluate the unsaved draft against live fee and price inputs.",

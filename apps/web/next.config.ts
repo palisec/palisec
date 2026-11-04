@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    // The overview lived at /overview briefly; keep old links working.
+    return [{ source: "/overview", destination: "/", permanent: true }];
+  },
   async headers() {
     return [
       {
