@@ -6,7 +6,7 @@ import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Quickstart",
-  description: "Evaluate your first policy locally today, and see the protected-operation flow the hosted service will run.",
+  description: "Sign in, write a policy, register an agent and authorize your first operation on Robinhood Chain Testnet, or evaluate policies locally.",
   alternates: { canonical: "/docs/quickstart" },
 };
 
@@ -30,34 +30,79 @@ const result = evaluate(
 console.log(result.decision, result.reason_code);  // "ALLOW" null
 // Keep result.next_state to evaluate the next request against the new ledger.`;
 
-const PROTECTED = `import { palisec } from "@palisec/sdk";
+const AGENT = `// Node 22+, no dependencies. PALISEC_API_KEY comes from Console → Agents → Create key.
+const API = "https://palisec.tech/api/v1";
 
-const wall = palisec({ apiKey: process.env.PALISEC_API_KEY!, chainId: 46630 });
+async function authorize(tx: { to: string; value: bigint; data: string; gas: number }) {
+  const requestId = crypto.randomUUID();          // unique per intended transaction
+  const res = await fetch(\`\${API}/operations\`, {
+    method: "POST",
+    headers: {
+      authorization: \`Bearer \${process.env.PALISEC_API_KEY}\`,
+      "content-type": "application/json",
+      "idempotency-key": requestId,               // a retry returns the same decision
+    },
+    body: JSON.stringify({
+      request_id: requestId,
+      chain_id: 46630,                            // Robinhood Chain Testnet
+      to: tx.to,
+      value_wei: tx.value.toString(),             // integers as strings, never floats
+      data: tx.data,
+      gas_limit: tx.gas,                          // the fee bound is gas_limit × gas price
+      deadline: Math.floor(Date.now() / 1000) + 120,
+    }),
+  });
+  const op = await res.json();
+  if (!res.ok) throw new Error(\`\${op.error.code}: \${op.error.message}\`);
+  return op; // { decision, reason_code, state, authorization_id, expires_at, checks, ... }
+}
 
-// 1. Register a constrained ERC-4337 account (testnet only).
-const account = await wall.accounts.register({ address: SMART_ACCOUNT, chainId: 46630 });
-
-// 2. Create and activate a policy.
-const draft = await wall.policies.create(policyDocument);
-await wall.policies.activate(draft.id);   // requires explicit confirmation
-
-// 3. Submit an operation and inspect the decision.
-const op = await wall.operations.create({ account: account.address, to, value, data,
-  idempotencyKey: crypto.randomUUID() });
-
-// 4. Verify the receipt. Authorization is not inclusion; inclusion is not success.
+const op = await authorize({ to: TOKEN, value: 0n, data: transferCalldata, gas: 90_000 });
 if (op.decision === "ALLOW") {
-  const receipt = await wall.operations.waitForReceipt(op.operationId);
+  // Send the transaction yourself, before op.expires_at.
+} else if (op.decision === "REQUIRES_HUMAN_SIGNATURE") {
+  // Poll GET /operations/{op.operation_id} until state is "approved" (then send) or "rejected".
+} else {
+  console.warn("Denied:", op.reason_code, op.message); // never send a denied transaction
 }`;
+
+const DRY_RUN = `curl -s https://palisec.tech/api/v1/authorizations/evaluate \\
+  -H "authorization: Bearer $PALISEC_API_KEY" -H "content-type: application/json" \\
+  -d '{"request_id":"try-1","chain_id":46630,"to":"0x…","value_wei":"0","data":"0x",
+       "gas_limit":21000,"deadline":'$(($(date +%s)+60))'}'`;
 
 export default function Quickstart() {
   return (
     <DocArticle
       title="Quickstart"
-      lede="Part one runs today: evaluate a policy locally with the reference evaluator. Part two shows the hosted protected-operation flow, which is specified but not yet deployed."
-      maturity="local"
+      lede="Part one runs on the hosted testnet service today: sign in, write a policy, register an agent and ask Palisec before every transaction. Part two evaluates policies locally with the reference evaluator."
+      maturity="service"
     >
-      <h2 id="local">1 · Evaluate locally</h2>
+      <h2 id="hosted">1 · Your first authorized operation (testnet)</h2>
+      <Note kind="warning" title="What this release enforces">
+        Palisec records each decision and enforces budgets, cooldowns, replay protection and approvals for agents that ask it. It does
+        not sign or broadcast yet, and the on-chain account module is not deployed, so a key that skips Palisec can still transact. Use
+        testnet (chain 46630) and never treasury funds.
+      </Note>
+      <ol>
+        <li><strong>Sign in.</strong> Open <Link href="/login">/login</Link> and sign the message with your wallet. Your first sign-in creates an organization with you as owner.</li>
+        <li><strong>Create a policy.</strong> In <Link href="/console/policies">Console → Policies</Link>, enter the smart account your agent acts for. The draft starts strict: tiny limits and nothing allowlisted.</li>
+        <li><strong>Allow what the agent needs.</strong> Add each contract and function selector, set the hourly budget and the approval threshold, then save. The editor validates against schema 1.0 as you type.</li>
+        <li><strong>Activate.</strong> Review the changes and activate. This creates an immutable version 1 and an audit event.</li>
+        <li><strong>Register the agent and create a key.</strong> In <Link href="/console/agents">Console → Agents</Link>, bind the agent to the policy, then create an API key. Copy it: it is shown once.</li>
+        <li><strong>Ask before every transaction.</strong> Your agent calls <code>POST /v1/operations</code> and only sends on <code>ALLOW</code>.</li>
+      </ol>
+      <CodeBlock code={AGENT} title="agent.ts" />
+      <p>Try a request without reserving anything: the dry run returns the same decision and evaluation sequence, and consumes no request ID or budget.</p>
+      <CodeBlock code={DRY_RUN} title="terminal" />
+      <ul>
+        <li><strong>Authorization is not execution.</strong> <code>transaction_hash</code> stays <code>null</code>: Palisec did not broadcast anything.</li>
+        <li><strong>Budget is held until it expires.</strong> An allowed amount counts against the hourly budget even if you never send, because nobody can prove you did not. Only a console operator can release it.</li>
+        <li><strong>Approvals bind the exact operation.</strong> An approver signs the request hash, target, value, calldata hash, policy version and expiry. Changing any of them needs a new approval.</li>
+      </ul>
+      <p>Every endpoint, field and status code is in the <Link href="/docs/api">API reference</Link>.</p>
+
+      <h2 id="local">2 · Evaluate locally</h2>
       <p>Requires Node 22 and pnpm 10. The test suite covers each rule, precedence, replay, cooldowns and fail-closed behaviour.</p>
       <CodeBlock code={LOCAL} title="terminal" />
       <p>Evaluate an intent from TypeScript:</p>
@@ -68,21 +113,9 @@ export default function Quickstart() {
         <Link href="/#workbench">workbench</Link> runs the same function in your browser.
       </p>
 
-      <h2 id="protected">2 · First protected operation</h2>
-      <Note kind="warning" title="Not yet runnable">
-        The hosted API, the SDK and the smart-account module are not deployed. This is the intended flow; it will become runnable
-        on testnet (chain 46630) first. Never use treasury funds with a pre-release system.
-      </Note>
-      <CodeBlock code={PROTECTED} title="agent.ts · proposed SDK" pseudo />
-      <ol>
-        <li><strong>Constrained account.</strong> The agent never holds an unrestricted key. The account only accepts operations carrying a valid Palisec authorization.</li>
-        <li><strong>Explicit activation.</strong> Editing a policy never activates it. Activation creates a new version and an audit event.</li>
-        <li><strong>Inspect the decision.</strong> DENY responses carry a reason code and no transaction hash.</li>
-        <li><strong>Verify the receipt.</strong> The reservation is finalized with the actual fee only after the receipt is reconciled.</li>
-      </ol>
-
       <h2 id="next">Next</h2>
       <ul>
+        <li><Link href="/docs/api">API reference</Link>: endpoints, authentication, idempotency and pagination.</li>
         <li><Link href="/docs/policies">Policy schema</Link>: every rule, unit and precedence rule.</li>
         <li><Link href="/docs/errors">Errors and operations</Link>: reason codes and retry semantics.</li>
         <li><Link href="/security">Security model</Link>: what the system does and does not protect.</li>

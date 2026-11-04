@@ -21,15 +21,16 @@ export interface Capability {
 export const CAPABILITIES: Capability[] = [
   { id: "schema", name: "Canonical policy schema 1.0", maturity: "local", note: "JSON Schema and TypeScript types; validated in the browser workbench." },
   { id: "simulator", name: "Deterministic local simulator", maturity: "local", note: "Runs the evaluation order on example data. Never signs or broadcasts." },
-  { id: "engine", name: "Rust policy engine", maturity: "specified", note: "Production evaluator implementing the same schema and reason codes." },
-  { id: "reservations", name: "Atomic budget reservations", maturity: "specified", note: "Serialized ledger keyed by account, agent and window." },
+  { id: "engine", name: "Rust policy engine", maturity: "specified", note: "Production evaluator implementing the same schema and reason codes. Until it ships, the API runs the TypeScript reference evaluator on the server." },
+  { id: "reservations", name: "Atomic budget reservations", maturity: "service", note: "Postgres ledger serialized per policy: one SQL function re-checks budget, pending slots, replay and loop state before recording. Testnet only." },
   { id: "enclave", name: "TEE-backed signing (AWS Nitro)", maturity: "specified", note: "Policy-bound signing with no arbitrary-signing interface." },
-  { id: "account", name: "ERC-4337 validation module", maturity: "specified", note: "On-chain rejection of operations without a valid Palisec authorization." },
-  { id: "identity", name: "Wallet sign-in and sessions", maturity: "service", note: "SIWE challenge and verify, HttpOnly sessions, organizations and roles. Live once the deployment is connected to Postgres." },
-  { id: "api", name: "Authorization API", maturity: "specified", note: "OpenAPI 3.1 contract specified; evaluation and operation endpoints are not published yet." },
-  { id: "sdk-ts", name: "TypeScript SDK (viem)", maturity: "specified", note: "@palisec/sdk. Not published." },
+  { id: "account", name: "ERC-4337 validation module", maturity: "specified", note: "On-chain rejection of operations without a valid Palisec authorization. Until it ships, an agent key that skips Palisec can still transact." },
+  { id: "identity", name: "Wallet sign-in and sessions", maturity: "service", note: "SIWE challenge and verify, HttpOnly sessions, organizations, members and roles enforced server-side." },
+  { id: "api", name: "Authorization API", maturity: "service", note: "Agents, API keys, policy versions, evaluate, operations with idempotency, approvals and audit. Testnet (46630) only. Decisions are recorded; nothing is signed or broadcast." },
+  { id: "approvals", name: "Human approvals", maturity: "service", note: "Approvers sign EIP-712 data bound to the exact operation and policy version with their own wallet." },
+  { id: "sdk-ts", name: "TypeScript SDK (viem)", maturity: "specified", note: "@palisec/sdk. Not published; call the REST API directly for now." },
   { id: "sdk-py", name: "Python SDK", maturity: "planned", note: "Published only once its semantics match the canonical API." },
-  { id: "console", name: "Developer console", maturity: "local", note: "Runs as a simulation workspace in the browser. The authenticated console needs the control plane, which is not deployed." },
+  { id: "console", name: "Developer console", maturity: "service", note: "Signed-in members manage live testnet agents, policies, approvals and audit. Visitors get a browser simulation workspace." },
 ];
 
 export const capability = (id: string) => CAPABILITIES.find((c) => c.id === id)!;

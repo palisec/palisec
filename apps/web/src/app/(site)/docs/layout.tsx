@@ -12,6 +12,7 @@ const DOCS_NAV = [
   {
     title: "Reference",
     items: [
+      { href: "/docs/api", label: "API reference" },
       { href: "/docs/policies", label: "Policy schema" },
       { href: "/docs/errors", label: "Errors and operations" },
       { href: "/docs/account-abstraction", label: "Account abstraction" },

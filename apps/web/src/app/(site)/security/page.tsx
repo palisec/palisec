@@ -66,7 +66,7 @@ export default function SecurityPage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · not deployed"
+        compat="Schema 1.0 · pre-release · API on testnet · signing not deployed"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature."

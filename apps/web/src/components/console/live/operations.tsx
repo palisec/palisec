@@ -1,0 +1,132 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { formatUnits, shortHex } from "@/lib/units";
+import { Codes } from "../../ui";
+import { Btn, Confirm, Empty, KV, Mono, PageTitle, Panel, Segmented } from "../kit";
+import { CheckList, DecisionPill, LoadError, Loading, StatePill, thCls, usd, useAction, utc, type LiveOperation } from "./common";
+import { api, can, useConsoleSession, useLive } from "./session";
+
+type Filter = "all" | "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
+
+export function LiveOperations() {
+  const params = useSearchParams();
+  const reason = params.get("reason_code");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [pages, setPages] = useState<string[]>([]);
+  const query = new URLSearchParams({ limit: "50" });
+  if (filter !== "all") query.set("decision", filter);
+  if (reason && /^RW_[A-Z]+_\d{3}$/.test(reason)) query.set("reason_code", reason);
+  if (pages.length) query.set("before", pages[pages.length - 1]!);
+  const list = useLive<{ operations: LiveOperation[]; next_before: string | null }>(`/operations?${query}`);
+  const [selected, setSelected] = useState<string | null>(null);
+  const ops = list.data?.operations ?? [];
+  const current = ops.find((o) => o.operation_id === selected) ?? ops[0] ?? null;
+
+  return (
+    <>
+      <PageTitle
+        title="Operations"
+        description={`Every request your agents sent, with the decision, reason code and the full evaluation sequence. Newest first, times in UTC.${reason ? ` Filtered to ${reason}.` : ""}`}
+        actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
+      />
+      <LoadError error={list.error} />
+      <div className="mb-4">
+        <Segmented
+          label="Decision"
+          value={filter}
+          onChange={(v) => {
+            setFilter(v);
+            setPages([]);
+          }}
+          options={[
+            { value: "all", label: "All" },
+            { value: "ALLOW", label: "Allowed" },
+            { value: "DENY", label: "Denied" },
+            { value: "REQUIRES_HUMAN_SIGNATURE", label: "Review" },
+          ]}
+        />
+      </div>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)]">
+        <Panel title="Operations">
+          {!list.data ? (
+            <Loading what="operations" />
+          ) : ops.length === 0 ? (
+            <Empty title="No operations match">Operations appear when an agent calls POST /v1/operations with its API key.</Empty>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-[13px]">
+                <thead className="text-left">
+                  <tr>{["Time (UTC)", "Agent", "Decision", "State", "Reason"].map((h) => <th key={h} className={thCls}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {ops.map((o) => (
+                    <tr key={o.operation_id} className={`cursor-pointer border-b border-line transition-colors ${o.operation_id === current?.operation_id ? "bg-raised/70" : "hover:bg-raised/40"}`} onClick={() => setSelected(o.operation_id)}>
+                      <td className="whitespace-nowrap px-4 py-2 font-mono text-[11.5px] text-muted">
+                        <button type="button" className="text-left" aria-pressed={o.operation_id === current?.operation_id} onClick={() => setSelected(o.operation_id)}>{utc(o.created_at).slice(5, 19)}</button>
+                      </td>
+                      <td className="px-4 py-2 text-soft">{o.details.agent_name}</td>
+                      <td className="px-4 py-2"><DecisionPill decision={o.decision} /></td>
+                      <td className="px-4 py-2"><StatePill state={o.state} /></td>
+                      <td className="px-4 py-2 font-mono text-[11.5px] text-muted">{o.reason_code ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="flex gap-2 border-t border-line px-4 py-2">
+            <Btn variant="quiet" disabled={pages.length === 0} onClick={() => setPages(pages.slice(0, -1))}>Newer</Btn>
+            <Btn variant="quiet" disabled={!list.data?.next_before} onClick={() => list.data?.next_before && setPages([...pages, list.data.next_before])}>Older</Btn>
+          </div>
+        </Panel>
+        {current && <OperationDetail op={current} onChange={list.reload} />}
+      </div>
+    </>
+  );
+}
+
+function OperationDetail({ op, onChange }: { op: LiveOperation; onChange: () => void }) {
+  const { org } = useConsoleSession();
+  const { run, busy, notice } = useAction();
+  const d = op.details;
+  const releasable = ["authorized", "approved", "pending_approval"].includes(op.state);
+  return (
+    <Panel title="Operation" actions={<StatePill state={op.state} />} bodyClassName="p-4 space-y-4">
+      <p className="text-[13px] leading-relaxed text-soft"><Codes text={op.message} /></p>
+      <KV
+        rows={[
+          ["Operation ID", <Mono key="id">{op.operation_id}</Mono>],
+          ["Request ID", <Mono key="r">{op.request_id}</Mono>],
+          ["Agent", d.agent_name],
+          ["Policy", op.policy_id ? <Mono key="p">{op.policy_id} v{op.policy_version}</Mono> : "None"],
+          ["Account", <Mono key="a">{shortHex(d.account)}</Mono>],
+          ["Target", <Mono key="t">{d.target}</Mono>],
+          ["Method", <Mono key="m">{d.selector ?? "native transfer"}</Mono>],
+          ["Value", `${formatUnits(d.value_wei, 18)} ETH`],
+          ["Fee bound", d.fee_estimate_wei ? `${formatUnits(d.fee_estimate_wei, 18)} ETH (gas limit ${d.gas_limit})` : "unavailable"],
+          ["Exposure reserved", usd(d.exposure_usd_micros)],
+          ["Authorization", op.authorization_id ? <Mono key="au">{op.authorization_id}</Mono> : "—"],
+          ["Expires", utc(op.expires_at)],
+          ["Decided by", d.decided_by ? <Mono key="db">{shortHex(d.decided_by)} · {utc(d.decided_at)}</Mono> : "—"],
+          ["Request hash", <Mono key="h" className="break-all text-[11px]">{d.request_hash}</Mono>],
+        ]}
+      />
+      <div>
+        <p className="label mb-1">Evaluation sequence</p>
+        <CheckList checks={op.checks} />
+      </div>
+      {releasable && can.operate(org?.role) && (
+        <Confirm
+          label={op.state === "pending_approval" ? "Withdraw request" : "Release unused authorization"}
+          prompt="Only release an authorization you know was not sent. Its budget returns to the hourly window, and the release is recorded with your identity."
+          confirmLabel="Release"
+          disabled={busy}
+          onConfirm={() => run(() => api(`/operations/${op.operation_id}/cancel`, { method: "POST" }), "Released.").then(onChange)}
+        />
+      )}
+      {notice}
+    </Panel>
+  );
+}

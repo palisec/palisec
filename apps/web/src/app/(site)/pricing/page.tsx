@@ -11,9 +11,9 @@ const PLANS = [
   {
     name: "Sandbox",
     price: "Free",
-    body: "Local policy simulation, sample transactions and schema validation in the browser. Testnet integration is planned and not available yet.",
-    items: ["Browser workbench", "Reference evaluator", "Console simulation workspace"],
-    note: "Local simulation is not live enclave execution.",
+    body: "The hosted authorization API and live console on Robinhood Chain Testnet, plus local policy simulation and schema validation in the browser.",
+    items: ["Testnet authorization API and console", "Agents, policies, approvals and audit", "Browser workbench and simulation"],
+    note: "Testnet only. Decisions are enforced for agents that call the API; nothing is signed or broadcast yet.",
     available: true,
   },
   {

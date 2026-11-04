@@ -37,7 +37,8 @@ export async function GET(req: Request) {
     components: {
       database,
       auth: database === "ok" ? "ok" : "unavailable",
-      policy_engine: "not_deployed",
+      // The TypeScript reference evaluator runs in this process; the Rust engine is not deployed.
+      policy_engine: "ok",
       signer: "not_deployed",
       bundler: "not_deployed",
     },

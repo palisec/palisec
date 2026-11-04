@@ -21,3 +21,39 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+
+  # The API against real Postgres: budget atomicity under concurrency, replay, roles, approvals, audit.
+  # Uses the public testnet RPC and price feeds, as production does.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      PALISEC_EXTRA_HOSTS: localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The build applies the migrations, exactly as on Vercel.
+      - run: pnpm --filter @palisec/web build
+      - name: Start the server
+        run: |
+          pnpm --filter @palisec/web start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
+          cat server.log; exit 1
+      - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-api.mjs
+      - if: failure()
+        run: cat server.log

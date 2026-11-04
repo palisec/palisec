@@ -1,0 +1,365 @@
+"use client";
+
+import { EXAMPLE_POLICY, validatePolicy, type ValidationError } from "@palisec/policy-schema";
+import Link from "next/link";
+import { useId, useMemo, useState } from "react";
+import { formatUnits, parseUnits } from "@/lib/units";
+import { CopyButton } from "../../copy-button";
+import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
+import { LoadError, Loading, thCls, useAction, utc } from "./common";
+import { api, can, useConsoleSession, useLive } from "./session";
+
+interface PolicyRow {
+  id: string;
+  policy_key: string;
+  name: string;
+  status: "draft" | "active" | "disabled";
+  active_version: number | null;
+  draft_valid: boolean | null;
+  draft_updated_at: string | null;
+  activated_at: string | null;
+  agents: number;
+}
+interface PolicyDetail {
+  id: string;
+  policy_key: string;
+  name: string;
+  status: string;
+  active_version: number | null;
+  draft: Record<string, unknown> | null;
+  draft_hash: string | null;
+  draft_errors: ValidationError[];
+  draft_updated_at: string | null;
+  draft_updated_by: string | null;
+  active_document: Record<string, unknown> | null;
+  versions: { version: number; document_hash: string; activated_at: string; activated_by: string | null }[];
+}
+
+const STATUS_TONE = { draft: "muted", active: "allow", disabled: "deny" } as const;
+
+export function LivePolicies() {
+  const { org } = useConsoleSession();
+  const list = useLive<{ policies: PolicyRow[] }>("/policies");
+  const [selected, setSelected] = useState<string | null>(null);
+  const policies = list.data?.policies ?? [];
+  const current = selected ?? policies[0]?.id ?? null;
+
+  return (
+    <>
+      <PageTitle
+        title="Policies"
+        description="Edit a draft, validate it against schema 1.0, review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with RW_POLICY_001."
+      />
+      <LoadError error={list.error} />
+      <div className="space-y-4">
+        <Panel title={`Policies · ${policies.length}`}>
+          {!list.data ? (
+            <Loading what="policies" />
+          ) : policies.length === 0 ? (
+            <Empty title="No policies yet">Create one below. It starts as a conservative draft: tiny limits, nothing allowlisted, unknown methods sent to a human.</Empty>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[620px] text-[13px]">
+                <thead className="text-left">
+                  <tr>{["Policy", "Status", "Active version", "Draft", "Agents"].map((h) => <th key={h} className={thCls}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {policies.map((p) => (
+                    <tr key={p.id} className={`border-b border-line transition-colors ${p.id === current ? "bg-raised/70" : "hover:bg-raised/40"}`}>
+                      <td className="px-4 py-2.5">
+                        <button type="button" onClick={() => setSelected(p.id)} aria-pressed={p.id === current} className="text-left">
+                          <span className="block text-bone underline-offset-4 hover:underline">{p.name}</span>
+                          <Mono className="text-dim">{p.policy_key}</Mono>
+                        </button>
+                      </td>
+                      <td className="px-4 py-2.5"><Pill tone={STATUS_TONE[p.status]}>{p.status}</Pill></td>
+                      <td className="px-4 py-2.5 font-mono text-soft">{p.active_version ? `v${p.active_version}` : "—"}</td>
+                      <td className="px-4 py-2.5 text-muted">{p.draft_valid === null ? "—" : p.draft_valid ? "valid" : <span className="text-deny">invalid</span>}</td>
+                      <td className="px-4 py-2.5 font-mono text-soft">{p.agents}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+        {can.manage(org?.role) && <CreatePolicy onCreated={(id) => { setSelected(id); list.reload(); }} />}
+        {current && <PolicyEditor key={current} id={current} onChange={list.reload} />}
+      </div>
+    </>
+  );
+}
+
+function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
+  const uid = useId();
+  const [name, setName] = useState("");
+  const [key, setKey] = useState("");
+  const [account, setAccount] = useState("");
+  const { run, busy, notice } = useAction();
+  const derivedKey = key || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 64);
+  return (
+    <Panel title="Create a policy" bodyClassName="grid gap-3 p-4 md:grid-cols-3">
+      <Field id={`${uid}-n`} label="Name">
+        <input id={`${uid}-n`} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Treasury bot limits" maxLength={80} />
+      </Field>
+      <Field id={`${uid}-k`} label="Policy ID" hint="a-z, 0-9 and _; cannot change later.">
+        <input id={`${uid}-k`} className={inputCls} value={derivedKey} onChange={(e) => setKey(e.target.value)} placeholder="treasury_bot" spellCheck={false} />
+      </Field>
+      <Field id={`${uid}-a`} label="Smart account (testnet 46630)">
+        <input id={`${uid}-a`} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value.trim())} placeholder="0x…" spellCheck={false} />
+      </Field>
+      <div className="md:col-span-3">
+        <Btn
+          variant="primary"
+          disabled={busy || !name.trim() || !derivedKey || !account}
+          onClick={async () => {
+            const r = await run(() => api<{ id: string }>("/policies", { method: "POST", body: { name, policy_key: derivedKey, chain_id: 46630, account } }), "Draft created. Edit it below, then activate.");
+            if (r) {
+              setName("");
+              setKey("");
+              setAccount("");
+              onCreated(r.id);
+            }
+          }}
+        >
+          Create draft
+        </Btn>
+        {notice && <div className="mt-3">{notice}</div>}
+      </div>
+    </Panel>
+  );
+}
+
+/** Paths whose values differ between two documents, for a compact review before activation. */
+function diff(a: unknown, b: unknown, path = "$"): { path: string; from: string; to: string }[] {
+  if (JSON.stringify(a) === JSON.stringify(b)) return [];
+  const isObj = (v: unknown) => v && typeof v === "object" && !Array.isArray(v);
+  if (isObj(a) && isObj(b)) {
+    const keys = new Set([...Object.keys(a as object), ...Object.keys(b as object)]);
+    return [...keys].flatMap((k) => diff((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], `${path}.${k}`));
+  }
+  const show = (v: unknown) => (v === undefined ? "∅" : JSON.stringify(v));
+  return [{ path, from: show(a), to: show(b) }];
+}
+
+const IGNORED_IN_DIFF = new Set(["$.version", "$.status"]);
+
+/** Postgres stores JSON keys in its own order; show them in the schema's order instead. */
+function ordered(value: unknown, template: unknown): unknown {
+  if (Array.isArray(value)) return value.map((v) => ordered(v, Array.isArray(template) ? template[0] : undefined));
+  if (!value || typeof value !== "object") return value;
+  const t = (template && typeof template === "object" ? template : {}) as Record<string, unknown>;
+  const v = value as Record<string, unknown>;
+  const keys = [...Object.keys(t).filter((k) => k in v), ...Object.keys(v).filter((k) => !(k in t))];
+  return Object.fromEntries(keys.map((k) => [k, ordered(v[k], t[k])]));
+}
+const pretty = (doc: unknown) => JSON.stringify(ordered(doc, EXAMPLE_POLICY), null, 2);
+
+function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
+  const uid = useId();
+  const { org } = useConsoleSession();
+  const detail = useLive<PolicyDetail>(`/policies/${id}`);
+  const p = detail.data;
+  const [text, setText] = useState<string | null>(null);
+  const { run, busy, notice } = useAction();
+  const manage = can.manage(org?.role);
+
+  const savedText = p?.draft ? pretty(p.draft) : "";
+  const value = text ?? savedText;
+  const dirty = text !== null && text !== savedText;
+  const parsed = useMemo(() => {
+    try {
+      return { doc: JSON.parse(value) as Record<string, unknown>, error: null };
+    } catch (e) {
+      return { doc: null, error: e instanceof Error ? e.message : "Invalid JSON" };
+    }
+  }, [value]);
+  const errors: ValidationError[] = useMemo(() => {
+    if (!parsed.doc) return [{ path: "$", message: parsed.error ?? "Invalid JSON" }];
+    const errs = validatePolicy({ ...parsed.doc, version: 1, status: "active" });
+    if (p && parsed.doc.policy_id !== p.policy_key) errs.push({ path: "$.policy_id", message: `must stay "${p.policy_key}"` });
+    return errs;
+  }, [parsed, p]);
+  const changes = useMemo(() => (parsed.doc ? diff(p?.active_document ?? {}, parsed.doc).filter((c) => !IGNORED_IN_DIFF.has(c.path)) : []), [parsed, p]);
+
+  if (detail.error) return <LoadError error={detail.error} />;
+  if (!p) return <Panel title="Policy"><Loading what="policy" /></Panel>;
+
+  const edit = (fn: (d: Record<string, any>) => void) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!parsed.doc) return;
+    const d = structuredClone(parsed.doc);
+    fn(d);
+    setText(pretty(d));
+  };
+  const after = () => {
+    setText(null);
+    detail.reload();
+    onChange();
+  };
+
+  return (
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
+      <Panel
+        title={`${p.name} · draft`}
+        actions={<Pill tone={errors.length ? "deny" : "allow"}>{errors.length ? `${errors.length} error${errors.length > 1 ? "s" : ""}` : "valid"}</Pill>}
+        bodyClassName="p-4 space-y-3"
+      >
+        <label htmlFor={`${uid}-json`} className="sr-only">Policy JSON</label>
+        <textarea
+          id={`${uid}-json`}
+          value={value}
+          onChange={(e) => setText(e.target.value)}
+          readOnly={!manage}
+          spellCheck={false}
+          rows={28}
+          className={`${inputCls} min-h-[28rem] resize-y leading-relaxed`}
+        />
+        {errors.length > 0 && (
+          <ul className="space-y-1 text-[12px]">
+            {errors.slice(0, 8).map((e, i) => (
+              <li key={i} className="text-deny"><Mono>{e.path}</Mono> <span className="text-soft">{e.message}</span></li>
+            ))}
+          </ul>
+        )}
+        {manage && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Btn variant="primary" disabled={busy || !dirty || !parsed.doc} onClick={() => run(() => api(`/policies/${id}`, { method: "PUT", body: { document: parsed.doc } }), "Draft saved.").then(after)}>
+              Save draft
+            </Btn>
+            <Btn variant="quiet" disabled={!dirty} onClick={() => setText(null)}>Discard changes</Btn>
+            <CopyButton text={value} label="Copy JSON" />
+          </div>
+        )}
+        {notice}
+      </Panel>
+
+      <div className="space-y-4">
+        {manage && parsed.doc && <QuickEdits doc={parsed.doc} edit={edit} />}
+
+        <Panel title={p.active_version ? `Changes from v${p.active_version}` : "Changes (no active version)"} bodyClassName="p-4 space-y-3">
+          {changes.length === 0 ? (
+            <p className="text-[13px] text-muted">The draft matches the active version.</p>
+          ) : (
+            <ul className="max-h-64 space-y-1.5 overflow-auto text-[12px]">
+              {changes.map((c) => (
+                <li key={c.path}>
+                  <Mono className="text-soft">{c.path}</Mono>
+                  <div className="font-mono text-[11.5px]"><span className="text-deny">− {c.from.slice(0, 120)}</span></div>
+                  <div className="font-mono text-[11.5px]"><span className="text-citrine">+ {c.to.slice(0, 120)}</span></div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {manage && (
+            <>
+              {dirty && <Notice>Save the draft before activating. Activation is bound to the saved draft&apos;s hash.</Notice>}
+              <Confirm
+                variant="primary"
+                label={`Activate as v${(p.active_version ?? 0) + 1}`}
+                disabled={busy || dirty || errors.length > 0 || !p.draft_hash || changes.length === 0}
+                disabledReason="Save a valid draft that differs from the active version"
+                prompt={`Agents bound to ${p.policy_key} will be evaluated against this version immediately. Pending approvals made under the old version can no longer be approved.`}
+                confirmLabel="Activate"
+                onConfirm={() => run(() => api(`/policies/${id}/activate`, { method: "POST", body: { confirm: true, draft_hash: p.draft_hash } }), "Activated. The version and its hash are in the audit trail.").then(after)}
+              />
+              {p.status === "active" && (
+                <Confirm
+                  label="Disable policy"
+                  prompt="Every agent bound to this policy is denied with RW_POLICY_001 until a version is activated again."
+                  confirmLabel="Disable"
+                  onConfirm={() => run(() => api(`/policies/${id}/disable`, { method: "POST", body: { confirm: true } }), "Policy disabled.").then(after)}
+                />
+              )}
+            </>
+          )}
+        </Panel>
+
+        <Panel title="Versions" bodyClassName="p-4">
+          {p.versions.length === 0 ? (
+            <p className="text-[13px] text-muted">Not activated yet.</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {p.versions.map((v) => (
+                <li key={v.version} className="py-2 text-[12.5px]">
+                  <p className="text-soft">
+                    v{v.version} {v.version === p.active_version && p.status === "active" && <Pill tone="allow" className="ml-1">active</Pill>}
+                  </p>
+                  <p className="text-[11.5px] text-muted">{utc(v.activated_at)}{v.activated_by ? ` · ${v.activated_by.slice(0, 10)}…` : ""}</p>
+                  <Mono className="block truncate text-[11px] text-dim">sha256 {v.document_hash}</Mono>
+                </li>
+              ))}
+            </ul>
+          )}
+          <KV className="mt-3" rows={[["Draft saved", utc(p.draft_updated_at)]]} />
+          <p className="mt-3 text-[12px] text-muted">
+            Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-citrine">policy schema 1.0</Link>.
+          </p>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+/** Common edits in human units, written into the JSON so the editor stays the single source. */
+function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Record<string, any>) => void) => void }) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const uid = useId();
+  const [contract, setContract] = useState("");
+  const [selectors, setSelectors] = useState("0xa9059cbb");
+  const usdField = (label: string, get: () => string | undefined, set: (d: Record<string, any>, v: string) => void, hint: string) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const current = get();
+    return (
+      <Field id={`${uid}-${label}`} label={label} hint={hint}>
+        <input
+          id={`${uid}-${label}`}
+          className={inputCls}
+          defaultValue={current ? formatUnits(current, 6) : ""}
+          key={current}
+          onBlur={(e) => {
+            const v = parseUnits(e.target.value, 6);
+            if (v !== null) edit((d) => set(d, v.toString()));
+          }}
+        />
+      </Field>
+    );
+  };
+  return (
+    <Panel title="Quick edits" bodyClassName="grid gap-3 p-4">
+      {usdField("Hourly budget (USD)", () => doc.limits?.hourly_budget_usd_micros, (d, v) => (d.limits.hourly_budget_usd_micros = v), "Value plus estimated fee, across every agent on this policy.")}
+      {usdField("Human approval at (USD)", () => doc.human_approval?.usd_threshold_micros, (d, v) => (d.human_approval.usd_threshold_micros = v), "Operations at or above this exposure wait for an approver's signature.")}
+      <Field id={`${uid}-maxeth`} label="Max value per transaction (ETH)">
+        <input
+          id={`${uid}-maxeth`}
+          className={inputCls}
+          key={doc.limits?.max_transaction_value_wei}
+          defaultValue={doc.limits?.max_transaction_value_wei ? formatUnits(doc.limits.max_transaction_value_wei, 18) : ""}
+          onBlur={(e) => {
+            const v = parseUnits(e.target.value, 18);
+            if (v !== null) edit((d) => (d.limits.max_transaction_value_wei = v.toString()));
+          }}
+        />
+      </Field>
+      <div className="space-y-2 border-t border-line pt-3">
+        <p className="label">Allow a contract</p>
+        <input aria-label="Contract address" className={inputCls} value={contract} onChange={(e) => setContract(e.target.value.trim())} placeholder="0x… contract" spellCheck={false} />
+        <input aria-label="Function selectors" className={inputCls} value={selectors} onChange={(e) => setSelectors(e.target.value)} placeholder="0xa9059cbb, 0x095ea7b3" spellCheck={false} />
+        <p className="text-[11.5px] text-muted">Selectors are the first 4 bytes of the call data. <Mono>0xa9059cbb</Mono> is ERC-20 transfer.</p>
+        <Btn
+          variant="quiet"
+          disabled={!/^0x[0-9a-fA-F]{40}$/.test(contract)}
+          onClick={() => {
+            edit((d) => {
+              const list = d.contracts.allowlist as { address: string; selectors: string[]; require_verified_code: boolean }[];
+              const sels = selectors.split(/[\s,]+/).filter(Boolean).map((s) => s.toLowerCase());
+              const existing = list.find((x) => x.address.toLowerCase() === contract.toLowerCase());
+              if (existing) existing.selectors = [...new Set([...existing.selectors, ...sels])];
+              else list.push({ address: contract, selectors: sels, require_verified_code: true });
+            });
+            setContract("");
+          }}
+        >
+          Add to allowlist
+        </Btn>
+      </div>
+    </Panel>
+  );
+}

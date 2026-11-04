@@ -210,7 +210,7 @@ export async function summary(ctx: MemberContext) {
       coalesce(sum(usd_micros) FILTER (WHERE created_at > now() - interval '1 hour' AND rw_holds_budget(state, expires_at)), 0)::text AS reserved_last_hour_usd_micros
     FROM operations WHERE org_id = ${ctx.orgId}::uuid AND created_at > now() - interval '24 hours'`;
   const hourly = await db()`
-    SELECT date_trunc('hour', created_at) AS hour,
+    SELECT to_char(date_trunc('hour', created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD"T"HH24:00:00"Z"') AS hour,
       count(*) FILTER (WHERE decision = 'ALLOW')::int AS allowed,
       count(*) FILTER (WHERE decision = 'DENY')::int AS denied,
       count(*) FILTER (WHERE decision = 'REQUIRES_HUMAN_SIGNATURE')::int AS reviewed

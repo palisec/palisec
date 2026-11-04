@@ -25,7 +25,7 @@ export default function DocsIndex() {
       title="Documentation"
       lede="Palisec is pre-release. Each guide marks what you can run today, what is specified but not deployed, and what is planned. Snippets that cannot run yet are labelled as pseudocode."
       maturity="local"
-      compat="Schema 1.0 · docs revision 2026-10"
+      compat="Schema 1.0 · docs revision 2026-11"
     >
       <div className="not-prose grid gap-px border border-line bg-line sm:grid-cols-2">
         {GUIDES.map((g) => (

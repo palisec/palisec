@@ -9,6 +9,22 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.4.0",
+    date: "2026-11-04",
+    tag: "Pre-release · testnet",
+    changes: [
+      "Authorization API on Robinhood Chain Testnet (46630): POST /v1/operations records each decision with its budget reservation; POST /v1/authorizations/evaluate is a dry run. Idempotency-Key, request_id replay protection and loop cooldowns.",
+      "Budget reservations are serialized per policy in Postgres: one SQL function re-checks budget, pending slots, replay and loop state, so concurrent requests cannot overspend. Tested with 30 simultaneous requests for one slot.",
+      "Agents bound to a smart account and a policy, with per-agent API keys shown once and stored as SHA-256 hashes. Pause, resume and revoke.",
+      "Policies: drafts validated against schema 1.0, activation bound to the reviewed draft's hash, immutable versions, disable.",
+      "Human approvals signed with EIP-712 over the exact operation and policy version, re-checked against pause, emergency stop and policy changes at approval time.",
+      "Organization emergency stop (operators engage, owners lift), members and roles enforced server-side, append-only audit API.",
+      "Fee bound from the testnet RPC gas price; USD conversion from Coinbase with a Kraken fallback. Any missing input fails closed.",
+      "The console reads live data when you are signed in; visitors keep the simulation. API reference and OpenAPI 3.1 at /api/v1/openapi.json.",
+      "Not in this release: signing, bundler submission, receipt reconciliation and the on-chain account module.",
+    ],
+  },
+  {
     version: "0.3.0",
     date: "2026-10-29",
     tag: "Pre-release",
