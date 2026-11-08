@@ -1,5 +1,5 @@
 import "server-only";
-import { evaluateDual } from "@palisec/policy-engine";
+import { evaluateDual, type Disagreement } from "@palisec/policy-engine";
 import {
   type evaluate,
   fingerprint,
@@ -19,7 +19,7 @@ import type { AgentContext } from "./access";
 import { ethUsd, gasPriceWei, hasDeployedCode } from "./chain-env";
 import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
-import { BadRequest, HttpError } from "./http";
+import { BadRequest, HttpError, logEvent } from "./http";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 
 /** How long an ALLOW can be used, and how long a request may wait for a human approver. */
@@ -71,6 +71,9 @@ interface Prepared {
   feeWei: bigint | null;
   result: ReturnType<typeof evaluate>;
 }
+
+/** Engine disagreements are rare and always worth a look: one structured line, no request body. */
+const reportEngine = (d: Disagreement) => logEvent("error", "policy_engine.fail_closed", d);
 
 const LIVE_DETAIL =
   "Not performed by this deployment yet. Palisec records the decision; your agent submits the transaction itself, and nothing on-chain enforces it until the account module ships.";
@@ -124,7 +127,7 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   const intent: Intent = { ...input, agent_id: "draft_test", from: getAddress(account.address) };
   const policy = { ...doc, version: 1, status: "active" } as unknown as Policy;
   const { env } = await liveEnvironment(input, now, false, []);
-  const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env), input.chain_id);
+  const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
 
@@ -183,7 +186,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   };
 
   const { env, feeWei } = await liveEnvironment(input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId]);
-  const { result, checks } = finish(evaluateDual(policy, intent, state, env), input.chain_id);
+  const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {
     intent,

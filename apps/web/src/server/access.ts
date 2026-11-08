@@ -79,7 +79,7 @@ export const API_KEY_PATTERN = /^ps_test_[0-9a-f]{48}$/;
 export async function requireAgent(req: Request): Promise<AgentContext> {
   const header = req.headers.get("authorization") ?? "";
   const key = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!API_KEY_PATTERN.test(key)) throw new HttpError(401, "PS_AUTH_001", "Missing or malformed API key");
+  if (!API_KEY_PATTERN.test(key)) throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
   if (rateLimited(req, `key:${key.slice(0, 20)}`, 120)) throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
   const rows = await db()`
     WITH c AS (
@@ -92,7 +92,7 @@ export async function requireAgent(req: Request): Promise<AgentContext> {
     SELECT c.id AS credential_id, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id`;
   const r = rows[0];
-  if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is unknown or revoked");
+  if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
   return {
     credentialId: r.credential_id,
     agentId: r.agent_id,

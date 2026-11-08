@@ -1,0 +1,48 @@
+name: Release
+# Push a tag such as v0.8.0 to publish a GitHub release. The release is created only if every CI
+# check passes (types, lint, unit and parity tests, the Rust engine, the API, both SDKs and the
+# hostile-input suite against Postgres) and the tag matches the newest changelog entry.
+on:
+  push:
+    tags: ["v*.*.*"]
+permissions:
+  contents: read
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Tag matches the changelog
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          latest=$(grep -m1 -oE 'version: "[0-9]+\.[0-9]+\.[0-9]+"' 'apps/web/src/app/(site)/changelog/page.tsx' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          if [ "$tag" != "$latest" ]; then echo "Tag v$tag does not match the newest changelog entry $latest"; exit 1; fi
+      - name: Build release files
+        run: |
+          mkdir -p release
+          pnpm --filter @palisec/sdk build
+          (cd packages/sdk && pnpm pack --pack-destination ../../release)
+          node packages/sdk-python/scripts/py.mjs packages/sdk-python/scripts/build_wheel.py release
+          node services/policy-engine/build.mjs --hash > release/policy-engine.source-sha256.txt
+          (cd release && sha256sum * > SHA256SUMS)
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --title "Palisec $GITHUB_REF_NAME" \
+            --notes "Changes: https://palisec.tech/changelog. SDKs install from palisec.tech/sdk; checksums in SHA256SUMS. Pre-release on Robinhood Chain Testnet." \
+            --prerelease

@@ -1,7 +1,7 @@
 import { engineStatus } from "@palisec/policy-engine";
 import { CHAINS, isDatabaseConfigured } from "@/server/config";
 import { db } from "@/server/db";
-import { ok } from "@/server/http";
+import { handle, ok } from "@/server/http";
 import { connection } from "next/server";
 
 const CACHE_MS = 30_000;
@@ -12,7 +12,7 @@ let cached: { at: number; database: "unreachable" | "ok"; schema: string | null 
  * `?shallow=1` reports only whether a database is configured, so page views cannot wake a
  * scale-to-zero database; it answers "configured" and never "ok".
  */
-export async function GET(req: Request) {
+export const GET = handle(async (req: Request) => {
   // Health must be observed per request, never prerendered into the build.
   await connection();
   if (new URL(req.url).searchParams.has("shallow")) {
@@ -48,4 +48,4 @@ export async function GET(req: Request) {
     policy_engine: { implementation: "rust-wasm+reference", version: engine.version, source_hash: engine.source_hash.slice(0, 12) },
     chains: Object.entries(CHAINS).map(([id, c]) => ({ chain_id: Number(id), name: c.name, enabled: c.enabled })),
   });
-}
+});

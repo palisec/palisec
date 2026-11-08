@@ -16,6 +16,8 @@ const ENTRIES = [
       "The Rust policy engine is live. It runs as WebAssembly inside the API next to the TypeScript reference evaluator, and every decision needs both to agree on every field: decision, reason code, each check's wording and the next ledger state. Any difference, or an engine that cannot run, denies with PS_STATE_001 and reserves nothing.",
       "Parity is proven on every change: shared fixtures that cover ALLOW, human review and every DENY reason code are checked natively in Rust and in WebAssembly, and 6,000 seeded random cases compare the two implementations one by one. CI refuses an embedded engine that was not built from the current Rust source.",
       "GET /v1/health reports the engine's version and source hash.",
+      "Hardening: every API response carries an X-Request-Id that matches the error body and the server logs; 429 responses send Retry-After; request bodies are limited by bytes as they stream and must be valid UTF-8 without NUL characters or deep nesting, so bad input is a 400 instead of a storage error; all API-key failures share one message.",
+      "A hostile-input suite (malformed, oversized, forged and replayed requests) runs in CI against Postgres on every change, and tagged releases are published only after every check passes.",
       "Icons replace text on icon-style controls: menu, close, copy, refresh, remove, sign out, reset and replay. Each keeps an accessible name and a tooltip.",
     ],
   },

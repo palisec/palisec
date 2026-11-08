@@ -35,7 +35,9 @@ export default function ApiReference() {
       <p>
         Every refusal is <code>{`{ request_id, error: { code, message, retryable } }`}</code> with a stable <Link href="/docs/errors">reason code</Link>. A
         denied operation is not an error: it returns <code>decision: &quot;DENY&quot;</code> with its reason. When the database or a required input is
-        unavailable the API answers <code>503 PS_STATE_001</code> and authorizes nothing. Keys are limited to 120 requests a minute (<code>429 PS_RATE_001</code>).
+        unavailable the API answers <code>503 PS_STATE_001</code> and authorizes nothing. Keys are limited to 120 requests a minute (<code>429 PS_RATE_001</code>
+        with <code>Retry-After</code>). Every response carries an <code>X-Request-Id</code> header, the same value as an error&apos;s <code>request_id</code>: quote it
+        when you contact support. Bodies are limited to 16 KB of valid UTF-8 JSON.
       </p>
 
       <h2 id="lifecycle">Operation states</h2>

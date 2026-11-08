@@ -3,6 +3,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The release workflow runs these same checks as its gate.
+  workflow_call:
 permissions:
   contents: read
 jobs:
@@ -74,5 +76,7 @@ jobs:
       - run: BASE_URL=http://localhost:3000 node packages/sdk/scripts/integration.mjs
       # The served Python wheel against the same server.
       - run: BASE_URL=http://localhost:3000 node packages/sdk-python/scripts/integration.mjs
+      # Hostile input: malformed, oversized and forged requests. Last, because its burst spends the rate limit.
+      - run: BASE_URL=http://localhost:3000 node apps/web/scripts/adversarial.mjs
       - if: failure()
         run: cat server.log
