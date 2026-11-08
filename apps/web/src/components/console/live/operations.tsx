@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
-import { Btn, Confirm, Empty, inputCls, KV, Mono, PageTitle, Panel, Segmented } from "../kit";
+import { Btn, Confirm, Empty, inputCls, KV, Mono, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
 import { CheckList, DecisionPill, LoadError, Loading, StatePill, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
@@ -38,7 +38,7 @@ export function LiveOperations() {
       <PageTitle
         title="Operations"
         description={`Every request your agents sent, with the decision, reason code and the full evaluation sequence. Newest first, times in UTC.${reason ? ` Filtered to ${reason}.` : ""}`}
-        actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
+        actions={<RefreshBtn onClick={list.reload} label="Refresh list" />}
       />
       <LoadError error={list.error} />
       <LoadError error={focused.error} />

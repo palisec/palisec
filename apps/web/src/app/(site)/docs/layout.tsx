@@ -1,4 +1,5 @@
 import { DocsNavLink } from "@/components/docs-nav-link";
+import { ChevronDownIcon } from "@/components/icons";
 import { Container } from "@/components/ui";
 
 const DOCS_NAV = [
@@ -39,8 +40,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   return (
     <Container className="grid gap-10 py-10 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-16 lg:py-16">
       <nav aria-label="Documentation" className="lg:sticky lg:top-24 lg:self-start">
-        <details className="border border-line lg:border-0" open>
-          <summary className="label cursor-pointer px-3 py-2 lg:hidden">Documentation index</summary>
+        <details className="group/docs border border-line lg:border-0" open>
+          <summary className="label flex cursor-pointer list-none items-center justify-between px-3 py-2 lg:hidden [&::-webkit-details-marker]:hidden">
+            Documentation index
+            <ChevronDownIcon size={14} className="transition-transform duration-300 group-open/docs:rotate-180" />
+          </summary>
           <div className="space-y-6 p-3 lg:p-0">
             {DOCS_NAV.map((g) => (
               <div key={g.title}>

@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { shortHex } from "@/lib/units";
 import { CubeGlyph } from "../cube";
 import { PointerLight } from "../pointer-light";
+import { SignOutIcon } from "../icons";
+import { IconBtn } from "./kit";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
 
 const NAV = [
@@ -133,8 +135,8 @@ function Shell({ children }: { children: ReactNode }) {
             })}
           </ul>
           {ready && (
-            <div className="space-y-3 border-t border-line px-4 py-4">
-              <div>
+            <div className="flex items-start justify-between gap-3 border-t border-line px-4 py-4">
+              <div className="min-w-0 flex-1">
                 <p className="label !text-[10px]">Organization</p>
                 {session.me && session.me.organizations.length > 1 ? (
                   <select
@@ -152,9 +154,9 @@ function Shell({ children }: { children: ReactNode }) {
                 )}
                 <p className="mt-1 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">Role · {session.org?.role}</p>
               </div>
-              <button type="button" onClick={signOut} className="rounded-[4px] border border-line-strong px-1.5 py-0.5 font-utility text-[10px] uppercase tracking-[0.06em] text-silver transition-colors hover:border-aqua hover:text-aqua">
-                Sign out
-              </button>
+              <IconBtn label="Sign out" onClick={signOut} className="mt-3">
+                <SignOutIcon size={15} />
+              </IconBtn>
             </div>
           )}
         </nav>

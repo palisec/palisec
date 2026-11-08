@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Codes } from "../ui";
 import { useInView } from "../motion";
+import { RefreshIcon } from "../icons";
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -51,6 +52,50 @@ export function Btn({ variant = "ghost", className = "", ...props }: ButtonHTMLA
       {...props}
       className={`${BTN[variant]} justify-center active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 ${className}`}
     />
+  );
+}
+
+const ICON_BTN: Record<"quiet" | "danger", string> = {
+  quiet: "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5)]",
+  danger: "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-deny hover:shadow-[inset_0_0_0_1px_rgb(255_122_140/0.6)]",
+};
+
+/** Square symbol button. `label` is its accessible name and its tooltip. */
+export function IconBtn({
+  label,
+  tone = "quiet",
+  className = "",
+  children,
+  ...props
+}: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-label" | "title"> & { label: string; tone?: "quiet" | "danger" }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      {...props}
+      className={`grid h-7 w-7 shrink-0 place-items-center rounded-[4px] transition-[color,box-shadow,transform] duration-200 active:scale-[0.92] disabled:pointer-events-none disabled:opacity-40 ${ICON_BTN[tone]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Refresh control: the arrow turns once per click. */
+export function RefreshBtn({ onClick, label = "Refresh" }: { onClick: () => void; label?: string }) {
+  const [turns, setTurns] = useState(0);
+  return (
+    <IconBtn
+      label={label}
+      onClick={() => {
+        setTurns((t) => t + 1);
+        onClick();
+      }}
+    >
+      <span key={turns} className={turns ? "block animate-[c-turn_.6s_var(--ease-out-quint)]" : "block"}>
+        <RefreshIcon size={15} />
+      </span>
+    </IconBtn>
   );
 }
 
@@ -116,6 +161,7 @@ export function Confirm({
   variant = "danger",
   disabled,
   disabledReason,
+  icon,
 }: {
   label: string;
   prompt: ReactNode;
@@ -124,9 +170,17 @@ export function Confirm({
   variant?: BtnVariant;
   disabled?: boolean;
   disabledReason?: string;
+  /** Show a symbol instead of the label; the label stays as its accessible name and tooltip. */
+  icon?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   if (!open) {
+    if (icon)
+      return (
+        <IconBtn label={disabled && disabledReason ? disabledReason : label} tone="danger" disabled={disabled} onClick={() => setOpen(true)}>
+          {icon}
+        </IconBtn>
+      );
     return (
       <Btn variant={variant} disabled={disabled} title={disabled ? disabledReason : undefined} onClick={() => setOpen(true)}>
         {label}

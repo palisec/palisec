@@ -715,6 +715,10 @@
   60% { opacity: 1; transform: scale(1.015); }
   100% { transform: none; }
 }
+@keyframes c-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 @keyframes c-notice {
   from { opacity: 0; transform: translateY(-6px); clip-path: inset(0 0 100% 0); }
   to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }

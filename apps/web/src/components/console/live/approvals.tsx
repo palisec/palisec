@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
-import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented } from "../kit";
+import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
 import { CheckList, LoadError, Loading, StatePill, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
@@ -45,7 +45,7 @@ export function LiveApprovals() {
       <PageTitle
         title="Approvals"
         description="Operations a policy held for a person. Approving means signing this exact operation (request hash, account, target, value, calldata hash, policy version and expiry) with your own wallet. Nothing else is authorized by that signature."
-        actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
+        actions={<RefreshBtn onClick={list.reload} label="Refresh list" />}
       />
       <LoadError error={list.error} />
       <div className="mb-4 flex flex-wrap items-end gap-3">

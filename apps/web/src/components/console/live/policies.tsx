@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { formatUnits, parseUnits } from "@/lib/units";
 import { CopyButton } from "../../copy-button";
-import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
+import { CloseIcon } from "../../icons";
+import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill, IconBtn } from "../kit";
 import { CheckList, DecisionPill, LoadError, Loading, thCls, usd, useAction, utc } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
@@ -383,7 +384,7 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
                   <Mono className="block break-all text-soft">{c.address}</Mono>
                   <Mono className="text-dim">{c.selectors.join(", ") || "no methods"}{c.require_verified_code ? " · code required" : ""}</Mono>
                 </span>
-                <Btn variant="quiet" aria-label={`Remove ${c.address}`} onClick={() => edit((d) => (d.contracts.allowlist = allow.filter((x) => x.address !== c.address)))}>Remove</Btn>
+                <IconBtn label={`Remove ${c.address}`} tone="danger" onClick={() => edit((d) => (d.contracts.allowlist = allow.filter((x) => x.address !== c.address)))}><CloseIcon size={14} /></IconBtn>
               </li>
             ))}
           </ul>
@@ -418,7 +419,7 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
         {denylist.map((d) => (
           <div key={d} className="flex items-center justify-between gap-2 text-[12px]">
             <Mono className="break-all text-deny">{d}</Mono>
-            <Btn variant="quiet" aria-label={`Remove ${d}`} onClick={() => edit((x) => (x.contracts.denylist = denylist.filter((y) => y !== d)))}>Remove</Btn>
+            <IconBtn label={`Remove ${d}`} tone="danger" onClick={() => edit((x) => (x.contracts.denylist = denylist.filter((y) => y !== d)))}><CloseIcon size={14} /></IconBtn>
           </div>
         ))}
         <input aria-label="Address to deny" className={inputCls} value={deny} onChange={(e) => setDeny(e.target.value.trim())} placeholder="0x… address" spellCheck={false} />

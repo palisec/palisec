@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertIcon, CheckIcon, CopyIcon } from "./icons";
 
 export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -20,9 +21,15 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
       type="button"
       onClick={copy}
       aria-label={label}
-      className="rounded-[4px] border border-line-strong bg-abyss px-2 py-1 font-utility text-[9.5px] tracking-[0.08em] text-silver transition-colors hover:border-aqua hover:text-aqua"
+      title={state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : "Copy"}
+      className={`grid h-7 w-7 shrink-0 place-items-center rounded-[4px] border bg-abyss transition-colors active:scale-[0.94] ${
+        state === "copied" ? "border-aqua/60 text-aqua" : state === "failed" ? "border-deny/60 text-deny" : "border-line-strong text-silver hover:border-aqua hover:text-aqua"
+      }`}
     >
-      <span aria-live="polite" className={state === "copied" ? "text-aqua" : ""}>{state === "copied" ? "COPIED" : state === "failed" ? "FAILED" : "COPY"}</span>
+      <span key={state} className="animate-[c-pop_.28s_var(--ease-out-quint)]">
+        {state === "copied" ? <CheckIcon size={14} /> : state === "failed" ? <AlertIcon size={14} /> : <CopyIcon size={14} />}
+      </span>
+      <span aria-live="polite" className="sr-only">{state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : ""}</span>
     </button>
   );
 }

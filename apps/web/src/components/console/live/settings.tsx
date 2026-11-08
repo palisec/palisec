@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { TrashIcon } from "../../icons";
 import { Btn, Confirm, Field, inputCls, Mono, PageTitle, Panel, Pill } from "../kit";
 import { ago, LoadError, Loading, useAction } from "./common";
 import { api, can, useConsoleSession, useLive, type Role } from "./session";
@@ -53,7 +54,8 @@ export function LiveSettings() {
                       <Pill tone={m.role === "owner" ? "info" : "muted"}>{m.role}</Pill>
                       {own && !self && (
                         <Confirm
-                          label="Remove"
+                          label={`Remove ${m.address}`}
+                          icon={<TrashIcon size={14} />}
                           variant="quiet"
                           prompt="They lose access to this organization immediately."
                           confirmLabel="Remove member"

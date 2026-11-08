@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ReplayIcon } from "./icons";
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
 const subscribeReduced = (cb: () => void) => {
@@ -81,10 +82,11 @@ export function BoundaryDiagram() {
           type="button"
           onClick={() => setRun((r) => r + 1)}
           disabled={reduced}
-          className="label transition-colors hover:!text-fg disabled:opacity-40"
+          className="grid h-7 w-7 place-items-center rounded-[4px] text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] transition-[color,box-shadow] hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5)] active:scale-[0.92] disabled:opacity-40"
           aria-label="Replay the boundary animation"
+          title="Replay"
         >
-          ↻ Replay
+          <ReplayIcon size={15} />
         </button>
       </div>
       <div className="overflow-x-auto">

@@ -43,9 +43,15 @@ export function SiteHeader() {
             <ButtonLink href="/console">Open Console</ButtonLink>
           </span>
           <details className="group relative lg:hidden">
-            <summary className="btn btn-ghost h-10 cursor-pointer list-none !px-3 !py-0 [&::-webkit-details-marker]:hidden">
-              <span className="group-open:hidden">Menu</span>
-              <span className="hidden group-open:inline">Close</span>
+            <summary className="btn btn-ghost h-10 w-10 cursor-pointer list-none items-center justify-center !p-0 [&::-webkit-details-marker]:hidden">
+              <span className="sr-only group-open:hidden">Open menu</span>
+              <span className="sr-only hidden group-open:inline">Close menu</span>
+              {/* Three lines that fold into a cross when the menu opens. */}
+              <span aria-hidden className="relative block h-3 w-4">
+                <span className="absolute left-0 top-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ease-[var(--ease-out-quint)] group-open:translate-y-[5.25px] group-open:rotate-45" />
+                <span className="absolute left-0 top-[5.25px] h-[1.5px] w-full rounded-full bg-current transition-opacity duration-200 group-open:opacity-0" />
+                <span className="absolute bottom-0 left-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ease-[var(--ease-out-quint)] group-open:-translate-y-[5.25px] group-open:-rotate-45" />
+              </span>
             </summary>
             <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
               {[...NAV, { href: "/console", label: "Open Console" }].map((n) => (

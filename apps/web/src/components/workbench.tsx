@@ -19,6 +19,7 @@ import {
 } from "@palisec/policy-schema";
 import { Codes, DecisionBadge } from "./ui";
 import { CopyButton } from "./copy-button";
+import { ResetIcon } from "./icons";
 import { formatUnits, parseUnits } from "@/lib/units";
 
 
@@ -153,8 +154,14 @@ export function Workbench() {
               +{s}s
             </button>
           ))}
-          <button type="button" onClick={reset} className="rounded-[4px] border border-reef px-2 py-1 text-mist transition-colors hover:border-aqua hover:text-aqua">
-            Reset
+          <button
+            type="button"
+            onClick={reset}
+            aria-label="Reset the simulation"
+            title="Reset the simulation"
+            className="group/reset grid h-[26px] w-[26px] place-items-center rounded-[4px] border border-reef text-mist transition-colors hover:border-aqua hover:text-aqua"
+          >
+            <ResetIcon size={14} className="transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover/reset:-rotate-180" />
           </button>
         </div>
       </div>

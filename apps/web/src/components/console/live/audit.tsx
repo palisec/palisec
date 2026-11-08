@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Fragment, useState } from "react";
 import { shortHex } from "@/lib/units";
-import { Btn, Empty, inputCls, Mono, PageTitle, Panel, Pill, Segmented } from "../kit";
+import { Btn, Empty, inputCls, Mono, PageTitle, Panel, Pill, Segmented, RefreshBtn } from "../kit";
 import { LoadError, Loading, thCls, utc } from "./common";
 import { useLive } from "./session";
 
@@ -51,7 +51,7 @@ export function LiveAudit() {
       <PageTitle
         title="Audit"
         description="Append-only: the database rejects updates and deletes to this table. Every change and decision is written in the same statement as the change itself. Times in UTC."
-        actions={<Btn variant="quiet" onClick={list.reload}>Refresh</Btn>}
+        actions={<RefreshBtn onClick={list.reload} label="Refresh list" />}
       />
       <LoadError error={list.error} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
