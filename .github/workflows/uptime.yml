@@ -1,0 +1,24 @@
+name: Uptime
+# Hourly check that the site answers. Off until the repository variable UPTIME_ENABLED is "true".
+# It loads /login, a static page, so it never wakes the database. A failed run emails the owner.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    if: vars.UPTIME_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sign-in page answers over HTTPS
+        env:
+          URL: ${{ vars.UPTIME_URL || 'https://palisec.tech/login' }}
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL") && [ "$code" = "200" ] && { echo "OK $URL"; exit 0; }
+            echo "Attempt $attempt: HTTP ${code:-none}"; sleep 20
+          done
+          echo "::error::$URL did not answer 200 after 3 attempts"; exit 1

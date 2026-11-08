@@ -2,6 +2,7 @@ import "server-only";
 import { createPublicClient, getAddress, http, isAddress, isHex, verifyMessage, type Hex } from "viem";
 import { createSiweMessage } from "viem/siwe";
 import { CHAINS, CHALLENGE_TTL_SECONDS, VERIFY_CHAIN } from "./config";
+import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 import { db } from "./db";
 import { BadRequest } from "./http";
 
@@ -107,7 +108,7 @@ export async function verifyChallenge(body: Record<string, unknown>, host: strin
       SELECT new_org.id, u.id, 'org.created', ${JSON.stringify({ name_set_by: "sign_in" })}::text::jsonb FROM new_org, u
     ), sign_in_audit AS (
       INSERT INTO audit_events (org_id, actor_user_id, type, detail)
-      SELECT (SELECT id FROM new_org), u.id, 'auth.sign_in', ${JSON.stringify({ method: "siwe", domain: host })}::text::jsonb FROM u
+      SELECT (SELECT id FROM new_org), u.id, 'auth.sign_in', ${JSON.stringify({ method: "siwe", domain: host, terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION })}::text::jsonb FROM u
     )
     SELECT id, created FROM u`;
   return { ok: true, userId: user.id, address, created: user.created };

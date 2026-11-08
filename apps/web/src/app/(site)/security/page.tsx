@@ -127,11 +127,19 @@ export default function SecurityPage() {
             </li>
           ))}
         </ol>
-        <p className="mt-8 text-sm text-muted">
-          The repository is private during pre-release, so report suspected vulnerabilities directly to the maintainers, following{" "}
-          <code className="font-mono text-soft">SECURITY.md</code>. A public private-disclosure channel is a release gate and will be published
-          before the first public release. Do not test against systems you do not own.
-        </p>
+        <div id="disclosure" className="mt-10 max-w-[68ch] scroll-mt-28 space-y-3 text-sm leading-relaxed text-muted">
+          <p className="label !text-mist">Reporting a vulnerability</p>
+          <p>
+            Email <a href="mailto:security@palisec.tech" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security@palisec.tech</a> with
+            the affected component, steps to reproduce and the impact you observed. Do not open a public issue. We acknowledge reports within
+            three working days and credit researchers who ask to be named.
+          </p>
+          <p>
+            Test only against your own organization on testnet. Do not access other organizations&apos; data, degrade the service, or use real
+            funds. Good-faith research within these rules will not be pursued. Machine-readable contact:{" "}
+            <a href="/.well-known/security.txt" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security.txt</a>.
+          </p>
+        </div>
       </Section>
     </>
   );

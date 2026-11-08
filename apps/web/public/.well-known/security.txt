@@ -1,0 +1,5 @@
+Contact: mailto:security@palisec.tech
+Expires: 2027-11-08T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://palisec.tech/.well-known/security.txt
+Policy: https://palisec.tech/security#disclosure

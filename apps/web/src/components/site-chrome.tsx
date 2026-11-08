@@ -64,7 +64,7 @@ export function SiteHeader() {
 const FOOTER = [
   { title: "Product", links: [{ href: "/product", label: "Capabilities" }, { href: "/architecture", label: "Architecture" }, { href: "/pricing", label: "Pricing" }, { href: "/changelog", label: "Changelog" }] },
   { title: "Developers", links: [{ href: "/docs/quickstart", label: "Quickstart" }, { href: "/docs/policies", label: "Policy reference" }, { href: "/docs/sdk/typescript", label: "TypeScript SDK" }, { href: "/docs/errors", label: "Error codes" }, { href: "/login", label: "Sign in" }] },
-  { title: "Trust", links: [{ href: "/security", label: "Security model" }, { href: "/attestation", label: "Attestation" }, { href: "/status", label: "Status" }] },
+  { title: "Trust", links: [{ href: "/security", label: "Security model" }, { href: "/attestation", label: "Attestation" }, { href: "/status", label: "Status" }, { href: "/terms", label: "Terms" }, { href: "/privacy", label: "Privacy" }] },
 ];
 
 export function SiteFooter() {

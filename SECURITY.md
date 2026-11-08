@@ -1,23 +1,23 @@
 # Security policy
 
-Palisec is pre-release. No production service, enclave or smart-account module is deployed, and nothing in this repository should protect real funds yet.
+Palisec is a pre-release service on Robinhood Chain Testnet at https://palisec.tech. The authorization API and console are live; protected signing, the enclave and the on-chain smart-account module are not deployed, so nothing here should protect real funds yet.
 
 ## Reporting a vulnerability
 
-The repository is private during pre-release. Report suspected vulnerabilities directly to the maintainers through the channel you were given access by; do not open a public issue. A public private-disclosure channel is a release gate (see the security model) and will be published here before the first public release.
+Email **security@palisec.tech** (also published at https://palisec.tech/.well-known/security.txt). Do not open a public issue. Reports are acknowledged within three working days.
 
-Include the affected component (policy schema, reference evaluator, web app), steps to reproduce, and the impact you observed. Do not test against systems you do not own, and do not use real funds or production keys.
+Include the affected component (policy schema, reference evaluator, web app), steps to reproduce, and the impact you observed. Test only against your own organization on testnet. Do not access other organizations' data, degrade the service, or use real funds or production keys. Good-faith research within these rules will not be pursued.
 
 ## Scope
 
 In scope today:
 
 - `packages/policy-schema`: the canonical schema, validator and deterministic reference evaluator.
-- `apps/web`: the public site, documentation, policy workbench and console simulation workspace.
-- `apps/web/src/server` and `apps/web/src/app/api/v1`: the control-plane API (wallet sign-in, sessions, organizations) and `apps/web/db/migrations`.
+- `apps/web`: the public site, documentation, policy workbench and the wallet-authenticated console.
+- `apps/web/src/server` and `apps/web/src/app/api/v1`: the authorization and control-plane API (sign-in, sessions, organizations, agents, API keys, policies, operations, approvals, audit) and `apps/web/db/migrations`.
 - `.github/workflows`: CI, security scans and backups.
 
-The authorization and operation endpoints, protected signing service, chain workers and contracts described in the specification are not built yet. Findings about their design are welcome as design feedback.
+The protected signing service, chain workers and contracts described in the specification are not built yet. Findings about their design are welcome as design feedback.
 
 ## Handling
 

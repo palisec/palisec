@@ -42,7 +42,10 @@ export default function LoginPage() {
           </div>
           <p className="mt-4 text-[12.5px] leading-relaxed text-muted">
             New here? Signing in for the first time creates your organization with you as owner. Teammates are added by wallet address
-            in Settings.
+            in Settings. By signing in you agree to the{" "}
+            <Link href="/terms" className="text-mist underline decoration-aqua/50 underline-offset-4 hover:text-aqua">Terms of Service</Link> and
+            acknowledge the{" "}
+            <Link href="/privacy" className="text-mist underline decoration-aqua/50 underline-offset-4 hover:text-aqua">Privacy Policy</Link>.
           </p>
         </div>
       </main>
@@ -54,6 +57,8 @@ export default function LoginPage() {
           ["/docs", "Docs"],
           ["/security", "Security model"],
           ["/status", "Status"],
+          ["/terms", "Terms"],
+          ["/privacy", "Privacy"],
         ].map(([href, label]) => (
           <Link key={href} href={href} className="text-silver transition-colors hover:text-aqua">{label}</Link>
         ))}
