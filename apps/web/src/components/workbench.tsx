@@ -100,7 +100,7 @@ export function Workbench() {
     const seq = history.length + 1;
     const result = evaluate(
       policy,
-      { ...scenario.intent, request_id: `rw_req_sim_${String(seq).padStart(4, "0")}`, deadline: now + 120 },
+      { ...scenario.intent, request_id: `ps_req_sim_${String(seq).padStart(4, "0")}`, deadline: now + 120 },
       ledger,
       {
         ...EXAMPLE_ENV,
@@ -231,7 +231,7 @@ export function Workbench() {
               className="btn btn-solid btn-primary group mt-4 h-12 w-full justify-between !px-4 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
               Evaluate locally
-              <span className="font-mono text-xs">rw_req_sim_{String(history.length + 1).padStart(4, "0")}</span>
+              <span className="font-mono text-xs">ps_req_sim_{String(history.length + 1).padStart(4, "0")}</span>
             </button>
           </fieldset>
         </div>
@@ -390,7 +390,7 @@ function CheckRow({ check, index }: { check: CheckResult; index: number }) {
 }
 
 // The evaluation order, derived from the evaluator itself so it can never drift from what runs.
-const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "rw_req_preview", deadline: SIM_EPOCH + 120 }, EMPTY_STATE, EXAMPLE_ENV).checks;
+const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "ps_req_preview", deadline: SIM_EPOCH + 120 }, EMPTY_STATE, EXAMPLE_ENV).checks;
 
 function OrderPreview() {
   return (
@@ -438,7 +438,7 @@ function LedgerView({ ledger, now }: { ledger: LedgerState; now: number }) {
           {[...ledger.reservations].reverse().map((r) => (
             <tr key={r.reservation_id} className="border-b border-line">
               <td className="px-4 py-2 text-soft">{r.reservation_id.slice(0, 14)}…</td>
-              <td className="px-4 py-2 text-muted">{r.request_id.replace("rw_req_sim_", "#")}</td>
+              <td className="px-4 py-2 text-muted">{r.request_id.replace("ps_req_sim_", "#")}</td>
               <td className="px-4 py-2 text-soft">{formatUsd(BigInt(r.amount_usd_micros))}</td>
               <td className={`px-4 py-2 ${r.state === "pending_approval" ? "text-review" : r.state === "released" ? "text-dim" : "text-soft"}`}>{r.state}</td>
               <td className="px-4 py-2 text-muted">{r.state === "released" ? "—" : `${Math.max(0, r.expires_at - now)}s`}</td>

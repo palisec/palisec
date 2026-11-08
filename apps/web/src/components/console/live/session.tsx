@@ -32,7 +32,7 @@ interface SessionValue {
 }
 
 const Ctx = createContext<SessionValue | null>(null);
-const ORG_KEY = "rw.console.org";
+const ORG_KEY = "ps.console.org";
 
 export class ApiError extends Error {
   constructor(
@@ -50,7 +50,7 @@ let currentOrg: string | null = null;
 export async function api<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const headers: Record<string, string> = {};
   if (init.body !== undefined) headers["content-type"] = "application/json";
-  if (currentOrg) headers["x-rw-org"] = currentOrg;
+  if (currentOrg) headers["x-ps-org"] = currentOrg;
   const res = await fetch(`/api/v1${path}`, {
     method: init.method ?? "GET",
     headers,
@@ -59,7 +59,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     cache: "no-store",
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body?.error?.code ?? "RW_STATE_001", body?.error?.message ?? `Request failed (${res.status})`);
+  if (!res.ok) throw new ApiError(res.status, body?.error?.code ?? "PS_STATE_001", body?.error?.message ?? `Request failed (${res.status})`);
   return body as T;
 }
 
@@ -134,7 +134,7 @@ export function useLive<T>(path: string | null) {
         setData(d);
         setError(null);
       })
-      .catch((e) => live && setError(e instanceof ApiError ? e : new ApiError(0, "RW_STATE_001", "Network error")));
+      .catch((e) => live && setError(e instanceof ApiError ? e : new ApiError(0, "PS_STATE_001", "Network error")));
     return () => {
       live = false;
     };

@@ -24,14 +24,14 @@ const STATES = [
 
 const FAILURES = [
   ["Policy unavailable", "Do not authorize new signing."],
-  ["State store unavailable", "Do not approve on stale counters (RW_STATE_001)."],
+  ["State store unavailable", "Do not approve on stale counters (PS_STATE_001)."],
   ["Enclave unavailable", "Typed unavailable error. Never fall back to an unprotected signer."],
-  ["Fee estimation unavailable", "Deny or require review per policy (RW_FEE_001)."],
-  ["Bundler unavailable", "Preserve operation state and reservation until reconciled (RW_CHAIN_001)."],
+  ["Fee estimation unavailable", "Deny or require review per policy (PS_FEE_001)."],
+  ["Bundler unavailable", "Preserve operation state and reservation until reconciled (PS_CHAIN_001)."],
   ["Telemetry unavailable", "Buffer bounded, redacted events. Decisions are unaffected."],
   ["RPC disagreement", "Do not finalize on an unverified receipt."],
   ["Approval expires", "Invalidate the pending authorization."],
-  ["Duplicate request", "Return the existing idempotent result, or RW_REPLAY_001."],
+  ["Duplicate request", "Return the existing idempotent result, or PS_REPLAY_001."],
 ];
 
 const DENIAL = `{
@@ -39,8 +39,8 @@ const DENIAL = `{
     "code": -32090,
     "message": "Palisec denied the operation",
     "data": {
-      "reason_code": "RW_BUDGET_001",
-      "request_id": "rw_req_example",
+      "reason_code": "PS_BUDGET_001",
+      "request_id": "ps_req_example",
       "retryable": true,
       "transaction_hash": null
     }
@@ -69,7 +69,7 @@ export default function ErrorsPage() {
         </tbody>
       </table>
       <p className="text-sm text-muted">
-        <code>RW_REQUEST_001</code> extends the original specification table: request schema failures need a code distinct from
+        <code>PS_REQUEST_001</code> extends the original specification table: request schema failures need a code distinct from
         policy failures.
       </p>
 
@@ -84,7 +84,7 @@ export default function ErrorsPage() {
       <ul>
         <li>Retry only operations created with an idempotency key. A retry with the same key returns the original result.</li>
         <li>Use bounded exponential backoff. Never retry a financial action without proof that it cannot execute twice.</li>
-        <li><code>RW_LOOP_001</code> is not retryable: change the intent, or wait out the cooldown with a new request.</li>
+        <li><code>PS_LOOP_001</code> is not retryable: change the intent, or wait out the cooldown with a new request.</li>
       </ul>
 
       <h2 id="states">Operation states</h2>
@@ -122,14 +122,14 @@ export default function ErrorsPage() {
           pending authorization is invalidated and its reservation released; submit a new request.</li>
         <li><strong>Submitted, outcome unknown.</strong> Do not resubmit. Query the operation until it reaches a final state; the reservation
           is held until the receipt is reconciled, so a retry cannot create a second execution.</li>
-        <li><strong>Emergency stop.</strong> New operations are denied with <code>RW_PAUSED_001</code>. Resume only after the stop is
+        <li><strong>Emergency stop.</strong> New operations are denied with <code>PS_PAUSED_001</code>. Resume only after the stop is
           released by an authorized operator and health checks pass.</li>
       </ol>
 
       <h2 id="rpc-outages">RPC and bundler outages</h2>
       <p>
-        When the RPC endpoint, fee estimator or bundler is unavailable, new authorizations fail closed (<code>RW_FEE_001</code>,{" "}
-        <code>RW_CHAIN_001</code>). Already-submitted operations keep their state and reservation until a receipt is verified; an
+        When the RPC endpoint, fee estimator or bundler is unavailable, new authorizations fail closed (<code>PS_FEE_001</code>,{" "}
+        <code>PS_CHAIN_001</code>). Already-submitted operations keep their state and reservation until a receipt is verified; an
         unverified or disputed receipt never finalizes spend. Retries use bounded exponential backoff and the original idempotency key.
       </p>
 

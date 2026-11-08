@@ -65,7 +65,7 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="flex h-12 items-center gap-4 px-4">
           <Link href="/" className="flex items-center gap-2" aria-label="Palisec overview">
             <CubeGlyph size={16} />
-            <span className="font-brand text-[15px] font-extrabold tracking-[-0.01em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
+            <span className="font-brand text-[15px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
           </Link>
           <span className="hidden h-5 w-px bg-line-strong sm:block" />
           <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-citrine/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
@@ -101,7 +101,7 @@ function Shell({ children }: { children: ReactNode }) {
       {org.data?.emergency_stop && (
         <div role="alert" className="c-alarm border-b border-deny/50 bg-deny/[0.08] px-4 py-2 text-[13px] text-soft">
           <span className="font-utility text-[10.5px] uppercase tracking-[0.08em] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
-          <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">RW_PAUSED_001</code>.</span>
+          <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>.</span>
           <Link href="/console/security" className="ml-3 text-bone underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
         </div>
       )}
@@ -163,7 +163,7 @@ function Shell({ children }: { children: ReactNode }) {
           {session.status === "loading" && <p className="py-10 text-center font-utility text-[11px] uppercase tracking-[0.08em] text-dim">Checking your session…</p>}
           {session.status === "unavailable" && (
             <div role="alert" className="max-w-[60ch] py-10">
-              <p className="font-mono text-xs tracking-[0.08em] text-deny">■ RW_STATE_001 · SERVICE UNAVAILABLE</p>
+              <p className="font-mono text-xs tracking-[0.08em] text-deny">■ PS_STATE_001 · SERVICE UNAVAILABLE</p>
               <p className="mt-3 text-sm leading-relaxed text-muted">The console could not reach the control plane. Nothing was changed. Try again in a moment.</p>
               <button type="button" onClick={() => window.location.reload()} className="btn btn-ghost mt-6">Try again</button>
             </div>

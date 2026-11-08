@@ -100,10 +100,10 @@ export function evaluate(
   const selector = selectorOf(intent.data);
 
   run("policy", "Active, valid policy", () => {
-    if (!policy) return { status: "fail", code: "RW_POLICY_001", detail: "No policy is configured. A missing policy is never treated as allow-all." };
+    if (!policy) return { status: "fail", code: "PS_POLICY_001", detail: "No policy is configured. A missing policy is never treated as allow-all." };
     const errs = validatePolicy(policy);
-    if (errs.length) return { status: "fail", code: "RW_POLICY_001", detail: `Policy failed schema validation: ${errs[0]!.path} ${errs[0]!.message}.` };
-    if (policy.status !== "active") return { status: "fail", code: "RW_POLICY_001", detail: `Policy status is "${policy.status}", not active.` };
+    if (errs.length) return { status: "fail", code: "PS_POLICY_001", detail: `Policy failed schema validation: ${errs[0]!.path} ${errs[0]!.message}.` };
+    if (policy.status !== "active") return { status: "fail", code: "PS_POLICY_001", detail: `Policy status is "${policy.status}", not active.` };
     return { status: "pass", detail: `${policy.policy_id} v${policy.version} is active.` };
   });
 
@@ -115,44 +115,44 @@ export function evaluate(
       !HEX.test(intent.data) ? "data" :
       (intent.data.length - 2) / 2 > MAX_CALLDATA_BYTES ? "data (too long)" :
       !intent.request_id ? "request_id" : null;
-    if (bad) return { status: "fail", code: "RW_REQUEST_001", detail: `Invalid field: ${bad}.` };
+    if (bad) return { status: "fail", code: "PS_REQUEST_001", detail: `Invalid field: ${bad}.` };
     return { status: "pass", detail: "All fields well-formed and within size bounds." };
   });
 
   run("replay", "Request identity, deadline, replay", () => {
     if (state.seen_request_ids.includes(intent.request_id))
-      return { status: "fail", code: "RW_REPLAY_001", detail: `request_id ${intent.request_id} was already evaluated.` };
+      return { status: "fail", code: "PS_REPLAY_001", detail: `request_id ${intent.request_id} was already evaluated.` };
     if (intent.deadline <= env.now)
-      return { status: "fail", code: "RW_REPLAY_001", detail: `Deadline ${intent.deadline} has passed (now ${env.now}).` };
+      return { status: "fail", code: "PS_REPLAY_001", detail: `Deadline ${intent.deadline} has passed (now ${env.now}).` };
     return { status: "pass", detail: `New request; ${intent.deadline - env.now}s until deadline.` };
   });
 
   run("active", "Emergency stop and agent status", () => {
-    if (env.emergency_stop) return { status: "fail", code: "RW_PAUSED_001", detail: "Global emergency stop is active. All new protected executions are denied." };
-    if (env.paused_agents.includes(intent.agent_id)) return { status: "fail", code: "RW_PAUSED_001", detail: `Agent ${intent.agent_id} is paused.` };
+    if (env.emergency_stop) return { status: "fail", code: "PS_PAUSED_001", detail: "Global emergency stop is active. All new protected executions are denied." };
+    if (env.paused_agents.includes(intent.agent_id)) return { status: "fail", code: "PS_PAUSED_001", detail: `Agent ${intent.agent_id} is paused.` };
     return { status: "pass", detail: "No emergency stop; agent is active." };
   });
 
   run("chain", "Chain and account binding", () => {
     if (intent.chain_id !== policy!.account.chain_id)
-      return { status: "fail", code: "RW_TARGET_001", detail: `Chain ${intent.chain_id} does not match policy chain ${policy!.account.chain_id}.` };
+      return { status: "fail", code: "PS_TARGET_001", detail: `Chain ${intent.chain_id} does not match policy chain ${policy!.account.chain_id}.` };
     if (intent.from.toLowerCase() !== policy!.account.address.toLowerCase())
-      return { status: "fail", code: "RW_POLICY_001", detail: "Sender is not the account this policy protects." };
+      return { status: "fail", code: "PS_POLICY_001", detail: "Sender is not the account this policy protects." };
     return { status: "pass", detail: `Chain ${intent.chain_id}; account matches.` };
   });
 
   run("denylist", "Explicit deny rules", () => {
     const hit = policy!.contracts.denylist.some((a) => a.toLowerCase() === intent.to.toLowerCase());
-    if (hit) return { status: "fail", code: "RW_POLICY_002", detail: "Target is on the explicit denylist. Deny overrides allow." };
+    if (hit) return { status: "fail", code: "PS_POLICY_002", detail: "Target is on the explicit denylist. Deny overrides allow." };
     return { status: "pass", detail: "No deny rule matched." };
   });
 
   const entry = policy?.contracts.allowlist.find((e) => e.address.toLowerCase() === intent.to.toLowerCase());
 
   run("target", "Target contract allowlist", () => {
-    if (!entry) return { status: "fail", code: "RW_TARGET_001", detail: "Target is not on the allowlist; default is deny." };
+    if (!entry) return { status: "fail", code: "PS_TARGET_001", detail: "Target is not on the allowlist; default is deny." };
     if (entry.require_verified_code && env.verified_code[intent.to.toLowerCase()] !== true)
-      return { status: "fail", code: "RW_TARGET_001", detail: "Target requires verified code, and verification is missing or failed." };
+      return { status: "fail", code: "PS_TARGET_001", detail: "Target requires verified code, and verification is missing or failed." };
     return { status: "pass", detail: entry.require_verified_code ? "Allowlisted; code verified per the chain environment's report." : "Allowlisted." };
   });
 
@@ -160,30 +160,30 @@ export function evaluate(
     if (!selector) return { status: "pass", detail: "Native transfer (no calldata)." };
     if (entry!.selectors.includes(selector as `0x${string}`)) return { status: "pass", detail: `Selector ${selector} is allowed.` };
     if (policy!.human_approval.require_for_unknown_methods)
-      return { status: "review", code: "RW_HUMAN_001", detail: `Selector ${selector} is not allowlisted; policy routes unknown methods to human review.` };
-    return { status: "fail", code: "RW_METHOD_001", detail: `Selector ${selector} is not allowed.` };
+      return { status: "review", code: "PS_HUMAN_001", detail: `Selector ${selector} is not allowlisted; policy routes unknown methods to human review.` };
+    return { status: "fail", code: "PS_METHOD_001", detail: `Selector ${selector} is not allowed.` };
   });
 
   run("value", "Per-transaction value limit", () => {
     const max = BigInt(policy!.limits.max_transaction_value_wei);
-    if (value > max) return { status: "fail", code: "RW_BUDGET_001", detail: `Value ${value} wei exceeds the per-transaction limit of ${max} wei.` };
+    if (value > max) return { status: "fail", code: "PS_BUDGET_001", detail: `Value ${value} wei exceeds the per-transaction limit of ${max} wei.` };
     return { status: "pass", detail: `${value} wei ≤ ${max} wei.` };
   });
 
   run("fee", "Fee estimate", () => {
     if (env.fee_estimate_wei === null || !UINT.test(env.fee_estimate_wei))
-      return { status: "fail", code: "RW_FEE_001", detail: "Fee estimate unavailable. An unknown fee is never treated as zero." };
+      return { status: "fail", code: "PS_FEE_001", detail: "Fee estimate unavailable. An unknown fee is never treated as zero." };
     fee = BigInt(env.fee_estimate_wei);
     const max = BigInt(policy!.limits.max_gas_cost_wei);
-    if (fee > max) return { status: "fail", code: "RW_BUDGET_001", detail: `Estimated fee ${fee} wei exceeds the gas limit of ${max} wei.` };
+    if (fee > max) return { status: "fail", code: "PS_BUDGET_001", detail: `Estimated fee ${fee} wei exceeds the gas limit of ${max} wei.` };
     return { status: "pass", detail: `Estimated fee ${fee} wei ≤ ${max} wei.` };
   });
 
   run("price", "Price freshness", () => {
-    if (!env.eth_usd) return { status: "fail", code: "RW_STATE_001", detail: "No price available. USD limits cannot be enforced, so the request fails closed." };
+    if (!env.eth_usd) return { status: "fail", code: "PS_STATE_001", detail: "No price available. USD limits cannot be enforced, so the request fails closed." };
     const age = env.now - env.eth_usd.observed_at;
     if (age > policy!.limits.max_price_age_seconds)
-      return { status: "fail", code: "RW_STATE_001", detail: `Price is ${age}s old; maximum is ${policy!.limits.max_price_age_seconds}s.` };
+      return { status: "fail", code: "PS_STATE_001", detail: `Price is ${age}s old; maximum is ${policy!.limits.max_price_age_seconds}s.` };
     usd = weiToUsdMicros(value + fee, BigInt(env.eth_usd.price_micros));
     return { status: "pass", detail: `Price is ${age}s old. Exposure: ${formatUsd(usd)} (value + fee).` };
   });
@@ -195,14 +195,14 @@ export function evaluate(
       .reduce((s, r) => s + BigInt(r.amount_usd_micros), 0n);
     const max = BigInt(policy!.limits.hourly_budget_usd_micros);
     if (used + usd > max)
-      return { status: "fail", code: "RW_BUDGET_001", detail: `${formatUsd(used)} used + ${formatUsd(usd)} requested exceeds the ${formatUsd(max)} hourly budget.` };
+      return { status: "fail", code: "PS_BUDGET_001", detail: `${formatUsd(used)} used + ${formatUsd(usd)} requested exceeds the ${formatUsd(max)} hourly budget.` };
     return { status: "pass", detail: `${formatUsd(used + usd)} of ${formatUsd(max)} after this reservation.` };
   });
 
   run("pending", "Pending operation limit", () => {
     const open = reservations.filter((r) => r.state === "reserved" || r.state === "pending_approval").length;
     const max = policy!.limits.max_pending_operations;
-    if (open >= max) return { status: "fail", code: "RW_RATE_001", detail: `${open} operations pending; limit is ${max}.` };
+    if (open >= max) return { status: "fail", code: "PS_RATE_001", detail: `${open} operations pending; limit is ${max}.` };
     return { status: "pass", detail: `${open} of ${max} pending slots in use.` };
   });
 
@@ -213,17 +213,17 @@ export function evaluate(
     const c = state.calldata_seen[calldataKey];
     const cd = policy!.cooldowns.identical_calldata_seconds;
     if (c !== undefined && env.now - c < cd)
-      return { status: "fail", code: "RW_LOOP_001", detail: `Identical calldata seen ${env.now - c}s ago; cooldown is ${cd}s.` };
+      return { status: "fail", code: "PS_LOOP_001", detail: `Identical calldata seen ${env.now - c}s ago; cooldown is ${cd}s.` };
     const i = state.intent_seen[intentKey];
     const id = policy!.cooldowns.identical_intent_seconds;
     if (i !== undefined && env.now - i < id)
-      return { status: "fail", code: "RW_LOOP_001", detail: `Equivalent intent seen ${env.now - i}s ago; cooldown is ${id}s.` };
+      return { status: "fail", code: "PS_LOOP_001", detail: `Equivalent intent seen ${env.now - i}s ago; cooldown is ${id}s.` };
     return { status: "pass", detail: "No repeat within the cooldown windows." };
   });
 
   run("human", "Human approval threshold", () => {
     const t = BigInt(policy!.human_approval.usd_threshold_micros);
-    if (usd >= t) return { status: "review", code: "RW_HUMAN_001", detail: `${formatUsd(usd)} meets the ${formatUsd(t)} approval threshold.` };
+    if (usd >= t) return { status: "review", code: "PS_HUMAN_001", detail: `${formatUsd(usd)} meets the ${formatUsd(t)} approval threshold.` };
     return { status: "pass", detail: `${formatUsd(usd)} is below the ${formatUsd(t)} approval threshold.` };
   });
 
@@ -258,7 +258,7 @@ export function evaluate(
   const p = policy!;
   const pending = rv !== null;
   const reservation: Reservation = {
-    reservation_id: "rw_res_" + fingerprint(`${intent.request_id}|${p.version}`).slice(2),
+    reservation_id: "ps_res_" + fingerprint(`${intent.request_id}|${p.version}`).slice(2),
     request_id: intent.request_id,
     agent_id: intent.agent_id,
     policy_version: p.version,
@@ -274,7 +274,7 @@ export function evaluate(
     reason_code: pending ? rv.code : null,
     policy_id: p.policy_id,
     policy_version: p.version,
-    authorization_id: pending ? null : "rw_auth_" + fingerprint(`${intent.request_id}|${p.policy_id}|${p.version}`).slice(2),
+    authorization_id: pending ? null : "ps_auth_" + fingerprint(`${intent.request_id}|${p.policy_id}|${p.version}`).slice(2),
     transaction_hash: null,
     retryable: false,
     message: pending

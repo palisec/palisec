@@ -36,7 +36,7 @@ export function LiveSecurity() {
           ) : (
             <>
               <p className="text-[13px] leading-relaxed text-soft">
-                While engaged, every new operation in this organization is denied with <code className="font-mono text-[0.9em]">RW_PAUSED_001</code>, and pending approvals cannot be approved. It is enforced by the
+                While engaged, every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>, and pending approvals cannot be approved. It is enforced by the
                 same database row every evaluation reads, so it applies to the next request. Operators can engage it; only an owner can lift it.
               </p>
               {!o.emergency_stop && can.operate(member?.role) && (

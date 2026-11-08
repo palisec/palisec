@@ -33,7 +33,7 @@ export const APPROVAL_TYPES = {
 async function loadPending(ctx: MemberContext, id: string) {
   const [op] = await db()`
     SELECT o.* FROM operations o WHERE o.id = ${id}::uuid AND o.org_id = ${ctx.orgId}::uuid`;
-  if (!op) throw new HttpError(404, "RW_REQUEST_001", "Operation not found in this organization");
+  if (!op) throw new HttpError(404, "PS_REQUEST_001", "Operation not found in this organization");
   return op;
 }
 
@@ -91,17 +91,17 @@ export async function approve(ctx: MemberContext, id: string, body: Record<strin
   const signature = body.signature;
   if (typeof signature !== "string" || !isHex(signature) || signature.length > 4096) throw new BadRequest("signature must be hex");
   const op = await loadPending(ctx, id);
-  if (op.state !== "pending_approval") throw new HttpError(409, "RW_REPLAY_001", `Operation is ${op.state}, not pending approval`);
-  if (new Date(op.expires_at).getTime() <= Date.now()) throw new HttpError(409, "RW_REPLAY_001", "The approval window has expired");
+  if (op.state !== "pending_approval") throw new HttpError(409, "PS_REPLAY_001", `Operation is ${op.state}, not pending approval`);
+  if (new Date(op.expires_at).getTime() <= Date.now()) throw new HttpError(409, "PS_REPLAY_001", "The approval window has expired");
   const typed = typedDataFor(op);
   if (!(await signatureFrom(ctx.user.address as Hex, typed, signature)))
-    throw new HttpError(401, "RW_AUTH_001", "Signature does not match this operation and your signed-in wallet");
+    throw new HttpError(401, "PS_AUTH_001", "Signature does not match this operation and your signed-in wallet");
 
   // One statement: every precondition is re-read at the moment of approval.
   const rows = await db()`
     WITH o AS (
       UPDATE operations o SET state = 'approved', decided_by = ${ctx.user.userId}::uuid, decided_at = now(),
-        approval_signature = ${signature}, authorization_id = ${`rw_auth_${randomHex(16)}`},
+        approval_signature = ${signature}, authorization_id = ${`ps_auth_${randomHex(16)}`},
         expires_at = now() + make_interval(secs => ${AUTHORIZATION_TTL_SECONDS}::int)
       FROM agents a, organizations g, policies p
       WHERE o.id = ${id}::uuid AND o.org_id = ${ctx.orgId}::uuid AND o.state = 'pending_approval' AND o.expires_at > now()
@@ -118,7 +118,7 @@ export async function approve(ctx: MemberContext, id: string, body: Record<strin
     )
     SELECT id FROM o`;
   if (rows.length === 0)
-    throw new HttpError(409, "RW_PAUSED_001", "Approval refused: the agent is paused, the organization is stopped, or the policy changed since evaluation");
+    throw new HttpError(409, "PS_PAUSED_001", "Approval refused: the agent is paused, the organization is stopped, or the policy changed since evaluation");
   return getOperation(ctx.orgId, id);
 }
 
@@ -136,7 +136,7 @@ export async function reject(ctx: MemberContext, id: string, body: Record<string
       FROM o
     )
     SELECT id FROM o`;
-  if (rows.length === 0) throw new HttpError(409, "RW_REPLAY_001", "Operation is not pending approval (it may have expired)");
+  if (rows.length === 0) throw new HttpError(409, "PS_REPLAY_001", "Operation is not pending approval (it may have expired)");
   return getOperation(ctx.orgId, id);
 }
 
@@ -167,7 +167,7 @@ export async function cancel(orgId: string, id: string, actor: { agent?: AgentCo
   if (rows.length === 0)
     throw new HttpError(
       409,
-      "RW_REPLAY_001",
+      "PS_REPLAY_001",
       agentId
         ? "Agents can only withdraw operations pending approval; an authorization keeps its budget until it expires"
         : "Operation cannot be cancelled: it is not an unexpired authorization or pending approval",
@@ -184,7 +184,7 @@ export async function listOperations(ctx: MemberContext, params: URLSearchParams
   if (before !== null && Number.isNaN(Date.parse(before))) throw new BadRequest("before must be an ISO timestamp");
   if (agentId !== null && !/^[0-9a-f-]{36}$/i.test(agentId)) throw new BadRequest("agent_id is malformed");
   if (decision !== null && !["ALLOW", "DENY", "REQUIRES_HUMAN_SIGNATURE"].includes(decision)) throw new BadRequest("decision is malformed");
-  if (reason !== null && !/^RW_[A-Z]+_\d{3}$/.test(reason)) throw new BadRequest("reason_code is malformed");
+  if (reason !== null && !/^PS_[A-Z]+_\d{3}$/.test(reason)) throw new BadRequest("reason_code is malformed");
   const requestId = params.get("request_id");
   if (requestId !== null && !/^[A-Za-z0-9_.:-]{1,128}$/.test(requestId)) throw new BadRequest("request_id is malformed");
   const rows = await db()`
@@ -210,7 +210,7 @@ export async function summary(ctx: MemberContext) {
       count(*) FILTER (WHERE decision = 'DENY')::int AS denied,
       count(*) FILTER (WHERE decision = 'REQUIRES_HUMAN_SIGNATURE')::int AS reviewed,
       count(*) FILTER (WHERE state = 'pending_approval' AND expires_at > now())::int AS pending_approvals,
-      coalesce(sum(usd_micros) FILTER (WHERE created_at > now() - interval '1 hour' AND rw_holds_budget(state, expires_at)), 0)::text AS reserved_last_hour_usd_micros
+      coalesce(sum(usd_micros) FILTER (WHERE created_at > now() - interval '1 hour' AND ps_holds_budget(state, expires_at)), 0)::text AS reserved_last_hour_usd_micros
     FROM operations WHERE org_id = ${ctx.orgId}::uuid AND created_at > now() - interval '24 hours'`;
   const hourly = await db()`
     SELECT to_char(date_trunc('hour', created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD"T"HH24:00:00"Z"') AS hour,

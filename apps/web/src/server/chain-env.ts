@@ -4,7 +4,7 @@ import { CHAINS, type ChainId } from "./config";
 
 /**
  * External inputs to an evaluation. Each lookup may fail; a failure returns null and the evaluator
- * fails closed (RW_FEE_001 or RW_STATE_001), never treating an unknown value as zero.
+ * fails closed (PS_FEE_001 or PS_STATE_001), never treating an unknown value as zero.
  * Results are cached briefly per server instance to keep latency and RPC usage low.
  */
 

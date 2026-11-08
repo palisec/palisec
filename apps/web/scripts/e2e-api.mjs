@@ -99,7 +99,7 @@ r = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Rebalancer"
 check("create agent", r.status === 201 && r.body.status === "active", r.body);
 const agentId = r.body.id;
 r = await call("POST", `/agents/${agentId}/credentials`, { cookie: o.cookie, body: { label: "e2e" } });
-check("create API key (secret shown once)", r.status === 201 && /^rw_test_[0-9a-f]{48}$/.test(r.body.secret), r.body);
+check("create API key (secret shown once)", r.status === 201 && /^ps_test_[0-9a-f]{48}$/.test(r.body.secret), r.body);
 const KEY = r.body.secret;
 const credId = r.body.id;
 r = await call("GET", `/agents/${agentId}`, { cookie: o.cookie });
@@ -108,7 +108,7 @@ check("key listing never includes the secret", r.status === 200 && !JSON.stringi
 // ---------------------------------------------------------------- evaluation
 const intent = (over = {}) => ({ request_id: `req_${Math.random().toString(36).slice(2)}`, chain_id: CHAIN, to: TOKEN, value_wei: "0", data: transfer(rand(), 5n), gas_limit: 100000, deadline: now() + 300, ...over });
 
-check("bad API key is refused", (await call("POST", "/operations", { key: "rw_test_" + "0".repeat(48), body: intent() })).status === 401);
+check("bad API key is refused", (await call("POST", "/operations", { key: "ps_test_" + "0".repeat(48), body: intent() })).status === 401);
 check("API key in a cookie session route is not a member", (await call("GET", "/operations", { key: KEY })).status === 400);
 check("unknown request field is refused", (await call("POST", "/operations", { key: KEY, body: { ...intent(), from: ACCOUNT } })).status === 400);
 
@@ -117,23 +117,23 @@ check("dry run allows an allowlisted transfer", r.status === 200 && r.body.decis
 
 const first = intent({ value_wei: "100000000000000" });
 r = await call("POST", "/operations", { key: KEY, body: first, headers: { "idempotency-key": "idem-1" } });
-check("operation ALLOW reserves budget", r.status === 201 && r.body.decision === "ALLOW" && r.body.state === "authorized" && /^rw_auth_/.test(r.body.authorization_id), r.body);
+check("operation ALLOW reserves budget", r.status === 201 && r.body.decision === "ALLOW" && r.body.state === "authorized" && /^ps_auth_/.test(r.body.authorization_id), r.body);
 check("transaction_hash stays null (nothing broadcast)", r.body.transaction_hash === null);
 const allowedOp = r.body.operation_id;
 r = await call("POST", "/operations", { key: KEY, body: first, headers: { "idempotency-key": "idem-1" } });
 check("idempotent retry returns the same operation", r.status === 200 && r.body.operation_id === allowedOp && r.headers.get("idempotent-replayed") === "true", r.body);
 r = await call("POST", "/operations", { key: KEY, body: { ...first, request_id: "other" }, headers: { "idempotency-key": "idem-1" } });
-check("idempotency key reused for a different request is refused", r.status === 409 && r.body.error?.code === "RW_REPLAY_001", r.body);
+check("idempotency key reused for a different request is refused", r.status === 409 && r.body.error?.code === "PS_REPLAY_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: first });
-check("replayed request_id is refused", r.status === 409 && r.body.error?.code === "RW_REPLAY_001", r.body);
+check("replayed request_id is refused", r.status === 409 && r.body.error?.code === "PS_REPLAY_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: { ...first, request_id: "loop_1" } });
-check("identical calldata within cooldown is RW_LOOP_001", r.body.decision === "DENY" && r.body.reason_code === "RW_LOOP_001", r.body);
+check("identical calldata within cooldown is PS_LOOP_001", r.body.decision === "DENY" && r.body.reason_code === "PS_LOOP_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ to: rand() }) });
-check("target not allowlisted is RW_TARGET_001", r.body.decision === "DENY" && r.body.reason_code === "RW_TARGET_001", r.body);
+check("target not allowlisted is PS_TARGET_001", r.body.decision === "DENY" && r.body.reason_code === "PS_TARGET_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "2000000000000000" }) });
-check("value over the per-transaction limit is RW_BUDGET_001", r.body.reason_code === "RW_BUDGET_001", r.body);
+check("value over the per-transaction limit is PS_BUDGET_001", r.body.reason_code === "PS_BUDGET_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ deadline: now() - 1 }) });
-check("expired deadline is RW_REPLAY_001", r.body.reason_code === "RW_REPLAY_001", r.body);
+check("expired deadline is PS_REPLAY_001", r.body.reason_code === "PS_REPLAY_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ chain_id: 4663 }) });
 check("wrong chain is denied", r.body.decision === "DENY", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ data: approveData(rand()) }) });
@@ -144,7 +144,7 @@ const toReject = r.body.operation_id;
 
 // Budget: $0.50 per hour. The first ALLOW used about $0.23; this asks for about $0.46 more.
 r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "200000000000000" }) });
-check("hourly budget exhaustion is RW_BUDGET_001", r.body.reason_code === "RW_BUDGET_001", r.body);
+check("hourly budget exhaustion is PS_BUDGET_001", r.body.reason_code === "PS_BUDGET_001", r.body);
 
 // ---------------------------------------------------------------- approvals
 r = await call("GET", "/approvals", { cookie: o.cookie });
@@ -159,7 +159,7 @@ const tampered = await owner.signTypedData({ domain: typed.domain, types: { Oper
 check("approval of a modified operation is refused", (await call("POST", `/approvals/${pendingOp}/approve`, { cookie: o.cookie, body: { signature: tampered } })).status === 401);
 const goodSig = await owner.signTypedData({ domain: typed.domain, types: { OperationApproval: typed.types.OperationApproval }, primaryType: typed.primaryType, message });
 r = await call("POST", `/approvals/${pendingOp}/approve`, { cookie: o.cookie, body: { signature: goodSig } });
-check("approval with the approver's signature authorizes", r.status === 200 && r.body.state === "approved" && /^rw_auth_/.test(r.body.authorization_id), r.body);
+check("approval with the approver's signature authorizes", r.status === 200 && r.body.state === "approved" && /^ps_auth_/.test(r.body.authorization_id), r.body);
 check("approval cannot be reused", (await call("POST", `/approvals/${pendingOp}/approve`, { cookie: o.cookie, body: { signature: goodSig } })).status === 409);
 r = await call("POST", `/approvals/${toReject}/reject`, { cookie: o.cookie, body: { reason: "not expected" } });
 check("reject a pending operation", r.status === 200 && r.body.state === "rejected", r.body);
@@ -190,7 +190,7 @@ const a2 = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Race
 const k2 = (await call("POST", `/agents/${a2.body.id}/credentials`, { cookie: o.cookie, body: {} })).body.secret;
 const racers = await Promise.all(Array.from({ length: 30 }, () => call("POST", "/operations", { key: k2, body: intent({ value_wei: "100000000000000" }) })));
 const allowed = racers.filter((x) => x.body.decision === "ALLOW").length;
-const budgetDenied = racers.filter((x) => x.body.reason_code === "RW_BUDGET_001").length;
+const budgetDenied = racers.filter((x) => x.body.reason_code === "PS_BUDGET_001").length;
 check(`30 concurrent requests for one budget slot: exactly 1 allowed (got ${allowed}, ${budgetDenied} budget-denied)`, allowed === 1 && budgetDenied === 29, racers.map((x) => x.body.reason_code ?? x.body.error));
 
 // ---------------------------------------------------------------- pause, emergency stop, roles
@@ -198,30 +198,30 @@ check("pause needs confirmation", (await call("POST", `/agents/${agentId}/pause`
 r = await call("POST", `/agents/${agentId}/pause`, { cookie: o.cookie, body: { confirm: true } });
 check("pause agent", r.status === 200 && r.body.status === "paused", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent() });
-check("paused agent is RW_PAUSED_001", r.body.reason_code === "RW_PAUSED_001", r.body);
+check("paused agent is PS_PAUSED_001", r.body.reason_code === "PS_PAUSED_001", r.body);
 r = await call("POST", `/agents/${agentId}/resume`, { cookie: o.cookie, body: { confirm: true } });
 check("resume agent", r.status === 200 && r.body.status === "active", r.body);
 
 r = await call("POST", "/organization/emergency-stop", { cookie: o.cookie, body: { active: true, confirm: true } });
 check("emergency stop on", r.status === 200 && r.body.emergency_stop === true, r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent() });
-check("emergency stop denies new operations", r.body.reason_code === "RW_PAUSED_001", r.body);
+check("emergency stop denies new operations", r.body.reason_code === "PS_PAUSED_001", r.body);
 
 r = await call("POST", "/members", { cookie: o.cookie, body: { address: viewer.address, role: "viewer" } });
 check("owner adds a viewer", r.status === 200 && r.body.members.length === 2, r.body);
 const v = await signIn(viewer);
 check("viewer signs in and joins the existing organization", (await call("GET", "/me", { cookie: v.cookie })).body.organizations?.some((x) => x.role === "viewer"));
 const viewerOrg = me.body.organizations[0].id;
-check("viewer can read agents", (await call("GET", "/agents", { cookie: v.cookie, headers: { "x-rw-org": viewerOrg } })).status === 200);
-check("viewer cannot create agents", (await call("POST", "/agents", { cookie: v.cookie, headers: { "x-rw-org": viewerOrg }, body: { name: "x", chain_id: CHAIN, account: ACCOUNT } })).status === 403);
-check("viewer cannot lift the emergency stop", (await call("POST", "/organization/emergency-stop", { cookie: v.cookie, headers: { "x-rw-org": viewerOrg }, body: { active: false, confirm: true } })).status === 403);
+check("viewer can read agents", (await call("GET", "/agents", { cookie: v.cookie, headers: { "x-ps-org": viewerOrg } })).status === 200);
+check("viewer cannot create agents", (await call("POST", "/agents", { cookie: v.cookie, headers: { "x-ps-org": viewerOrg }, body: { name: "x", chain_id: CHAIN, account: ACCOUNT } })).status === 403);
+check("viewer cannot lift the emergency stop", (await call("POST", "/organization/emergency-stop", { cookie: v.cookie, headers: { "x-ps-org": viewerOrg }, body: { active: false, confirm: true } })).status === 403);
 r = await call("POST", "/organization/emergency-stop", { cookie: o.cookie, body: { active: false, confirm: true } });
 check("owner lifts the emergency stop", r.status === 200 && r.body.emergency_stop === false, r.body);
 
 const x = await signIn(outsider);
 check("another organization cannot see this agent", (await call("GET", `/agents/${agentId}`, { cookie: x.cookie })).status === 404);
 check("another organization cannot read this operation", (await call("GET", `/operations/${allowedOp}`, { cookie: x.cookie })).status === 404);
-check("another organization cannot select this organization", (await call("GET", "/agents", { cookie: x.cookie, headers: { "x-rw-org": viewerOrg } })).status === 403);
+check("another organization cannot select this organization", (await call("GET", "/agents", { cookie: x.cookie, headers: { "x-ps-org": viewerOrg } })).status === 403);
 
 // ---------------------------------------------------------------- revocation and audit
 r = await call("POST", `/credentials/${credId}/revoke`, { cookie: o.cookie });

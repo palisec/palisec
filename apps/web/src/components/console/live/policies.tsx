@@ -48,7 +48,7 @@ export function LivePolicies() {
     <>
       <PageTitle
         title="Policies"
-        description="Edit a draft, validate it against schema 1.0, review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with RW_POLICY_001."
+        description="Edit a draft, validate it against schema 1.0, review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with PS_POLICY_001."
       />
       <LoadError error={list.error} />
       <div className="space-y-4">
@@ -232,7 +232,7 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
               {p.status === "active" && (
                 <Confirm
                   label="Disable policy"
-                  prompt="Every agent bound to this policy is denied with RW_POLICY_001 until a version is activated again."
+                  prompt="Every agent bound to this policy is denied with PS_POLICY_001 until a version is activated again."
                   confirmLabel="Disable"
                   onConfirm={() => run(() => api(`/policies/${id}/disable`, { method: "POST", body: { confirm: true } }), "Policy disabled.").then(after)}
                 />
@@ -365,8 +365,8 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
         {unitField("Approval at or above (USD)", 6, doc.human_approval?.usd_threshold_micros, (d, v) => (d.human_approval.usd_threshold_micros = v))}
         <Field id={`${uid}-unknown`} label="Unknown methods on allowed contracts">
           <select id={`${uid}-unknown`} className={inputCls} value={doc.human_approval?.require_for_unknown_methods ? "review" : "deny"} onChange={(e) => edit((d) => (d.human_approval.require_for_unknown_methods = e.target.value === "review"))}>
-            <option value="review">Send to a human (RW_HUMAN_001)</option>
-            <option value="deny">Deny (RW_METHOD_001)</option>
+            <option value="review">Send to a human (PS_HUMAN_001)</option>
+            <option value="deny">Deny (PS_METHOD_001)</option>
           </select>
         </Field>
         <p className="text-[11.5px] text-muted">Failure mode is always <Mono>closed</Mono>: a missing policy, price or fee never allows.</p>

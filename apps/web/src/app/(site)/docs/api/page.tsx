@@ -26,8 +26,8 @@ export default function ApiReference() {
 
       <h2 id="auth">Authentication</h2>
       <ul>
-        <li><strong>Agents</strong> send <code>Authorization: Bearer rw_test_…</code>. Keys belong to one agent, are shown once and are stored only as a SHA-256 hash. Never put a key in a URL.</li>
-        <li><strong>People</strong> use the console session from wallet sign-in. State changes must come from this site (the <code>Origin</code> header is checked). With several organizations, choose one with the <code>x-rw-org</code> header.</li>
+        <li><strong>Agents</strong> send <code>Authorization: Bearer ps_test_…</code>. Keys belong to one agent, are shown once and are stored only as a SHA-256 hash. Never put a key in a URL.</li>
+        <li><strong>People</strong> use the console session from wallet sign-in. State changes must come from this site (the <code>Origin</code> header is checked). With several organizations, choose one with the <code>x-ps-org</code> header.</li>
         <li><strong>Roles</strong> are checked on every request: viewer reads; operator also pauses agents and engages the emergency stop; approver signs approvals; admin manages agents, keys and policies; owner also manages members and lifts the stop.</li>
       </ul>
 
@@ -35,7 +35,7 @@ export default function ApiReference() {
       <p>
         Every refusal is <code>{`{ request_id, error: { code, message, retryable } }`}</code> with a stable <Link href="/docs/errors">reason code</Link>. A
         denied operation is not an error: it returns <code>decision: &quot;DENY&quot;</code> with its reason. When the database or a required input is
-        unavailable the API answers <code>503 RW_STATE_001</code> and authorizes nothing. Keys are limited to 120 requests a minute (<code>429 RW_RATE_001</code>).
+        unavailable the API answers <code>503 PS_STATE_001</code> and authorizes nothing. Keys are limited to 120 requests a minute (<code>429 PS_RATE_001</code>).
       </p>
 
       <h2 id="lifecycle">Operation states</h2>

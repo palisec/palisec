@@ -3,7 +3,7 @@
  * Applies db/migrations/*.sql in filename order, each in its own transaction, exactly once.
  * Runs before `next build` on Vercel, and by hand with `pnpm --filter @palisec/web db:migrate`.
  * A failure fails the build, so the previous deployment stays live. Without a database URL it exits
- * cleanly; the API then fails closed with RW_STATE_001.
+ * cleanly; the API then fails closed with PS_STATE_001.
  *
  * --soft: log a failure but exit 0. The API still fails closed, and /api/v1/health reports the
  * applied schema version.

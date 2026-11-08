@@ -33,7 +33,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
           gas_limit: "integer 21000-30000000; fee bound = gas_limit × current gas price",
           deadline: "unix seconds, at most one hour ahead",
         },
-        notes: "Send Idempotency-Key to make retries return the original decision (header Idempotent-Replayed: true). 201 on a new decision, 200 on an idempotent replay, 409 RW_REPLAY_001 for a reused request_id or a key reused with a different body.",
+        notes: "Send Idempotency-Key to make retries return the original decision (header Idempotent-Replayed: true). 201 on a new decision, 200 on an idempotent replay, 409 PS_REPLAY_001 for a reused request_id or a key reused with a different body.",
       },
       { method: "POST", path: "/authorizations/evaluate", auth: "key", summary: "Dry run: the same evaluation against live state, reserving nothing and consuming no request_id.", body: { "…": "same fields as POST /operations" } },
       { method: "GET", path: "/operations/{id}", auth: "session or key", role: "viewer", summary: "One operation. An API key can read only its own agent's operations." },
@@ -57,7 +57,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "POST", path: "/agents", auth: "session", role: "admin", summary: "Register an agent.", body: { name: "string", chain_id: "46630", account: "smart account address", policy_id: "optional policy id; must protect the same account" } },
       { method: "GET", path: "/agents/{id}", auth: "session", role: "viewer", summary: "Agent detail with keys (never secrets) and last-hour usage." },
       { method: "PATCH", path: "/agents/{id}", auth: "session", role: "admin", summary: "Rename or rebind the policy.", body: { name: "optional", policy_id: "optional; null to unbind" } },
-      { method: "POST", path: "/agents/{id}/pause", auth: "session", role: "operator", summary: "Deny the agent's new operations with RW_PAUSED_001.", body: { confirm: "true" } },
+      { method: "POST", path: "/agents/{id}/pause", auth: "session", role: "operator", summary: "Deny the agent's new operations with PS_PAUSED_001.", body: { confirm: "true" } },
       { method: "POST", path: "/agents/{id}/resume", auth: "session", role: "admin", summary: "Resume a paused agent.", body: { confirm: "true" } },
       { method: "POST", path: "/agents/{id}/revoke", auth: "session", role: "admin", summary: "Permanently revoke the agent and all its keys.", body: { confirm: "true" } },
       { method: "POST", path: "/agents/{id}/credentials", auth: "session", role: "admin", summary: "Create an API key. The secret is in this response only.", body: { label: "optional string" } },
@@ -72,7 +72,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "GET", path: "/policies/{id}", auth: "session", role: "viewer", summary: "Draft, its validation errors and hash, the active document and version history." },
       { method: "PUT", path: "/policies/{id}", auth: "session", role: "admin", summary: "Save the draft. Drafts may be invalid while you edit.", body: { document: "policy object" } },
       { method: "POST", path: "/policies/{id}/activate", auth: "session", role: "admin", summary: "Activate the saved draft as the next immutable version.", body: { confirm: "true", draft_hash: "draft_hash from GET, binding activation to what you reviewed" } },
-      { method: "POST", path: "/policies/{id}/disable", auth: "session", role: "admin", summary: "Disable: bound agents are denied with RW_POLICY_001.", body: { confirm: "true" } },
+      { method: "POST", path: "/policies/{id}/disable", auth: "session", role: "admin", summary: "Disable: bound agents are denied with PS_POLICY_001.", body: { confirm: "true" } },
     ],
   },
   {
@@ -128,7 +128,7 @@ export function openApiDocument(serverUrl: string) {
         responses: {
           "200": { description: "Success" },
           "4XX": { description: "Refused", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "503": { description: "RW_STATE_001: authoritative state unavailable; nothing was authorized", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "503": { description: "PS_STATE_001: authoritative state unavailable; nothing was authorized", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
         },
       };
     }
@@ -144,8 +144,8 @@ export function openApiDocument(serverUrl: string) {
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {
       securitySchemes: {
-        apiKey: { type: "http", scheme: "bearer", description: "Agent API key: rw_test_ followed by 48 hex characters." },
-        session: { type: "apiKey", in: "cookie", name: "__Host-rw_session", description: "Console session from wallet sign-in. State changes must send an Origin header for this site." },
+        apiKey: { type: "http", scheme: "bearer", description: "Agent API key: ps_test_ followed by 48 hex characters." },
+        session: { type: "apiKey", in: "cookie", name: "__Host-ps_session", description: "Console session from wallet sign-in. State changes must send an Origin header for this site." },
       },
       schemas: {
         Error: {
@@ -156,7 +156,7 @@ export function openApiDocument(serverUrl: string) {
             error: {
               type: "object",
               required: ["code", "message", "retryable"],
-              properties: { code: { type: "string", pattern: "^RW_[A-Z]+_\\d{3}$" }, message: { type: "string" }, retryable: { type: "boolean" } },
+              properties: { code: { type: "string", pattern: "^PS_[A-Z]+_\\d{3}$" }, message: { type: "string" }, retryable: { type: "boolean" } },
             },
           },
         },

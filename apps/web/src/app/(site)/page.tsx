@@ -93,7 +93,7 @@ export default function Home() {
   const swap = SCENARIOS.find((s) => s.id === "swap")!;
   const sample = evaluate(
     EXAMPLE_POLICY,
-    { ...swap.intent, request_id: "rw_req_example", deadline: EXAMPLE_ENV.now + 120 },
+    { ...swap.intent, request_id: "ps_req_example", deadline: EXAMPLE_ENV.now + 120 },
     EMPTY_STATE,
     EXAMPLE_ENV,
   );

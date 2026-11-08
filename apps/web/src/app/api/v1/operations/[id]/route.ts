@@ -8,6 +8,6 @@ export const GET = handle<RouteContext<"/api/v1/operations/[id]">>(async (req, c
   const op = hasBearer(req)
     ? await requireAgent(req).then((a) => getOperation(a.orgId, id, a.agentId))
     : await requireMember(req, "read").then((m) => getOperation(m.orgId, id));
-  if (!op) throw new HttpError(404, "RW_REQUEST_001", "Operation not found");
+  if (!op) throw new HttpError(404, "PS_REQUEST_001", "Operation not found");
   return ok(op);
 });

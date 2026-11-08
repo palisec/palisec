@@ -18,7 +18,7 @@ export const isDatabaseConfigured = () => databaseUrl() !== "";
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 12;
 export const CHALLENGE_TTL_SECONDS = 5 * 60;
-export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-rw_session" : "rw_session";
+export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-ps_session" : "ps_session";
 
 /**
  * Hosts a sign-in message may be bound to. The SIWE domain is taken from this list, never from an
@@ -39,6 +39,9 @@ export function allowedHosts(): string[] {
   const apex = new URL(SITE_URL).host.replace(/^www\./, "");
   add(apex);
   add(`www.${apex}`);
+  // The previous domain keeps working until it only redirects to palisec.tech (docs/DEPLOYMENT.md).
+  add("palisec.tech");
+  add("www.palisec.tech");
   // Vercel deployment and branch URLs, so preview deployments can be tested. Vercel sets these.
   add(process.env.VERCEL_URL);
   add(process.env.VERCEL_BRANCH_URL);

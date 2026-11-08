@@ -101,8 +101,8 @@ function finish(r: ReturnType<typeof evaluate>, chainId: number) {
     result = {
       ...result,
       decision: "DENY",
-      reason_code: "RW_CHAIN_001",
-      retryable: RETRYABLE.RW_CHAIN_001,
+      reason_code: "PS_CHAIN_001",
+      retryable: RETRYABLE.PS_CHAIN_001,
       authorization_id: null,
       message: `Chain ${chainId} is not enabled on this deployment.`,
     };
@@ -153,7 +153,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
           'id', id, 'request_id', request_id, 'state', state, 'usd', usd_micros::text, 'version', policy_version,
           'created', extract(epoch FROM created_at)::bigint, 'expires', extract(epoch FROM expires_at)::bigint)), '[]'::json)
         FROM operations WHERE policy_id = ${agent.policyId}::uuid AND created_at > now() - interval '1 hour'
-          AND rw_holds_budget(state, expires_at)) AS holds,
+          AND ps_holds_budget(state, expires_at)) AS holds,
       EXISTS (SELECT 1 FROM operations WHERE agent_id = ${agent.agentId}::uuid AND request_id = ${input.request_id}) AS seen,
       (SELECT extract(epoch FROM max(created_at))::bigint FROM operations
         WHERE agent_id = ${agent.agentId}::uuid AND calldata_fp = ${calldataFp} AND state <> 'denied') AS calldata_at,
@@ -272,7 +272,7 @@ export async function createOperation(
     reason_code: r.reason_code,
     message: r.message,
     checks: r.checks,
-    authorization_id: `rw_auth_${randomHex(16)}`,
+    authorization_id: `ps_auth_${randomHex(16)}`,
     authorization_ttl: AUTHORIZATION_TTL_SECONDS,
     approval_ttl: APPROVAL_TTL_SECONDS,
   };
@@ -282,13 +282,13 @@ export async function createOperation(
     identical_calldata_seconds: cooldowns?.identical_calldata_seconds ?? 0,
     identical_intent_seconds: cooldowns?.identical_intent_seconds ?? 0,
   };
-  const [{ result }] = await db()`SELECT rw_record_operation(${JSON.stringify(op)}::text::jsonb, ${JSON.stringify(lim)}::text::jsonb) AS result`;
+  const [{ result }] = await db()`SELECT ps_record_operation(${JSON.stringify(op)}::text::jsonb, ${JSON.stringify(lim)}::text::jsonb) AS result`;
   const outcome = result.outcome as string;
-  if (outcome === "replay") throw new HttpError(409, "RW_REPLAY_001", `request_id ${input.request_id} was already used by this agent`);
+  if (outcome === "replay") throw new HttpError(409, "PS_REPLAY_001", `request_id ${input.request_id} was already used by this agent`);
   if (outcome === "idempotency_conflict")
-    throw new HttpError(409, "RW_REPLAY_001", "Idempotency-Key was already used with a different request");
+    throw new HttpError(409, "PS_REPLAY_001", "Idempotency-Key was already used with a different request");
   const stored = await getOperation(agent.orgId, result.id, agent.agentId);
-  if (!stored) throw new HttpError(503, "RW_STATE_001", "Authoritative state unavailable", true);
+  if (!stored) throw new HttpError(503, "PS_STATE_001", "Authoritative state unavailable", true);
   return { status: outcome === "idempotent" ? 200 : 201, body: stored, replayed: outcome === "idempotent" };
 }
 

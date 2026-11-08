@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://palisec.dev/schemas/policy/1.0.json",
+  "$id": "https://palisec.tech/schemas/policy/1.0.json",
   "title": "Palisec policy",
   "description": "Canonical policy document, schema version 1.0. Integers that can exceed 2^53 are decimal strings. Unknown fields are rejected.",
   "type": "object",
@@ -34,7 +34,7 @@
         "max_gas_cost_wei": { "$ref": "#/$defs/uint", "description": "Estimated total fee per transaction, in wei." },
         "hourly_budget_usd_micros": { "$ref": "#/$defs/uint", "description": "Rolling 3600-second budget in USD millionths, covering value plus fees." },
         "max_pending_operations": { "type": "integer", "minimum": 0, "maximum": 1000 },
-        "max_price_age_seconds": { "type": "integer", "minimum": 1, "maximum": 3600, "description": "Older prices fail closed with RW_STATE_001." }
+        "max_price_age_seconds": { "type": "integer", "minimum": 1, "maximum": 3600, "description": "Older prices fail closed with PS_STATE_001." }
       }
     },
     "cooldowns": {
@@ -75,7 +75,7 @@
       "required": ["usd_threshold_micros", "require_for_unknown_methods"],
       "properties": {
         "usd_threshold_micros": { "$ref": "#/$defs/uint" },
-        "require_for_unknown_methods": { "type": "boolean", "description": "true routes unknown selectors to review; false denies them with RW_METHOD_001." }
+        "require_for_unknown_methods": { "type": "boolean", "description": "true routes unknown selectors to review; false denies them with PS_METHOD_001." }
       }
     },
     "failure_mode": { "const": "closed" }

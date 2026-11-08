@@ -107,7 +107,7 @@ export function ButtonLink({
 }
 
 // Reason codes, hex, request/reservation/credential IDs, API paths, method calls, decisions, PCRs, snake_case fields.
-const CODE_TOKENS = /(RW_[A-Z]+_\d{3}|0x[0-9a-fA-F…]{8,}|\brw_[a-z]+_[0-9a-zA-Z_…]+|\b(?:GET|POST) \/v1\/[\w/{}]+|\b[a-z][A-Za-z]*\(\)|\b(?:ALLOW|DENY|REQUIRES_HUMAN_SIGNATURE)\b|\bPCR\d\b|\b[a-z]+(?:_[a-z]+)+\b)/g;
+const CODE_TOKENS = /(PS_[A-Z]+_\d{3}|0x[0-9a-fA-F…]{8,}|\brw_[a-z]+_[0-9a-zA-Z_…]+|\b(?:GET|POST) \/v1\/[\w/{}]+|\b[a-z][A-Za-z]*\(\)|\b(?:ALLOW|DENY|REQUIRES_HUMAN_SIGNATURE)\b|\bPCR\d\b|\b[a-z]+(?:_[a-z]+)+\b)/g;
 
 /** Renders codes and identifiers inside prose in the data face, so a code always looks like a code. */
 export function Codes({ text }: { text: string }) {

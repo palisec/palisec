@@ -13,7 +13,7 @@ const TYPES = `type Decision =
   | { decision: "ALLOW"; operationId: string; authorizationId: string;
       policyVersion: number }
   | { decision: "REQUIRES_HUMAN_SIGNATURE"; operationId: string;
-      approvalId: string; expiresAt: Date; reasonCode: "RW_HUMAN_001" }
+      approvalId: string; expiresAt: Date; reasonCode: "PS_HUMAN_001" }
   | { decision: "DENY"; reasonCode: ReasonCode; retryable: boolean;
       message: string; transactionHash: null };`;
 
@@ -31,8 +31,8 @@ const ERRORS = `try {
 } catch (err) {
   if (err instanceof PalisecError) {
     switch (err.code) {
-      case "RW_STATE_001":   // retryable: authoritative state unavailable
-      case "RW_CHAIN_001":   // retryable: bundler or RPC unavailable
+      case "PS_STATE_001":   // retryable: authoritative state unavailable
+      case "PS_CHAIN_001":   // retryable: bundler or RPC unavailable
         return retryWithSameIdempotencyKey(request);
       default:
         throw err;           // terminal

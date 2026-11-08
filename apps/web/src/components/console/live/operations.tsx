@@ -21,7 +21,7 @@ export function LiveOperations() {
   const [pages, setPages] = useState<string[]>([]);
   const query = new URLSearchParams({ limit: "50" });
   if (filter !== "all") query.set("decision", filter);
-  if (reason && /^RW_[A-Z]+_\d{3}$/.test(reason)) query.set("reason_code", reason);
+  if (reason && /^PS_[A-Z]+_\d{3}$/.test(reason)) query.set("reason_code", reason);
   if (agentId) query.set("agent_id", agentId);
   if (/^[A-Za-z0-9_.:-]{1,128}$/.test(requestId.trim())) query.set("request_id", requestId.trim());
   if (pages.length) query.set("before", pages[pages.length - 1]!);

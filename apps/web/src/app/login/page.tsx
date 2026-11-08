@@ -19,7 +19,7 @@ export default function LoginPage() {
       <header className="flex items-center justify-between px-6 py-5">
         <span className="flex items-center gap-2.5">
           <CubeGlyph size={18} />
-          <span className="font-brand text-[17px] font-extrabold tracking-[-0.01em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
+          <span className="font-brand text-[17px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
         </span>
         <span className="rounded-[4px] bg-citrine/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4)]">
           ● Testnet · pre-release

@@ -103,11 +103,11 @@ export function BoundaryDiagram() {
         </desc>
 
         <defs>
-          <filter id="rw-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <filter id="ps-glow" x="-200%" y="-200%" width="500%" height="500%">
             <feGaussianBlur stdDeviation="3.5" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
-          <radialGradient id="rw-engine-light" cx="50%" cy="50%" r="50%">
+          <radialGradient id="ps-engine-light" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#e5ff5d" stopOpacity="0.22" />
             <stop offset="100%" stopColor="#e5ff5d" stopOpacity="0" />
           </radialGradient>
@@ -119,7 +119,7 @@ export function BoundaryDiagram() {
         <text x="0" y="138" className="fill-[#a0a391] font-mono text-[11px] tracking-[0.08em]">PROPOSED INTENT</text>
 
         {/* engine */}
-        <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#rw-engine-light)" />
+        <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#ps-engine-light)" />
         <rect x="242" y="104" width="136" height="112" fill="none" stroke="#e5ff5d" strokeOpacity="0.25" rx="6">
           <animate attributeName="stroke-opacity" values="0.05;0.45;0.05" dur="2.4s" repeatCount="indefinite" />
         </rect>
@@ -147,7 +147,7 @@ export function BoundaryDiagram() {
         <text x="568" y="72" className="fill-[#a0a391] font-mono text-[10px]">Pending · unsigned</text>
 
         {/* deny wall */}
-        <rect x="514" y="226" width="8" height="68" fill="#ff5247" filter="url(#rw-glow)" />
+        <rect x="514" y="226" width="8" height="68" fill="#ff5247" filter="url(#ps-glow)" />
         <text x="534" y="256" className="fill-[#ff5247] font-mono text-[11px] tracking-[0.08em]">■ DENY</text>
         <text x="534" y="272" className="fill-[#a0a391] font-mono text-[10px]">No signature · no broadcast</text>
 
@@ -158,9 +158,9 @@ export function BoundaryDiagram() {
           return (
             <g key={p.id}>
               {showStatic ? (
-                <rect x={end[0]! - 4} y={end[1]! - 4} width="8" height="8" fill={p.color} filter="url(#rw-glow)" />
+                <rect x={end[0]! - 4} y={end[1]! - 4} width="8" height="8" fill={p.color} filter="url(#ps-glow)" />
               ) : (
-                <rect data-packet x="-4" y="-4" width="8" height="8" fill={p.color} opacity="0" filter="url(#rw-glow)">
+                <rect data-packet x="-4" y="-4" width="8" height="8" fill={p.color} opacity="0" filter="url(#ps-glow)">
                   <animate attributeName="opacity" values="0;1" dur="0.01s" begin="indefinite" fill="freeze" />
                   <animateMotion
                     path={path}

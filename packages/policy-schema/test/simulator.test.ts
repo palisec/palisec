@@ -56,9 +56,9 @@ describe("evaluate", () => {
   });
 
   it.each([
-    ["over-limit", "RW_BUDGET_001"],
-    ["unknown-target", "RW_TARGET_001"],
-    ["denied-target", "RW_POLICY_002"],
+    ["over-limit", "PS_BUDGET_001"],
+    ["unknown-target", "PS_TARGET_001"],
+    ["denied-target", "PS_POLICY_002"],
   ])("denies %s with %s", (id, code) => {
     const r = evaluate(EXAMPLE_POLICY, scenario(id), EMPTY_STATE, EXAMPLE_ENV);
     expect(r.decision).toBe("DENY");
@@ -70,7 +70,7 @@ describe("evaluate", () => {
   it("routes unknown methods to review, or denies when configured", () => {
     expect(evaluate(EXAMPLE_POLICY, scenario("unknown-method"), EMPTY_STATE, EXAMPLE_ENV).decision).toBe("REQUIRES_HUMAN_SIGNATURE");
     const strict: Policy = { ...EXAMPLE_POLICY, human_approval: { ...EXAMPLE_POLICY.human_approval, require_for_unknown_methods: false } };
-    expect(evaluate(strict, scenario("unknown-method"), EMPTY_STATE, EXAMPLE_ENV).reason_code).toBe("RW_METHOD_001");
+    expect(evaluate(strict, scenario("unknown-method"), EMPTY_STATE, EXAMPLE_ENV).reason_code).toBe("PS_METHOD_001");
   });
 
   it("requires a human above the USD threshold and does not authorize", () => {
@@ -83,7 +83,7 @@ describe("evaluate", () => {
   it("blocks identical calldata within the cooldown, then allows after it", () => {
     const first = evaluate(EXAMPLE_POLICY, scenario("swap", 1), EMPTY_STATE, EXAMPLE_ENV);
     const again = evaluate(EXAMPLE_POLICY, scenario("swap", 2), first.next_state, { ...EXAMPLE_ENV, now: EXAMPLE_ENV.now + 30 });
-    expect(again.reason_code).toBe("RW_LOOP_001");
+    expect(again.reason_code).toBe("PS_LOOP_001");
     const later = evaluate(EXAMPLE_POLICY, { ...scenario("swap", 3), deadline: EXAMPLE_ENV.now + 600 }, again.next_state, at(EXAMPLE_ENV.now + 61));
     expect(later.decision).toBe("ALLOW");
   });
@@ -91,19 +91,19 @@ describe("evaluate", () => {
   it("rejects a replayed request id", () => {
     const first = evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, EXAMPLE_ENV);
     const replay = evaluate(EXAMPLE_POLICY, scenario("swap"), first.next_state, EXAMPLE_ENV);
-    expect(replay.reason_code).toBe("RW_REPLAY_001");
+    expect(replay.reason_code).toBe("PS_REPLAY_001");
   });
 
   it("fails closed without a fee estimate or a fresh price", () => {
-    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, fee_estimate_wei: null }).reason_code).toBe("RW_FEE_001");
-    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, eth_usd: null }).reason_code).toBe("RW_STATE_001");
+    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, fee_estimate_wei: null }).reason_code).toBe("PS_FEE_001");
+    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, eth_usd: null }).reason_code).toBe("PS_STATE_001");
     const stale = { ...EXAMPLE_ENV, now: EXAMPLE_ENV.now + 61 };
-    expect(evaluate(EXAMPLE_POLICY, { ...scenario("swap"), deadline: stale.now + 10 }, EMPTY_STATE, stale).reason_code).toBe("RW_STATE_001");
+    expect(evaluate(EXAMPLE_POLICY, { ...scenario("swap"), deadline: stale.now + 10 }, EMPTY_STATE, stale).reason_code).toBe("PS_STATE_001");
   });
 
   it("denies everything under an emergency stop, and with no policy", () => {
-    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, emergency_stop: true }).reason_code).toBe("RW_PAUSED_001");
-    expect(evaluate(null, scenario("swap"), EMPTY_STATE, EXAMPLE_ENV).reason_code).toBe("RW_POLICY_001");
+    expect(evaluate(EXAMPLE_POLICY, scenario("swap"), EMPTY_STATE, { ...EXAMPLE_ENV, emergency_stop: true }).reason_code).toBe("PS_PAUSED_001");
+    expect(evaluate(null, scenario("swap"), EMPTY_STATE, EXAMPLE_ENV).reason_code).toBe("PS_POLICY_001");
   });
 
   it("enforces the hourly budget across sequential reservations", () => {
@@ -116,6 +116,6 @@ describe("evaluate", () => {
       state = r.next_state;
     }
     // $128.38 per swap against a $500 hourly budget: three fit, the fourth does not.
-    expect(decisions).toEqual(["ALLOW", "ALLOW", "ALLOW", "RW_BUDGET_001", "RW_BUDGET_001"]);
+    expect(decisions).toEqual(["ALLOW", "ALLOW", "ALLOW", "PS_BUDGET_001", "PS_BUDGET_001"]);
   });
 });

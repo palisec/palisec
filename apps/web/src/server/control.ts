@@ -13,8 +13,8 @@ import { canonicalJson, randomHex, sha256Hex } from "./tokens";
  * statement, so they cannot diverge. Every query is scoped to the caller's organization.
  */
 
-const notFound = (what: string) => new HttpError(404, "RW_REQUEST_001", `${what} not found in this organization`);
-const conflict = (message: string) => new HttpError(409, "RW_REQUEST_001", message);
+const notFound = (what: string) => new HttpError(404, "PS_REQUEST_001", `${what} not found in this organization`);
+const conflict = (message: string) => new HttpError(409, "PS_REQUEST_001", message);
 
 function text(v: unknown, field: string, max = 80): string {
   if (typeof v !== "string" || v.trim().length < 1 || v.trim().length > max) throw new BadRequest(`${field} must be 1-${max} characters`);
@@ -57,7 +57,7 @@ export async function renameOrganization(ctx: MemberContext, body: Record<string
 export async function setEmergencyStop(ctx: MemberContext, body: Record<string, unknown>) {
   requireConfirm(body);
   if (typeof body.active !== "boolean") throw new BadRequest("active must be true or false");
-  if (!body.active && ctx.role !== "owner") throw new HttpError(403, "RW_AUTH_001", "Only an owner can lift the emergency stop");
+  if (!body.active && ctx.role !== "owner") throw new HttpError(403, "PS_AUTH_001", "Only an owner can lift the emergency stop");
   const a = audit(body.active ? "org.emergency_stop.activated" : "org.emergency_stop.lifted", {});
   await db()`
     WITH u AS (UPDATE organizations SET emergency_stop = ${body.active} WHERE id = ${ctx.orgId}::uuid AND emergency_stop <> ${body.active} RETURNING id)
@@ -236,7 +236,7 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   const current = await getPolicy(ctx, id);
   if (!current.draft) throw conflict("There is no draft to activate");
   if (body.draft_hash !== current.draft_hash) throw conflict("The draft changed since you reviewed it. Reload and review it again.");
-  if (current.draft_errors.length) throw new HttpError(422, "RW_POLICY_001", `Draft is invalid: ${current.draft_errors[0]!.path} ${current.draft_errors[0]!.message}`);
+  if (current.draft_errors.length) throw new HttpError(422, "PS_POLICY_001", `Draft is invalid: ${current.draft_errors[0]!.path} ${current.draft_errors[0]!.message}`);
   const next = (current.active_version ?? 0) + 1;
   const document = { ...(current.draft as object), version: next, status: "active" };
   const hash = await sha256Hex(canonicalJson(document));
@@ -297,7 +297,7 @@ export async function getAgent(ctx: MemberContext, id: string) {
     FROM api_credentials c LEFT JOIN users u ON u.id = c.created_by
     WHERE c.agent_id = ${id}::uuid ORDER BY c.created_at DESC`;
   const [usage] = await db()`
-    SELECT coalesce(sum(usd_micros) FILTER (WHERE rw_holds_budget(state, expires_at)), 0)::text AS reserved_usd_micros,
+    SELECT coalesce(sum(usd_micros) FILTER (WHERE ps_holds_budget(state, expires_at)), 0)::text AS reserved_usd_micros,
       count(*) FILTER (WHERE decision = 'ALLOW')::int AS allowed,
       count(*) FILTER (WHERE decision = 'DENY')::int AS denied,
       count(*) FILTER (WHERE decision = 'REQUIRES_HUMAN_SIGNATURE')::int AS reviewed
@@ -391,7 +391,7 @@ export async function setAgentStatus(ctx: MemberContext, id: string, to: "paused
 /** Creates a key for an agent. The secret is returned once and only its SHA-256 is stored. */
 export async function createCredential(ctx: MemberContext, agentId: string, body: Record<string, unknown>) {
   const label = body.label === undefined ? "API key" : text(body.label, "label");
-  const secret = `rw_test_${randomHex(24)}`;
+  const secret = `ps_test_${randomHex(24)}`;
   const prefix = secret.slice(0, 16);
   const a = audit("credential.created", { agent_id: agentId, prefix, label });
   const rows = await db()`

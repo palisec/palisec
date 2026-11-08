@@ -52,21 +52,21 @@ function rows(node: Node, path: string, required: boolean, out: { path: string; 
 }
 
 const ORDER = [
-  ["Policy", "A valid, active policy exists for the account.", "RW_POLICY_001"],
-  ["Request schema", "Fields are well-formed and within size bounds.", "RW_REQUEST_001"],
-  ["Replay", "request_id is new and the deadline has not passed.", "RW_REPLAY_001"],
-  ["Emergency stop and agent", "No global stop; the agent is not paused.", "RW_PAUSED_001"],
-  ["Chain and account", "Chain ID and sender match the policy.", "RW_TARGET_001"],
-  ["Explicit deny", "Target is not denylisted.", "RW_POLICY_002"],
-  ["Target", "Target is allowlisted (and code-verified if required).", "RW_TARGET_001"],
-  ["Method", "Selector is allowlisted, or routed to review.", "RW_METHOD_001 / RW_HUMAN_001"],
-  ["Value", "Native value ≤ per-transaction limit.", "RW_BUDGET_001"],
-  ["Fee", "A bounded fee estimate exists and is within the gas limit.", "RW_FEE_001 / RW_BUDGET_001"],
-  ["Price", "A price exists and is fresher than max_price_age_seconds.", "RW_STATE_001"],
-  ["Budget", "Window usage + this request ≤ hourly budget; reserve atomically.", "RW_BUDGET_001"],
-  ["Pending", "Open reservations < max_pending_operations.", "RW_RATE_001"],
-  ["Loop", "No identical calldata or equivalent intent within cooldowns.", "RW_LOOP_001"],
-  ["Human threshold", "Exposure below the approval threshold, else review.", "RW_HUMAN_001"],
+  ["Policy", "A valid, active policy exists for the account.", "PS_POLICY_001"],
+  ["Request schema", "Fields are well-formed and within size bounds.", "PS_REQUEST_001"],
+  ["Replay", "request_id is new and the deadline has not passed.", "PS_REPLAY_001"],
+  ["Emergency stop and agent", "No global stop; the agent is not paused.", "PS_PAUSED_001"],
+  ["Chain and account", "Chain ID and sender match the policy.", "PS_TARGET_001"],
+  ["Explicit deny", "Target is not denylisted.", "PS_POLICY_002"],
+  ["Target", "Target is allowlisted (and code-verified if required).", "PS_TARGET_001"],
+  ["Method", "Selector is allowlisted, or routed to review.", "PS_METHOD_001 / PS_HUMAN_001"],
+  ["Value", "Native value ≤ per-transaction limit.", "PS_BUDGET_001"],
+  ["Fee", "A bounded fee estimate exists and is within the gas limit.", "PS_FEE_001 / PS_BUDGET_001"],
+  ["Price", "A price exists and is fresher than max_price_age_seconds.", "PS_STATE_001"],
+  ["Budget", "Window usage + this request ≤ hourly budget; reserve atomically.", "PS_BUDGET_001"],
+  ["Pending", "Open reservations < max_pending_operations.", "PS_RATE_001"],
+  ["Loop", "No identical calldata or equivalent intent within cooldowns.", "PS_LOOP_001"],
+  ["Human threshold", "Exposure below the approval threshold, else review.", "PS_HUMAN_001"],
 ];
 
 export default function PoliciesPage() {
@@ -112,7 +112,7 @@ export default function PoliciesPage() {
       <ul>
         <li><strong>Native value and fees</strong> are integer wei.</li>
         <li><strong>USD amounts</strong> are integer micros (1 USD = 1,000,000). Conversion rounds up, so limits are never under-counted.</li>
-        <li><strong>USD enforcement needs a fresh price.</strong> A missing price, or one older than <code>max_price_age_seconds</code>, fails closed with <code>RW_STATE_001</code>.</li>
+        <li><strong>USD enforcement needs a fresh price.</strong> A missing price, or one older than <code>max_price_age_seconds</code>, fails closed with <code>PS_STATE_001</code>.</li>
         <li><strong>Exposure</strong> is native value plus estimated fee. Token-denominated allocations are specified but not yet in schema 1.0.</li>
       </ul>
 

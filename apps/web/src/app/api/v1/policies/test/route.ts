@@ -9,13 +9,13 @@ import { validatePolicy } from "@palisec/policy-schema";
  */
 export const POST = handle(async (req) => {
   await requireMember(req, "read");
-  if (rateLimited(req, "policy-test", 30)) throw new HttpError(429, "RW_RATE_001", "Too many test runs. Try again in a minute.", true);
+  if (rateLimited(req, "policy-test", 30)) throw new HttpError(429, "PS_RATE_001", "Too many test runs. Try again in a minute.", true);
   const body = await readJson(req, MAX_OPERATION_BODY + 128 * 1024);
   const doc = body.document;
-  if (!doc || typeof doc !== "object" || Array.isArray(doc)) throw new HttpError(400, "RW_REQUEST_001", "document must be a policy object");
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) throw new HttpError(400, "PS_REQUEST_001", "document must be a policy object");
   const errors = validatePolicy({ ...(doc as object), version: 1, status: "active" });
-  if (errors.length) throw new HttpError(422, "RW_POLICY_001", `Draft is invalid: ${errors[0]!.path} ${errors[0]!.message}`);
+  if (errors.length) throw new HttpError(422, "PS_POLICY_001", `Draft is invalid: ${errors[0]!.path} ${errors[0]!.message}`);
   const tx = body.transaction;
-  if (!tx || typeof tx !== "object" || Array.isArray(tx)) throw new HttpError(400, "RW_REQUEST_001", "transaction must be an object");
+  if (!tx || typeof tx !== "object" || Array.isArray(tx)) throw new HttpError(400, "PS_REQUEST_001", "transaction must be an object");
   return ok(await testDraft(doc as Record<string, unknown>, tx as Record<string, unknown>));
 });

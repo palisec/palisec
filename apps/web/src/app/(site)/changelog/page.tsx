@@ -45,7 +45,7 @@ const ENTRIES = [
       "Control-plane foundation: Postgres schema with an append-only audit log, applied by versioned migrations.",
       "Wallet sign-in (SIWE, EIP-4361) at /login: server-issued one-time challenges bound to the domain, EOA and ERC-1271 signature verification, HttpOnly sessions with revocation and an Origin check on state changes.",
       "First sign-in creates an organization with the signer as owner. GET /v1/health reports which components are reachable and which are not deployed.",
-      "Without a configured database every state-dependent endpoint fails closed with RW_STATE_001.",
+      "Without a configured database every state-dependent endpoint fails closed with PS_STATE_001.",
     ],
   },
   {
@@ -67,7 +67,7 @@ const ENTRIES = [
       "Deterministic reference evaluator with fixed evaluation order and stable reason codes.",
       "Browser policy workbench running the reference evaluator on example data.",
       "Public site and documentation, with maturity labels on every capability.",
-      "Added RW_REQUEST_001 for request schema failures.",
+      "Added PS_REQUEST_001 for request schema failures.",
     ],
   },
 ];

@@ -6,7 +6,7 @@ import { StateUnavailable } from "./db";
 export const MAX_BODY_BYTES = 16 * 1024;
 
 export function requestId(): string {
-  return `rw_req_${crypto.randomUUID().replaceAll("-", "")}`;
+  return `ps_req_${crypto.randomUUID().replaceAll("-", "")}`;
 }
 
 /** Error envelope shared by every endpoint: a stable code plus a safe explanation. */
@@ -111,7 +111,7 @@ export function rateLimited(req: Request, name: string, limit: number, windowMs 
   return bucket.count > limit;
 }
 
-export const tooManyRequests = () => apiError(429, "RW_RATE_001", "Too many requests. Try again in a minute.", true);
+export const tooManyRequests = () => apiError(429, "PS_RATE_001", "Too many requests. Try again in a minute.", true);
 
 /** Maps thrown errors to fail-closed responses. Unknown errors never leak internals. */
 export function handle<C = unknown>(fn: (req: Request, ctx: C) => Promise<Response>) {
@@ -121,12 +121,12 @@ export function handle<C = unknown>(fn: (req: Request, ctx: C) => Promise<Respon
     } catch (err) {
       // Next signals prerender bailouts and redirects by throwing; those are not failures.
       unstable_rethrow(err);
-      if (err instanceof BadRequest) return apiError(400, "RW_REQUEST_001", err.message);
+      if (err instanceof BadRequest) return apiError(400, "PS_REQUEST_001", err.message);
       if (err instanceof HttpError) return apiError(err.status, err.code, err.message, err.retryable);
-      if (err instanceof StateUnavailable) return apiError(503, "RW_STATE_001", "Authoritative state unavailable", true);
+      if (err instanceof StateUnavailable) return apiError(503, "PS_STATE_001", "Authoritative state unavailable", true);
       // Name and message only: request bodies and headers may carry credentials.
       console.error("[api] unhandled", err instanceof Error ? `${err.name}: ${err.message.slice(0, 200)}` : "error");
-      return apiError(503, "RW_STATE_001", "Authoritative state unavailable", true);
+      return apiError(503, "PS_STATE_001", "Authoritative state unavailable", true);
     }
   };
 }

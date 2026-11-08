@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * not the security boundary: every API request verifies the session server-side, and a console page
  * with an expired cookie is sent back to /login by the console itself.
  */
-const SESSION_COOKIES = ["__Host-rw_session", "rw_session"];
+const SESSION_COOKIES = ["__Host-ps_session", "ps_session"];
 
 export function proxy(req: NextRequest) {
   const hasSession = SESSION_COOKIES.some((n) => /^[0-9a-f]{64}$/.test(req.cookies.get(n)?.value ?? ""));

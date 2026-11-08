@@ -70,7 +70,7 @@ export function LiveAgents() {
     <>
       <PageTitle
         title="Agents"
-        description="Each agent acts for one smart account, is bound to one policy and authenticates with its own API keys. A paused agent's new operations are denied with RW_PAUSED_001."
+        description="Each agent acts for one smart account, is bound to one policy and authenticates with its own API keys. A paused agent's new operations are denied with PS_PAUSED_001."
       />
       <LoadError error={list.error} />
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)]">
@@ -150,7 +150,7 @@ function RegisterAgent({ policies, onCreated }: { policies: PolicyRow[]; onCreat
       <Field id={`${uid}-name`} label="Name">
         <input id={`${uid}-name`} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Treasury rebalancer" maxLength={80} />
       </Field>
-      <Field id={`${uid}-policy`} label="Policy" hint="The agent's account comes from the policy. Without a policy every request is denied with RW_POLICY_001.">
+      <Field id={`${uid}-policy`} label="Policy" hint="The agent's account comes from the policy. Without a policy every request is denied with PS_POLICY_001.">
         <select id={`${uid}-policy`} className={inputCls} value={policyId} onChange={(e) => setPolicyId(e.target.value)}>
           <option value="">No policy yet</option>
           {policies.map((p) => (
@@ -219,7 +219,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
         {a.status !== "revoked" && (
           <div className="mt-4 flex flex-wrap gap-2">
             {a.status === "active" && can.operate(org?.role) && (
-              <Confirm label="Pause agent" prompt="New operations from this agent will be denied with RW_PAUSED_001 as soon as the server confirms. Existing authorizations are not recalled." confirmLabel="Pause" onConfirm={() => setStatus("pause")} disabled={busy} />
+              <Confirm label="Pause agent" prompt="New operations from this agent will be denied with PS_PAUSED_001 as soon as the server confirms. Existing authorizations are not recalled." confirmLabel="Pause" onConfirm={() => setStatus("pause")} disabled={busy} />
             )}
             {a.status === "paused" && can.manage(org?.role) && (
               <Confirm variant="primary" label="Resume agent" prompt="The agent can be authorized again under its policy." confirmLabel="Resume" onConfirm={() => setStatus("resume")} disabled={busy} />
@@ -276,7 +276,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
                   <Pill tone="deny">Revoked</Pill>
                 ) : (
                   can.manage(org?.role) && (
-                    <Confirm label="Revoke" variant="quiet" prompt="Requests with this key fail immediately with RW_AUTH_001." confirmLabel="Revoke key" onConfirm={() => run(() => api(`/credentials/${c.id}/revoke`, { method: "POST" }), "Key revoked.").then(after)} />
+                    <Confirm label="Revoke" variant="quiet" prompt="Requests with this key fail immediately with PS_AUTH_001." confirmLabel="Revoke key" onConfirm={() => run(() => api(`/credentials/${c.id}/revoke`, { method: "POST" }), "Key revoked.").then(after)} />
                   )
                 )}
               </li>
@@ -311,7 +311,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
 
       <Panel title="Budget and rate limits" bodyClassName="p-4">
         {!a.policy_id ? (
-          <p className="text-[13px] text-muted">No policy bound: every request is denied with RW_POLICY_001.</p>
+          <p className="text-[13px] text-muted">No policy bound: every request is denied with PS_POLICY_001.</p>
         ) : !policy.data ? (
           <Loading what="limits" />
         ) : !policy.data.active_document ? (

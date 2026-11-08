@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const STEPS = [
   ["Reproducible build", "The enclave image is built reproducibly; anyone can recompute PCR0–PCR2."],
   ["Document verification", "The attestation document is verified against the AWS Nitro root and certificate chain."],
-  ["Freshness and nonce", "Each verification uses a fresh nonce; stale documents are rejected (RW_ATTEST_001)."],
+  ["Freshness and nonce", "Each verification uses a fresh nonce; stale documents are rejected (PS_ATTEST_001)."],
   ["Measurement match", "PCR values must equal the published, approved measurements."],
   ["Signer binding", "The signing public key is bound to the verified document and authorized deployment configuration."],
   ["On-chain trust", "The smart account trusts the registered signer, not the PCR value itself."],

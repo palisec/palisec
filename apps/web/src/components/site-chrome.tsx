@@ -9,7 +9,7 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
       <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
         <CubeGlyph size={size === "lg" ? 22 : 18} />
       </span>
-      <span className="font-brand text-[18px] font-extrabold tracking-[-0.01em] text-bone">Palisec<span className="text-citrine">Wall</span></span>
+      <span className="font-brand text-[18px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
     </Link>
   );
 }
