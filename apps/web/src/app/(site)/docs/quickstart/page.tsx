@@ -102,7 +102,8 @@ export default function Quickstart() {
       </ul>
       <p>
         Using TypeScript? The <Link href="/docs/sdk/typescript">SDK</Link> does all of this in one call:{" "}
-        <code>palisec.sendTransaction(wallet, intent)</code> authorizes and sends with viem only on ALLOW. Every endpoint, field and status code
+        <code>palisec.sendTransaction(wallet, intent)</code> authorizes and sends with viem or ethers only on ALLOW. Python agents use the{" "}
+        <Link href="/docs/sdk/python">Python SDK</Link>, with the same semantics. Every endpoint, field and status code
         is in the <Link href="/docs/api">API reference</Link>.
       </p>
 

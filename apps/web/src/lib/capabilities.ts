@@ -28,8 +28,8 @@ export const CAPABILITIES: Capability[] = [
   { id: "identity", name: "Wallet sign-in and sessions", maturity: "service", note: "SIWE challenge and verify, HttpOnly sessions, organizations, members and roles enforced server-side." },
   { id: "api", name: "Authorization API", maturity: "service", note: "Agents, API keys, policy versions, evaluate, operations with idempotency, approvals and audit. Testnet (46630) only. Decisions are recorded; nothing is signed or broadcast." },
   { id: "approvals", name: "Human approvals", maturity: "service", note: "Approvers sign EIP-712 data bound to the exact operation and policy version with their own wallet." },
-  { id: "sdk-ts", name: "TypeScript SDK (viem)", maturity: "service", note: "@palisec/sdk 0.1.0, installed from palisec.tech: typed decisions and errors, idempotent retries, approval waiting, sends with viem only on ALLOW." },
-  { id: "sdk-py", name: "Python SDK", maturity: "planned", note: "Published only once its semantics match the canonical API." },
+  { id: "sdk-ts", name: "TypeScript SDK (viem, ethers)", maturity: "service", note: "@palisec/sdk 0.2.0, installed from palisec.tech: typed decisions and errors, idempotent retries, approval waiting, sends with viem or ethers only on ALLOW." },
+  { id: "sdk-py", name: "Python SDK", maturity: "service", note: "palisec 0.1.0, installed from palisec.tech: async, no dependencies, same semantics as the TypeScript SDK, web3.py adapter. Tested against the live API." },
   { id: "console", name: "Developer console", maturity: "service", note: "Wallet sign-in, then agents, policies with a rule builder and test cases, approvals, audit and emergency controls on testnet. Real data only." },
 ];
 

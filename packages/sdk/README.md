@@ -3,7 +3,7 @@
 TypeScript client for [Palisec](https://palisec.tech): your agent asks before every transaction and sends only on ALLOW.
 
 ```bash
-npm install https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz viem
+npm install https://palisec.tech/sdk/palisec-sdk-0.2.0.tgz viem
 ```
 
 ```ts
@@ -23,6 +23,7 @@ try {
 
 - `authorize(intent)` records a decision and returns `ALLOW`, `DENY` or `REQUIRES_HUMAN_SIGNATURE`. Safe to retry: the request ID is the idempotency key.
 - `evaluate(intent)` is a dry run that reserves nothing.
+- `fromEthers(signer)` adapts an ethers v6 signer (checks its network). A wallet on another chain, or another account than the agent's, is refused before sending.
 - `waitForApproval(id)`, `getOperation(id)`, `cancel(id)` (withdraws a pending approval).
 - Errors are `PalisecError` subclasses with a stable `code` (`PS_…`). Retries happen only for network errors, 429 and 5xx, and only on calls that are safe to repeat.
 - Log events never contain your API key, request bodies or calldata; `redact()` masks keys in any string.

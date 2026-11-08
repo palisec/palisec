@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "palisec"
+dynamic = ["version"]
+description = "Python client for Palisec: ask before every agent transaction, send only on ALLOW."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: Other/Proprietary License",
+  "Framework :: AsyncIO",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Documentation = "https://palisec.tech/docs/sdk/python"
+
+[tool.hatch.version]
+path = "src/palisec/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/palisec"]

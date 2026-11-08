@@ -7,6 +7,7 @@ import {
   PalisecError,
   PalisecTimeoutError,
   redact,
+  fromEthers,
   type LogEvent,
 } from "../src/index";
 
@@ -176,5 +177,39 @@ describe("redaction", () => {
     await createPalisec({ apiKey: KEY, fetch: s.fetch, logger: (e) => events.push(e) }).authorize({ to: TO });
     expect(events.length).toBeGreaterThan(0);
     expect(JSON.stringify(events)).not.toContain(KEY);
+  });
+});
+
+describe("chain and ethers compatibility", () => {
+  it("refuses a viem wallet on another chain before sending", async () => {
+    const w = { account: { address: ACCOUNT }, chain: { id: 1 }, sendTransaction: vi.fn(async () => "0xhash" as `0x${string}`) };
+    const s = server([json(201, op())]);
+    await expect(createPalisec({ apiKey: KEY, fetch: s.fetch }).sendTransaction(w, { to: TO })).rejects.toBeInstanceOf(PalisecConfigError);
+    expect(w.sendTransaction).not.toHaveBeenCalled();
+  });
+
+  const signer = (chainId: bigint) => ({
+    getAddress: vi.fn(async () => ACCOUNT),
+    sendTransaction: vi.fn(async () => ({ hash: "0xethers" })),
+    provider: { getNetwork: vi.fn(async () => ({ chainId })) },
+  });
+
+  it("fromEthers sends with the bounded gas and a pinned chain", async () => {
+    const sg = signer(46630n);
+    const w = await fromEthers(sg);
+    const res = await createPalisec({ apiKey: KEY, fetch: server([json(201, op())]).fetch }).sendTransaction(w, { to: TO, value: 5n, gasLimit: 90_000 });
+    expect(res.hash).toBe("0xethers");
+    expect(sg.sendTransaction).toHaveBeenCalledWith({ to: TO, value: 5n, data: "0x", gasLimit: 90000n, chainId: 46630n });
+  });
+
+  it("fromEthers refuses a signer connected to another network", async () => {
+    await expect(fromEthers(signer(1n))).rejects.toBeInstanceOf(PalisecConfigError);
+  });
+
+  it("fromEthers keeps the account check: a different signer is refused", async () => {
+    const sg = { ...signer(46630n), getAddress: vi.fn(async () => TO) };
+    const w = await fromEthers(sg);
+    await expect(createPalisec({ apiKey: KEY, fetch: server([json(201, op())]).fetch }).sendTransaction(w, { to: TO })).rejects.toBeInstanceOf(PalisecConfigError);
+    expect(sg.sendTransaction).not.toHaveBeenCalled();
   });
 });

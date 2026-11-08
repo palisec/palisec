@@ -1,0 +1,14 @@
+{
+  "name": "@palisec/sdk-python",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Workspace wrapper for the palisec Python package: tests and the wheel served from palisec.tech.",
+  "scripts": {
+    "test": "node scripts/py.mjs -m unittest discover -s tests",
+    "build": "node scripts/py.mjs scripts/build_wheel.py --check ../../apps/web/public/sdk",
+    "pack:web": "node scripts/py.mjs scripts/build_wheel.py ../../apps/web/public/sdk"
+  },
+  "devDependencies": {
+    "viem": "2.57.16"
+  }
+}

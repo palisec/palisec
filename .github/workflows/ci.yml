@@ -57,5 +57,7 @@ jobs:
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-api.mjs
       # The published SDK (built by the web build) against the same server.
       - run: BASE_URL=http://localhost:3000 node packages/sdk/scripts/integration.mjs
+      # The served Python wheel against the same server.
+      - run: BASE_URL=http://localhost:3000 node packages/sdk-python/scripts/integration.mjs
       - if: failure()
         run: cat server.log

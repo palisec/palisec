@@ -22,11 +22,11 @@ export function redact(text: string): string {
   return text.replace(/ps_test_[0-9a-f]{8,}/g, (k) => `${k.slice(0, 12)}…[redacted]`);
 }
 
-/** The minimum of a viem WalletClient that `sendTransaction` needs. */
+/** The minimum of a viem WalletClient that `sendTransaction` needs. `fromEthers` adapts an ethers signer to it. */
 export interface SendingWallet {
   account?: { address: Address } | null;
   sendTransaction(args: { to: Address; value?: bigint; data?: Hex; gas?: bigint; account?: unknown; chain?: unknown }): Promise<Hex>;
-  chain?: unknown;
+  chain?: { id?: number } | null | unknown;
 }
 
 interface RawOperation {
@@ -238,6 +238,9 @@ export class PalisecClient {
     }
     if (!USABLE.has(op.state) || !op.authorizationId) throw new PalisecDeniedError(op);
     if (op.expiresAt && op.expiresAt.getTime() <= Date.now()) throw new PalisecTimeoutError("The authorization expired before sending");
+    const walletChain = (wallet.chain as { id?: unknown } | null | undefined)?.id;
+    if (typeof walletChain === "number" && walletChain !== this.chainId)
+      throw new PalisecConfigError(`The wallet is on chain ${walletChain}, but this client authorizes chain ${this.chainId}`);
     const account = typeof op.details?.account === "string" ? (op.details.account as string) : null;
     const sender = wallet.account?.address;
     if (account && sender && account.toLowerCase() !== sender.toLowerCase())

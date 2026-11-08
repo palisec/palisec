@@ -9,6 +9,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.7.0",
+    date: "2026-11-09",
+    tag: "Pre-release · testnet",
+    changes: [
+      "Python SDK palisec 0.1.0, installed with pip from https://palisec.tech/sdk/palisec-0.1.0-py3-none-any.whl: async, typed, no third-party dependencies. authorize, dry-run evaluate, wait_for_approval, cancel and send_transaction, with the same semantics as the TypeScript SDK.",
+      "palisec.web3.Web3Sender sends with web3.py: it checks the RPC's chain, signs locally and pays the gas limit Palisec bounded the fee on.",
+      "TypeScript SDK 0.2.0: fromEthers adapts an ethers v6 signer; a wallet on another chain is refused before sending.",
+      "Both SDKs run against the live API in CI on every change. The served Python wheel is rebuilt from source in CI and must match byte for byte in content.",
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-11-09",
     tag: "Pre-release · testnet",

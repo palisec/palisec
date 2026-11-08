@@ -6,12 +6,20 @@ import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "TypeScript SDK",
-  description: "@palisec/sdk: ask Palisec before every agent transaction and send with viem only on ALLOW. Typed decisions, typed errors, idempotent retries.",
+  description: "@palisec/sdk: ask Palisec before every agent transaction and send with viem or ethers only on ALLOW. Typed decisions, typed errors, idempotent retries.",
   alternates: { canonical: "/docs/sdk/typescript" },
 };
 
-const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz viem
-# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz viem`;
+const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.2.0.tgz viem
+# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.2.0.tgz viem`;
+
+const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
+import { createPalisec, fromEthers } from "@palisec/sdk";
+
+const provider = new JsonRpcProvider("https://rpc.testnet.chain.robinhood.com");
+const wallet = await fromEthers(new Wallet(process.env.AGENT_KEY!, provider)); // checks the network
+
+const { hash } = await palisec.sendTransaction(wallet, { to: TOKEN, data, gasLimit: 90_000 });`;
 
 const SEND = `import { createWalletClient, http, encodeFunctionData, erc20Abi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -78,7 +86,7 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="@palisec/sdk 0.1.0 · Schema 1.0 · testnet 46630"
+      compat="@palisec/sdk 0.2.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process. Until the on-chain account module ships,
@@ -98,8 +106,16 @@ export default function TypeScriptSdk() {
       <ul>
         <li>The wallet must be the agent&apos;s registered account, or the SDK refuses before sending.</li>
         <li>The transaction is sent with the gas limit Palisec bounded the fee on.</li>
+        <li>A wallet on another chain is refused before sending.</li>
         <li>Pass <code>{`{ waitForApproval: true }`}</code> to wait for an approver and then send; by default a held operation is returned unsent.</li>
       </ul>
+
+      <h2 id="ethers">With ethers</h2>
+      <p>
+        <code>fromEthers</code> adapts an ethers v6 signer. It checks the provider&apos;s network and pins the chain ID on every transaction, so
+        ethers refuses a mismatch. The account check still applies.
+      </p>
+      <CodeBlock code={ETHERS} title="agent-ethers.ts" />
 
       <h2 id="decisions">Decisions</h2>
       <p>
@@ -129,6 +145,7 @@ export default function TypeScriptSdk() {
         <li><code>evaluate(intent)</code>: dry run.</li>
         <li><code>sendTransaction(wallet, intent, options)</code>: authorize, then send with viem only if allowed.</li>
         <li><code>getOperation(id)</code>, <code>waitForApproval(id, {"{ timeoutMs, intervalMs }"})</code>, <code>cancel(id)</code> (withdraws a pending approval).</li>
+        <li><code>fromEthers(signer, {"{ chainId }"})</code>: adapt an ethers v6 signer.</li>
         <li><code>redact(text)</code>, <code>REASON_CODES</code>, <code>RETRYABLE</code>.</li>
       </ul>
       <p>

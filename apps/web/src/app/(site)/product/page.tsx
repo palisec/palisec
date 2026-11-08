@@ -13,7 +13,7 @@ const PRODUCTS = [
   { n: "01", name: "Authorization engine", body: "Deterministic policy evaluation for transactions, UserOperations, spending, recipients, contracts and repeated actions.", cap: "engine" },
   { n: "02", name: "Protected signing service", body: "Policy-bound signing inside a TEE. The parent host cannot request a signature that skips evaluation.", cap: "enclave" },
   { n: "03", name: "On-chain account enforcement", body: "Smart-account validation that rejects operations without a valid Palisec authorization.", cap: "account" },
-  { n: "04", name: "Developer SDK", body: "Typed clients for TypeScript (viem first, then ethers) and Python, with no security logic of their own.", cap: "sdk-ts" },
+  { n: "04", name: "Developer SDK", body: "Typed clients for TypeScript (viem or ethers) and Python (web3.py), with no security logic of their own. Installed from palisec.tech.", cap: "sdk-ts" },
   { n: "05", name: "Security control plane", body: "Policy management, human approvals, API credentials, emergency stops and attestation verification, enforced server-side.", cap: "api" },
   { n: "06", name: "Developer platform", body: "This site and its documentation, the policy workbench, and the wallet-authenticated console for agents, policies, approvals and audit.", cap: "console" },
 ];
