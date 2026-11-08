@@ -23,10 +23,10 @@ export function DocArticle({
           <MaturityBadge maturity={maturity} />
           <span className="label">{compat}</span>
         </div>
-        <h1 className="font-display text-3xl font-medium uppercase leading-tight tracking-[-0.025em] text-fg sm:text-4xl">{title}</h1>
+        <h1 className="font-display text-3xl font-medium leading-tight tracking-[-0.035em] text-fg sm:text-4xl">{title}</h1>
         {lede && <p className="mt-4 max-w-[62ch] text-base leading-relaxed text-muted">{lede}</p>}
       </header>
-      <div className="prose-rw">{children}</div>
+      <div className="prose-ps">{children}</div>
     </article>
   );
 }

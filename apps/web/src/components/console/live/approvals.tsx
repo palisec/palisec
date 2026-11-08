@@ -22,7 +22,7 @@ function Countdown({ until }: { until: string | null }) {
   }, []);
   if (!until) return null;
   const s = Math.max(0, Math.floor((new Date(until).getTime() - now) / 1000));
-  return <Mono className={s < 60 ? "text-deny" : "text-sand"}>{s === 0 ? "expired" : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s left`}</Mono>;
+  return <Mono className={s < 60 ? "text-deny" : "text-lilac"}>{s === 0 ? "expired" : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s left`}</Mono>;
 }
 
 type Sort = "expiry" | "newest" | "oldest" | "exposure" | "agent";

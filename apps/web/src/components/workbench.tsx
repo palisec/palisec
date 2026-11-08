@@ -141,19 +141,19 @@ export function Workbench() {
       {/* toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <p className="flex items-center gap-2.5 font-utility text-[11px] tracking-[0.08em] text-bone"><span aria-hidden className="tick-dot" />POLICY WORKBENCH</p>
-          <p className="label !text-sand">◆ Simulation · example data · nothing is signed or broadcast</p>
+          <p className="flex items-center gap-2.5 font-utility text-[11px] tracking-[0.08em] text-mist"><span aria-hidden className="tick-dot" />POLICY WORKBENCH</p>
+          <p className="label !text-lilac">◆ Simulation · example data · nothing is signed or broadcast</p>
         </div>
         <div className="flex items-center gap-1 font-mono text-xs">
           <span className="mr-2 text-muted" aria-live="polite">
             CLOCK <span className="text-fg">T+{clock}s</span>
           </span>
           {[15, 60].map((s) => (
-            <button key={s} type="button" onClick={() => setClock((c) => c + s)} className="rounded-[4px] border border-graphite px-2 py-1 text-bone transition-colors hover:border-citrine hover:text-citrine" aria-label={`Advance simulated clock by ${s} seconds`}>
+            <button key={s} type="button" onClick={() => setClock((c) => c + s)} className="rounded-[4px] border border-reef px-2 py-1 text-mist transition-colors hover:border-aqua hover:text-aqua" aria-label={`Advance simulated clock by ${s} seconds`}>
               +{s}s
             </button>
           ))}
-          <button type="button" onClick={reset} className="rounded-[4px] border border-graphite px-2 py-1 text-bone transition-colors hover:border-citrine hover:text-citrine">
+          <button type="button" onClick={reset} className="rounded-[4px] border border-reef px-2 py-1 text-mist transition-colors hover:border-aqua hover:text-aqua">
             Reset
           </button>
         </div>
@@ -169,10 +169,10 @@ export function Workbench() {
                 <label
                   key={s.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-[8px] border px-3 py-2.5 transition-colors ${
-                    s.id === scenarioId ? "border-citrine/50 bg-raised" : "border-transparent hover:bg-raised/60"
+                    s.id === scenarioId ? "border-aqua/50 bg-raised" : "border-transparent hover:bg-raised/60"
                   }`}
                 >
-                  <input type="radio" name={`${uid}-scenario`} value={s.id} checked={s.id === scenarioId} onChange={() => setScenarioId(s.id)} className="mt-1 accent-[#e5ff5d]" />
+                  <input type="radio" name={`${uid}-scenario`} value={s.id} checked={s.id === scenarioId} onChange={() => setScenarioId(s.id)} className="mt-1 accent-[#9cf6ee]" />
                   <span className="min-w-0">
                     <span className="block text-sm text-fg">{s.label}</span>
                     <span className="block text-xs text-muted">{s.summary}</span>
@@ -200,9 +200,9 @@ export function Workbench() {
             </div>
             <div className="mt-3">
               <p className="label mb-1.5" id={`${uid}-unk`}>Unknown methods</p>
-              <div role="radiogroup" aria-labelledby={`${uid}-unk`} className="grid grid-cols-2 overflow-hidden rounded-[4px] border border-graphite">
+              <div role="radiogroup" aria-labelledby={`${uid}-unk`} className="grid grid-cols-2 overflow-hidden rounded-[4px] border border-reef">
                 {(["review", "deny"] as const).map((v) => (
-                  <label key={v} className={`cursor-pointer px-3 py-1.5 text-center font-mono text-xs ${controls.unknownMethods === v ? "bg-citrine text-carbon" : "text-soft hover:bg-raised"}`}>
+                  <label key={v} className={`cursor-pointer px-3 py-1.5 text-center font-mono text-xs ${controls.unknownMethods === v ? "bg-aqua text-abyss" : "text-soft hover:bg-raised"}`}>
                     <input type="radio" className="sr-only" name={`${uid}-unk`} checked={controls.unknownMethods === v} onChange={() => set("unknownMethods", v)} />
                     {v === "review" ? "Human review" : "Deny"}
                   </label>
@@ -273,7 +273,7 @@ export function Workbench() {
                 aria-selected={tab === id}
                 aria-controls={`${uid}-panel`}
                 onClick={() => setTab(id)}
-                className={`relative shrink-0 border-r border-line px-4 py-2.5 text-[12px] font-medium tracking-[0.032em] transition-colors ${tab === id ? "bg-raised text-citrine" : "text-muted hover:text-soft"}`}
+                className={`relative shrink-0 border-r border-line px-4 py-2.5 text-[12px] font-medium tracking-[0.032em] transition-colors ${tab === id ? "bg-raised text-aqua" : "text-muted hover:text-soft"}`}
               >
                 {label}
               </button>
@@ -314,7 +314,7 @@ export function NumField({ id, label, unit, value, onChange }: { id: string; lab
   return (
     <div>
       <label htmlFor={id} className="label mb-1.5 block">{label}</label>
-      <div className="flex overflow-hidden rounded-[4px] border border-graphite transition-colors focus-within:border-citrine">
+      <div className="flex overflow-hidden rounded-[4px] border border-reef transition-colors focus-within:border-aqua">
         <input
           id={id}
           inputMode="decimal"
@@ -346,9 +346,9 @@ export function Toggle({ label, checked, onChange }: { label: string; checked: b
 }
 
 const STATUS_STYLE: Record<CheckResult["status"], { glyph: string; cls: string; text: string }> = {
-  pass: { glyph: "✓", cls: "text-citrine", text: "PASS" },
+  pass: { glyph: "✓", cls: "text-aqua", text: "PASS" },
   fail: { glyph: "■", cls: "text-deny", text: "FAIL" },
-  review: { glyph: "◆", cls: "text-sand", text: "REVIEW" },
+  review: { glyph: "◆", cls: "text-lilac", text: "REVIEW" },
   skipped: { glyph: "·", cls: "text-dim", text: "SKIP" },
 };
 

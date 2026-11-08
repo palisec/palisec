@@ -1,14 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Anybody, Hanken_Grotesk, Martian_Mono } from "next/font/google";
+import { Anybody, Funnel_Display, Hanken_Grotesk, Instrument_Sans, Martian_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
-// Three families, many voices. Anybody's width axis carries display (condensed rampart),
-// brand and the reversal band (expanded); Martian Mono carries labels, data and code.
-const display = Anybody({ variable: "--font-anybody", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
+// Five families, one job each:
+//   Funnel Display  headings and the hero, medium weight only
+//   Instrument Sans navigation, buttons and tracked uppercase labels
+//   Hanken Grotesk  body copy
+//   Martian Mono    codes, figures, addresses and data
+//   Anybody         the wordmark and oversized kinetic type (its width axis animates)
+const heading = Funnel_Display({ variable: "--font-funnel", subsets: ["latin"], weight: "variable" });
+const ui = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
 const body = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], weight: "variable" });
 const mono = Martian_Mono({ variable: "--font-martian", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
-const FONT_VARS = [display, body, mono].map((f) => f.variable).join(" ");
+const kinetic = Anybody({ variable: "--font-anybody", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
+const FONT_VARS = [heading, ui, body, mono, kinetic].map((f) => f.variable).join(" ");
 
 
 export const metadata: Metadata = {
@@ -29,7 +35,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0e0a",
+  themeColor: "#012624",
   colorScheme: "dark",
 };
 

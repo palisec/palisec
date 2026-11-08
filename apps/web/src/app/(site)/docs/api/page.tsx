@@ -52,7 +52,7 @@ export default function ApiReference() {
             {g.items.map((e) => (
               <div key={`${e.method} ${e.path}`} className="border border-line p-4">
                 <p className="font-mono text-[13px] text-fg">
-                  <span className="mr-2 text-citrine">{e.method}</span>
+                  <span className="mr-2 text-aqua">{e.method}</span>
                   {e.path}
                 </p>
                 <p className="mt-1 text-sm text-soft">{e.summary}</p>

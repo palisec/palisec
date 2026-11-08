@@ -28,7 +28,7 @@ export function HealthCheck() {
 
   return (
     <div className="mb-6 space-y-4">
-      <button type="button" onClick={check} disabled={state === "checking"} className="border border-line-strong px-4 py-2 text-sm text-fg hover:border-citrine/60 disabled:opacity-50">
+      <button type="button" onClick={check} disabled={state === "checking"} className="border border-line-strong px-4 py-2 text-sm text-fg hover:border-aqua/60 disabled:opacity-50">
         {state === "checking" ? "Checking…" : "Check now"}
       </button>
       {state === "error" && <p className="font-mono text-[11px] tracking-[0.08em] text-deny">■ THE API DID NOT RESPOND</p>}

@@ -54,21 +54,21 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="console min-h-dvh bg-carbon">
+    <div className="console min-h-dvh bg-abyss">
       <PointerLight />
-      <a href="#console-main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-[4px] focus:bg-citrine focus:px-3 focus:py-1 focus:text-carbon">
+      <a href="#console-main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
         Skip to content
       </a>
 
       {/* Top bar: environment, network, account, system health (spec §11.1) */}
-      <header className="sticky top-0 z-40 animate-[c-drop_.5s_var(--ease-out-quint)] border-b border-line bg-[linear-gradient(180deg,rgb(35_37_28/0.92),rgb(13_14_10/0.92))] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 animate-[c-drop_.5s_var(--ease-out-quint)] border-b border-line bg-[linear-gradient(180deg,rgb(0_55_52/0.92),rgb(1_38_36/0.92))] backdrop-blur-xl">
         <div className="flex h-12 items-center gap-4 px-4">
           <Link href="/" className="flex items-center gap-2" aria-label="Palisec overview">
             <CubeGlyph size={16} />
-            <span className="font-brand text-[15px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
+            <span className="font-brand text-[15px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
           </Link>
           <span className="hidden h-5 w-px bg-line-strong sm:block" />
-          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-citrine/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
             ● Testnet
           </span>
           <dl className="hidden items-center gap-4 font-utility text-[10.5px] uppercase tracking-[0.06em] md:flex">
@@ -78,31 +78,31 @@ function Shell({ children }: { children: ReactNode }) {
           <ul aria-label="System health" className="ml-auto hidden items-center gap-3 font-utility text-[10.5px] uppercase tracking-[0.05em] xl:flex">
             {HEALTH.map((h) => (
               <li key={h.label} className="flex items-center gap-1.5">
-                <span aria-hidden className={h.ok ? "text-citrine" : "text-stone"}>{h.ok ? "●" : "○"}</span>
+                <span aria-hidden className={h.ok ? "text-aqua" : "text-silver"}>{h.ok ? "●" : "○"}</span>
                 <span className="text-dim">{h.label}</span>
-                <span className={h.ok ? "text-soft" : "text-stone"}>{h.value}</span>
+                <span className={h.ok ? "text-soft" : "text-silver"}>{h.value}</span>
               </li>
             ))}
           </ul>
-          <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[10.5px] uppercase tracking-[0.08em] text-stone transition-colors hover:text-citrine xl:ml-4">Docs</Link>
+          <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[10.5px] uppercase tracking-[0.08em] text-silver transition-colors hover:text-aqua xl:ml-4">Docs</Link>
         </div>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap border-t border-line px-4 py-1.5 font-utility text-[10px] uppercase tracking-[0.05em] xl:hidden">
           <div className="flex gap-1.5 md:hidden"><dt className="text-dim">Network</dt><dd className="text-soft">Testnet · 46630</dd></div>
           {HEALTH.map((h) => (
             <div key={h.label} className="flex items-center gap-1.5">
               <dt className="text-dim">{h.label}</dt>
-              <dd className={h.ok ? "text-citrine" : "text-stone"}>{h.ok ? "● " : "○ "}{h.value}</dd>
+              <dd className={h.ok ? "text-aqua" : "text-silver"}>{h.ok ? "● " : "○ "}{h.value}</dd>
             </div>
           ))}
         </dl>
-        <div aria-hidden className="c-progress absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#e5ff5d_40%,#f6ffc2)] shadow-[0_0_10px_#e5ff5d]" />
+        <div aria-hidden className="c-progress absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#9cf6ee_40%,#cbfffc)] shadow-[0_0_10px_#9cf6ee]" />
       </header>
 
       {org.data?.emergency_stop && (
         <div role="alert" className="c-alarm border-b border-deny/50 bg-deny/[0.08] px-4 py-2 text-[13px] text-soft">
           <span className="font-utility text-[10.5px] uppercase tracking-[0.08em] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
           <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>.</span>
-          <Link href="/console/security" className="ml-3 text-bone underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
+          <Link href="/console/security" className="ml-3 text-mist underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
         </div>
       )}
 
@@ -117,15 +117,15 @@ function Shell({ children }: { children: ReactNode }) {
                     href={n.href}
                     aria-current={active ? "page" : undefined}
                     className={`group flex items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-[13.5px] transition-[background-color,color,transform] duration-300 hover:translate-x-0.5 ${
-                      active ? "bg-raised text-bone shadow-[inset_0_1px_0_rgb(255_255_240/0.06)]" : "text-stone hover:bg-raised/60 hover:text-bone"
+                      active ? "bg-raised text-mist shadow-[inset_0_1px_0_rgb(237_255_254/0.06)]" : "text-silver hover:bg-raised/60 hover:text-mist"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <span aria-hidden className={`h-1.5 w-1.5 transition-all duration-500 ${active ? "scale-125 bg-citrine shadow-[0_0_10px_2px_rgb(229_255_93/0.6)]" : "bg-line-strong group-hover:bg-stone"}`} />
+                      <span aria-hidden className={`h-1.5 w-1.5 transition-all duration-500 ${active ? "scale-125 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.6)]" : "bg-line-strong group-hover:bg-silver"}`} />
                       {n.label}
                     </span>
                     {n.href === "/console/approvals" && pending > 0 && (
-                      <span key={pending} className="c-badge animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[4px] border border-dashed border-sand/60 px-1 font-mono text-[10px] text-sand" aria-label={`${pending} pending`}>{pending}</span>
+                      <span key={pending} className="c-badge animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[4px] border border-dashed border-lilac/60 px-1 font-mono text-[10px] text-lilac" aria-label={`${pending} pending`}>{pending}</span>
                     )}
                   </Link>
                 </li>
@@ -141,7 +141,7 @@ function Shell({ children }: { children: ReactNode }) {
                     aria-label="Organization"
                     value={session.org?.id ?? ""}
                     onChange={(e) => session.setOrgId(e.target.value)}
-                    className="mt-1 w-full rounded-[4px] border border-graphite bg-ink px-2 py-1 text-[12px] text-fg"
+                    className="mt-1 w-full rounded-[4px] border border-reef bg-ink px-2 py-1 text-[12px] text-fg"
                   >
                     {session.me.organizations.map((o) => (
                       <option key={o.id} value={o.id}>{o.name}</option>
@@ -152,7 +152,7 @@ function Shell({ children }: { children: ReactNode }) {
                 )}
                 <p className="mt-1 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">Role · {session.org?.role}</p>
               </div>
-              <button type="button" onClick={signOut} className="rounded-[4px] border border-line-strong px-1.5 py-0.5 font-utility text-[10px] uppercase tracking-[0.06em] text-stone transition-colors hover:border-citrine hover:text-citrine">
+              <button type="button" onClick={signOut} className="rounded-[4px] border border-line-strong px-1.5 py-0.5 font-utility text-[10px] uppercase tracking-[0.06em] text-silver transition-colors hover:border-aqua hover:text-aqua">
                 Sign out
               </button>
             </div>
@@ -170,7 +170,7 @@ function Shell({ children }: { children: ReactNode }) {
           )}
           {session.status === "no_org" && (
             <div className="max-w-[60ch] py-10">
-              <p className="font-mono text-xs tracking-[0.08em] text-sand">◆ NO ORGANIZATION</p>
+              <p className="font-mono text-xs tracking-[0.08em] text-lilac">◆ NO ORGANIZATION</p>
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 This wallet is not a member of any organization. Ask an owner to add <span className="font-mono text-soft">{session.me?.address}</span> in their Settings, then sign in again.
               </p>
@@ -180,9 +180,9 @@ function Shell({ children }: { children: ReactNode }) {
           {ready && (
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
-                <span className="font-utility text-[10px] uppercase tracking-[0.08em] text-citrine">● Testnet · pre-release · </span>
+                <span className="font-utility text-[10px] uppercase tracking-[0.08em] text-aqua">● Testnet · pre-release · </span>
                 Palisec records and enforces each authorization decision. It does not sign or broadcast yet: your agent sends the transaction itself after an
-                ALLOW, and nothing on-chain blocks a transaction that skips Palisec. <Link href="/security" className="text-bone underline decoration-line-strong underline-offset-4 hover:text-citrine">What this protects</Link>
+                ALLOW, and nothing on-chain blocks a transaction that skips Palisec. <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
               </p>
               {children}
             </>

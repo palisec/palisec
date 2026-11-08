@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Cube } from "./cube";
+import { ParticleSphere } from "./particle-sphere";
 
 /**
- * Hero composition: the citrine cube inside two counter-rotating orbit rings carrying
+ * Hero composition: the cube inside a slowly turning particle orb and two counter-rotating orbit rings carrying
  * check nodes, lit by slow-drifting pools of light and a spotlight that follows the
  * pointer. Below, a ground plane recedes to a horizon of light: the boundary itself.
  * Pointer movement tilts the rings slightly. If a generated hero loop exists at
@@ -52,21 +53,22 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
   return (
     <div ref={root} aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* Light: three slow pools, then a spotlight that tracks the pointer */}
-      <div className="aurora left-[18%] top-[6%] h-[520px] w-[720px] bg-citrine/[0.12] animate-[drift-a_19s_ease-in-out_infinite]" />
-      <div className="aurora right-[8%] top-[28%] h-[420px] w-[560px] bg-[#9fb928]/[0.14] animate-[drift-b_24s_ease-in-out_infinite]" />
-      <div className="aurora left-[36%] top-[48%] h-[300px] w-[480px] bg-[#fbffd8]/[0.06] animate-[drift-c_28s_ease-in-out_infinite]" />
+      <div className="aurora left-[18%] top-[6%] h-[520px] w-[720px] bg-aqua/[0.12] animate-[drift-a_19s_ease-in-out_infinite]" />
+      <div className="aurora right-[8%] top-[28%] h-[420px] w-[560px] bg-[#00827c]/[0.14] animate-[drift-b_24s_ease-in-out_infinite]" />
+      <div className="aurora left-[36%] top-[48%] h-[300px] w-[480px] bg-[#cbfffc]/[0.06] animate-[drift-c_28s_ease-in-out_infinite]" />
+      <div className="aurora right-[22%] top-[12%] h-[340px] w-[460px] bg-[#fad1ff]/[0.05] animate-[drift-c_31s_ease-in-out_infinite]" />
       <div
         className="absolute left-0 top-0 h-[760px] w-[760px] rounded-full opacity-[var(--spot,0)] transition-opacity duration-1000"
         style={{
           transform: "translate3d(calc(var(--px, 50vw) - 380px), calc(var(--py, 40vh) - 380px), 0)",
-          background: "radial-gradient(closest-side, rgb(229 255 93 / 0.075), rgb(229 255 93 / 0.025) 45%, transparent 72%)",
+          background: "radial-gradient(closest-side, rgb(156 246 238 / 0.075), rgb(156 246 238 / 0.025) 45%, transparent 72%)",
         }}
       />
 
       {STARS.map((s, i) => (
         <span
           key={i}
-          className="absolute rounded-full bg-bone"
+          className="absolute rounded-full bg-mist"
           style={{
             left: `${s.x}%`,
             top: `${s.y}%`,
@@ -80,7 +82,10 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
       {/* Ground plane and the horizon of light where it meets the wall */}
       <div className="ground" />
       <div className="horizon bottom-[172px]" />
-      <div className="absolute inset-x-0 bottom-[172px] h-40 bg-[radial-gradient(50%_100%_at_50%_100%,rgb(229_255_93/0.12),transparent_70%)]" />
+      <div className="absolute inset-x-0 bottom-[172px] h-40 bg-[radial-gradient(50%_100%_at_50%_100%,rgb(156_246_238/0.12),transparent_70%)]" />
+
+      {/* The data orb the engine lives in */}
+      <ParticleSphere className="absolute left-1/2 top-[46%] h-[min(820px,120vw)] w-[min(820px,120vw)] -translate-x-1/2 -translate-y-1/2 opacity-95" />
 
       <div className="absolute inset-0 origin-center scale-[0.62] opacity-30 sm:scale-[0.85] lg:scale-100">
         <div
@@ -105,7 +110,7 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
             )}
           </div>
           {/* Contact light under the floating cube */}
-          <div className="absolute left-1/2 top-[132px] h-6 w-[200px] -translate-x-1/2 rounded-[50%] bg-citrine/30 blur-xl" />
+          <div className="absolute left-1/2 top-[132px] h-6 w-[200px] -translate-x-1/2 rounded-[50%] bg-aqua/30 blur-xl" />
         </div>
       </div>
     </div>
@@ -115,7 +120,7 @@ export function HeroScene({ videoSrc }: { videoSrc?: string }) {
 function Ring({ size, items, seconds, reverse = false, dashed = false }: { size: number; items: string[]; seconds: number; reverse?: boolean; dashed?: boolean }) {
   return (
     <div
-      className="absolute left-1/2 top-1/2 rounded-full border border-smoke/60"
+      className="absolute left-1/2 top-1/2 rounded-full border border-drift/60"
       style={{
         width: size,
         height: size,
@@ -134,9 +139,9 @@ function Ring({ size, items, seconds, reverse = false, dashed = false }: { size:
             {/* counter-rotate so labels stay upright */}
             <div style={{ animation: `${reverse ? "orbit" : "counter-orbit"} ${seconds}s linear infinite` }}>
               <div className="relative -translate-x-1/2 -translate-y-1/2">
-                {i % 3 === 0 && <span className="absolute inset-0 rounded-full border border-citrine animate-pulse-ring" style={{ animationDelay: `${i * 0.4}s` }} />}
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-carbon shadow-[inset_0_0_0_1px_var(--color-graphite),inset_0_1px_0_rgb(255_255_240/0.08)]">
-                  <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-citrine shadow-[0_0_10px_#e5ff5d]" : "bg-bone/70"}`} />
+                {i % 3 === 0 && <span className="absolute inset-0 rounded-full border border-aqua animate-pulse-ring" style={{ animationDelay: `${i * 0.4}s` }} />}
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-abyss shadow-[inset_0_0_0_1px_var(--color-reef),inset_0_1px_0_rgb(237_255_254/0.08)]">
+                  <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-aqua shadow-[0_0_10px_#9cf6ee]" : "bg-mist/70"}`} />
                 </div>
                 <span className="sr-only">{label}</span>
               </div>

@@ -68,7 +68,7 @@ export function LivePolicies() {
                     <tr key={p.id} className={`border-b border-line transition-colors ${p.id === current ? "bg-raised/70" : "hover:bg-raised/40"}`}>
                       <td className="px-4 py-2.5">
                         <button type="button" onClick={() => setSelected(p.id)} aria-pressed={p.id === current} className="text-left">
-                          <span className="block text-bone underline-offset-4 hover:underline">{p.name}</span>
+                          <span className="block text-mist underline-offset-4 hover:underline">{p.name}</span>
                           <Mono className="text-dim">{p.policy_key}</Mono>
                         </button>
                       </td>
@@ -212,7 +212,7 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
                 <li key={c.path}>
                   <Mono className="text-soft">{c.path}</Mono>
                   <div className="font-mono text-[11.5px]"><span className="text-deny">− {c.from.slice(0, 120)}</span></div>
-                  <div className="font-mono text-[11.5px]"><span className="text-citrine">+ {c.to.slice(0, 120)}</span></div>
+                  <div className="font-mono text-[11.5px]"><span className="text-aqua">+ {c.to.slice(0, 120)}</span></div>
                 </li>
               ))}
             </ul>
@@ -296,7 +296,7 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
           )}
           <KV className="mt-3" rows={[["Draft saved", utc(p.draft_updated_at)]]} />
           <p className="mt-3 text-[12px] text-muted">
-            Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-citrine">policy schema 1.0</Link>.
+            Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-aqua">policy schema 1.0</Link>.
           </p>
         </Panel>
       </div>
@@ -391,7 +391,7 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
         <input aria-label="Contract address" className={inputCls} value={contract} onChange={(e) => setContract(e.target.value.trim())} placeholder="0x… contract" spellCheck={false} />
         <input aria-label="Function selectors" className={inputCls} value={selectors} onChange={(e) => setSelectors(e.target.value)} placeholder="0xa9059cbb, 0x095ea7b3" spellCheck={false} />
         <label className="flex items-start gap-2 text-[12px] text-soft">
-          <input type="checkbox" checked={requireCode} onChange={(e) => setRequireCode(e.target.checked)} className="mt-0.5 accent-[#e5ff5d]" />
+          <input type="checkbox" checked={requireCode} onChange={(e) => setRequireCode(e.target.checked)} className="mt-0.5 accent-[#9cf6ee]" />
           <span>Require deployed contract code. Denies the call if no contract exists at the address on the chain (for example a typo or an undeployed address).</span>
         </label>
         <p className="text-[11.5px] text-muted">Selectors are the first 4 bytes of the call data. <Mono>0xa9059cbb</Mono> is ERC-20 transfer, <Mono>0x095ea7b3</Mono> is approve.</p>

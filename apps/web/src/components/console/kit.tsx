@@ -11,7 +11,7 @@ export function PageTitle({ title, description, actions }: { title: string; desc
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
       <div className="min-w-0">
-        <h1 className="line-mask font-heading text-[26px] font-bold leading-none text-bone">
+        <h1 className="line-mask font-heading text-[26px] font-medium tracking-[-0.02em] leading-none text-mist">
           <span>{title}</span>
         </h1>
         {description && <p className="mt-2 max-w-[72ch] animate-[c-fade_.5s_var(--ease-out-quint)_.15s_both] text-sm leading-relaxed text-muted">{typeof description === "string" ? <Codes text={description} /> : description}</p>}
@@ -26,8 +26,8 @@ export function Panel({ title, actions, children, className = "", bodyClassName 
   return (
     <section id={id} className={`panel overflow-hidden ${className}`} aria-label={typeof title === "string" ? title : undefined}>
       {(title || actions) && (
-        <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-line bg-[linear-gradient(180deg,rgb(255_255_240/0.025),transparent)] px-4 py-2">
-          {title && <h2 className="label !text-bone">{title}</h2>}
+        <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-line bg-[linear-gradient(180deg,rgb(237_255_254/0.025),transparent)] px-4 py-2">
+          {title && <h2 className="label !text-mist">{title}</h2>}
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
       )}
@@ -40,8 +40,8 @@ type BtnVariant = "primary" | "ghost" | "danger" | "quiet";
 const BTN: Record<BtnVariant, string> = {
   primary: "btn btn-primary px-3 py-1.5 font-utility text-[11px] font-semibold uppercase tracking-[0.06em]",
   ghost: "btn btn-ghost !px-3 !py-1.5 !text-[11px]",
-  danger: "btn px-3 py-1.5 font-utility text-[11px] uppercase tracking-[0.06em] text-deny shadow-[inset_0_0_0_1px_rgb(255_82_71/0.55)] hover:bg-deny/10 hover:shadow-[inset_0_0_0_1px_rgb(255_82_71/0.8),0_8px_22px_-10px_rgb(255_82_71/0.6)]",
-  quiet: "btn px-2 py-1 font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-citrine hover:shadow-[inset_0_0_0_1px_rgb(229_255_93/0.5),0_6px_18px_-10px_rgb(229_255_93/0.5)]",
+  danger: "btn px-3 py-1.5 font-utility text-[11px] uppercase tracking-[0.06em] text-deny shadow-[inset_0_0_0_1px_rgb(255_122_140/0.55)] hover:bg-deny/10 hover:shadow-[inset_0_0_0_1px_rgb(255_122_140/0.8),0_8px_22px_-10px_rgb(255_122_140/0.6)]",
+  quiet: "btn px-2 py-1 font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5),0_6px_18px_-10px_rgb(156_246_238/0.5)]",
 };
 
 export function Btn({ variant = "ghost", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant }) {
@@ -56,11 +56,11 @@ export function Btn({ variant = "ghost", className = "", ...props }: ButtonHTMLA
 
 export type Tone = "allow" | "deny" | "review" | "muted" | "info";
 const TONE: Record<Tone, string> = {
-  allow: "text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4)] bg-citrine/[0.06]",
-  deny: "text-deny shadow-[inset_0_0_0_1px_rgb(255_82_71/0.5)] bg-deny/[0.06]",
-  review: "text-sand border border-dashed border-sand/60",
-  muted: "text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)]",
-  info: "text-bone shadow-[inset_0_0_0_1px_rgb(248_249_241/0.3)]",
+  allow: "text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)] bg-aqua/[0.06]",
+  deny: "text-deny shadow-[inset_0_0_0_1px_rgb(255_122_140/0.5)] bg-deny/[0.06]",
+  review: "text-lilac border border-dashed border-lilac/60",
+  muted: "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)]",
+  info: "text-mist shadow-[inset_0_0_0_1px_rgb(237_255_254/0.3)]",
 };
 
 export function Pill({ tone = "muted", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
@@ -87,7 +87,7 @@ export function Mono({ children, className = "" }: { children: ReactNode; classN
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="animate-[c-fade_.5s_var(--ease-out-quint)] px-4 py-8 text-center">
-      <span aria-hidden className="mx-auto mb-3 block h-1.5 w-1.5 animate-pulse bg-smoke" />
+      <span aria-hidden className="mx-auto mb-3 block h-1.5 w-1.5 animate-pulse bg-drift" />
       <p className="text-sm text-soft">{title}</p>
       {children && <div className="mx-auto mt-1.5 max-w-[52ch] text-[13px] leading-relaxed text-muted">{children}</div>}
     </div>
@@ -105,7 +105,7 @@ export function Field({ id, label, hint, children }: { id: string; label: string
 }
 
 export const inputCls =
-  "w-full rounded-[4px] border border-graphite bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg transition-[border-color,box-shadow] duration-300 placeholder:text-dim focus:border-citrine focus:shadow-[0_0_0_3px_rgb(229_255_93/0.12)]";
+  "w-full rounded-[4px] border border-reef bg-ink px-2.5 py-1.5 font-mono text-[12.5px] text-fg transition-[border-color,box-shadow] duration-300 placeholder:text-dim focus:border-aqua focus:shadow-[0_0_0_3px_rgb(156_246_238/0.12)]";
 
 /** Two-step confirmation for consequential actions, inline rather than modal. */
 export function Confirm({
@@ -154,7 +154,7 @@ export function Confirm({
 }
 
 export function Notice({ tone = "review", children }: { tone?: "review" | "deny" | "allow"; children: ReactNode }) {
-  const cls = tone === "deny" ? "border-deny/50 bg-deny/[0.05] text-soft animate-[c-notice_.4s_var(--ease-out-quint),c-shake_.4s_.35s]" : tone === "allow" ? "border-citrine/40 bg-citrine/[0.04] text-soft animate-[c-notice_.4s_var(--ease-out-quint)]" : "border-dashed border-sand/50 text-soft animate-[c-notice_.4s_var(--ease-out-quint)]";
+  const cls = tone === "deny" ? "border-deny/50 bg-deny/[0.05] text-soft animate-[c-notice_.4s_var(--ease-out-quint),c-shake_.4s_.35s]" : tone === "allow" ? "border-aqua/40 bg-aqua/[0.04] text-soft animate-[c-notice_.4s_var(--ease-out-quint)]" : "border-dashed border-lilac/50 text-soft animate-[c-notice_.4s_var(--ease-out-quint)]";
   // Keyed on the message so every new notice slides in, not just the first.
   return (
     <div role="status" key={typeof children === "string" ? children : undefined} className={`rounded-[6px] border px-3 py-2 text-[13px] leading-relaxed ${cls}`}>
@@ -178,11 +178,11 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
     return () => ro.disconnect();
   }, [value, options.length]);
   return (
-    <div ref={wrap} role="radiogroup" aria-label={label} className="relative inline-flex max-w-full overflow-x-auto rounded-[4px] border border-graphite [scrollbar-width:none]">
+    <div ref={wrap} role="radiogroup" aria-label={label} className="relative inline-flex max-w-full overflow-x-auto rounded-[4px] border border-reef [scrollbar-width:none]">
       {thumb && (
         <span
           aria-hidden
-          className="absolute left-0 top-0 rounded-[2px] bg-[linear-gradient(180deg,#f4ffb0,#e5ff5d_45%,#d2ec45)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_4px_14px_-4px_rgb(229_255_93/0.6)] transition-[transform,width,height] duration-300 ease-[var(--ease-out-quint)]"
+          className="absolute left-0 top-0 rounded-[2px] bg-[linear-gradient(180deg,#cbfffc,#9cf6ee_45%,#00827c)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_4px_14px_-4px_rgb(156_246_238/0.6)] transition-[transform,width,height] duration-300 ease-[var(--ease-out-quint)]"
           style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)`, width: thumb.w, height: thumb.h }}
         />
       )}
@@ -195,10 +195,10 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`relative shrink-0 whitespace-nowrap px-2.5 py-1.5 font-utility text-[10.5px] uppercase tracking-[0.05em] transition-colors duration-300 active:scale-[0.97] ${on ? `text-carbon ${thumb ? "" : "bg-citrine"}` : "text-soft hover:bg-raised"}`}
+            className={`relative shrink-0 whitespace-nowrap px-2.5 py-1.5 font-utility text-[10.5px] uppercase tracking-[0.05em] transition-colors duration-300 active:scale-[0.97] ${on ? `text-abyss ${thumb ? "" : "bg-aqua"}` : "text-soft hover:bg-raised"}`}
           >
             {o.label}
-            {o.count !== undefined && <span className={`ml-1.5 tabular-nums transition-colors ${on ? "text-carbon/70" : "text-dim"}`}>{o.count}</span>}
+            {o.count !== undefined && <span className={`ml-1.5 tabular-nums transition-colors ${on ? "text-abyss/70" : "text-dim"}`}>{o.count}</span>}
           </button>
         );
       })}
@@ -247,7 +247,7 @@ export function Meter({ fraction, label, danger = false }: { fraction: number; l
   return (
     <div ref={ref} className="h-1.5 overflow-hidden rounded-full bg-line" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(f * 100)} aria-label={label}>
       <div
-        className={`c-meter h-full w-full rounded-full ${danger ? "bg-deny shadow-[0_0_10px_rgb(255_82_71/0.7)]" : "bg-[linear-gradient(90deg,#a3bd2a,#e5ff5d)] shadow-[0_0_10px_rgb(229_255_93/0.5)]"}`}
+        className={`c-meter h-full w-full rounded-full ${danger ? "bg-deny shadow-[0_0_10px_rgb(255_122_140/0.7)]" : "bg-[linear-gradient(90deg,#00827c,#9cf6ee)] shadow-[0_0_10px_rgb(156_246_238/0.5)]"}`}
         style={{ transform: `scaleX(${seen ? f : 0})` }}
       />
     </div>

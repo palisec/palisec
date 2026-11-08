@@ -9,7 +9,7 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
       <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
         <CubeGlyph size={size === "lg" ? 22 : 18} />
       </span>
-      <span className="font-brand text-[18px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
+      <span className="font-brand text-[18px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
     </Link>
   );
 }
@@ -25,16 +25,16 @@ export const NAV = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 px-3 pt-3">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[4px] focus:bg-citrine focus:px-3 focus:py-1 focus:text-carbon">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
         Skip to content
       </a>
       <NavShell>
         <Wordmark />
         <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="group relative font-utility text-[11.5px] uppercase tracking-[0.1em] text-bone/85 transition-colors hover:text-bone">
+            <Link key={n.href} href={n.href} className="group relative font-utility text-[12px] font-medium uppercase tracking-[0.12em] text-silver transition-colors hover:text-platinum">
               {n.label}
-              <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-citrine shadow-[0_0_8px_#e5ff5d] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
+              <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-aqua shadow-[0_0_8px_#9cf6ee] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
             </Link>
           ))}
         </nav>
@@ -49,7 +49,7 @@ export function SiteHeader() {
             </summary>
             <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
               {[...NAV, { href: "/console", label: "Open Console" }].map((n) => (
-                <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-bone last:border-b-0 hover:bg-raised hover:text-citrine">
+                <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-mist last:border-b-0 hover:bg-raised hover:text-aqua">
                   {n.label}
                 </Link>
               ))}
@@ -69,12 +69,12 @@ const FOOTER = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden border-t border-graphite">
-      <div aria-hidden className="aurora bottom-[-30%] left-1/2 h-[360px] w-[900px] -translate-x-1/2 bg-citrine/[0.07]" />
-      <Container className="grid grid-cols-2 gap-x-6 gap-y-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)] md:py-20">
+    <footer className="relative overflow-hidden border-t border-line bg-deep">
+      <div aria-hidden className="aurora bottom-[-30%] left-1/2 h-[360px] w-[900px] -translate-x-1/2 bg-aqua/[0.07]" />
+      <Container className="grid grid-cols-2 gap-x-6 gap-y-12 py-20 md:grid-cols-[1.4fr_repeat(3,1fr)] md:py-[120px]">
         <div className="col-span-2 space-y-5 md:col-span-1">
           <Wordmark />
-          <p className="max-w-[34ch] text-sm leading-relaxed text-stone">Deterministic transaction security for autonomous agents on Robinhood Chain.</p>
+          <p className="max-w-[34ch] text-sm leading-relaxed text-silver">Deterministic transaction security for autonomous agents on Robinhood Chain.</p>
           <p className="label">Chain ID 4663 · Testnet 46630</p>
         </div>
         {FOOTER.map((col) => (
@@ -83,15 +83,15 @@ export function SiteFooter() {
             <ul className="space-y-3">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-bone/80 transition-colors hover:text-citrine">{l.label}</Link>
+                  <Link href={l.href} className="text-sm text-mist/80 transition-colors hover:text-aqua">{l.label}</Link>
                 </li>
               ))}
             </ul>
           </nav>
         ))}
       </Container>
-      <Container className="relative flex flex-col gap-2 border-t border-graphite bg-carbon py-6 sm:flex-row sm:justify-between">
-        <p className="label">Pre-release · No production deployment</p>
+      <Container className="relative flex flex-col gap-2 border-t border-line py-6 sm:flex-row sm:justify-between">
+        <p className="label">Pre-release · Robinhood Chain Testnet</p>
         <p className="label">No third-party tracking</p>
       </Container>
     </footer>

@@ -23,9 +23,9 @@ const PATHS = {
 } as const;
 
 const PACKETS = [
-  { id: "allow", color: "#e5ff5d", begin: 0 },
-  { id: "deny", color: "#ff5247", begin: 1.1 },
-  { id: "review", color: "#bdb8a0", begin: 2.2 },
+  { id: "allow", color: "#9cf6ee", begin: 0 },
+  { id: "deny", color: "#ff7a8c", begin: 1.1 },
+  { id: "review", color: "#e3c4ee", begin: 2.2 },
 ] as const;
 
 const DURATION = 2.2;
@@ -108,48 +108,48 @@ export function BoundaryDiagram() {
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
           <radialGradient id="ps-engine-light" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#e5ff5d" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#e5ff5d" stopOpacity="0" />
+            <stop offset="0%" stopColor="#9cf6ee" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#9cf6ee" stopOpacity="0" />
           </radialGradient>
         </defs>
 
         {/* entry channel, with current flowing toward the engine */}
-        <path d="M0 150 H250 M0 170 H250" stroke="#5a5d4e" strokeWidth="1" fill="none" />
-        <path d="M0 160 H242" stroke="#e5ff5d" strokeOpacity="0.4" strokeDasharray="2 14" fill="none" className="animate-dash" />
-        <text x="0" y="138" className="fill-[#a0a391] font-mono text-[11px] tracking-[0.08em]">PROPOSED INTENT</text>
+        <path d="M0 150 H250 M0 170 H250" stroke="#2c6a64" strokeWidth="1" fill="none" />
+        <path d="M0 160 H242" stroke="#9cf6ee" strokeOpacity="0.4" strokeDasharray="2 14" fill="none" className="animate-dash" />
+        <text x="0" y="138" className="fill-[#bbc7c6] font-mono text-[11px] tracking-[0.08em]">PROPOSED INTENT</text>
 
         {/* engine */}
         <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#ps-engine-light)" />
-        <rect x="242" y="104" width="136" height="112" fill="none" stroke="#e5ff5d" strokeOpacity="0.25" rx="6">
+        <rect x="242" y="104" width="136" height="112" fill="none" stroke="#9cf6ee" strokeOpacity="0.25" rx="6">
           <animate attributeName="stroke-opacity" values="0.05;0.45;0.05" dur="2.4s" repeatCount="indefinite" />
         </rect>
-        <rect x="250" y="112" width="120" height="96" fill="#0d0e0a" stroke="#e5ff5d" rx="4" />
-        <text x="310" y="150" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[11px] tracking-[0.08em]">POLICY</text>
-        <text x="310" y="164" textAnchor="middle" className="fill-[#f8f9f1] font-mono text-[11px] tracking-[0.08em]">ENGINE</text>
-        <text x="310" y="190" textAnchor="middle" className="fill-[#8d907f] font-mono text-[10px]">v7 · 15 checks</text>
+        <rect x="250" y="112" width="120" height="96" fill="#012624" stroke="#9cf6ee" rx="4" />
+        <text x="310" y="150" textAnchor="middle" className="fill-[#edfffe] font-mono text-[11px] tracking-[0.08em]">POLICY</text>
+        <text x="310" y="164" textAnchor="middle" className="fill-[#edfffe] font-mono text-[11px] tracking-[0.08em]">ENGINE</text>
+        <text x="310" y="190" textAnchor="middle" className="fill-[#93a3a1] font-mono text-[10px]">v7 · 15 checks</text>
         {[124, 132, 140].map((x) => (
-          <line key={x} x1={250 + (x - 112)} y1="112" x2={250 + (x - 112)} y2="118" stroke="#e5ff5d" />
+          <line key={x} x1={250 + (x - 112)} y1="112" x2={250 + (x - 112)} y2="118" stroke="#9cf6ee" />
         ))}
 
         {/* exits */}
-        <path d="M370 160 H556" stroke="rgba(229,255,93,0.45)" fill="none" />
-        <path d="M410 160 V60 H556" stroke="rgba(189,184,160,0.45)" fill="none" strokeDasharray="3 3" />
-        <path d="M410 160 V260 H514" stroke="rgba(255,82,71,0.45)" fill="none" />
+        <path d="M370 160 H556" stroke="rgba(156,246,238,0.45)" fill="none" />
+        <path d="M410 160 V60 H556" stroke="rgba(227,196,238,0.45)" fill="none" strokeDasharray="3 3" />
+        <path d="M410 160 V260 H514" stroke="rgba(255,122,140,0.45)" fill="none" />
 
         {/* allow → account */}
-        <rect x="556" y="136" width="150" height="48" fill="#0d0e0a" stroke="rgba(229,255,93,0.5)" />
-        <text x="568" y="156" className="fill-[#e5ff5d] font-mono text-[11px] tracking-[0.08em]">→ ALLOW</text>
-        <text x="568" y="172" className="fill-[#a0a391] font-mono text-[10px]">ERC-4337 smart account</text>
+        <rect x="556" y="136" width="150" height="48" fill="#012624" stroke="rgba(156,246,238,0.5)" />
+        <text x="568" y="156" className="fill-[#9cf6ee] font-mono text-[11px] tracking-[0.08em]">→ ALLOW</text>
+        <text x="568" y="172" className="fill-[#bbc7c6] font-mono text-[10px]">ERC-4337 smart account</text>
 
         {/* review */}
-        <rect x="556" y="36" width="150" height="48" fill="#0d0e0a" stroke="rgba(189,184,160,0.5)" strokeDasharray="3 3" />
-        <text x="568" y="56" className="fill-[#bdb8a0] font-mono text-[11px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
-        <text x="568" y="72" className="fill-[#a0a391] font-mono text-[10px]">Pending · unsigned</text>
+        <rect x="556" y="36" width="150" height="48" fill="#012624" stroke="rgba(227,196,238,0.5)" strokeDasharray="3 3" />
+        <text x="568" y="56" className="fill-[#e3c4ee] font-mono text-[11px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
+        <text x="568" y="72" className="fill-[#bbc7c6] font-mono text-[10px]">Pending · unsigned</text>
 
         {/* deny wall */}
-        <rect x="514" y="226" width="8" height="68" fill="#ff5247" filter="url(#ps-glow)" />
-        <text x="534" y="256" className="fill-[#ff5247] font-mono text-[11px] tracking-[0.08em]">■ DENY</text>
-        <text x="534" y="272" className="fill-[#a0a391] font-mono text-[10px]">No signature · no broadcast</text>
+        <rect x="514" y="226" width="8" height="68" fill="#ff7a8c" filter="url(#ps-glow)" />
+        <text x="534" y="256" className="fill-[#ff7a8c] font-mono text-[11px] tracking-[0.08em]">■ DENY</text>
+        <text x="534" y="272" className="fill-[#bbc7c6] font-mono text-[10px]">No signature · no broadcast</text>
 
         {/* packets */}
         {PACKETS.map((p) => {

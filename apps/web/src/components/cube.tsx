@@ -42,8 +42,8 @@ export function Cube({
 export function CubeGlyph({ size = 14, className = "" }: { size?: number; className?: string }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 16 16" className={className}>
-      <path d="M8 1 14.5 4.75v6.5L8 15 1.5 11.25v-6.5Z" fill="#e5ff5d" fillOpacity="0.9" />
-      <path d="M8 1 14.5 4.75 8 8.5 1.5 4.75Z" fill="#f6ffc4" />
+      <path d="M8 1 14.5 4.75v6.5L8 15 1.5 11.25v-6.5Z" fill="#9cf6ee" fillOpacity="0.9" />
+      <path d="M8 1 14.5 4.75 8 8.5 1.5 4.75Z" fill="#cbfffc" />
       <path d="M8 8.5V15" stroke="#111" strokeOpacity="0.35" />
     </svg>
   );
@@ -51,7 +51,7 @@ export function CubeGlyph({ size = 14, className = "" }: { size?: number; classN
 
 /** 3×3 pixel glyph used as the left-side seed in buttons. Pixels shift on hover. */
 export function PixelIcon({ dark = false }: { dark?: boolean }) {
-  const on = dark ? "bg-carbon" : "bg-citrine";
+  const on = dark ? "bg-abyss" : "bg-aqua";
   return (
     <span aria-hidden className="grid grid-cols-3 gap-[1.5px]">
       {[1, 0, 1, 0, 1, 0, 1, 0, 1].map((v, i) => (

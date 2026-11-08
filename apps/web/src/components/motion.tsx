@@ -72,7 +72,7 @@ export function TypeOut({ text, className = "", speed = 22 }: { text: string; cl
   return (
     <span ref={ref} className={className} aria-label={text}>
       <span aria-hidden>{text.slice(0, n)}</span>
-      <span aria-hidden className="ml-0.5 inline-block w-[0.5em] animate-blink bg-citrine">&nbsp;</span>
+      <span aria-hidden className="ml-0.5 inline-block w-[0.5em] animate-blink bg-aqua">&nbsp;</span>
     </span>
   );
 }

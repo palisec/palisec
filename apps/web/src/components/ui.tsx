@@ -28,10 +28,10 @@ export function Section({
         {label && (
           <Reveal>
             <p className="label mb-14 flex items-center gap-4">
-              <span className="h-1.5 w-1.5 bg-citrine shadow-[0_0_10px_2px_rgb(229_255_93/0.55)]" />
-              <span className="!text-bone">{label}</span>
+              <span className="h-1.5 w-1.5 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.55)]" />
+              <span className="!text-mist">{label}</span>
               <span aria-hidden className="section-rule" />
-              {index && <span className="tabular-nums text-smoke">{index}</span>}
+              {index && <span className="tabular-nums text-drift">{index}</span>}
             </p>
           </Reveal>
         )}
@@ -47,8 +47,8 @@ const MATURITY_GLYPH: Record<Maturity, string> = { local: "●", service: "●",
 export function MaturityBadge({ maturity }: { maturity: Maturity }) {
   const tone =
     maturity === "local" || maturity === "service"
-      ? "text-citrine bg-citrine/[0.07] shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4),0_0_18px_-6px_rgb(229_255_93/0.5)]"
-      : "text-stone shadow-[inset_0_0_0_1px_var(--color-line-strong)]";
+      ? "text-aqua bg-aqua/[0.07] shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4),0_0_18px_-6px_rgb(156_246_238/0.5)]"
+      : "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)]";
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-[4px] px-2 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.05em] ${tone}`}>
       <span aria-hidden>{MATURITY_GLYPH[maturity]}</span>
@@ -61,12 +61,12 @@ export type DecisionTone = "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
 
 const DECISION_STYLE: Record<DecisionTone, { cls: string; glyph: string; text: string }> = {
   ALLOW: {
-    cls: "text-carbon bg-[linear-gradient(180deg,#f4ffb0,#e5ff5d_45%,#d2ec45)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_6px_18px_-6px_rgb(229_255_93/0.6)]",
+    cls: "text-abyss bg-[linear-gradient(180deg,#cbfffc,#9cf6ee_45%,#00827c)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_6px_18px_-6px_rgb(156_246_238/0.6)]",
     glyph: "→",
     text: "ALLOW",
   },
-  DENY: { cls: "text-deny bg-deny/[0.08] shadow-[inset_0_0_0_1px_rgb(255_82_71/0.6),0_6px_18px_-8px_rgb(255_82_71/0.55)]", glyph: "■", text: "DENY" },
-  REQUIRES_HUMAN_SIGNATURE: { cls: "text-sand border border-dashed border-sand/60", glyph: "◆", text: "HUMAN REVIEW" },
+  DENY: { cls: "text-deny bg-deny/[0.08] shadow-[inset_0_0_0_1px_rgb(255_122_140/0.6),0_6px_18px_-8px_rgb(255_122_140/0.55)]", glyph: "■", text: "DENY" },
+  REQUIRES_HUMAN_SIGNATURE: { cls: "text-lilac border border-dashed border-lilac/60", glyph: "◆", text: "HUMAN REVIEW" },
 };
 
 export function DecisionBadge({ decision, className = "" }: { decision: DecisionTone; className?: string }) {
@@ -107,7 +107,7 @@ export function ButtonLink({
 }
 
 // Reason codes, hex, request/reservation/credential IDs, API paths, method calls, decisions, PCRs, snake_case fields.
-const CODE_TOKENS = /(PS_[A-Z]+_\d{3}|0x[0-9a-fA-F…]{8,}|\brw_[a-z]+_[0-9a-zA-Z_…]+|\b(?:GET|POST) \/v1\/[\w/{}]+|\b[a-z][A-Za-z]*\(\)|\b(?:ALLOW|DENY|REQUIRES_HUMAN_SIGNATURE)\b|\bPCR\d\b|\b[a-z]+(?:_[a-z]+)+\b)/g;
+const CODE_TOKENS = /(PS_[A-Z]+_\d{3}|0x[0-9a-fA-F…]{8,}|\bps_[a-z]+_[0-9a-zA-Z_…]+|\b(?:GET|POST) \/v1\/[\w/{}]+|\b[a-z][A-Za-z]*\(\)|\b(?:ALLOW|DENY|REQUIRES_HUMAN_SIGNATURE)\b|\bPCR\d\b|\b[a-z]+(?:_[a-z]+)+\b)/g;
 
 /** Renders codes and identifiers inside prose in the data face, so a code always looks like a code. */
 export function Codes({ text }: { text: string }) {
@@ -129,16 +129,16 @@ export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow
   return (
     <header className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="aurora right-[4%] top-[-30%] h-[460px] w-[620px] bg-citrine/[0.13] animate-[drift-a_20s_ease-in-out_infinite]" />
-        <div className="aurora left-[-10%] top-[10%] h-[360px] w-[520px] bg-[#c9d89a]/[0.06] animate-[drift-b_26s_ease-in-out_infinite]" />
+        <div className="aurora right-[4%] top-[-30%] h-[460px] w-[620px] bg-aqua/[0.13] animate-[drift-a_20s_ease-in-out_infinite]" />
+        <div className="aurora left-[-10%] top-[10%] h-[360px] w-[520px] bg-[#00827c]/[0.06] animate-[drift-b_26s_ease-in-out_infinite]" />
       </div>
       <Container className="relative grid gap-10 pb-16 pt-20 sm:pb-24 sm:pt-28 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
         <div>
           <p className="label mb-8 flex items-center gap-3">
-            <span className="h-1.5 w-1.5 bg-citrine shadow-[0_0_10px_2px_rgb(229_255_93/0.55)]" />
+            <span className="h-1.5 w-1.5 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.55)]" />
             {eyebrow}
           </p>
-          <h1 className="display max-w-[16ch] text-bone">
+          <h1 className="display max-w-[16ch] text-mist">
             {title.split(" ").reduce<string[][]>((rows, w, i) => {
               const r = Math.floor(i / 3);
               (rows[r] ??= []).push(w);
@@ -151,7 +151,7 @@ export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow
           </h1>
           {lede && (
             <Reveal delay={300}>
-              <p className="mt-8 max-w-[560px] text-base leading-relaxed text-stone sm:text-lg">{lede}</p>
+              <p className="mt-8 max-w-[560px] text-base leading-relaxed text-silver sm:text-lg">{lede}</p>
             </Reveal>
           )}
           {compat && (
@@ -166,7 +166,7 @@ export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow
         </div>
       </Container>
       <div className="relative mx-auto h-px max-w-[1280px] bg-gradient-to-r from-transparent via-line-strong to-transparent">
-        <div className="absolute inset-x-[20%] -top-px h-[3px] bg-[radial-gradient(closest-side,rgb(229_255_93/0.5),transparent)] blur-[2px]" />
+        <div className="absolute inset-x-[20%] -top-px h-[3px] bg-[radial-gradient(closest-side,rgb(156_246_238/0.5),transparent)] blur-[2px]" />
       </div>
     </header>
   );
@@ -175,9 +175,9 @@ export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow
 /** Callout for limits, caveats and corrections. */
 export function Note({ kind = "note", title, children }: { kind?: "note" | "warning"; title: string; children: ReactNode }) {
   return (
-    <aside className={`panel my-6 px-5 py-4 ${kind === "warning" ? "bg-raised/60 [--panel-ring:rgb(248_249_241/0.28)]" : ""}`}>
-      <p className={`label mb-1.5 ${kind === "warning" ? "!text-bone" : "!text-citrine"}`}>{kind === "warning" ? "▲ " : "● "}{title}</p>
-      <div className="text-sm leading-relaxed text-stone [&_code]:text-bone">{children}</div>
+    <aside className={`panel my-6 px-5 py-4 ${kind === "warning" ? "bg-raised/60 [--panel-ring:rgb(237_255_254/0.28)]" : ""}`}>
+      <p className={`label mb-1.5 ${kind === "warning" ? "!text-mist" : "!text-aqua"}`}>{kind === "warning" ? "▲ " : "● "}{title}</p>
+      <div className="text-sm leading-relaxed text-silver [&_code]:text-mist">{children}</div>
     </aside>
   );
 }

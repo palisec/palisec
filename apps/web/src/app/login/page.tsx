@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CubeGlyph } from "@/components/cube";
+import { ParticleSphere } from "@/components/particle-sphere";
 import { PointerLight } from "@/components/pointer-light";
 import { WalletSignIn } from "@/components/wallet-sign-in";
 
@@ -14,21 +15,22 @@ export const metadata: Metadata = {
 /** The front door: palisec.tech sends everyone without a session here. */
 export default function LoginPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-carbon">
+    <div className="flex min-h-dvh flex-col bg-abyss">
       <PointerLight />
-      <header className="flex items-center justify-between px-6 py-5">
+      <header className="relative flex items-center justify-between px-6 py-5">
         <span className="flex items-center gap-2.5">
           <CubeGlyph size={18} />
-          <span className="font-brand text-[17px] font-extrabold tracking-[-0.01em] text-bone">Pali<span className="text-citrine">sec</span></span>
+          <span className="font-brand text-[17px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
         </span>
-        <span className="rounded-[4px] bg-citrine/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-citrine shadow-[inset_0_0_0_1px_rgb(229_255_93/0.4)]">
+        <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">
           ● Testnet · pre-release
         </span>
       </header>
 
-      <main id="main" className="flex flex-1 items-center justify-center px-4 py-10">
+      <ParticleSphere className="pointer-events-none fixed left-1/2 top-1/2 h-[min(900px,130vw)] w-[min(900px,130vw)] -translate-x-1/2 -translate-y-1/2 opacity-60" speed={0.00008} />
+      <main id="main" className="relative flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-[420px]">
-          <h1 className="font-heading text-[28px] font-bold leading-tight text-bone">Sign in to Palisec</h1>
+          <h1 className="font-heading text-[28px] font-medium tracking-[-0.02em] leading-tight text-mist">Sign in to Palisec</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             The authorization boundary for your on-chain agents: policies, budgets and human approvals checked before every transaction.
           </p>
@@ -45,7 +47,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <footer className="flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-line px-6 py-4 font-utility text-[10.5px] uppercase tracking-[0.08em]">
+      <footer className="relative flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-line px-6 py-4 font-utility text-[10.5px] uppercase tracking-[0.08em]">
         {[
           ["/", "Overview"],
           ["/docs/quickstart", "Quickstart"],
@@ -53,7 +55,7 @@ export default function LoginPage() {
           ["/security", "Security model"],
           ["/status", "Status"],
         ].map(([href, label]) => (
-          <Link key={href} href={href} className="text-stone transition-colors hover:text-citrine">{label}</Link>
+          <Link key={href} href={href} className="text-silver transition-colors hover:text-aqua">{label}</Link>
         ))}
       </footer>
     </div>

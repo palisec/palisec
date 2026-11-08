@@ -64,7 +64,7 @@ export function LiveSecurity() {
           />
           <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
             Until the account module ships, Palisec is a gate your agent must call: it records and limits authorizations, but a key that bypasses it can still send transactions. See{" "}
-            <Link href="/security" className="text-soft underline underline-offset-4 hover:text-citrine">security</Link> for the threat model.
+            <Link href="/security" className="text-soft underline underline-offset-4 hover:text-aqua">security</Link> for the threat model.
           </p>
         </Panel>
 
@@ -72,9 +72,9 @@ export function LiveSecurity() {
           <KV
             rows={[
               ["Disable new authorizations globally", <span key="g" className="text-soft">Emergency stop, above · enforced on the next request</span>],
-              ["Pause one agent", <Link key="a" href="/console/agents" className="text-soft underline underline-offset-4 hover:text-citrine">Agents → Pause · enforced on the next request</Link>],
-              ["Revoke one API key", <Link key="k" href="/console/agents" className="text-soft underline underline-offset-4 hover:text-citrine">Agents → API keys · immediate</Link>],
-              ["Disable a policy", <Link key="p" href="/console/policies" className="text-soft underline underline-offset-4 hover:text-citrine">Policies → Disable · enforced on the next request</Link>],
+              ["Pause one agent", <Link key="a" href="/console/agents" className="text-soft underline underline-offset-4 hover:text-aqua">Agents → Pause · enforced on the next request</Link>],
+              ["Revoke one API key", <Link key="k" href="/console/agents" className="text-soft underline underline-offset-4 hover:text-aqua">Agents → API keys · immediate</Link>],
+              ["Disable a policy", <Link key="p" href="/console/policies" className="text-soft underline underline-offset-4 hover:text-aqua">Policies → Disable · enforced on the next request</Link>],
               ["Pause one smart account", <Pill key="s" tone="muted">○ needs the on-chain module</Pill>],
               ["Revoke a signing identity", <Pill key="r" tone="muted">○ needs protected signing</Pill>],
             ]}
@@ -96,7 +96,7 @@ export function LiveSecurity() {
         <Panel title="API keys" bodyClassName="p-4">
           <p className="text-[13px] leading-relaxed text-soft">
             Keys belong to one agent and are shown once at creation. Only a SHA-256 hash is stored, so a database leak does not reveal usable keys. Create, review and revoke them on the{" "}
-            <Link href="/console/agents" className="text-bone underline underline-offset-4 hover:text-citrine">Agents</Link> page.
+            <Link href="/console/agents" className="text-mist underline underline-offset-4 hover:text-aqua">Agents</Link> page.
           </p>
         </Panel>
       </div>

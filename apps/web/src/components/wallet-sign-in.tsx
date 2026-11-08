@@ -154,7 +154,7 @@ export function WalletSignIn() {
                 type="button"
                 disabled={busy}
                 onClick={() => signIn(w)}
-                className="flex h-11 w-full items-center justify-between border border-line-strong px-4 text-sm text-fg transition-colors hover:border-citrine/60 disabled:cursor-wait disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-between border border-line-strong px-4 text-sm text-fg transition-colors hover:border-aqua/60 disabled:cursor-wait disabled:opacity-60"
               >
                 <span className="flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element -- wallet icons are data: URIs announced by the extension */}

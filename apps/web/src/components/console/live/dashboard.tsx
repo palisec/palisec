@@ -74,9 +74,9 @@ function OutcomeChart({ hourly }: { hourly: Summary["hourly"] }) {
               className="flex h-full min-w-0 flex-1 flex-col justify-end rounded-[2px] transition-opacity hover:opacity-80"
             >
               {total === 0 ? <span className="block h-px bg-line-strong" /> : null}
-              <span className="block bg-sand/80" style={{ height: seg(h.reviewed) }} />
+              <span className="block bg-lilac/80" style={{ height: seg(h.reviewed) }} />
               <span className="block bg-deny" style={{ height: seg(h.denied) }} />
-              <span className="block bg-citrine" style={{ height: seg(h.allowed) }} />
+              <span className="block bg-aqua" style={{ height: seg(h.allowed) }} />
             </Link>
           );
         })}
@@ -84,9 +84,9 @@ function OutcomeChart({ hourly }: { hourly: Summary["hourly"] }) {
       <figcaption className="mt-2 flex flex-wrap justify-between gap-2 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">
         <span>{series[0]!.hour.slice(11, 13)}:00 UTC</span>
         <span className="flex gap-3">
-          <span><span aria-hidden className="text-citrine">■</span> Allowed</span>
+          <span><span aria-hidden className="text-aqua">■</span> Allowed</span>
           <span><span aria-hidden className="text-deny">■</span> Denied</span>
-          <span><span aria-hidden className="text-sand">■</span> Review</span>
+          <span><span aria-hidden className="text-lilac">■</span> Review</span>
         </span>
         <span>now</span>
       </figcaption>
@@ -137,10 +137,10 @@ export function LiveDashboard() {
           <ol className="divide-y divide-line">
             {steps.map((st, i) => (
               <li key={i} className="flex items-center gap-3 px-4 py-2.5 text-[13px]">
-                <span aria-hidden className={`font-mono ${st.done ? "text-citrine" : "text-dim"}`}>{st.done ? "✓" : String(i + 1)}</span>
+                <span aria-hidden className={`font-mono ${st.done ? "text-aqua" : "text-dim"}`}>{st.done ? "✓" : String(i + 1)}</span>
                 <span className={st.done ? "text-muted line-through decoration-line-strong" : "text-soft"}>{st.text}</span>
                 {!st.done && (
-                  <Link href={st.href} className="ml-auto font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Open →</Link>
+                  <Link href={st.href} className="ml-auto font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Open →</Link>
                 )}
               </li>
             ))}
@@ -150,10 +150,10 @@ export function LiveDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Allowed · 24h", s?.allowed, "text-citrine", "/console/operations?decision=ALLOW"],
+          ["Allowed · 24h", s?.allowed, "text-aqua", "/console/operations?decision=ALLOW"],
           ["Denied · 24h", s?.denied, "text-deny", "/console/operations?decision=DENY"],
-          ["Pending approvals", s?.pending_approvals, "text-sand", "/console/approvals"],
-          ["Reserved · last hour", s ? usd(s.reserved_last_hour_usd_micros) : undefined, "text-bone", "/console/operations?decision=ALLOW"],
+          ["Pending approvals", s?.pending_approvals, "text-lilac", "/console/approvals"],
+          ["Reserved · last hour", s ? usd(s.reserved_last_hour_usd_micros) : undefined, "text-phosphor", "/console/operations?decision=ALLOW"],
         ].map(([label, value, cls, href]) => (
           <Link key={label as string} href={href as string} className="panel block px-4 py-4 transition-colors hover:border-line-strong">
             <p className="label !text-[10px]">{label}</p>
@@ -171,7 +171,7 @@ export function LiveDashboard() {
             {!s ? <Loading what="decisions" /> : total === 0 ? <Empty title="No operations in the last 24 hours">Decisions appear here as soon as an agent calls the API.</Empty> : <OutcomeChart hourly={s.hourly} />}
           </Panel>
 
-          <Panel title="Recent security events" actions={<Link href="/console/audit" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Full audit →</Link>}>
+          <Panel title="Recent security events" actions={<Link href="/console/audit" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Full audit →</Link>}>
             {!events.data ? (
               <Loading what="events" />
             ) : events.data.events.length === 0 ? (
@@ -194,7 +194,7 @@ export function LiveDashboard() {
         </div>
 
         <div className="space-y-4">
-          <Panel title="Agents" actions={<Link href="/console/agents" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Manage →</Link>}>
+          <Panel title="Agents" actions={<Link href="/console/agents" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Manage →</Link>}>
             {!agents.data ? (
               <Loading what="agents" />
             ) : a.length === 0 ? (
@@ -217,7 +217,7 @@ export function LiveDashboard() {
             )}
           </Panel>
 
-          <Panel title="Policies" actions={<Link href="/console/policies" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">Edit →</Link>}>
+          <Panel title="Policies" actions={<Link href="/console/policies" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Edit →</Link>}>
             {!policies.data ? (
               <Loading what="policies" />
             ) : p.length === 0 ? (

@@ -12,10 +12,10 @@ export function DocsNavLink({ href, children }: { href: string; children: ReactN
       href={href}
       aria-current={active ? "page" : undefined}
       className={`-ml-px flex items-center gap-2 border-l py-1 pl-3 text-[13px] transition-colors ${
-        active ? "border-citrine text-bone" : "border-transparent text-muted hover:border-fg hover:text-fg"
+        active ? "border-aqua text-mist" : "border-transparent text-muted hover:border-fg hover:text-fg"
       }`}
     >
-      <span aria-hidden className={`h-1 w-1 ${active ? "bg-citrine shadow-[0_0_6px_#e5ff5d]" : "bg-transparent"}`} />
+      <span aria-hidden className={`h-1 w-1 ${active ? "bg-aqua shadow-[0_0_6px_#9cf6ee]" : "bg-transparent"}`} />
       {children}
     </Link>
   );

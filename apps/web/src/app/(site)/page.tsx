@@ -119,16 +119,20 @@ export default function Home() {
       <section aria-labelledby="hero-title" className="relative -mt-[76px] flex min-h-[100svh] flex-col overflow-hidden">
         <HeroScene videoSrc={media("hero-cube.mp4")} />
         {/* Vignette keeps the headline legible over the translucent object */}
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_58%_42%_at_50%_44%,rgb(13_14_10/0.6),transparent_75%)]" />
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_58%_42%_at_50%_44%,rgb(1_38_36/0.6),transparent_75%)]" />
         <Container className="relative flex flex-1 flex-col items-center justify-center pb-36 pt-28 text-center">
-          <h1 id="hero-title" className="display text-[clamp(50px,9.4vw,96px)] text-bone">
+          <p className="label mb-8 flex items-center gap-3 !text-mist animate-[fade-up_.8s_var(--ease-out-quint)_both]">
+            <span aria-hidden className="tick-dot" />
+            Palisec · Deterministic transaction security
+          </p>
+          <h1 id="hero-title" className="display text-[clamp(50px,9.4vw,96px)] text-mist">
             {HEADLINE.map((line, i) => (
               <span key={line} className="line-mask wide" style={{ "--d": `${120 + i * 120}ms` } as CSSProperties}>
                 <span className={i === HEADLINE.length - 1 ? "text-signal" : "text-lit"}>{line}</span>
               </span>
             ))}
           </h1>
-          <p className="mt-8 max-w-[600px] text-base leading-relaxed text-chalk animate-[fade-up_.9s_var(--ease-out-quint)_.8s_both] [text-wrap:pretty] sm:text-lg">
+          <p className="mt-8 max-w-[600px] text-base leading-relaxed text-foam animate-[fade-up_.9s_var(--ease-out-quint)_.8s_both] [text-wrap:pretty] sm:text-lg">
             Enforce transaction policies, spending limits, and approval requirements before autonomous agents execute on Robinhood Chain.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3 animate-[fade-up_.9s_var(--ease-out-quint)_1s_both]">
@@ -138,7 +142,7 @@ export default function Home() {
         </Container>
 
         {/* Spec strip: the facts the old kicker carried, set where the ground meets the page */}
-        <div className="relative border-t border-line/80 bg-carbon/55 backdrop-blur-md animate-[fade-up_.9s_var(--ease-out-quint)_1.2s_both]">
+        <div className="relative border-t border-line/80 bg-abyss/55 backdrop-blur-md animate-[fade-up_.9s_var(--ease-out-quint)_1.2s_both]">
           <Container>
             <dl className="grid grid-cols-2 sm:grid-cols-4">
               {[
@@ -148,8 +152,8 @@ export default function Home() {
                 ["Status", "Pre-release"],
               ].map(([k, v], i) => (
                 <div key={k} className={`flex flex-col gap-1 py-4 sm:py-5 ${i % 2 === 1 ? "border-l border-line pl-4" : ""} ${i > 0 ? "sm:border-l sm:border-line sm:pl-6" : ""}`}>
-                  <dt className="label !text-[10px] !text-smoke">{k}</dt>
-                  <dd className="flex items-center gap-2 font-mono text-[12px] text-bone">
+                  <dt className="label !text-[10px] !text-drift">{k}</dt>
+                  <dd className="flex items-center gap-2 font-mono text-[12px] text-mist">
                     {k === "Status" && <span aria-hidden className="tick-dot" />}
                     {v}
                   </dd>
@@ -161,7 +165,7 @@ export default function Home() {
       </section>
 
       {/* ───────── Invariants marquee (no customer logos: there are none yet) ───────── */}
-      <div className="border-y border-graphite py-6">
+      <div className="border-y border-reef py-6">
         <Marquee items={["Fail closed", "Deterministic", "Deny overrides allow", "Never broadcast on deny", "Integer wei", "Atomic reservations", "Replay protected", "Human approval bound to op hash", "No arbitrary signing"]} />
       </div>
 
@@ -170,22 +174,22 @@ export default function Home() {
         <div className="grid items-center gap-16 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-20">
           <div>
             <Reveal>
-              <h2 id="enforcement-title" className="heading text-bone">Rules a program executes. Not warnings a model interprets.</h2>
+              <h2 id="enforcement-title" className="heading text-mist">Rules a program executes. Not warnings a model interprets.</h2>
             </Reveal>
             <Reveal delay={120}>
-              <p className="mt-8 max-w-[560px] leading-relaxed text-stone">
+              <p className="mt-8 max-w-[560px] leading-relaxed text-silver">
                 Every proposed action runs the same fifteen checks in the same order. The same policy, request and state always
                 produce the same decision and the same reason code.
               </p>
             </Reveal>
             <Reveal delay={220}>
-              <p className="mt-4 max-w-[560px] leading-relaxed text-stone">
+              <p className="mt-4 max-w-[560px] leading-relaxed text-silver">
                 Anything failed, ambiguous, timed-out or unverifiable ends in no signature. Unavailable fees are never zero; a
                 missing policy is never allow-all.
               </p>
             </Reveal>
             <Reveal delay={320}>
-              <div className="mt-10 font-mono text-sm text-bone">
+              <div className="mt-10 font-mono text-sm text-mist">
                 <TypeOut text="> evaluate(policy, intent, state, env)" />
               </div>
             </Reveal>
@@ -198,16 +202,16 @@ export default function Home() {
 
       {/* ───────── Boundary + proof ───────── */}
       <Section index="02" label="Enforcement">
-        <div className="grid items-center gap-16 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-20">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-16 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-20">
           <Reveal>
             <BoundaryDiagram />
           </Reveal>
           <div>
             <Reveal>
-              <h2 className="heading text-bone">Three exits. One of them is a wall.</h2>
+              <h2 className="heading text-mist">Three exits. One of them is a wall.</h2>
             </Reveal>
             <Reveal delay={120}>
-              <p className="mt-8 max-w-[560px] leading-relaxed text-stone">
+              <p className="mt-8 max-w-[560px] leading-relaxed text-silver">
                 Allowed operations continue to the smart account. Operations that cross a threshold wait for a human, unsigned.
                 Denied operations stop at the boundary: no signature, no broadcast, no transaction hash.
               </p>
@@ -215,26 +219,26 @@ export default function Home() {
           </div>
         </div>
 
-        <ol className="mt-24 grid gap-x-12 gap-y-16 border-t border-graphite pt-6 md:grid-cols-3">
+        <ol className="mt-24 grid gap-x-12 gap-y-16 border-t border-reef pt-6 md:grid-cols-3">
           {PROOF.map((p, i) => (
             <Reveal key={p.title} as="li" delay={i * 120} className="group relative flex flex-col pt-10">
-              <span aria-hidden className="absolute inset-x-0 -top-px h-px origin-left scale-x-0 bg-gradient-to-r from-citrine via-citrine/40 to-transparent transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
-              <span aria-hidden className="pointer-events-none absolute -top-16 left-0 h-32 w-48 rounded-full bg-citrine/10 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
+              <span aria-hidden className="absolute inset-x-0 -top-px h-px origin-left scale-x-0 bg-gradient-to-r from-aqua via-aqua/40 to-transparent transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
+              <span aria-hidden className="pointer-events-none absolute -top-16 left-0 h-32 w-48 rounded-full bg-aqua/10 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
               <div className="mb-8 flex items-center justify-between gap-3">
-                <span className="font-mono text-[12px] text-smoke transition-colors group-hover:text-citrine">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-[12px] text-drift transition-colors group-hover:text-aqua">{String(i + 1).padStart(2, "0")}</span>
                 <MaturityBadge maturity={capability(p.cap).maturity} />
               </div>
-              <h3 className="font-heading text-[27px] font-bold leading-[1.08] tracking-[-0.005em] text-bone">{p.title}</h3>
-              <p className="mt-4 leading-relaxed text-stone">{p.body}</p>
+              <h3 className="font-heading text-[27px] font-medium leading-[1.08] tracking-[-0.025em] text-mist">{p.title}</h3>
+              <p className="mt-4 leading-relaxed text-silver">{p.body}</p>
               <ul className="mt-6 space-y-2">
                 {p.spec.map((s) => (
-                  <li key={s} className="flex items-center gap-3 font-utility text-[11px] uppercase tracking-[0.07em] text-citrine">
-                    <span className="h-1 w-1 bg-citrine shadow-[0_0_6px_#e5ff5d]" />
+                  <li key={s} className="flex items-center gap-3 font-utility text-[11px] uppercase tracking-[0.07em] text-aqua">
+                    <span className="h-1 w-1 bg-aqua shadow-[0_0_6px_#9cf6ee]" />
                     {s}
                   </li>
                 ))}
               </ul>
-              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 font-utility text-[11px] uppercase tracking-[0.08em] text-bone transition-colors hover:text-citrine">
+              <Link href={p.href} className="mt-auto inline-flex items-center gap-2 pt-8 font-utility text-[11px] uppercase tracking-[0.08em] text-mist transition-colors hover:text-aqua">
                 Implementation detail
                 <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
@@ -247,10 +251,10 @@ export default function Home() {
       <Section index="03" label="Policy workbench" id="workbench">
         <div className="mb-14 grid gap-8 lg:grid-cols-2 lg:items-end">
           <Reveal>
-            <h2 id="workbench-title" className="heading text-bone">Put a transaction against the wall.</h2>
+            <h2 id="workbench-title" className="heading text-mist">Put a transaction against the wall.</h2>
           </Reveal>
           <Reveal delay={120}>
-            <p className="max-w-[560px] leading-relaxed text-stone">
+            <p className="max-w-[560px] leading-relaxed text-silver">
               The canonical schema and evaluation order, running in your browser on illustrative data. Checks that need a live
               protected account are listed and explicitly not run.
             </p>
@@ -264,15 +268,15 @@ export default function Home() {
       {/* ───────── The one cream reversal ───────── */}
       <ReversalBand clusterImages={clusters}>
         <Reveal>
-          <p className="mb-8 font-utility text-[11px] uppercase tracking-[0.12em] text-ash">Smart-account enforcement</p>
+          <p className="mb-8 font-utility text-[11px] font-medium uppercase tracking-[0.12em] text-aqua-lo">Smart-account enforcement</p>
         </Reveal>
-        <h2 className="mx-auto max-w-[18ch] font-wide text-[clamp(28px,4.6vw,56px)] font-semibold uppercase leading-[1.04] tracking-[-0.02em] text-carbon [text-wrap:balance]">
+        <h2 className="mx-auto max-w-[18ch] kinetic text-[clamp(28px,4.6vw,56px)] leading-[1.04] text-abyss [text-wrap:balance]">
           {["A gateway", "can't guard", "a key it", "doesn't hold."].map((l, i) => (
             <Reveal key={l} as="span" delay={i * 90} className="block">{l}</Reveal>
           ))}
         </h2>
         <Reveal delay={400}>
-          <p className="mx-auto mt-8 max-w-[520px] leading-relaxed text-ash">
+          <p className="mx-auto mt-8 max-w-[520px] leading-relaxed text-abyss/75">
             The protected path is an ERC-4337 account whose validation rejects any operation without a valid Palisec authorization.
             Plain EOA forwarding is a convenience, never a boundary.
           </p>
@@ -290,10 +294,10 @@ export default function Home() {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
           <Reveal className="min-w-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-heading text-[30px] font-bold leading-none text-bone">One protected execution call.</h2>
+              <h2 className="font-heading text-[30px] font-medium tracking-[-0.02em] leading-none text-mist">One protected execution call.</h2>
               <MaturityBadge maturity={capability("sdk-ts").maturity} />
             </div>
-            <p className="max-w-[560px] leading-relaxed text-stone">
+            <p className="max-w-[560px] leading-relaxed text-silver">
               Approval, signing, submission, inclusion and success are separate states. The SDK returns a discriminated union and
               never treats a pending approval as permission.
             </p>
@@ -304,16 +308,16 @@ export default function Home() {
               <p className="label">Evaluation result</p>
               <DecisionBadge decision={sample.decision} />
             </div>
-            <p className="leading-relaxed text-stone">
+            <p className="leading-relaxed text-silver">
               Real output of the local reference evaluator for the swap above, computed at build time.{" "}
-              <code className="font-mono text-sm text-citrine">transaction_hash</code> is null: nothing was broadcast.
+              <code className="font-mono text-sm text-aqua">transaction_hash</code> is null: nothing was broadcast.
             </p>
             <CodeBlock code={sampleJson} title="response.json · local evaluator" />
             <ol className="space-y-0">
               {sample.checks.filter((c) => c.enforcement === "local").map((c, i) => (
-                <Reveal key={c.id} as="li" delay={i * 40} className="flex justify-between gap-4 border-b border-graphite py-1.5 text-[12px]">
-                  <span className="truncate text-stone">{c.label}</span>
-                  <span className="font-mono text-[11px] text-citrine">{c.status.toUpperCase()}</span>
+                <Reveal key={c.id} as="li" delay={i * 40} className="flex justify-between gap-4 border-b border-reef py-1.5 text-[12px]">
+                  <span className="truncate text-silver">{c.label}</span>
+                  <span className="font-mono text-[11px] text-aqua">{c.status.toUpperCase()}</span>
                 </Reveal>
               ))}
             </ol>
@@ -325,20 +329,20 @@ export default function Home() {
       <Section index="05" label="Request lifecycle">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <Reveal>
-            <h2 className="heading max-w-[18ch] text-bone">Off-chain decision. On-chain enforcement.</h2>
+            <h2 className="heading max-w-[18ch] text-mist">Off-chain decision. On-chain enforcement.</h2>
           </Reveal>
           <Reveal delay={120}>
-            <p className="max-w-[440px] text-sm leading-relaxed text-stone">
+            <p className="max-w-[440px] text-sm leading-relaxed text-silver">
               Trust boundaries, the enclave&apos;s role, smart-account enforcement and the chain submission path are specified in the{" "}
-              <Link href="/architecture" className="text-bone underline decoration-citrine/60 underline-offset-4 hover:text-citrine">architecture document</Link>.
+              <Link href="/architecture" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">architecture document</Link>.
             </p>
           </Reveal>
         </div>
         <div className="relative mt-16">
-        <div aria-hidden className="absolute left-0 right-0 top-[19px] hidden h-px bg-graphite xl:block">
-          <Reveal className="draw-x relative h-full w-full bg-gradient-to-r from-citrine/70 via-citrine/40 to-citrine/10">
+        <div aria-hidden className="absolute left-0 right-0 top-[19px] hidden h-px bg-reef xl:block">
+          <Reveal className="draw-x relative h-full w-full bg-gradient-to-r from-aqua/70 via-aqua/40 to-aqua/10">
             <span className="absolute inset-0 animate-[travel_6s_var(--ease-out-quint)_1.8s_infinite]">
-              <span className="absolute -top-[3px] left-0 h-[7px] w-[140px] rounded-full bg-[radial-gradient(closest-side,#f6ffc2,rgb(229_255_93/0.6)_40%,transparent)] blur-[1px]" />
+              <span className="absolute -top-[3px] left-0 h-[7px] w-[140px] rounded-full bg-[radial-gradient(closest-side,#cbfffc,rgb(156_246_238/0.6)_40%,transparent)] blur-[1px]" />
             </span>
           </Reveal>
         </div>
@@ -346,14 +350,14 @@ export default function Home() {
           {LIFECYCLE.map((p, i) => (
             <Reveal key={p.plane} as="li" delay={i * 180} className="relative">
               <div className="mb-6 flex items-center gap-4">
-                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-carbon shadow-[inset_0_0_0_1px_var(--color-line-strong),inset_0_1px_0_rgb(255_255_240/0.1),0_0_24px_-6px_rgb(229_255_93/0.45)]">
+                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-abyss shadow-[inset_0_0_0_1px_var(--color-line-strong),inset_0_1px_0_rgb(237_255_254/0.1),0_0_24px_-6px_rgb(156_246_238/0.45)]">
                   <CubeGlyph size={14} />
                 </span>
-                <span className="label relative z-10 -ml-2 bg-carbon px-2 pr-4 !text-bone">{String.fromCharCode(65 + i)} · {p.plane}</span>
+                <span className="label relative z-10 -ml-2 bg-abyss px-2 pr-4 !text-mist">{String.fromCharCode(65 + i)} · {p.plane}</span>
               </div>
               <ol className="space-y-2.5">
                 {p.steps.map((s) => (
-                  <li key={s} className="border-l border-graphite pl-4 text-sm text-stone transition-colors hover:border-citrine hover:text-bone">{s}</li>
+                  <li key={s} className="border-l border-reef pl-4 text-sm text-silver transition-colors hover:border-aqua hover:text-mist">{s}</li>
                 ))}
               </ol>
             </Reveal>
@@ -366,13 +370,13 @@ export default function Home() {
       <Section index="06" label="Network">
         <div className="grid gap-16 lg:grid-cols-2">
           <Reveal>
-            <p className="font-utility text-[11px] uppercase tracking-[0.08em] text-sand">◆ Metrics unavailable</p>
-            <h2 className="mt-6 font-heading text-[30px] font-bold leading-none text-bone">No deployment, so no numbers.</h2>
-            <p className="mt-4 max-w-[480px] leading-relaxed text-stone">
+            <p className="font-utility text-[11px] uppercase tracking-[0.08em] text-lilac">◆ Metrics not published yet</p>
+            <h2 className="mt-6 font-heading text-[30px] font-medium tracking-[-0.02em] leading-none text-mist">Live on testnet. Figures only when measured.</h2>
+            <p className="mt-4 max-w-[480px] leading-relaxed text-silver">
               Block height, latency and transaction counts appear here only when backed by real telemetry and a published
               measurement definition.
             </p>
-            <Link href="/status" className="mt-8 inline-block font-utility text-[11px] uppercase tracking-[0.08em] text-bone transition-colors hover:text-citrine">Status page →</Link>
+            <Link href="/status" className="mt-8 inline-block font-utility text-[11px] uppercase tracking-[0.08em] text-mist transition-colors hover:text-aqua">Status page →</Link>
           </Reveal>
           <Reveal delay={150}>
             <dl className="panel divide-y divide-line px-5 text-sm">
@@ -385,8 +389,8 @@ export default function Home() {
                 ["Fee model", "Pending RPC fee confirmation"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-6 py-3.5">
-                  <dt className="whitespace-nowrap text-stone">{k}</dt>
-                  <dd className={`text-right font-mono text-[13px] ${v.startsWith("Pending") ? "text-sand" : "text-bone"}`}>{v}</dd>
+                  <dt className="whitespace-nowrap text-silver">{k}</dt>
+                  <dd className={`text-right font-mono text-[13px] ${v.startsWith("Pending") ? "text-lilac" : "text-mist"}`}>{v}</dd>
                 </div>
               ))}
             </dl>
@@ -397,12 +401,12 @@ export default function Home() {
       {/* ───────── Final CTA ───────── */}
       <Section className="overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="aurora left-1/2 top-[18%] h-[420px] w-[760px] -translate-x-1/2 bg-citrine/[0.09] animate-[drift-c_24s_ease-in-out_infinite]" />
+          <div className="aurora left-1/2 top-[18%] h-[420px] w-[760px] -translate-x-1/2 bg-aqua/[0.09] animate-[drift-c_24s_ease-in-out_infinite]" />
           <div className="horizon bottom-[14%] opacity-70" />
         </div>
         <div className="relative flex flex-col items-center text-center">
           <Reveal>
-            <h2 className="display max-w-[14ch] text-bone"><span className="text-lit">Read how it works before you </span><span className="text-signal">trust it.</span></h2>
+            <h2 className="display max-w-[14ch] text-mist"><span className="text-lit">Read how it works before you </span><span className="text-signal">trust it.</span></h2>
           </Reveal>
           <Reveal delay={200}>
             <div className="mt-12 flex flex-wrap justify-center gap-3">

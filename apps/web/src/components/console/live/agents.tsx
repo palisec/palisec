@@ -91,7 +91,7 @@ export function LiveAgents() {
                       <tr key={a.id} className={`border-b border-line transition-colors ${a.id === current ? "bg-raised/70" : "hover:bg-raised/40"}`}>
                         <td className="px-4 py-2.5">
                           <button type="button" onClick={() => setSelected(a.id)} aria-pressed={a.id === current} className="text-left">
-                            <span className="block text-bone underline-offset-4 hover:underline">{a.name}</span>
+                            <span className="block text-mist underline-offset-4 hover:underline">{a.name}</span>
                             <Mono className="text-dim">{shortHex(a.account)}</Mono>
                           </button>
                         </td>
@@ -210,7 +210,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
             ["Owner", a.created_by ? <Mono key="o" className="text-soft">{shortHex(a.created_by)}</Mono> : "—"],
             ["Account", <Mono key="acct" className="text-soft">{a.account}</Mono>],
             ["Chain", `Robinhood Chain Testnet · ${a.chain_id}`],
-            ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-citrine"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
+            ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-aqua"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
             ["Last hour", `${a.last_hour.allowed} allowed · ${a.last_hour.denied} denied · ${a.last_hour.reviewed} review · ${usd(a.last_hour.reserved_usd_micros)} reserved`],
             ["Status changed", a.status_changed_at ? `${utc(a.status_changed_at)}${a.status_changed_by ? ` by ${shortHex(a.status_changed_by)}` : ""}` : "—"],
             ["Signer identities", <span key="sig" className="text-muted">None: protected signing is not deployed</span>],
@@ -253,10 +253,10 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
 
       <Panel title={`API keys · ${a.credentials.filter((c) => !c.revoked_at).length} active`} bodyClassName="p-4 space-y-3">
         {secret && (
-          <div className="rounded-[6px] border border-citrine/40 bg-citrine/[0.04] p-3">
+          <div className="rounded-[6px] border border-aqua/40 bg-aqua/[0.04] p-3">
             <p className="text-[12.5px] text-soft">Copy this key now and store it in your agent&apos;s secret store. It is never shown again.</p>
             <div className="mt-2 flex items-center gap-2">
-              <code className="min-w-0 flex-1 break-all font-mono text-[12px] text-bone">{secret}</code>
+              <code className="min-w-0 flex-1 break-all font-mono text-[12px] text-mist">{secret}</code>
               <CopyButton text={secret} />
             </div>
             <Btn variant="quiet" className="mt-2" onClick={() => setSecret(null)}>I have stored it</Btn>
@@ -330,7 +330,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
         )}
       </Panel>
 
-      <Panel title="Recent operations" actions={<Link href="/console/operations" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-stone hover:text-citrine">All →</Link>}>
+      <Panel title="Recent operations" actions={<Link href="/console/operations" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">All →</Link>}>
         {!recent.data ? (
           <Loading what="operations" />
         ) : recent.data.operations.length === 0 ? (

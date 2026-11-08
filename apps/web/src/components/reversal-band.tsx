@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Cube } from "./cube";
 
 /**
- * The single cream reversal per page. Large translucent cube clusters float at both
+ * The single phosphor reversal per page: lavender light with dark teal type. Large translucent cube clusters float at both
  * edges. Generated renders at /media/cubes-left.png and /media/cubes-right.png replace
  * the CSS clusters when present.
  */
@@ -19,10 +19,10 @@ const RIGHT = [
 
 export function ReversalBand({ children, clusterImages }: { children: ReactNode; clusterImages?: { left: string; right: string } }) {
   return (
-    <section className="relative overflow-hidden bg-cream text-carbon">
-      {/* Daylight from above, falling off toward the dark bands either side */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_70%_at_50%_0%,#fbfcf4,transparent_70%),linear-gradient(180deg,transparent_60%,rgb(13_14_10/0.06))]" />
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-citrine to-transparent" />
+    <section className="relative overflow-hidden bg-phosphor text-abyss">
+      {/* Light from the surface, cooling to aqua toward the dark bands either side */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_70%_at_50%_0%,#ffffff,transparent_70%),radial-gradient(60%_80%_at_50%_120%,rgb(203_255_252/0.7),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,transparent,#cbfffc_20%,#ffffff_50%,#fad1ff_80%,transparent)]" />
       <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 hidden w-[26%] md:block">
         {clusterImages ? (
           // eslint-disable-next-line @next/next/no-img-element
