@@ -39,9 +39,6 @@ export function allowedHosts(): string[] {
   const apex = new URL(SITE_URL).host.replace(/^www\./, "");
   add(apex);
   add(`www.${apex}`);
-  // The previous domain keeps working until it only redirects to palisec.tech (docs/DEPLOYMENT.md).
-  add("palisec.tech");
-  add("www.palisec.tech");
   // Vercel deployment and branch URLs, so preview deployments can be tested. Vercel sets these.
   add(process.env.VERCEL_URL);
   add(process.env.VERCEL_BRANCH_URL);
