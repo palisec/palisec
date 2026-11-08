@@ -22,6 +22,21 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+  # The Rust policy engine: native parity against the shared fixtures, and a WebAssembly build.
+  # (pnpm test in `verify` checks the embedded WebAssembly against the reference on random cases
+  # and refuses one not built from the current source.)
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: services/policy-engine
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup target add wasm32-unknown-unknown
+      - run: cargo test --locked
+      - run: cargo build --locked --release --target wasm32-unknown-unknown
+
   # The API against real Postgres: budget atomicity under concurrency, replay, roles, approvals, audit.
   # Uses the public testnet RPC and price feeds, as production does.
   e2e:

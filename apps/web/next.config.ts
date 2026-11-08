@@ -20,7 +20,7 @@ const csp = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
-  transpilePackages: ["@palisec/policy-schema"],
+  transpilePackages: ["@palisec/policy-schema", "@palisec/policy-engine"],
   poweredByHeader: false,
   turbopack: {
     rules: {

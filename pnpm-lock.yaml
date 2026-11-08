@@ -17,6 +17,9 @@ importers:
       '@neondatabase/serverless':
         specifier: 1.2.0
         version: 1.2.0
+      '@palisec/policy-engine':
+        specifier: workspace:*
+        version: link:../../packages/policy-engine
       '@palisec/policy-schema':
         specifier: workspace:*
         version: link:../../packages/policy-schema
@@ -63,6 +66,22 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/policy-engine:
+    dependencies:
+      '@palisec/policy-schema':
+        specifier: workspace:*
+        version: link:../policy-schema
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.5
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@22.20.5)(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0))
 
   packages/policy-schema:
     devDependencies:

@@ -1,6 +1,7 @@
 import "server-only";
+import { evaluateDual } from "@palisec/policy-engine";
 import {
-  evaluate,
+  type evaluate,
   fingerprint,
   RETRYABLE,
   selectorOf,
@@ -123,11 +124,11 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   const intent: Intent = { ...input, agent_id: "draft_test", from: getAddress(account.address) };
   const policy = { ...doc, version: 1, status: "active" } as unknown as Policy;
   const { env } = await liveEnvironment(input, now, false, []);
-  const { result, checks } = finish(evaluate(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env), input.chain_id);
+  const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
 
-/** Snapshot of authoritative state, then the reference evaluator. Pure read: nothing is recorded. */
+/** Snapshot of authoritative state, then both evaluators (Rust and reference, which must agree). Pure read: nothing is recorded. */
 async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepared> {
   const selector = selectorOf(input.data);
   const intent: Intent = {
@@ -182,7 +183,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   };
 
   const { env, feeWei } = await liveEnvironment(input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId]);
-  const { result, checks } = finish(evaluate(policy, intent, state, env), input.chain_id);
+  const { result, checks } = finish(evaluateDual(policy, intent, state, env), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {
     intent,

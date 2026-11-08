@@ -74,7 +74,7 @@ export default function PoliciesPage() {
   return (
     <DocArticle
       title="Policy schema"
-      lede="One canonical, versioned document defines what an agent may do. The browser workbench validates against it today; the Rust engine and the SDKs will be generated from it."
+      lede="One canonical, versioned document defines what an agent may do. The browser workbench, the API, the Rust engine and the SDKs all validate against it."
       maturity="local"
     >
       <h2 id="document">Representative document</h2>

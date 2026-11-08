@@ -1,3 +1,4 @@
+import { engineStatus } from "@palisec/policy-engine";
 import { CHAINS, isDatabaseConfigured } from "@/server/config";
 import { db } from "@/server/db";
 import { ok } from "@/server/http";
@@ -32,17 +33,19 @@ export async function GET(req: Request) {
     database = cached.database;
     schema = cached.schema;
   }
+  // Decisions need both the Rust engine and the reference evaluator; without the engine they fail closed.
+  const engine = engineStatus();
   return ok({
-    status: database === "ok" ? "ok" : "degraded",
+    status: database === "ok" && engine.ok ? "ok" : "degraded",
     components: {
       database,
       auth: database === "ok" ? "ok" : "unavailable",
-      // The TypeScript reference evaluator runs in this process; the Rust engine is not deployed.
-      policy_engine: "ok",
+      policy_engine: engine.ok ? "ok" : "unavailable",
       signer: "not_deployed",
       bundler: "not_deployed",
     },
     schema_migration: schema,
+    policy_engine: { implementation: "rust-wasm+reference", version: engine.version, source_hash: engine.source_hash.slice(0, 12) },
     chains: Object.entries(CHAINS).map(([id, c]) => ({ chain_id: Number(id), name: c.name, enabled: c.enabled })),
   });
 }

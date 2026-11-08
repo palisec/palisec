@@ -9,6 +9,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.8.0",
+    date: "2026-11-09",
+    tag: "Pre-release · testnet",
+    changes: [
+      "The Rust policy engine is live. It runs as WebAssembly inside the API next to the TypeScript reference evaluator, and every decision needs both to agree on every field: decision, reason code, each check's wording and the next ledger state. Any difference, or an engine that cannot run, denies with PS_STATE_001 and reserves nothing.",
+      "Parity is proven on every change: shared fixtures that cover ALLOW, human review and every DENY reason code are checked natively in Rust and in WebAssembly, and 6,000 seeded random cases compare the two implementations one by one. CI refuses an embedded engine that was not built from the current Rust source.",
+      "GET /v1/health reports the engine's version and source hash.",
+      "Icons replace text on icon-style controls: menu, close, copy, refresh, remove, sign out, reset and replay. Each keeps an accessible name and a tooltip.",
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-11-09",
     tag: "Pre-release · testnet",

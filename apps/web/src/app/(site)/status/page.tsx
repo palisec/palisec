@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const SERVICES: { name: string; deployed: boolean; note: string }[] = [
   { name: "Authorization API", deployed: true, note: "Testnet 46630" },
-  { name: "Policy engine", deployed: true, note: "TypeScript reference evaluator on the server" },
+  { name: "Policy engine", deployed: true, note: "Rust engine (WebAssembly) and the reference evaluator; both must agree or the request is denied" },
   { name: "Control plane and console", deployed: true, note: "Wallet sign-in, agents, policies, approvals, audit" },
   { name: "Signing enclave", deployed: false, note: "" },
   { name: "Chain worker · bundler", deployed: false, note: "" },

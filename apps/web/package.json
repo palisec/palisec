@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "1.2.0",
+    "@palisec/policy-engine": "workspace:*",
     "@palisec/policy-schema": "workspace:*",
     "next": "16.4.5",
     "postgres": "3.4.9",

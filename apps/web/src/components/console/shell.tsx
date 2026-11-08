@@ -46,7 +46,7 @@ function Shell({ children }: { children: ReactNode }) {
   // Reported only from the real health endpoint; nothing is shown as up before it answers.
   const HEALTH = [
     { label: "Database", value: c ? (c.database === "ok" ? "OK" : c.database) : "…", ok: c?.database === "ok" },
-    { label: "Policy engine", value: c ? (c.policy_engine === "ok" ? "Server" : c.policy_engine) : "…", ok: c?.policy_engine === "ok" },
+    { label: "Policy engine", value: c ? (c.policy_engine === "ok" ? "Rust + ref" : c.policy_engine) : "…", ok: c?.policy_engine === "ok" },
     { label: "Signing", value: "Not deployed", ok: false },
   ];
 

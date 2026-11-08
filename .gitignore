@@ -17,3 +17,4 @@ contracts/out/
 apps/web/public/sdk/*.tgz
 __pycache__/
 *.pyc
+services/policy-engine/target/

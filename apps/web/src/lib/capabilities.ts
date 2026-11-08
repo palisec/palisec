@@ -21,7 +21,7 @@ export interface Capability {
 export const CAPABILITIES: Capability[] = [
   { id: "schema", name: "Canonical policy schema 1.0", maturity: "local", note: "JSON Schema and TypeScript types; validated in the browser workbench." },
   { id: "simulator", name: "Deterministic local simulator", maturity: "local", note: "Runs the evaluation order on example data. Never signs or broadcasts." },
-  { id: "engine", name: "Rust policy engine", maturity: "specified", note: "Production evaluator implementing the same schema and reason codes. Until it ships, the API runs the TypeScript reference evaluator on the server." },
+  { id: "engine", name: "Rust policy engine", maturity: "service", note: "Runs as WebAssembly in the API next to the TypeScript reference evaluator. Every decision needs both to agree on every field; any difference, or an engine that cannot run, denies with PS_STATE_001. Parity is tested on shared fixtures and 6,000 random cases on every change." },
   { id: "reservations", name: "Atomic budget reservations", maturity: "service", note: "Postgres ledger serialized per policy: one SQL function re-checks budget, pending slots, replay and loop state before recording. Testnet only." },
   { id: "enclave", name: "TEE-backed signing (AWS Nitro)", maturity: "specified", note: "Policy-bound signing with no arbitrary-signing interface." },
   { id: "account", name: "ERC-4337 validation module", maturity: "specified", note: "On-chain rejection of operations without a valid Palisec authorization. Until it ships, an agent key that skips Palisec can still transact." },

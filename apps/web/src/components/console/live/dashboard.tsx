@@ -260,7 +260,7 @@ export function LiveDashboard() {
             <KV
               rows={[
                 ["Authorization state", c ? <Pill key="d" tone={c.database === "ok" ? "allow" : "deny"}>{c.database}</Pill> : "…"],
-                ["Policy engine", c ? <Pill key="p" tone={c.policy_engine === "ok" ? "allow" : "deny"}>{c.policy_engine === "ok" ? "reference · server" : c.policy_engine}</Pill> : "…"],
+                ["Policy engine", c ? <Pill key="p" tone={c.policy_engine === "ok" ? "allow" : "deny"}>{c.policy_engine === "ok" ? "rust + reference · agree" : c.policy_engine}</Pill> : "…"],
                 ["Chain", <span key="c" className="text-soft">Robinhood Testnet · 46630</span>],
                 ["Signing service", <Pill key="s" tone="muted">○ not deployed</Pill>],
                 ["Bundler", <Pill key="b" tone="muted">○ not deployed</Pill>],
