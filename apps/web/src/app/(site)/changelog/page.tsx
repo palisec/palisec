@@ -9,6 +9,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.6.0",
+    date: "2026-11-09",
+    tag: "Pre-release · testnet",
+    changes: [
+      "TypeScript SDK @palisec/sdk 0.1.0, installed from https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz: authorize, dry-run evaluate, waitForApproval, cancel, and sendTransaction, which sends with your viem wallet only on ALLOW and refuses a wallet that is not the agent's account.",
+      "Typed errors with stable codes, automatic idempotency keys, timeouts, and retries only on calls that are safe to repeat. Log events never contain API keys, bodies or calldata.",
+      "The SDK is tested against the live API in CI on every change, alongside the API end-to-end suite.",
+      "The service now runs only at palisec.tech.",
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-11-04",
     tag: "Pre-release · testnet",

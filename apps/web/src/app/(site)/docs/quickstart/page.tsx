@@ -100,7 +100,11 @@ export default function Quickstart() {
         <li><strong>Budget is held until it expires.</strong> An allowed amount counts against the hourly budget even if you never send, because nobody can prove you did not. Only a console operator can release it.</li>
         <li><strong>Approvals bind the exact operation.</strong> An approver signs the request hash, target, value, calldata hash, policy version and expiry. Changing any of them needs a new approval.</li>
       </ul>
-      <p>Every endpoint, field and status code is in the <Link href="/docs/api">API reference</Link>.</p>
+      <p>
+        Using TypeScript? The <Link href="/docs/sdk/typescript">SDK</Link> does all of this in one call:{" "}
+        <code>palisec.sendTransaction(wallet, intent)</code> authorizes and sends with viem only on ALLOW. Every endpoint, field and status code
+        is in the <Link href="/docs/api">API reference</Link>.
+      </p>
 
       <h2 id="local">2 · Evaluate locally</h2>
       <p>Requires Node 22 and pnpm 10. The test suite covers each rule, precedence, replay, cooldowns and fail-closed behaviour.</p>

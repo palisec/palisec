@@ -1,88 +1,139 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "TypeScript SDK",
-  description: "The proposed @palisec/sdk interface: viem-first, typed decisions, typed errors and idempotent operations.",
+  description: "@palisec/sdk: ask Palisec before every agent transaction and send with viem only on ALLOW. Typed decisions, typed errors, idempotent retries.",
   alternates: { canonical: "/docs/sdk/typescript" },
 };
 
-const TYPES = `type Decision =
-  | { decision: "ALLOW"; operationId: string; authorizationId: string;
-      policyVersion: number }
-  | { decision: "REQUIRES_HUMAN_SIGNATURE"; operationId: string;
-      approvalId: string; expiresAt: Date; reasonCode: "PS_HUMAN_001" }
-  | { decision: "DENY"; reasonCode: ReasonCode; retryable: boolean;
-      message: string; transactionHash: null };`;
+const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz viem
+# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz viem`;
 
-const CONFIG = `import { palisec } from "@palisec/sdk";
+const SEND = `import { createWalletClient, http, encodeFunctionData, erc20Abi } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { createPalisec, PalisecDeniedError } from "@palisec/sdk";
 
-const wall = palisec({
-  apiKey: process.env.PALISEC_API_KEY!,  // server-side only; never in a browser bundle
-  chainId: 4663,
-  timeoutMs: 10_000,
-  logger: console,                        // secrets are redacted before logging
-});`;
+const palisec = createPalisec({ apiKey: process.env.PALISEC_API_KEY! }); // server-side only
 
-const ERRORS = `try {
-  await wall.operations.create(request);
-} catch (err) {
-  if (err instanceof PalisecError) {
-    switch (err.code) {
-      case "PS_STATE_001":   // retryable: authoritative state unavailable
-      case "PS_CHAIN_001":   // retryable: bundler or RPC unavailable
-        return retryWithSameIdempotencyKey(request);
-      default:
-        throw err;           // terminal
-    }
+// The agent's own account: the one you registered in Console → Agents.
+const wallet = createWalletClient({
+  account: privateKeyToAccount(process.env.AGENT_KEY as \`0x\${string}\`),
+  transport: http("https://rpc.testnet.chain.robinhood.com"),
+});
+
+try {
+  const { operation, hash } = await palisec.sendTransaction(wallet, {
+    to: TOKEN,
+    data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [RECIPIENT, 5n] }),
+    gasLimit: 90_000,                 // the fee bound Palisec checks against your policy
+  });
+  if (hash) console.log("sent", hash, "under", operation.authorizationId);
+  else console.log("held for a human approver:", operation.operationId);
+} catch (e) {
+  if (e instanceof PalisecDeniedError) console.warn(e.code, e.message); // nothing was sent
+  else throw e;
+}`;
+
+const DECISIONS = `const op = await palisec.authorize({ to, data, gasLimit: 90_000 });
+
+switch (op.decision) {
+  case "ALLOW":                      // op.authorizationId, op.expiresAt (5 minutes)
+    break;
+  case "REQUIRES_HUMAN_SIGNATURE":   // op.operationId; nothing is authorized yet
+    const approved = await palisec.waitForApproval(op.operationId!);
+    break;
+  case "DENY":                       // op.reasonCode, op.message; never send it
+    break;
+}`;
+
+const ERRORS = `import { PalisecError, PalisecTimeoutError } from "@palisec/sdk";
+
+try {
+  await palisec.authorize(intent);
+} catch (e) {
+  if (e instanceof PalisecTimeoutError) {
+    // Safe: the request ID is the idempotency key, so this returns the original decision.
+    await palisec.authorize(intent);
+  } else if (e instanceof PalisecError) {
+    console.error(e.code, e.status, e.requestId); // e.g. PS_AUTH_001, PS_RATE_001, PS_STATE_001
   }
 }`;
+
+const CONFIG = `createPalisec({
+  apiKey: process.env.PALISEC_API_KEY!,  // ps_test_… ; validated on construction
+  chainId: 46630,                        // Robinhood Chain Testnet, the only chain enabled
+  baseUrl: "https://palisec.tech/api/v1",
+  timeoutMs: 15_000,                     // per request
+  maxRetries: 2,                         // network errors, 429 and 5xx, on safe calls only
+  logger: (e) => console.debug(e),       // never includes the key, bodies or calldata
+});`;
 
 export default function TypeScriptSdk() {
   return (
     <DocArticle
       title="TypeScript SDK"
-      lede="@palisec/sdk is a typed client for the canonical authorization protocol. It holds no security logic of its own: every decision is made server-side."
-      maturity="specified"
-      compat="Schema 1.0 · proposed interface · not published"
+      lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
+      maturity="service"
+      compat="@palisec/sdk 0.1.0 · Schema 1.0 · testnet 46630"
     >
-      <Note kind="warning" title="Interface under design">
-        The package is not published and these signatures may change. Snippets on this page are pseudocode until the SDK and API
-        are tested together.
+      <Note kind="warning" title="What the SDK enforces">
+        <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process. Until the on-chain account module ships,
+        a key used outside the SDK can still transact, so keep the agent&apos;s key only where this code runs.
       </Note>
 
-      <h2 id="install">Configuration</h2>
-      <CodeBlock code={CONFIG} title="config.ts" pseudo />
-
-      <h2 id="decisions">Decisions are a discriminated union</h2>
+      <h2 id="install">Install</h2>
+      <p>The package is served from palisec.tech; no registry account is needed. Node 18 or later.</p>
+      <CodeBlock code={INSTALL} title="terminal" />
       <p>
-        An ALLOW is an authorization, not a completed transaction. Submission, inclusion and execution are tracked separately
-        through the operation status.
-      </p>
-      <CodeBlock code={TYPES} title="types.ts" pseudo />
-
-      <h2 id="errors">Typed errors</h2>
-      <p>Every reason code is exported as a string literal union. Retries reuse the original idempotency key.</p>
-      <CodeBlock code={ERRORS} title="errors.ts" pseudo />
-
-      <h2 id="wallets">About wrapping wallets</h2>
-      <p>
-        A helper that wraps a viem wallet client cannot protect a key that can still broadcast on its own. The SDK will only
-        offer wallet wrapping for constrained smart-account signers, and will refuse to wrap a plain EOA as if it were
-        protected.
+        You need an agent API key: sign in, create and activate a policy, register the agent and create a key (see the{" "}
+        <Link href="/docs/quickstart">quickstart</Link>).
       </p>
 
-      <h2 id="roadmap">Build order</h2>
-      <ol>
-        <li>Canonical REST and authorization protocol.</li>
-        <li>TypeScript SDK with viem.</li>
-        <li>Protected smart-account integration.</li>
-        <li>Python SDK.</li>
-        <li>ethers adapter.</li>
-        <li>Agent-framework examples, all calling the same protected interface.</li>
-      </ol>
+      <h2 id="send">Send only on ALLOW</h2>
+      <CodeBlock code={SEND} title="agent.ts" />
+      <ul>
+        <li>The wallet must be the agent&apos;s registered account, or the SDK refuses before sending.</li>
+        <li>The transaction is sent with the gas limit Palisec bounded the fee on.</li>
+        <li>Pass <code>{`{ waitForApproval: true }`}</code> to wait for an approver and then send; by default a held operation is returned unsent.</li>
+      </ul>
+
+      <h2 id="decisions">Decisions</h2>
+      <p>
+        <code>authorize</code> records the decision and its budget reservation and returns it; it does not throw on DENY.{" "}
+        <code>evaluate</code> is the same check as a dry run that reserves nothing.
+      </p>
+      <CodeBlock code={DECISIONS} title="decisions.ts" />
+
+      <h2 id="errors">Errors and retries</h2>
+      <p>
+        Every failure is a <code>PalisecError</code> with a stable <code>code</code>: the <Link href="/docs/errors">reason codes</Link> plus{" "}
+        <code>PS_SDK_CONFIG</code>, <code>PS_SDK_TIMEOUT</code> and <code>PS_SDK_NETWORK</code>. Subclasses: <code>PalisecDeniedError</code>,{" "}
+        <code>PalisecApprovalError</code> (rejected, expired or withdrawn), <code>PalisecTimeoutError</code>, <code>PalisecConfigError</code>.
+      </p>
+      <CodeBlock code={ERRORS} title="errors.ts" />
+      <p>
+        Retries are automatic only where they are provably safe: authorizations carry the request ID as an idempotency key, dry runs and reads
+        change nothing. <code>cancel</code> is never retried.
+      </p>
+
+      <h2 id="config">Configuration</h2>
+      <CodeBlock code={CONFIG} title="config.ts" />
+
+      <h2 id="reference">Reference</h2>
+      <ul>
+        <li><code>authorize(intent)</code>: record a decision. Intent: <code>to</code>, <code>value</code>, <code>data</code>, <code>gasLimit</code>, <code>requestId</code>, <code>deadlineSeconds</code>.</li>
+        <li><code>evaluate(intent)</code>: dry run.</li>
+        <li><code>sendTransaction(wallet, intent, options)</code>: authorize, then send with viem only if allowed.</li>
+        <li><code>getOperation(id)</code>, <code>waitForApproval(id, {"{ timeoutMs, intervalMs }"})</code>, <code>cancel(id)</code> (withdraws a pending approval).</li>
+        <li><code>redact(text)</code>, <code>REASON_CODES</code>, <code>RETRYABLE</code>.</li>
+      </ul>
+      <p>
+        The SDK is a client for the <Link href="/docs/api">REST API</Link>; everything it does is also available over HTTP.
+      </p>
     </DocArticle>
   );
 }

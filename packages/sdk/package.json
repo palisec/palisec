@@ -1,0 +1,42 @@
+{
+  "name": "@palisec/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript client for Palisec: ask before every agent transaction, send only on ALLOW.",
+  "license": "UNLICENSED",
+  "homepage": "https://palisec.tech/docs/sdk/typescript",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "pack:web": "tsup && pnpm pack --pack-destination ../../apps/web/public/sdk"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "viem": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@palisec/policy-schema": "workspace:*",
+    "tsup": "^8.5.0",
+    "typescript": "^5",
+    "viem": "2.57.16",
+    "vitest": "^5"
+  }
+}

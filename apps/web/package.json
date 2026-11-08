@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/migrate.mjs && next build",
+    "build": "pnpm --filter @palisec/sdk pack:web && node scripts/migrate.mjs && next build",
     "db:migrate": "node scripts/migrate.mjs",
     "start": "next start",
     "lint": "eslint",
