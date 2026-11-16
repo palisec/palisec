@@ -101,9 +101,9 @@ export function RefreshBtn({ onClick, label = "Refresh" }: { onClick: () => void
 
 export type Tone = "allow" | "deny" | "review" | "muted" | "info";
 const TONE: Record<Tone, string> = {
-  allow: "text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)] bg-aqua/[0.06]",
+  allow: "text-allow shadow-[inset_0_0_0_1px_rgb(116_223_160/0.45)] bg-allow/[0.06]",
   deny: "text-deny shadow-[inset_0_0_0_1px_rgb(255_122_140/0.5)] bg-deny/[0.06]",
-  review: "text-lilac border border-dashed border-lilac/60",
+  review: "text-review border border-dashed border-review/60",
   muted: "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)]",
   info: "text-mist shadow-[inset_0_0_0_1px_rgb(237_255_254/0.3)]",
 };
@@ -208,7 +208,7 @@ export function Confirm({
 }
 
 export function Notice({ tone = "review", children }: { tone?: "review" | "deny" | "allow"; children: ReactNode }) {
-  const cls = tone === "deny" ? "border-deny/50 bg-deny/[0.05] text-soft animate-[c-notice_.4s_var(--ease-out-quint),c-shake_.4s_.35s]" : tone === "allow" ? "border-aqua/40 bg-aqua/[0.04] text-soft animate-[c-notice_.4s_var(--ease-out-quint)]" : "border-dashed border-lilac/50 text-soft animate-[c-notice_.4s_var(--ease-out-quint)]";
+  const cls = tone === "deny" ? "border-deny/50 bg-deny/[0.05] text-soft animate-[c-notice_.4s_var(--ease-out-quint),c-shake_.4s_.35s]" : tone === "allow" ? "border-allow/40 bg-allow/[0.04] text-soft animate-[c-notice_.4s_var(--ease-out-quint)]" : "border-dashed border-review/50 text-soft animate-[c-notice_.4s_var(--ease-out-quint)]";
   // Keyed on the message so every new notice slides in, not just the first.
   return (
     <div role="status" key={typeof children === "string" ? children : undefined} className={`rounded-[6px] border px-3 py-2 text-[13px] leading-relaxed ${cls}`}>

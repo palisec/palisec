@@ -15,6 +15,10 @@ const GUIDES = [
   { href: "/docs/policies", title: "Policy schema", body: "Canonical JSON schema, every rule, precedence, units, limits and validation errors." },
   { href: "/docs/errors", title: "Errors and operations", body: "Reason codes, retry semantics, operation states, reservations and recovery." },
   { href: "/docs/account-abstraction", title: "Account abstraction", body: "ERC-4337 validation, authorization binding, replay protection and human approvals." },
+  { href: "/docs/mcp", title: "MCP server", body: "Connect MCP-compatible agents over Streamable HTTP with a scoped key." },
+  { href: "/docs/webhooks", title: "Webhooks", body: "Signed events, retries with stable IDs, and verification in both SDKs." },
+  { href: "/docs/integrations", title: "Integrations and keys", body: "Scoped keys, rotation, revocation and what a key can read about itself." },
+  { href: "/docs/agent", title: "PALISEC Agent", body: "Tools, autonomy levels, confirmed actions, evidence and model configuration." },
   { href: "/architecture", title: "Architecture", body: "Control, enforcement, chain and observability planes, and how they fail." },
   { href: "/security", title: "Security model", body: "Threats, trust boundaries, key lifecycle, limitations and release gates." },
 ];

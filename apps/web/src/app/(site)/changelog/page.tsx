@@ -9,6 +9,21 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.9.0",
+    date: "2026-11-16",
+    tag: "Pre-release · testnet · PALISEC 2.0",
+    changes: [
+      "PALISEC Agent: a native security operator in the console with 30 server-checked tools for investigation, policy engineering (draft, validate, simulate including history replay, compare, explain) and operations. It cannot authorize, approve, sign or activate; actions are requests a member confirms. Autonomy levels 0-2, evidence-linked answers, unverified citations flagged. Any OpenAI-compatible model; Groq free tier by default.",
+      "PALISEC Connect: least-privilege API key scopes (existing keys keep all of them), atomic key rotation, integration activity, and endpoints for a key's own identity, policy version, operations and audit trail.",
+      "MCP server at /api/mcp (official MCP SDK, Streamable HTTP) with per-tool scope checks and the same authorization path as REST.",
+      "Webhooks: HMAC-SHA256 signed events with stable IDs, retries, redelivery and an SSRF guard. verifyWebhook in both SDKs.",
+      "Security events: deterministic detectors (repeated denials, replays, unapproved contracts and selectors, budget thresholds, unfamiliar targets, rejections, pauses, emergency stops) with evidence and webhooks.",
+      "SDKs: TypeScript 0.3.0 and Python 0.2.0 add whoAmI, policy and audit reads, own operations, and a transactions namespace. Existing methods unchanged.",
+      "Website redesigned around the agent economy: Infrastructure, PALISEC Agent, Integrations and Developers pages; /product now redirects to /infrastructure. Decision states use green (allow), crimson (deny) and amber (approval).",
+      "New end-to-end suites in CI: Connect (59 checks, official MCP client) and Agent (48 checks with a scripted model, including prompt injection, forged tools, tenant isolation and provider outage).",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-11-09",
     tag: "Pre-release · testnet",

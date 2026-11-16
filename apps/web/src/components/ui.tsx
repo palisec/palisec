@@ -61,12 +61,12 @@ export type DecisionTone = "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
 
 const DECISION_STYLE: Record<DecisionTone, { cls: string; glyph: string; text: string }> = {
   ALLOW: {
-    cls: "text-abyss bg-[linear-gradient(180deg,#cbfffc,#9cf6ee_45%,#00827c)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_6px_18px_-6px_rgb(156_246_238/0.6)]",
+    cls: "text-abyss bg-[linear-gradient(180deg,#d4f9e3,#74dfa0_45%,#2e9c62)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_6px_18px_-6px_rgb(116_223_160/0.55)]",
     glyph: "→",
     text: "ALLOW",
   },
   DENY: { cls: "text-deny bg-deny/[0.08] shadow-[inset_0_0_0_1px_rgb(255_122_140/0.6),0_6px_18px_-8px_rgb(255_122_140/0.55)]", glyph: "■", text: "DENY" },
-  REQUIRES_HUMAN_SIGNATURE: { cls: "text-lilac border border-dashed border-lilac/60", glyph: "◆", text: "HUMAN REVIEW" },
+  REQUIRES_HUMAN_SIGNATURE: { cls: "text-review border border-dashed border-review/60", glyph: "◆", text: "HUMAN REVIEW" },
 };
 
 export function DecisionBadge({ decision, className = "" }: { decision: DecisionTone; className?: string }) {

@@ -30,6 +30,12 @@ export const CAPABILITIES: Capability[] = [
   { id: "approvals", name: "Human approvals", maturity: "service", note: "Approvers sign EIP-712 data bound to the exact operation and policy version with their own wallet." },
   { id: "sdk-ts", name: "TypeScript SDK (viem, ethers)", maturity: "service", note: "@palisec/sdk 0.3.0, installed from palisec.tech: typed decisions and errors, idempotent retries, approval waiting, sends with viem or ethers only on ALLOW." },
   { id: "sdk-py", name: "Python SDK", maturity: "service", note: "palisec 0.2.0, installed from palisec.tech: async, no dependencies, same semantics as the TypeScript SDK, web3.py adapter. Tested against the live API." },
+  { id: "agent", name: "PALISEC Agent (native)", maturity: "service", note: "Security intelligence, policy engineering and operations assistance over real records, through 30 server-checked tools. Cannot authorize, approve, sign or activate: actions are requests a member confirms. Model: any OpenAI-compatible provider (Groq free tier by default); investigations also run without a model." },
+  { id: "security-events", name: "Security events", maturity: "service", note: "Deterministic detectors over the authoritative records (repeated denials, replays, unapproved contracts and methods, budget thresholds, unfamiliar targets, rejections, pauses, emergency stops), each with evidence." },
+  { id: "mcp", name: "MCP server", maturity: "service", note: "Official MCP TypeScript SDK, Streamable HTTP at /api/mcp. API key with the mcp scope; each tool checks its own scope; same authorization path as REST. No activation, approval or signing tools." },
+  { id: "integrations", name: "Integrations and scoped keys", maturity: "service", note: "Registered agents with least-privilege key scopes, atomic rotation, revocation, framework metadata and activity." },
+  { id: "webhooks", name: "Webhooks", maturity: "service", note: "HMAC-SHA256 signed events with stable IDs, retries and redelivery; public HTTPS endpoints only. Verification helpers in both SDKs." },
+  { id: "framework-adapters", name: "Framework adapters (OpenAI Agents SDK, LangGraph, Vercel AI SDK)", maturity: "planned", note: "Today any framework integrates through the SDKs (wrap sendTransaction as a tool) or the MCP server; dedicated tested adapters come later." },
   { id: "console", name: "Developer console", maturity: "service", note: "Wallet sign-in, then agents, policies with a rule builder and test cases, approvals, audit and emergency controls on testnet. Real data only." },
 ];
 

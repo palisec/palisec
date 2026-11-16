@@ -10,15 +10,19 @@ import { SignOutIcon } from "../icons";
 import { IconBtn } from "./kit";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
 
-const NAV = [
-  { href: "/console", label: "Dashboard" },
-  { href: "/console/agents", label: "Agents" },
+/** Grouped as in the 2.0 console; each entry is an existing or additive route. */
+const NAV: { href: string; label: string; group?: string }[] = [
+  { href: "/console", label: "Dashboard", group: "Overview" },
+  { href: "/console/agents", label: "Agents", group: "Security" },
   { href: "/console/policies", label: "Policies" },
   { href: "/console/operations", label: "Operations" },
   { href: "/console/approvals", label: "Approvals" },
   { href: "/console/audit", label: "Audit" },
-  { href: "/console/security", label: "Security" },
-  { href: "/console/settings", label: "Settings" },
+  { href: "/console/security-events", label: "Security events" },
+  { href: "/console/security", label: "Emergency stop" },
+  { href: "/console/agent", label: "PALISEC Agent", group: "Intelligence" },
+  { href: "/console/integrations", label: "Integrations", group: "Connect" },
+  { href: "/console/settings", label: "Settings", group: "Settings" },
 ];
 
 interface Health {
@@ -112,9 +116,10 @@ function Shell({ children }: { children: ReactNode }) {
         <nav aria-label="Console" className="border-b border-line lg:sticky lg:top-12 lg:h-[calc(100dvh-3rem)] lg:border-b-0 lg:border-r">
           <ul className="flex gap-1 overflow-x-auto px-3 py-2 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:py-4">
             {NAV.map((n, i) => {
-              const active = n.href === "/console" ? pathname === "/console" : pathname.startsWith(n.href);
+              const active = n.href === "/console" ? pathname === "/console" : pathname === n.href || pathname.startsWith(`${n.href}/`);
               return (
                 <li key={n.href} className="shrink-0 animate-[c-fade_.45s_var(--ease-out-quint)_both]" style={{ animationDelay: `${80 + i * 40}ms` }}>
+                  {n.group && <p className="label hidden px-3 pb-1 pt-3 !text-[9.5px] first:pt-0 lg:block">{n.group}</p>}
                   <Link
                     href={n.href}
                     aria-current={active ? "page" : undefined}
@@ -127,7 +132,7 @@ function Shell({ children }: { children: ReactNode }) {
                       {n.label}
                     </span>
                     {n.href === "/console/approvals" && pending > 0 && (
-                      <span key={pending} className="c-badge animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[4px] border border-dashed border-lilac/60 px-1 font-mono text-[10px] text-lilac" aria-label={`${pending} pending`}>{pending}</span>
+                      <span key={pending} className="c-badge animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[4px] border border-dashed border-review/60 px-1 font-mono text-[10px] text-review" aria-label={`${pending} pending`}>{pending}</span>
                     )}
                   </Link>
                 </li>

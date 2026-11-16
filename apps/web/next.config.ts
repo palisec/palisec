@@ -32,7 +32,11 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // The overview lived at /overview briefly; keep old links working.
-    return [{ source: "/overview", destination: "/", permanent: true }];
+    return [
+      { source: "/overview", destination: "/", permanent: true },
+      // /product became /infrastructure in 2.0; old links keep working.
+      { source: "/product", destination: "/infrastructure", permanent: true },
+    ];
   },
   async headers() {
     return [

@@ -39,8 +39,10 @@
   --color-dim: #93a3a1;
   --color-line: #0b3f3b;
   --color-line-strong: #17554f;
-  --color-allow: #9cf6ee;
-  --color-review: #e3c4ee;
+  /* Decision states (2.0): restrained green allow, amber needs-approval, crimson deny. */
+  --color-allow: #74dfa0;
+  --color-amber: #f2bf5e;
+  --color-review: #f2bf5e;
   --color-deny: #ff7a8c;
 
   /* Five families, one job each. */

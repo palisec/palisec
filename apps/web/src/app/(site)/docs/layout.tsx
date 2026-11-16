@@ -20,11 +20,18 @@ const DOCS_NAV = [
     ],
   },
   {
-    title: "SDKs",
+    title: "SDKs and Connect",
     items: [
       { href: "/docs/sdk/typescript", label: "TypeScript" },
       { href: "/docs/sdk/python", label: "Python" },
+      { href: "/docs/mcp", label: "MCP server" },
+      { href: "/docs/webhooks", label: "Webhooks" },
+      { href: "/docs/integrations", label: "Integrations and keys" },
     ],
+  },
+  {
+    title: "PALISEC Agent",
+    items: [{ href: "/docs/agent", label: "Agent" }],
   },
   {
     title: "Trust",

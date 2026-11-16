@@ -353,9 +353,9 @@ export function Toggle({ label, checked, onChange }: { label: string; checked: b
 }
 
 const STATUS_STYLE: Record<CheckResult["status"], { glyph: string; cls: string; text: string }> = {
-  pass: { glyph: "✓", cls: "text-aqua", text: "PASS" },
+  pass: { glyph: "✓", cls: "text-allow", text: "PASS" },
   fail: { glyph: "■", cls: "text-deny", text: "FAIL" },
-  review: { glyph: "◆", cls: "text-lilac", text: "REVIEW" },
+  review: { glyph: "◆", cls: "text-review", text: "REVIEW" },
   skipped: { glyph: "·", cls: "text-dim", text: "SKIP" },
 };
 

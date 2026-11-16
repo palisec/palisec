@@ -60,6 +60,17 @@ function FlowDiagram() {
   );
 }
 
+const FAILURES: [string, string][] = [
+  ["Database, price or fee unavailable", "The request is denied (PS_STATE_001 / PS_FEE_001). Unknown is never treated as zero or allowed."],
+  ["Rust engine and reference disagree", "Denied with PS_STATE_001, nothing reserved, and a policy_engine.fail_closed log line."],
+  ["Model provider unavailable", "Agent runs fail with a clear error. Authorization, the SDKs, MCP and the console keep working."],
+  ["Agent timeout or invalid tool output", "The tool call is recorded as an error; nothing is authorized or changed."],
+  ["MCP endpoint unavailable", "The REST API and SDKs are independent and keep working."],
+  ["Webhook receiver failing", "Three attempts with the same event ID, then marked failed for manual redelivery; decisions are unaffected."],
+  ["Approval expired or policy version changed", "Approval is refused; the agent must request again and a person must sign again."],
+  ["Emergency stop during agent activity", "Every new operation is denied at once; the agent can still explain, but cannot lift it."],
+];
+
 export default function ArchitecturePage() {
   return (
     <>
@@ -117,6 +128,44 @@ export default function ArchitecturePage() {
           abstraction; Solidity with Foundry; PostgreSQL as the authoritative store; Redis for coordination with explicit
           consistency boundaries; ClickHouse for analytics only.
         </Note>
+      </Section>
+      <Section index="05" label="Native agent runtime" id="agent-runtime">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="space-y-4 text-[15.5px] leading-relaxed text-silver">
+            <p>The PALISEC Agent is an isolated module of the API, never part of the policy engine. Runs are stored conversations; each request advances a run by a few model steps within a time budget, so no request stays open while a model reasons or a human decides.</p>
+            <p>The model calls typed tools. The server resolves which tools the signed-in member may use (role × organization autonomy level × disabled tools), validates every input against its schema, scopes every query to the organization, and records each call with its evidence.</p>
+            <p>Actions become requests; a member confirms them and they run through the same control-plane functions as the console, with the same role checks and audit.</p>
+          </div>
+          <pre className="panel overflow-x-auto p-5 font-mono text-[12px] leading-[1.9] text-soft">{`operator ─► run ─► model (Groq, OpenAI-compatible)
+                     │ tool call (name, JSON)
+                     ▼
+            permission resolver ── refused ──► recorded
+                     │ allowed
+                     ▼
+            tool (org-scoped, schema-checked, 10 s)
+                     │ minimized, redacted output + evidence
+                     ▼
+            answer with [record:id] citations
+                     │ action?
+                     ▼
+            action request ─► member confirms ─► control plane ─► audit`}</pre>
+        </div>
+      </Section>
+      <Section index="06" label="External integrations" id="integrations">
+        <div className="max-w-[760px] space-y-4 text-[15.5px] leading-relaxed text-silver">
+          <p>External agents are untrusted callers. They authenticate with a scoped API key belonging to a registered agent, and reach the same functions through the REST API, the SDKs or the MCP server (stateless Streamable HTTP, one server instance per request). Every interface converges on the same evaluation, reservation and audit path.</p>
+          <p>Webhooks are emitted after the response from the recorded change, signed with HMAC-SHA256, with one stable event ID per event and webhook, so retries cannot cause duplicate actions at a receiver that deduplicates.</p>
+        </div>
+      </Section>
+      <Section index="07" label="Failure handling" id="failures">
+        <dl className="divide-y divide-line border-y border-line">
+          {FAILURES.map(([k, v]) => (
+            <div key={k} className="grid gap-2 py-4 md:grid-cols-[300px_1fr]">
+              <dt className="text-fg">{k}</dt>
+              <dd className="text-sm leading-relaxed text-muted">{v}</dd>
+            </div>
+          ))}
+        </dl>
       </Section>
     </>
   );

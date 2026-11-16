@@ -62,6 +62,14 @@ const GATES = [
   "No unresolved critical findings",
 ];
 
+const BOUNDARIES: [string, string][] = [
+  ["A · External agent → PALISEC", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
+  ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
+  ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
+  ["D · Agent → signing", "No path exists. The agent never receives keys, enclave secrets or signing credentials; signing is a separate protected service (specified, not deployed)."],
+  ["E · PALISEC API → smart account", "The account must enforce the authorization independently, so a compromised agent or API cannot gain unrestricted execution. Specified; until it is deployed, a key that skips PALISEC can still transact."],
+];
+
 export default function SecurityPage() {
   return (
     <>
@@ -139,6 +147,31 @@ export default function SecurityPage() {
             funds. Good-faith research within these rules will not be pursued. Machine-readable contact:{" "}
             <a href="/.well-known/security.txt" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security.txt</a>.
           </p>
+        </div>
+      </Section>
+      <Section index="06" label="Agentic trust boundaries" id="agentic">
+        <dl className="divide-y divide-line border-y border-line">
+          {BOUNDARIES.map(([k, v]) => (
+            <div key={k} className="grid gap-2 py-5 md:grid-cols-[300px_1fr]">
+              <dt className="text-fg">{k}</dt>
+              <dd className="text-sm leading-relaxed text-muted">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </Section>
+      <Section index="07" label="Prompt injection and untrusted data" id="injection">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <p className="text-[15.5px] leading-relaxed text-silver">
+            The PALISEC Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.
+          </p>
+          <ul className="space-y-2.5 text-[14.5px] text-silver">
+            {["Strict tool schemas and server-side input validation", "Least-privilege tools per role and autonomy level, re-checked on every call", "No tool that signs, approves, activates or changes permissions", "Sensitive actions only as requests a person confirms", "Context minimization and secret redaction before the model", "Every tool call recorded and audited; rate limits per member", "Tested: an injected instruction cannot call a refused tool or escalate"].map((x) => (
+              <li key={x} className="flex gap-3">
+                <span aria-hidden className="mt-2 h-1 w-1 shrink-0 bg-aqua" />
+                {x}
+              </li>
+            ))}
+          </ul>
         </div>
       </Section>
     </>

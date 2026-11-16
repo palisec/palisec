@@ -125,9 +125,9 @@ export function useAction() {
 /** The evaluation sequence for one decision, in order. */
 export function CheckList({ checks }: { checks: CheckResult[] }) {
   const glyph: Record<string, [string, string]> = {
-    pass: ["→", "text-aqua"],
+    pass: ["→", "text-allow"],
     fail: ["■", "text-deny"],
-    review: ["◆", "text-lilac"],
+    review: ["◆", "text-review"],
     skipped: ["·", "text-dim"],
   };
   return (

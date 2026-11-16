@@ -74,9 +74,9 @@ function OutcomeChart({ hourly }: { hourly: Summary["hourly"] }) {
               className="flex h-full min-w-0 flex-1 flex-col justify-end rounded-[2px] transition-opacity hover:opacity-80"
             >
               {total === 0 ? <span className="block h-px bg-line-strong" /> : null}
-              <span className="block bg-lilac/80" style={{ height: seg(h.reviewed) }} />
+              <span className="block bg-review/80" style={{ height: seg(h.reviewed) }} />
               <span className="block bg-deny" style={{ height: seg(h.denied) }} />
-              <span className="block bg-aqua" style={{ height: seg(h.allowed) }} />
+              <span className="block bg-allow" style={{ height: seg(h.allowed) }} />
             </Link>
           );
         })}
@@ -84,9 +84,9 @@ function OutcomeChart({ hourly }: { hourly: Summary["hourly"] }) {
       <figcaption className="mt-2 flex flex-wrap justify-between gap-2 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">
         <span>{series[0]!.hour.slice(11, 13)}:00 UTC</span>
         <span className="flex gap-3">
-          <span><span aria-hidden className="text-aqua">■</span> Allowed</span>
+          <span><span aria-hidden className="text-allow">■</span> Allowed</span>
           <span><span aria-hidden className="text-deny">■</span> Denied</span>
-          <span><span aria-hidden className="text-lilac">■</span> Review</span>
+          <span><span aria-hidden className="text-review">■</span> Review</span>
         </span>
         <span>now</span>
       </figcaption>
@@ -152,7 +152,7 @@ export function LiveDashboard() {
         {[
           ["Allowed · 24h", s?.allowed, "text-aqua", "/console/operations?decision=ALLOW"],
           ["Denied · 24h", s?.denied, "text-deny", "/console/operations?decision=DENY"],
-          ["Pending approvals", s?.pending_approvals, "text-lilac", "/console/approvals"],
+          ["Pending approvals", s?.pending_approvals, "text-review", "/console/approvals"],
           ["Reserved · last hour", s ? usd(s.reserved_last_hour_usd_micros) : undefined, "text-phosphor", "/console/operations?decision=ALLOW"],
         ].map(([label, value, cls, href]) => (
           <Link key={label as string} href={href as string} className="panel block px-4 py-4 transition-colors hover:border-line-strong">

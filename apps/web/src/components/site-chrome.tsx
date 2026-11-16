@@ -15,11 +15,12 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
 }
 
 export const NAV = [
-  { href: "/product", label: "Product" },
+  { href: "/infrastructure", label: "Infrastructure" },
+  { href: "/agent", label: "PALISEC Agent" },
+  { href: "/integrations", label: "Integrations" },
   { href: "/architecture", label: "Architecture" },
-  { href: "/docs", label: "Docs" },
+  { href: "/developers", label: "Developers" },
   { href: "/security", label: "Security" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 export function SiteHeader() {
@@ -30,7 +31,7 @@ export function SiteHeader() {
       </a>
       <NavShell>
         <Wordmark />
-        <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-7 xl:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className="group relative font-utility text-[12px] font-medium uppercase tracking-[0.12em] text-silver transition-colors hover:text-platinum">
               {n.label}
@@ -39,10 +40,13 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <Link href="/docs" className="hidden font-utility text-[12px] font-medium uppercase tracking-[0.12em] text-silver transition-colors hover:text-platinum xl:inline">
+            Docs
+          </Link>
           <span className="hidden sm:inline-flex">
-            <ButtonLink href="/console">Open Console</ButtonLink>
+            <ButtonLink href="/console">Launch Console</ButtonLink>
           </span>
-          <details className="group relative lg:hidden">
+          <details className="group relative xl:hidden">
             <summary className="btn btn-ghost h-10 w-10 cursor-pointer list-none items-center justify-center !p-0 [&::-webkit-details-marker]:hidden">
               <span className="sr-only group-open:hidden">Open menu</span>
               <span className="sr-only hidden group-open:inline">Close menu</span>
@@ -54,7 +58,7 @@ export function SiteHeader() {
               </span>
             </summary>
             <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
-              {[...NAV, { href: "/console", label: "Open Console" }].map((n) => (
+              {[...NAV, { href: "/docs", label: "Documentation" }, { href: "/console", label: "Launch Console" }].map((n) => (
                 <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-mist last:border-b-0 hover:bg-raised hover:text-aqua">
                   {n.label}
                 </Link>
@@ -68,9 +72,9 @@ export function SiteHeader() {
 }
 
 const FOOTER = [
-  { title: "Product", links: [{ href: "/product", label: "Capabilities" }, { href: "/architecture", label: "Architecture" }, { href: "/pricing", label: "Pricing" }, { href: "/changelog", label: "Changelog" }] },
-  { title: "Developers", links: [{ href: "/docs/quickstart", label: "Quickstart" }, { href: "/docs/policies", label: "Policy reference" }, { href: "/docs/sdk/typescript", label: "TypeScript SDK" }, { href: "/docs/errors", label: "Error codes" }, { href: "/login", label: "Sign in" }] },
-  { title: "Trust", links: [{ href: "/security", label: "Security model" }, { href: "/attestation", label: "Attestation" }, { href: "/status", label: "Status" }, { href: "/terms", label: "Terms" }, { href: "/privacy", label: "Privacy" }] },
+  { title: "Product", links: [{ href: "/infrastructure", label: "Infrastructure" }, { href: "/agent", label: "PALISEC Agent" }, { href: "/integrations", label: "Integrations" }, { href: "/architecture", label: "Architecture" }, { href: "/pricing", label: "Pricing" }, { href: "/changelog", label: "Changelog" }] },
+  { title: "Developers", links: [{ href: "/developers", label: "Start building" }, { href: "/docs", label: "Documentation" }, { href: "/docs/sdk/typescript", label: "TypeScript SDK" }, { href: "/docs/sdk/python", label: "Python SDK" }, { href: "/docs/mcp", label: "MCP server" }, { href: "/docs/errors", label: "Error codes" }] },
+  { title: "Trust", links: [{ href: "/security", label: "Security model" }, { href: "/attestation", label: "Attestation" }, { href: "/status", label: "Status" }, { href: "/terms", label: "Terms" }, { href: "/privacy", label: "Privacy" }, { href: "/login", label: "Sign in" }] },
 ];
 
 export function SiteFooter() {
@@ -80,7 +84,7 @@ export function SiteFooter() {
       <Container className="grid grid-cols-2 gap-x-6 gap-y-12 py-20 md:grid-cols-[1.4fr_repeat(3,1fr)] md:py-[120px]">
         <div className="col-span-2 space-y-5 md:col-span-1">
           <Wordmark />
-          <p className="max-w-[34ch] text-sm leading-relaxed text-silver">Deterministic transaction security for autonomous agents on Robinhood Chain.</p>
+          <p className="max-w-[34ch] text-sm leading-relaxed text-silver">Security infrastructure for the autonomous agent economy. Agents decide. PALISEC secures execution.</p>
           <p className="label">Chain ID 4663 · Testnet 46630</p>
         </div>
         {FOOTER.map((col) => (
