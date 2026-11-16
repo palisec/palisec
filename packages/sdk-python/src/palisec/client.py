@@ -14,6 +14,7 @@ import random
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from typing import Any, Awaitable, Callable, Optional, Protocol, Tuple, Union
@@ -262,6 +263,30 @@ class Palisec:
             raise PalisecConfigError("operation_id must be an operation's id")
         return Operation.from_api(await self._request("GET", f"/operations/{operation_id}", retry=True))
 
+    async def who_am_i(self) -> dict:
+        """The integration this key belongs to: agent, protected account, chain, scopes and bound policy."""
+        return await self._request("GET", "/integration", retry=True)
+
+    async def get_policy(self) -> dict:
+        """The exact active policy version this agent is evaluated against (scope policy:read)."""
+        return await self._request("GET", "/integration/policy", retry=True)
+
+    async def list_audit_events(self, *, limit: int = 50, before: Optional[str] = None) -> dict:
+        """Audit events this agent caused, newest first (scope audit:read). Returns events and next_before."""
+        q = urllib.parse.urlencode({"limit": max(1, min(int(limit), 200)), **({"before": before} if before else {})})
+        return await self._request("GET", f"/integration/audit-events?{q}", retry=True)
+
+    async def list_operations(self, *, limit: int = 20, before: Optional[str] = None, decision: Optional[str] = None) -> dict:
+        """This agent's own operations, newest first (scope operations:read)."""
+        q = urllib.parse.urlencode({"limit": max(1, min(int(limit), 100)), **({"before": before} if before else {}), **({"decision": decision} if decision else {})})
+        raw = await self._request("GET", f"/integration/operations?{q}", retry=True)
+        return {"operations": [Operation.from_api(o) for o in raw.get("operations", [])], "next_before": raw.get("next_before")}
+
+    @property
+    def transactions(self) -> "_Transactions":
+        """2.0 naming: `propose` is `authorize` (records a decision), `evaluate` is the dry run."""
+        return _Transactions(self)
+
     async def cancel(self, operation_id: str) -> Operation:
         """Withdraws an operation still waiting for approval. Never retried automatically.
         Authorized operations keep their budget until they expire."""
@@ -325,3 +350,25 @@ class Palisec:
         tx = {"to": it.to, "value": int(it.value), "data": it.data or "0x", "gas": it.gas, "chainId": self.chain_id}
         tx_hash = await _maybe_await(sender.send_transaction(tx))
         return SendResult(operation=op, hash=str(tx_hash))
+
+
+class _Transactions:
+    """Aliases grouped under the 2.0 naming. Existing method names keep working."""
+
+    def __init__(self, client: Palisec) -> None:
+        self._c = client
+
+    async def evaluate(self, intent: Optional[Intent] = None, **kwargs: Any) -> Operation:
+        return await self._c.evaluate(intent, **kwargs)
+
+    async def propose(self, intent: Optional[Intent] = None, **kwargs: Any) -> Operation:
+        return await self._c.authorize(intent, **kwargs)
+
+    async def get(self, operation_id: str) -> Operation:
+        return await self._c.get_operation(operation_id)
+
+    async def wait_for_approval(self, operation_id: str, **kwargs: Any) -> Operation:
+        return await self._c.wait_for_approval(operation_id, **kwargs)
+
+    async def cancel(self, operation_id: str) -> Operation:
+        return await self._c.cancel(operation_id)

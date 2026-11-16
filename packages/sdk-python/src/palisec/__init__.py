@@ -3,7 +3,7 @@
 Docs: https://palisec.tech/docs/sdk/python
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .client import DEFAULT_BASE_URL, Palisec, Sender, Transport, redact, urllib_transport  # noqa: E402
 from .codes import REASON_CODES, RETRYABLE  # noqa: E402
@@ -15,6 +15,7 @@ from .errors import (  # noqa: E402
     PalisecTimeoutError,
 )
 from .models import SUPPORTED_CHAINS, Check, Intent, LogEvent, Operation, SendResult  # noqa: E402
+from . import webhooks  # noqa: E402
 
 __all__ = [
     "DEFAULT_BASE_URL",
@@ -36,5 +37,6 @@ __all__ = [
     "Transport",
     "redact",
     "urllib_transport",
+    "webhooks",
     "__version__",
 ]

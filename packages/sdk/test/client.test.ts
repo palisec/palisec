@@ -8,6 +8,8 @@ import {
   PalisecTimeoutError,
   redact,
   fromEthers,
+  verifyWebhook,
+  WebhookVerificationError,
   type LogEvent,
 } from "../src/index";
 
@@ -211,5 +213,45 @@ describe("chain and ethers compatibility", () => {
     const w = await fromEthers(sg);
     await expect(createPalisec({ apiKey: KEY, fetch: server([json(201, op())]).fetch }).sendTransaction(w, { to: TO })).rejects.toBeInstanceOf(PalisecConfigError);
     expect(sg.sendTransaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("2.0 additions", () => {
+  it("reads identity, policy, audit and own operations from the integration endpoints", async () => {
+    const s = server([
+      json(200, { agent_id: "a1", name: "bot", framework: "langgraph", status: "active", chain_id: 46630, account: ACCOUNT, scopes: ["policy:read"], policy: { policy_key: "p", version: 2 }, emergency_stop: false }),
+      json(200, { policy_key: "p", name: "P", version: 2, document_hash: "ab", activated_at: "2026-11-16T00:00:00Z", document: { schema_version: "1.0" } }),
+      json(200, { events: [{ seq: "5", event_id: "e1", type: "operation.allowed", detail: {}, created_at: "2026-11-16T00:00:00Z" }], next_before: null }),
+      json(200, { operations: [op()], next_before: null }),
+    ]);
+    const c = createPalisec({ apiKey: KEY, fetch: s.fetch });
+    expect((await c.whoAmI()).framework).toBe("langgraph");
+    expect((await c.policy.get()).version).toBe(2);
+    expect((await c.audit.list({ limit: 5 })).events[0]!.type).toBe("operation.allowed");
+    expect((await c.operations.list({ decision: "ALLOW" })).operations[0]!.decision).toBe("ALLOW");
+    expect(s.calls.map((x) => new URL(x.url).pathname)).toEqual(["/api/v1/integration", "/api/v1/integration/policy", "/api/v1/integration/audit-events", "/api/v1/integration/operations"]);
+    expect(s.calls[3]!.url).toContain("decision=ALLOW");
+  });
+
+  it("transactions.propose is authorize, with the request ID as idempotency key", async () => {
+    const s = server([json(201, op())]);
+    await createPalisec({ apiKey: KEY, fetch: s.fetch }).transactions.propose({ to: TO, requestId: "r-9" });
+    expect(new URL(s.calls[0]!.url).pathname).toBe("/api/v1/operations");
+    expect((s.calls[0]!.init.headers as Record<string, string>)["idempotency-key"]).toBe("r-9");
+  });
+
+  it("verifies webhook signatures and rejects tampering, stale and missing headers", async () => {
+    const secret = "whsec_test";
+    const body = JSON.stringify({ id: "e1", type: "ping", created_at: "", organization_id: "o", data: {} });
+    const ts = String(Math.floor(Date.now() / 1000));
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const sig = Array.from(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${ts}.${body}`))), (b) => b.toString(16).padStart(2, "0")).join("");
+    const headers = { "palisec-timestamp": ts, "palisec-signature": `v1=${sig}` };
+    expect((await verifyWebhook(secret, body, headers)).type).toBe("ping");
+    expect((await verifyWebhook(secret, body, new Headers(headers))).id).toBe("e1");
+    await expect(verifyWebhook(secret, body.replace("ping", "pong"), headers)).rejects.toBeInstanceOf(WebhookVerificationError);
+    await expect(verifyWebhook("wrong", body, headers)).rejects.toBeInstanceOf(WebhookVerificationError);
+    await expect(verifyWebhook(secret, body, headers, { now: Number(ts) + 3600 })).rejects.toBeInstanceOf(WebhookVerificationError);
+    await expect(verifyWebhook(secret, body, {})).rejects.toBeInstanceOf(WebhookVerificationError);
   });
 });

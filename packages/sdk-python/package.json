@@ -1,6 +1,6 @@
 {
   "name": "@palisec/sdk-python",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Workspace wrapper for the palisec Python package: tests and the wheel served from palisec.tech.",
   "scripts": {

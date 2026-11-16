@@ -3,7 +3,7 @@
 TypeScript client for [Palisec](https://palisec.tech): your agent asks before every transaction and sends only on ALLOW.
 
 ```bash
-npm install https://palisec.tech/sdk/palisec-sdk-0.2.0.tgz viem
+npm install https://palisec.tech/sdk/palisec-sdk-0.3.0.tgz viem
 ```
 
 ```ts

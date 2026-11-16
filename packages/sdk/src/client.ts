@@ -3,7 +3,10 @@ import { PalisecApprovalError, PalisecConfigError, PalisecDeniedError, PalisecEr
 import {
   SUPPORTED_CHAINS,
   type Address,
+  type AuditEvent,
   type AuthorizationResult,
+  type BoundPolicy,
+  type Integration,
   type Hex,
   type Intent,
   type LogEvent,
@@ -192,6 +195,62 @@ export class PalisecClient {
     if (!/^[0-9a-f-]{36}$/i.test(operationId)) throw new PalisecConfigError("operationId must be an operation's id");
     return toOperation(await this.request<RawOperation>("GET", `/operations/${operationId}`, { retry: true }));
   }
+
+  /** The integration this key belongs to: agent, protected account, chain, scopes and bound policy. */
+  async whoAmI(): Promise<Integration> {
+    const r = await this.request<Record<string, unknown>>("GET", "/integration", { retry: true });
+    return {
+      agentId: String(r.agent_id),
+      name: String(r.name ?? ""),
+      framework: (r.framework as string | null) ?? null,
+      status: r.status as Integration["status"],
+      chainId: Number(r.chain_id),
+      account: r.account as Address,
+      scopes: (r.scopes as string[]) ?? [],
+      policy: (r.policy as Integration["policy"]) ?? null,
+      emergencyStop: Boolean(r.emergency_stop),
+    };
+  }
+
+  /** Policy reads (scope policy:read). */
+  readonly policy = {
+    /** The exact active policy version this agent is evaluated against. */
+    get: async (): Promise<BoundPolicy> => {
+      const r = await this.request<Record<string, unknown>>("GET", "/integration/policy", { retry: true });
+      return { policyKey: String(r.policy_key), name: String(r.name), version: Number(r.version), documentHash: String(r.document_hash), activatedAt: new Date(String(r.activated_at)), document: r.document as Record<string, unknown> };
+    },
+  };
+
+  /** Audit reads (scope audit:read). */
+  readonly audit = {
+    /** Audit events this agent caused, newest first. Pass `before` from the previous page to continue. */
+    list: async (opts: { limit?: number; before?: string } = {}): Promise<{ events: AuditEvent[]; nextBefore: string | null }> => {
+      const q = new URLSearchParams({ limit: String(opts.limit ?? 50), ...(opts.before ? { before: opts.before } : {}) });
+      const r = await this.request<{ events: Record<string, unknown>[]; next_before: string | null }>("GET", `/integration/audit-events?${q}`, { retry: true });
+      return { events: r.events.map((e) => ({ seq: String(e.seq), eventId: String(e.event_id), type: String(e.type), detail: (e.detail as Record<string, unknown>) ?? {}, createdAt: new Date(String(e.created_at)) })), nextBefore: r.next_before };
+    },
+  };
+
+  /** This agent's own operations (scope operations:read). */
+  readonly operations = {
+    list: async (opts: { limit?: number; before?: string; decision?: Operation["decision"] } = {}): Promise<{ operations: Operation[]; nextBefore: string | null }> => {
+      const q = new URLSearchParams({ limit: String(opts.limit ?? 20), ...(opts.before ? { before: opts.before } : {}), ...(opts.decision ? { decision: opts.decision } : {}) });
+      const r = await this.request<{ operations: RawOperation[]; next_before: string | null }>("GET", `/integration/operations?${q}`, { retry: true });
+      return { operations: r.operations.map(toOperation), nextBefore: r.next_before };
+    },
+  };
+
+  /**
+   * The same methods grouped by the 2.0 naming: `propose` is `authorize` (records a decision),
+   * `evaluate` is the dry run. Kept as aliases so existing code keeps working.
+   */
+  readonly transactions = {
+    evaluate: (intent: Intent) => this.evaluate(intent),
+    propose: (intent: Intent) => this.authorize(intent),
+    get: (operationId: string) => this.getOperation(operationId),
+    waitForApproval: (operationId: string, opts?: { timeoutMs?: number; intervalMs?: number; signal?: AbortSignal }) => this.waitForApproval(operationId, opts),
+    cancel: (operationId: string) => this.cancel(operationId),
+  };
 
   /** Withdraws an operation that is still waiting for approval. Authorized operations keep their budget until they expire. */
   async cancel(operationId: string): Promise<Operation> {

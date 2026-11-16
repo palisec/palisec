@@ -94,3 +94,34 @@ export type Allowed = Operation & { decision: "ALLOW"; authorizationId: string; 
 export type Denied = Operation & { decision: "DENY"; reasonCode: ReasonCode };
 export type Held = Operation & { decision: "REQUIRES_HUMAN_SIGNATURE" };
 export type AuthorizationResult = Allowed | Denied | Held;
+
+/** The integration an API key belongs to (`whoAmI`). */
+export interface Integration {
+  agentId: string;
+  name: string;
+  framework: string | null;
+  status: "active" | "paused" | "revoked";
+  chainId: number;
+  account: Address;
+  scopes: string[];
+  policy: { policy_key: string; version: number } | null;
+  emergencyStop: boolean;
+}
+
+/** The exact active policy version an agent is evaluated against. */
+export interface BoundPolicy {
+  policyKey: string;
+  name: string;
+  version: number;
+  documentHash: string;
+  activatedAt: Date;
+  document: Record<string, unknown>;
+}
+
+export interface AuditEvent {
+  seq: string;
+  eventId: string;
+  type: string;
+  detail: Record<string, unknown>;
+  createdAt: Date;
+}

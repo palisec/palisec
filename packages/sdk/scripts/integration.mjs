@@ -86,6 +86,16 @@ check("console: approver signs the exact operation", approved.status === 200, ap
 const done = await waiting;
 check("waitForApproval: resolves once approved, with an authorization", done.state === "approved" && Boolean(done.authorizationId), done);
 
+const me = await palisec.whoAmI();
+check("whoAmI: the key identifies its agent and scopes", me.account.toLowerCase() === agentWallet.address.toLowerCase() && me.scopes.includes("mcp"), me);
+const bound = await palisec.policy.get();
+check("policy.get: the exact active version", bound.version === 1 && bound.document.schema_version === "1.0", bound.version);
+const trail = await palisec.audit.list({ limit: 10 });
+check("audit.list: the agent's own audit events", trail.events.some((e) => e.type.startsWith("operation.")), trail.events.length);
+const prop = await palisec.transactions.propose({ to: token, data: transfer(9n), gasLimit: 90_000 });
+const mine = await palisec.operations.list({ limit: 5 });
+check("transactions.propose and operations.list", prop.decision === "ALLOW" && mine.operations.some((o) => o.operationId === prop.operationId), prop.decision);
+
 const bad = createPalisec({ apiKey: `ps_test_${"0".repeat(48)}`, baseUrl: `${BASE}/api/v1` });
 const authErr = await bad.authorize({ to: token }).catch((e) => e);
 check("errors: an unknown key is PS_AUTH_001", authErr instanceof PalisecError && authErr.code === "PS_AUTH_001" && authErr.status === 401, authErr?.code);

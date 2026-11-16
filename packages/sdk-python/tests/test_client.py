@@ -289,3 +289,48 @@ class Web3AdapterTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdditionsTests(unittest.IsolatedAsyncioTestCase):
+    async def test_integration_reads_and_transactions_alias(self):
+        s = Server(
+            (200, {"agent_id": "a1", "scopes": ["policy:read"], "framework": "crewai"}),
+            (200, {"policy_key": "p", "version": 3, "document": {"schema_version": "1.0"}}),
+            (200, {"events": [{"seq": "1", "type": "operation.denied"}], "next_before": None}),
+            (200, {"operations": [op()], "next_before": None}),
+            (201, op()),
+        )
+        c = client(s)
+        self.assertEqual((await c.who_am_i())["framework"], "crewai")
+        self.assertEqual((await c.get_policy())["version"], 3)
+        self.assertEqual((await c.list_audit_events(limit=5))["events"][0]["type"], "operation.denied")
+        ops = await c.list_operations(decision="ALLOW")
+        self.assertEqual(ops["operations"][0].decision, "ALLOW")
+        await c.transactions.propose(to=TO, request_id="r-7")
+        paths = [c["url"].split("/api/v1")[1].split("?")[0] for c in s.calls]
+        self.assertEqual(paths, ["/integration", "/integration/policy", "/integration/audit-events", "/integration/operations", "/operations"])
+        self.assertIn("decision=ALLOW", s.calls[3]["url"])
+        self.assertEqual(s.calls[4]["headers"]["idempotency-key"], "r-7")
+
+
+class WebhookTests(unittest.TestCase):
+    def setUp(self):
+        import hashlib, hmac, time
+        from palisec import webhooks
+
+        self.w = webhooks
+        self.secret = "whsec_test"
+        self.body = json.dumps({"id": "e1", "type": "ping", "data": {}})
+        self.ts = str(int(time.time()))
+        self.sig = "v1=" + hmac.new(self.secret.encode(), f"{self.ts}.{self.body}".encode(), hashlib.sha256).hexdigest()
+
+    def test_valid_signature(self):
+        ev = self.w.verify(self.secret, self.body, {"Palisec-Timestamp": self.ts, "Palisec-Signature": self.sig})
+        self.assertEqual(ev["type"], "ping")
+        self.assertEqual(self.w.verify(self.secret, self.body.encode(), {"palisec-timestamp": self.ts, "palisec-signature": self.sig})["id"], "e1")
+
+    def test_rejections(self):
+        h = {"palisec-timestamp": self.ts, "palisec-signature": self.sig}
+        for args, kw in (((self.secret, self.body.replace("ping", "pong"), h), {}), (("wrong", self.body, h), {}), ((self.secret, self.body, h), {"now": int(self.ts) + 3600}), ((self.secret, self.body, {}), {})):
+            with self.assertRaises(self.w.WebhookVerificationError):
+                self.w.verify(*args, **kw)

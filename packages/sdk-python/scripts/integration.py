@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 # Import from the exact wheel palisec.tech serves (wheels are zip files, importable directly).
-WHEEL = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "sdk" / "palisec-0.1.0-py3-none-any.whl"
+WHEEL = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "sdk" / "palisec-0.2.0-py3-none-any.whl"
 sys.path.insert(0, str(WHEEL))
 
 from palisec import Palisec, PalisecDeniedError, PalisecError  # noqa: E402
@@ -54,7 +54,7 @@ class Recorder:
 
 
 async def main():
-    check("import: the served wheel is what runs", "palisec-0.1.0-py3-none-any.whl" in __import__("palisec").__file__)
+    check("import: the served wheel is what runs", "palisec-0.2.0-py3-none-any.whl" in __import__("palisec").__file__)
     sender = Recorder()
     async with Palisec(KEY, base_url=BASE) as palisec:
         dry = await palisec.evaluate(to=TOKEN, data=transfer(1), gas_limit=90_000)
@@ -84,6 +84,16 @@ async def main():
         print(f"HELD {held2.operation_id}", flush=True)
         done = await palisec.wait_for_approval(held2.operation_id, timeout=60, interval=1)
         check("wait_for_approval: resolves once approved, with an authorization", done.state == "approved" and done.authorization_id, done)
+
+        me = await palisec.who_am_i()
+        check("who_am_i: the key identifies its agent and scopes", me["account"].lower() == AGENT.lower() and "mcp" in me["scopes"], me)
+        pol = await palisec.get_policy()
+        check("get_policy: the exact active version", pol["version"] == 1 and pol["document"]["schema_version"] == "1.0", pol.get("version"))
+        trail = await palisec.list_audit_events(limit=10)
+        check("list_audit_events: the agent's own events", any(e["type"].startswith("operation.") for e in trail["events"]), len(trail["events"]))
+        prop = await palisec.transactions.propose(to=TOKEN, data=transfer(9), gas_limit=90_000)
+        mine = await palisec.list_operations(limit=5)
+        check("transactions.propose and list_operations", prop.decision == "ALLOW" and any(o.operation_id == prop.operation_id for o in mine["operations"]), prop.decision)
 
     async with Palisec("ps_test_" + "0" * 48, base_url=BASE) as bad:
         try:
