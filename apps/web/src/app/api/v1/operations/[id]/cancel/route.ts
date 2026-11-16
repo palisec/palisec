@@ -9,7 +9,7 @@ import { handle, ok } from "@/server/http";
 export const POST = handle<RouteContext<"/api/v1/operations/[id]/cancel">>(async (req, ctx) => {
   const id = await idParam(ctx);
   if (hasBearer(req)) {
-    const agent = await requireAgent(req);
+    const agent = await requireAgent(req, "operations:write");
     return ok(await cancel(agent.orgId, id, { agent }));
   }
   const m = await requireMember(req, "operate");

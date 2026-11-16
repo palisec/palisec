@@ -57,8 +57,16 @@ export async function requireMember(req: Request, permission: Permission): Promi
   return { user, orgId: membership.orgId, role: membership.role };
 }
 
+/**
+ * What an API key may do. Keys created before scopes existed hold all of them, so existing
+ * integrations keep working; new keys can be narrowed. A key can never change its own scopes.
+ */
+export const SCOPES = ["operations:write", "operations:read", "policy:read", "audit:read", "mcp"] as const;
+export type Scope = (typeof SCOPES)[number];
+
 export interface AgentContext {
   credentialId: string;
+  scopes: Scope[];
   agentId: string;
   orgId: string;
   agentName: string;
@@ -76,25 +84,28 @@ export const API_KEY_PATTERN = /^ps_test_[0-9a-f]{48}$/;
  * Authenticates an agent's API key from `Authorization: Bearer …`. Keys are never accepted in URLs.
  * Revoked keys and keys of revoked agents fail. Usage time is recorded at most once a minute.
  */
-export async function requireAgent(req: Request): Promise<AgentContext> {
+export async function requireAgent(req: Request, scope: Scope | null): Promise<AgentContext> {
   const header = req.headers.get("authorization") ?? "";
   const key = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
   if (!API_KEY_PATTERN.test(key)) throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
   if (rateLimited(req, `key:${key.slice(0, 20)}`, 120)) throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
   const rows = await db()`
     WITH c AS (
-      SELECT c.id, c.agent_id FROM api_credentials c
+      SELECT c.id, c.agent_id, c.scopes FROM api_credentials c
       WHERE c.secret_hash = decode(${await sha256Hex(key)}, 'hex') AND c.revoked_at IS NULL
     ), touch AS (
       UPDATE api_credentials SET last_used_at = now()
       WHERE id IN (SELECT id FROM c) AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')
     )
-    SELECT c.id AS credential_id, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop
+    SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id`;
   const r = rows[0];
   if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
+  const scopes = (r.scopes ?? []) as Scope[];
+  if (scope !== null && !scopes.includes(scope)) throw new HttpError(403, "PS_AUTH_001", `This API key does not have the ${scope} scope`);
   return {
     credentialId: r.credential_id,
+    scopes,
     agentId: r.agent_id,
     orgId: r.org_id,
     agentName: r.name,

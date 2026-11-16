@@ -1,5 +1,6 @@
 import { hasBearer, requireAgent, requireMember } from "@/server/access";
 import { listOperations } from "@/server/approvals";
+import { afterOperation } from "@/server/events";
 import { BadRequest, handle, ok, readJson } from "@/server/http";
 import { createOperation, MAX_OPERATION_BODY, parseIntent } from "@/server/operations";
 
@@ -8,10 +9,11 @@ import { createOperation, MAX_OPERATION_BODY, parseIntent } from "@/server/opera
  * reservation; an Idempotency-Key makes retries return the original result instead of a second one.
  */
 export const POST = handle(async (req) => {
-  const agent = await requireAgent(req);
+  const agent = await requireAgent(req, "operations:write");
   const key = req.headers.get("idempotency-key");
   if (key !== null && !/^[A-Za-z0-9_.:-]{1,128}$/.test(key)) throw new BadRequest("Idempotency-Key must be 1-128 characters of A-Z a-z 0-9 _ . : -");
   const { status, body, replayed } = await createOperation(agent, parseIntent(await readJson(req, MAX_OPERATION_BODY)), key);
+  afterOperation(agent.orgId, body as unknown as Record<string, unknown>, replayed);
   return ok(body, { status, headers: replayed ? { "Idempotent-Replayed": "true" } : {} });
 });
 

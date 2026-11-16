@@ -1,6 +1,6 @@
 import "server-only";
 import { SCHEMA_VERSION, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
-import type { MemberContext } from "./access";
+import { SCOPES, type MemberContext, type Scope } from "./access";
 import { CHAINS } from "./config";
 import { db, type Row } from "./db";
 import { BadRequest, HttpError } from "./http";
@@ -19,6 +19,11 @@ const conflict = (message: string) => new HttpError(409, "PS_REQUEST_001", messa
 function text(v: unknown, field: string, max = 80): string {
   if (typeof v !== "string" || v.trim().length < 1 || v.trim().length > max) throw new BadRequest(`${field} must be 1-${max} characters`);
   return v.trim();
+}
+
+function optionalText(v: unknown, field: string, max: number): string | null {
+  if (v === undefined || v === null || v === "") return null;
+  return text(v, field, max);
 }
 
 function chainId(v: unknown): number {
@@ -276,7 +281,7 @@ export async function disablePolicy(ctx: MemberContext, id: string, body: Record
 
 export async function listAgents(ctx: MemberContext) {
   return db()`
-    SELECT a.id, a.name, a.chain_id, a.account, a.status, a.status_changed_at, a.created_at,
+    SELECT a.id, a.name, a.framework, a.description, a.chain_id, a.account, a.status, a.status_changed_at, a.created_at,
       p.id AS policy_id, p.policy_key, p.active_version AS policy_version, (p.disabled_at IS NOT NULL) AS policy_disabled,
       (SELECT count(*) FROM api_credentials c WHERE c.agent_id = a.id AND c.revoked_at IS NULL)::int AS active_keys,
       (SELECT max(created_at) FROM operations o WHERE o.agent_id = a.id) AS last_operation_at
@@ -293,7 +298,7 @@ export async function getAgent(ctx: MemberContext, id: string) {
     WHERE a.id = ${id}::uuid AND a.org_id = ${ctx.orgId}::uuid`;
   if (!agent) throw notFound("Agent");
   const credentials = await db()`
-    SELECT c.id, c.label, c.prefix, c.created_at, c.last_used_at, c.revoked_at, u.address AS created_by
+    SELECT c.id, c.label, c.prefix, c.scopes, c.rotated_from, c.created_at, c.last_used_at, c.revoked_at, u.address AS created_by
     FROM api_credentials c LEFT JOIN users u ON u.id = c.created_by
     WHERE c.agent_id = ${id}::uuid ORDER BY c.created_at DESC`;
   const [usage] = await db()`
@@ -331,12 +336,14 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
   const chain = chainId(body.chain_id);
   const account = parseAddress(body.account);
   const policyId = optionalPolicyId(body.policy_id);
+  const framework = optionalText(body.framework, "framework", 40);
+  const description = optionalText(body.description, "description", 280);
   await checkPolicyBinding(ctx, policyId, chain, account);
-  const a = audit("agent.created", { name, chain_id: chain, account, policy_id: policyId });
+  const a = audit("agent.created", { name, chain_id: chain, account, policy_id: policyId, framework });
   const [row] = await db()`
     WITH ag AS (
-      INSERT INTO agents (org_id, name, chain_id, account, policy_id, created_by)
-      VALUES (${ctx.orgId}::uuid, ${name}, ${chain}::int, ${account}, ${policyId}::uuid, ${ctx.user.userId}::uuid) RETURNING id, org_id
+      INSERT INTO agents (org_id, name, chain_id, account, policy_id, framework, description, created_by)
+      VALUES (${ctx.orgId}::uuid, ${name}, ${chain}::int, ${account}, ${policyId}::uuid, ${framework}, ${description}, ${ctx.user.userId}::uuid) RETURNING id, org_id
     ), e AS (
       INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
       SELECT org_id, ${ctx.user.userId}::uuid, id, ${a.type}, ${a.detail}::text::jsonb FROM ag
@@ -351,11 +358,13 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
   if (agent.status === "revoked") throw conflict("A revoked agent cannot be changed");
   const name = body.name === undefined ? agent.name : text(body.name, "name");
   const policyId = body.policy_id === undefined ? agent.policy_id : optionalPolicyId(body.policy_id);
+  const framework = body.framework === undefined ? agent.framework : optionalText(body.framework, "framework", 40);
+  const description = body.description === undefined ? agent.description : optionalText(body.description, "description", 280);
   await checkPolicyBinding(ctx, policyId, agent.chain_id, agent.account);
-  const a = audit("agent.updated", { agent_id: id, name, policy_id: policyId });
+  const a = audit("agent.updated", { agent_id: id, name, policy_id: policyId, framework });
   await db()`
     WITH ag AS (
-      UPDATE agents SET name = ${name}, policy_id = ${policyId}::uuid WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid RETURNING id, org_id
+      UPDATE agents SET name = ${name}, policy_id = ${policyId}::uuid, framework = ${framework}, description = ${description} WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid RETURNING id, org_id
     )
     INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
     SELECT org_id, ${ctx.user.userId}::uuid, id, ${a.type}, ${a.detail}::text::jsonb FROM ag`;
@@ -391,14 +400,15 @@ export async function setAgentStatus(ctx: MemberContext, id: string, to: "paused
 /** Creates a key for an agent. The secret is returned once and only its SHA-256 is stored. */
 export async function createCredential(ctx: MemberContext, agentId: string, body: Record<string, unknown>) {
   const label = body.label === undefined ? "API key" : text(body.label, "label");
+  const scopes = parseScopes(body.scopes);
   const secret = `ps_test_${randomHex(24)}`;
   const prefix = secret.slice(0, 16);
-  const a = audit("credential.created", { agent_id: agentId, prefix, label });
+  const a = audit("credential.created", { agent_id: agentId, prefix, label, scopes });
   const rows = await db()`
     WITH ag AS (SELECT id, org_id FROM agents WHERE id = ${agentId}::uuid AND org_id = ${ctx.orgId}::uuid AND status <> 'revoked'),
     c AS (
-      INSERT INTO api_credentials (org_id, agent_id, label, prefix, secret_hash, created_by)
-      SELECT org_id, id, ${label}, ${prefix}, decode(${await sha256Hex(secret)}, 'hex'), ${ctx.user.userId}::uuid FROM ag
+      INSERT INTO api_credentials (org_id, agent_id, label, prefix, secret_hash, scopes, created_by)
+      SELECT org_id, id, ${label}, ${prefix}, decode(${await sha256Hex(secret)}, 'hex'), ${scopes}::text[], ${ctx.user.userId}::uuid FROM ag
       RETURNING id, org_id, agent_id, created_at
     ), e AS (
       INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
@@ -406,7 +416,44 @@ export async function createCredential(ctx: MemberContext, agentId: string, body
     )
     SELECT id, created_at FROM c`;
   if (rows.length === 0) throw notFound("Active agent");
-  return { id: rows[0].id, label, prefix, created_at: rows[0].created_at, secret, note: "Store this key now. It is not shown again." };
+  return { id: rows[0].id, label, prefix, scopes, created_at: rows[0].created_at, secret, note: "Store this key now. It is not shown again." };
+}
+
+/** Scopes for a new key: a subset of SCOPES, defaulting to all of them. */
+function parseScopes(v: unknown): Scope[] {
+  if (v === undefined) return [...SCOPES];
+  if (!Array.isArray(v) || v.length === 0) throw new BadRequest(`scopes must be a non-empty array of: ${SCOPES.join(", ")}`);
+  for (const s of v) if (!(SCOPES as readonly unknown[]).includes(s)) throw new BadRequest(`Unknown scope: ${String(s).slice(0, 40)}`);
+  return [...new Set(v as Scope[])];
+}
+
+/**
+ * Replaces a key: a new secret with the same agent, label and scopes, and the old key revoked, in one
+ * statement, so there is never a moment with both or neither. The new secret is returned once.
+ */
+export async function rotateCredential(ctx: MemberContext, id: string) {
+  const secret = `ps_test_${randomHex(24)}`;
+  const prefix = secret.slice(0, 16);
+  const rows = await db()`
+    WITH old AS (
+      UPDATE api_credentials SET revoked_at = now(), revoked_by = ${ctx.user.userId}::uuid
+      WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid AND revoked_at IS NULL
+        AND agent_id IN (SELECT id FROM agents WHERE status <> 'revoked')
+      RETURNING id, org_id, agent_id, label, scopes, prefix
+    ), n AS (
+      INSERT INTO api_credentials (org_id, agent_id, label, prefix, secret_hash, scopes, rotated_from, created_by)
+      SELECT org_id, agent_id, label, ${prefix}, decode(${await sha256Hex(secret)}, 'hex'), scopes, id, ${ctx.user.userId}::uuid FROM old
+      RETURNING id, org_id, agent_id, label, scopes, created_at
+    ), e AS (
+      INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
+      SELECT n.org_id, ${ctx.user.userId}::uuid, n.agent_id, 'credential.rotated',
+        jsonb_build_object('old_credential_id', old.id, 'old_prefix', old.prefix, 'credential_id', n.id, 'prefix', ${prefix}::text)
+      FROM n JOIN old ON old.agent_id = n.agent_id
+    )
+    SELECT id, agent_id, label, scopes, created_at FROM n`;
+  if (rows.length === 0) throw conflict("Key not found, already revoked, or its agent is revoked");
+  const r = rows[0]!;
+  return { id: r.id, agent_id: r.agent_id, label: r.label, prefix, scopes: r.scopes, created_at: r.created_at, rotated_from: id, secret, note: "Store this key now. It is not shown again. The old key no longer works." };
 }
 
 export async function revokeCredential(ctx: MemberContext, id: string) {
