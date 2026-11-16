@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { shortHex } from "@/lib/units";
-import { CubeGlyph } from "../cube";
+import { BrandMark } from "../brand-mark";
 import { PointerLight } from "../pointer-light";
 import { SignOutIcon } from "../icons";
 import { IconBtn } from "./kit";
@@ -70,7 +70,7 @@ function Shell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 animate-[c-drop_.5s_var(--ease-out-quint)] border-b border-line bg-[linear-gradient(180deg,rgb(0_55_52/0.92),rgb(1_38_36/0.92))] backdrop-blur-xl">
         <div className="flex h-12 items-center gap-4 px-4">
           <Link href="/" className="flex items-center gap-2" aria-label="Palisec overview">
-            <CubeGlyph size={16} />
+            <BrandMark size={20} />
             <span className="font-brand text-[15px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
           </Link>
           <span className="hidden h-5 w-px bg-line-strong sm:block" />

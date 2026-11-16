@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CubeGlyph } from "@/components/cube";
+import { BrandMark } from "@/components/brand-mark";
 import { ParticleSphere } from "@/components/particle-sphere";
 import { PointerLight } from "@/components/pointer-light";
 import { WalletSignIn } from "@/components/wallet-sign-in";
@@ -19,7 +19,7 @@ export default function LoginPage() {
       <PointerLight />
       <header className="relative flex items-center justify-between px-6 py-5">
         <span className="flex items-center gap-2.5">
-          <CubeGlyph size={18} />
+          <BrandMark size={22} />
           <span className="font-brand text-[17px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
         </span>
         <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">

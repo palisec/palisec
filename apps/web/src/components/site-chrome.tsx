@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { CubeGlyph } from "./cube";
+import { BrandMark } from "./brand-mark";
 import { NavShell } from "./nav-shell";
 import { ButtonLink, Container } from "./ui";
 
 export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <Link href="/" className="group flex items-center gap-2.5" aria-label="Palisec home">
-      <span className="transition-transform duration-500 group-hover:rotate-[60deg]">
-        <CubeGlyph size={size === "lg" ? 22 : 18} />
+      <span className="transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-110">
+        <BrandMark size={size === "lg" ? 26 : 22} />
       </span>
       <span className="font-brand text-[18px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
     </Link>
