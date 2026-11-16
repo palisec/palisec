@@ -55,6 +55,7 @@ interface Run {
   evidence: Evidence[];
   unverified_citations: { type: string; id: string }[];
   can_continue: boolean;
+  paused?: boolean;
 }
 interface RunRow {
   id: string;
@@ -173,7 +174,7 @@ export function LiveAgentWorkspace() {
 
   async function advance(r: Run) {
     let cur = r;
-    for (let i = 0; i < 5 && cur.can_continue; i++) cur = await api<Run>(`/agent/runs/${cur.id}/continue`, { method: "POST" });
+    for (let i = 0; i < 5 && cur.can_continue && !cur.paused; i++) cur = await api<Run>(`/agent/runs/${cur.id}/continue`, { method: "POST" });
     return cur;
   }
 
@@ -343,7 +344,25 @@ export function LiveAgentWorkspace() {
                     )}
                   </div>
                 ))}
-                {run.error && <Notice tone="deny">{run.error}</Notice>}
+                {run.error && (
+                  <Notice tone={run.paused ? "review" : "deny"}>
+                    {run.paused ? "Paused: the model provider's free-tier limit was reached. Continue in about a minute." : run.error}
+                  </Notice>
+                )}
+                {run.can_continue && !working && (
+                  <Btn
+                    variant="quiet"
+                    disabled={busy}
+                    onClick={async () => {
+                      setWorking(true);
+                      const r = await act(async () => advance(await api<Run>(`/agent/runs/${run.id}/continue`, { method: "POST" })));
+                      setWorking(false);
+                      if (r) setRun(r);
+                    }}
+                  >
+                    Continue
+                  </Btn>
+                )}
                 {run.unverified_citations.length > 0 && (
                   <Notice tone="review">The answer cites {run.unverified_citations.length} record(s) that no tool returned in this run. Treat those as unverified.</Notice>
                 )}

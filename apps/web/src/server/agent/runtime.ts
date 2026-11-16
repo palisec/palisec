@@ -20,7 +20,7 @@ import { availableTools, toolByName, toolSpec, type Evidence, type Tool } from "
 export const INSTRUCTIONS_VERSION = "agent-2026-11-16.1";
 const MAX_STEPS_PER_REQUEST = 4;
 const MAX_STEPS_PER_RUN = 40;
-const REQUEST_BUDGET_MS = 22_000;
+const REQUEST_BUDGET_MS = 45_000;
 const TOOL_TIMEOUT_MS = 10_000;
 const MAX_TOOL_OUTPUT = 6_000;
 const HISTORY = 24;
@@ -185,6 +185,7 @@ export async function getRun(ctx: MemberContext, id: string) {
     evidence: [...evidence.values()],
     unverified_citations: unverified,
     can_continue: r.status === "ready" && needsModel(r.messages as ChatMessage[]),
+    paused: r.status === "ready" && Boolean(r.error),
   };
 }
 
@@ -258,7 +259,7 @@ export async function cancelRun(ctx: MemberContext, id: string) {
 /** Advances a run by up to a few model steps within the request budget. */
 async function advance(ctx: MemberContext, id: string) {
   // Optimistic lock: only one request advances a run at a time.
-  const locked = await db()`UPDATE agent_runs SET status = 'running', updated_at = now() WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid AND status = 'ready' RETURNING messages, steps`;
+  const locked = await db()`UPDATE agent_runs SET status = 'running', error = NULL, updated_at = now() WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid AND status = 'ready' RETURNING messages, steps`;
   if (!locked.length) return getRun(ctx, id);
   let messages = locked[0]!.messages as ChatMessage[];
   let steps = Number(locked[0]!.steps);
@@ -293,7 +294,9 @@ async function advance(ctx: MemberContext, id: string) {
     error = err instanceof HttpError ? `${err.code}: ${err.message}` : "The run failed";
     if (!(err instanceof HttpError)) logEvent("error", "agent.run_failed", { run_id: id, error: err instanceof Error ? err.message.slice(0, 200) : "error" });
   }
-  const status = error ? "failed" : "ready";
+  // A rate limit pauses the run (it can be continued); anything else fails it.
+  const rateLimited = error?.startsWith("PS_RATE_001") ?? false;
+  const status = error && !rateLimited ? "failed" : "ready";
   await db()`
     UPDATE agent_runs SET messages = ${JSON.stringify(messages)}::text::jsonb, steps = ${steps}::int, status = ${status}, error = ${error?.slice(0, 300) ?? null}, updated_at = now()
     WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid`;

@@ -36,6 +36,18 @@ export interface Provider {
 const DEFAULT_BASE = "https://api.groq.com/openai/v1";
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const TIMEOUT_MS = 25_000;
+const MAX_RATE_RETRIES = 2;
+const MAX_RATE_WAIT_MS = 15_000;
+
+/** Seconds to wait from `retry-after`, or Groq's `x-ratelimit-reset-tokens` / `-requests` (e.g. "7.66s", "1m2s"). */
+function retryAfterMs(res: Response): number | null {
+  const ra = res.headers.get("retry-after");
+  if (ra && /^\d+(\.\d+)?$/.test(ra)) return Math.ceil(Number(ra) * 1000);
+  const reset = res.headers.get("x-ratelimit-reset-tokens") ?? res.headers.get("x-ratelimit-reset-requests");
+  const m = reset?.match(/^(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?(?:(\d+)ms)?$/);
+  if (!m || !reset) return null;
+  return Math.ceil((Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0)) * 1000 + Number(m[3] ?? 0));
+}
 
 function baseUrl(): string {
   const raw = (process.env.PALISEC_AGENT_BASE_URL || DEFAULT_BASE).replace(/\/+$/, "");
@@ -55,12 +67,7 @@ export function provider(): Provider {
     configured: key !== "",
     async complete(messages, tools, signal) {
       if (!key) throw new HttpError(503, "PS_STATE_001", "The PALISEC Agent model is not configured on this deployment (PALISEC_AGENT_API_KEY)", false);
-      const res = await fetch(`${baseUrl()}/chat/completions`, {
-        method: "POST",
-        redirect: "error",
-        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS),
-        headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-        body: JSON.stringify({
+      const body = JSON.stringify({
           model,
           messages: messages.map((m) => ({
             role: m.role,
@@ -71,10 +78,26 @@ export function provider(): Provider {
           ...(tools.length ? { tools, tool_choice: "auto" } : {}),
           temperature: 0.2,
           max_tokens: 1500,
-        }),
-      }).catch(() => null);
+        });
+      // Free tiers limit tokens per minute. When the provider says how long to wait, wait (briefly)
+      // and retry instead of failing the run.
+      let res: Response | null = null;
+      for (let attempt = 0; attempt <= MAX_RATE_RETRIES; attempt++) {
+        res = await fetch(`${baseUrl()}/chat/completions`, {
+          method: "POST",
+          redirect: "error",
+          signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS),
+          headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+          body,
+        }).catch(() => null);
+        if (!res || res.status !== 429 || attempt === MAX_RATE_RETRIES) break;
+        const wait = retryAfterMs(res);
+        if (wait === null || wait > MAX_RATE_WAIT_MS || signal?.aborted) break;
+        await res.body?.cancel().catch(() => {});
+        await new Promise((r) => setTimeout(r, wait + 250));
+      }
       if (!res) throw new HttpError(503, "PS_STATE_001", "The model provider did not respond", true);
-      if (res.status === 429) throw new HttpError(429, "PS_RATE_001", "The model provider's free-tier limit was reached. Try again shortly.", true);
+      if (res.status === 429) throw new HttpError(429, "PS_RATE_001", "The model provider's free-tier limit was reached. Continue in a minute.", true);
       if (!res.ok) throw new HttpError(503, "PS_STATE_001", `The model provider returned HTTP ${res.status}`, true);
       const json = (await res.json().catch(() => null)) as { choices?: { message?: ChatMessage }[] } | null;
       const msg = json?.choices?.[0]?.message;
