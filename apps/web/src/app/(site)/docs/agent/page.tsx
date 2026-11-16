@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function AgentDocs() {
   return (
-    <DocArticle title="PALISEC Agent" lede="The native security operator in the console: investigation, policy engineering and operations assistance over your real records." maturity="service" compat="Instructions agent-2026-11-16.1 · OpenAI-compatible providers">
+    <DocArticle title="PALISEC Agent" lede="The native security operator in the console: investigation, policy engineering and operations assistance over your real records." maturity="service" compat="Instructions agent-2026-11-16.2 · OpenAI-compatible providers">
       <Note kind="warning" title="The agent is not an authority">
         It cannot authorize, approve, sign, activate a policy or change its own permissions. The deterministic engine decides every transaction. Actions the agent prepares run only after a
         member with the right role confirms them.
