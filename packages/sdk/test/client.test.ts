@@ -9,6 +9,7 @@ import {
   redact,
   fromEthers,
   verifyWebhook,
+  createPalisecTools,
   WebhookVerificationError,
   type LogEvent,
 } from "../src/index";
@@ -253,5 +254,36 @@ describe("2.0 additions", () => {
     await expect(verifyWebhook("wrong", body, headers)).rejects.toBeInstanceOf(WebhookVerificationError);
     await expect(verifyWebhook(secret, body, headers, { now: Number(ts) + 3600 })).rejects.toBeInstanceOf(WebhookVerificationError);
     await expect(verifyWebhook(secret, body, {})).rejects.toBeInstanceOf(WebhookVerificationError);
+  });
+});
+
+describe("framework tools", () => {
+  const wallet = () => ({ account: { address: ACCOUNT }, sendTransaction: vi.fn(async () => "0xhash" as `0x${string}`) });
+  const tx = { to: TO, value_wei: "0", data: "0x", gas_limit: 21000 };
+
+  it("exposes JSON-schema tools; sending only when a wallet is given", () => {
+    const names = createPalisecTools(createPalisec({ apiKey: KEY, fetch: server([]).fetch })).map((t) => t.name);
+    expect(names).toEqual(["palisec_evaluate_transaction", "palisec_get_operation", "palisec_explain_reason_code"]);
+    const withWallet = createPalisecTools(createPalisec({ apiKey: KEY, fetch: server([]).fetch }), { wallet: wallet() });
+    expect(withWallet.map((t) => t.name)).toContain("palisec_send_transaction");
+    for (const t of withWallet) expect(t.parameters.additionalProperties).toBe(false);
+  });
+
+  it("send returns sent, held or denied as text and never sends on DENY", async () => {
+    const w = wallet();
+    const s = server([json(201, op()), json(201, op({ decision: "REQUIRES_HUMAN_SIGNATURE", state: "pending_approval", authorization_id: null })), json(201, op({ decision: "DENY", state: "denied", reason_code: "PS_TARGET_001", authorization_id: null }))]);
+    const send = createPalisecTools(createPalisec({ apiKey: KEY, fetch: s.fetch }), { wallet: w }).find((t) => t.name === "palisec_send_transaction")!;
+    expect(JSON.parse(await send.execute(tx)).status).toBe("sent");
+    expect(JSON.parse(await send.execute(tx)).status).toBe("held_for_approval");
+    const denied = JSON.parse(await send.execute(tx));
+    expect(denied).toMatchObject({ status: "denied", code: "PS_TARGET_001" });
+    expect(w.sendTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("invalid model input is reported as text, not thrown, and nothing is called", async () => {
+    const s = server([]);
+    const ev = createPalisecTools(createPalisec({ apiKey: KEY, fetch: s.fetch }))[0]!;
+    expect(JSON.parse(await ev.execute({ ...tx, to: "0x12" }))).toMatchObject({ status: "error", code: "PS_REQUEST_001" });
+    expect(s.calls).toHaveLength(0);
   });
 });

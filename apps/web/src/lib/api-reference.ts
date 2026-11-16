@@ -99,6 +99,8 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
   {
     group: "Integrations and webhooks (console)",
     items: [
+      { method: "GET", path: "/usage", auth: "session", role: "viewer", summary: "Requests and outcomes per API key over 7 days, a daily series, agent tool calls and webhook deliveries." },
+      { method: "GET", path: "/policies/{id}/compare", auth: "session", role: "viewer", summary: "Field-by-field changes between two versions, or a version and the draft.", notes: "?from=1&to=2, or ?from=1 for the draft" },
       { method: "GET", path: "/integrations", auth: "session", role: "viewer", summary: "Registered agents with keys (prefixes, scopes), activity, 24-hour requests and denials, webhook health." },
       { method: "POST", path: "/credentials/{id}/rotate", auth: "session", role: "admin", summary: "New secret with the same agent, label and scopes; the old key is revoked in the same statement. Secret shown once." },
       { method: "GET", path: "/webhooks", auth: "session", role: "viewer", summary: "Webhooks and the event types available." },

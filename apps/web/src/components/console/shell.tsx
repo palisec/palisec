@@ -22,6 +22,7 @@ const NAV: { href: string; label: string; group?: string }[] = [
   { href: "/console/security", label: "Emergency stop" },
   { href: "/console/agent", label: "PALISEC Agent", group: "Intelligence" },
   { href: "/console/integrations", label: "Integrations", group: "Connect" },
+  { href: "/console/usage", label: "Usage" },
   { href: "/console/settings", label: "Settings", group: "Settings" },
 ];
 

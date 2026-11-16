@@ -34,19 +34,18 @@ const CANNOT = [
   "Reach signing secrets, or activate, approve or sign anything",
 ];
 
-const TOOL = `// One tool for any framework (OpenAI Agents SDK, LangGraph, Vercel AI SDK, your own loop).
+const TOOL = `import { createPalisec, createPalisecTools } from "@palisec/sdk";
+
+// Framework-neutral tools: name, description, JSON Schema, execute.
 // The framework decides what to try; PALISEC decides whether it may be sent.
-export async function sendToken(to: string, amount: bigint) {
-  try {
-    const { hash, operation } = await palisec.sendTransaction(wallet, {
-      to: TOKEN, data: encodeTransfer(to, amount), gasLimit: 90_000,
-    });
-    return hash ? \`Sent \${hash}\` : \`Waiting for human approval: \${operation.operationId}\`;
-  } catch (e) {
-    if (e instanceof PalisecDeniedError) return \`Refused by policy (\${e.code}): \${e.message}\`;
-    throw e;
-  }
-}`;
+const tools = createPalisecTools(createPalisec({ apiKey: process.env.PALISEC_API_KEY! }), { wallet });
+
+// OpenAI Agents SDK
+new Agent({ name: "trader", tools: tools.map((t) => tool({ ...t, strict: false })) });
+// Vercel AI SDK
+Object.fromEntries(tools.map((t) => [t.name, aiTool({ description: t.description, inputSchema: jsonSchema(t.parameters), execute: t.execute })]));
+// LangGraph / LangChain
+tools.map((t) => new DynamicStructuredTool({ name: t.name, description: t.description, schema: t.parameters, func: t.execute }));`;
 
 export default function IntegrationsPage() {
   return (
@@ -91,7 +90,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
               <h2 id="frameworks-title" className="font-heading text-[26px] font-medium text-mist">OpenAI Agents SDK · LangGraph · Vercel AI SDK</h2>
             </div>
             <MaturityBadge maturity={capability("framework-adapters").maturity} />
-            <p>Dedicated adapters are planned, not shipped. Every framework already works today, because PALISEC needs no framework-specific security logic: wrap the SDK&apos;s send call as a tool, or point an MCP-capable framework at the MCP server.</p>
+            <p><code>createPalisecTools</code> in the TypeScript SDK gives every framework the same tested tools: evaluate, send (only on ALLOW), read an operation, explain a reason code. There is no framework-specific security logic, and MCP-capable frameworks can use the MCP server instead.</p>
             <p>The core SDKs stay framework-independent on purpose.</p>
           </div>
           <CodeBlock code={TOOL} title="tools.ts" />

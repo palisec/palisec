@@ -19,7 +19,7 @@ const STEPS: { n: string; title: string; body: string; href: string }[] = [
 ];
 
 const INSTALL = `# TypeScript (viem or ethers)
-npm install https://palisec.tech/sdk/palisec-sdk-0.3.0.tgz viem
+npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem
 
 # Python 3.10+
 pip install https://palisec.tech/sdk/palisec-0.2.0-py3-none-any.whl`;

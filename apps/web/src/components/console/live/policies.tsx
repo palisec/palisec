@@ -295,6 +295,7 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
               ))}
             </ul>
           )}
+          {p.versions.length > 0 && <VersionCompare policyId={p.id} versions={p.versions.map((v) => v.version)} hasDraft={Boolean(p.draft)} />}
           <KV className="mt-3" rows={[["Draft saved", utc(p.draft_updated_at)]]} />
           <p className="mt-3 text-[12px] text-muted">
             Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-aqua">policy schema 1.0</Link>.
@@ -506,5 +507,48 @@ function TestPanel({ doc }: { doc: Record<string, unknown> }) {
         </div>
       )}
     </Panel>
+  );
+}
+
+/** Field-by-field changes between two activated versions, or a version and the current draft. */
+function VersionCompare({ policyId, versions, hasDraft }: { policyId: string; versions: number[]; hasDraft: boolean }) {
+  const latest = versions[0]!;
+  const [from, setFrom] = useState(String(versions[1] ?? latest));
+  const [to, setTo] = useState(hasDraft ? "draft" : String(latest));
+  const [result, setResult] = useState<{ changes: { path: string; from: unknown; to: unknown }[] } | null>(null);
+  const { run, busy, notice } = useAction();
+  const options = [...versions.map((v) => ({ value: String(v), label: `v${v}` })), ...(hasDraft ? [{ value: "draft", label: "draft" }] : [])];
+  const show = (v: unknown) => (v === null ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v));
+  return (
+    <div className="mt-4 space-y-2 border-t border-line pt-3">
+      <p className="label">Compare</p>
+      <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
+        <select aria-label="From version" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-[4px] border border-reef bg-ink px-2 py-1 text-fg">
+          {options.filter((o) => o.value !== "draft").map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <span className="text-dim">→</span>
+        <select aria-label="To version" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-[4px] border border-reef bg-ink px-2 py-1 text-fg">
+          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <Btn variant="quiet" disabled={busy} onClick={() => run(() => api<{ changes: { path: string; from: unknown; to: unknown }[] }>(`/policies/${policyId}/compare?from=${from}&to=${to}`)).then((r) => r && setResult(r))}>
+          Compare
+        </Btn>
+      </div>
+      {notice}
+      {result &&
+        (result.changes.length === 0 ? (
+          <p className="text-[12px] text-muted">No differences.</p>
+        ) : (
+          <ul className="max-h-[260px] space-y-1.5 overflow-y-auto">
+            {result.changes.map((c) => (
+              <li key={c.path} className="rounded-[6px] border border-line px-2.5 py-1.5 text-[11.5px]">
+                <Mono className="block text-mist">{c.path}</Mono>
+                <span className="block break-all text-deny/90">− {show(c.from)}</span>
+                <span className="block break-all text-allow">+ {show(c.to)}</span>
+              </li>
+            ))}
+          </ul>
+        ))}
+    </div>
   );
 }

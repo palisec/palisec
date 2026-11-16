@@ -58,7 +58,7 @@ const SURFACES = [
   { name: "REST API", cap: "api", note: "OpenAPI 3.1 · idempotent", href: "/docs/api" },
   { name: "MCP server", cap: "mcp", note: "Streamable HTTP · scoped keys", href: "/docs/mcp" },
   { name: "Webhooks", cap: "webhooks", note: "HMAC-signed events", href: "/docs/webhooks" },
-  { name: "Framework adapters", cap: "framework-adapters", note: "use the SDK or MCP today", href: "/integrations#frameworks" },
+  { name: "Framework tools", cap: "framework-adapters", note: "OpenAI Agents · Vercel AI · LangGraph", href: "/integrations#frameworks" },
 ] as const;
 
 const STEPS: { n: string; title: string; body: string; cap?: string; tone: "allow" | "deny" | "review" | "neutral" }[] = [

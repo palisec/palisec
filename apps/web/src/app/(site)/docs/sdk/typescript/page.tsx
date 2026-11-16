@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/sdk/typescript" },
 };
 
-const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.3.0.tgz viem
-# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.3.0.tgz viem`;
+const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem
+# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
@@ -71,6 +71,26 @@ try {
   }
 }`;
 
+const FRAMEWORKS = `import { createPalisec, createPalisecTools } from "@palisec/sdk";
+
+const palisec = createPalisec({ apiKey: process.env.PALISEC_API_KEY! });
+const tools = createPalisecTools(palisec, { wallet });   // omit wallet: evaluate and read only
+
+// OpenAI Agents SDK (@openai/agents)
+import { Agent, tool } from "@openai/agents";
+const agent = new Agent({
+  name: "trader",
+  tools: tools.map((t) => tool({ name: t.name, description: t.description, parameters: t.parameters, strict: false, execute: t.execute })),
+});
+
+// Vercel AI SDK (ai)
+import { jsonSchema, tool as aiTool } from "ai";
+const aiTools = Object.fromEntries(tools.map((t) => [t.name, aiTool({ description: t.description, inputSchema: jsonSchema(t.parameters), execute: t.execute })]));
+
+// LangGraph / LangChain (@langchain/core)
+import { DynamicStructuredTool } from "@langchain/core/tools";
+const lcTools = tools.map((t) => new DynamicStructuredTool({ name: t.name, description: t.description, schema: t.parameters, func: t.execute }));`;
+
 const CONFIG = `createPalisec({
   apiKey: process.env.PALISEC_API_KEY!,  // ps_test_… ; validated on construction
   chainId: 46630,                        // Robinhood Chain Testnet, the only chain enabled
@@ -86,7 +106,7 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="@palisec/sdk 0.3.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
+      compat="@palisec/sdk 0.4.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process. Until the on-chain account module ships,
@@ -135,6 +155,14 @@ export default function TypeScriptSdk() {
         Retries are automatic only where they are provably safe: authorizations carry the request ID as an idempotency key, dry runs and reads
         change nothing. <code>cancel</code> is never retried.
       </p>
+
+      <h2 id="frameworks">Agent frameworks</h2>
+      <p>
+        <code>createPalisecTools</code> returns framework-neutral tools (name, description, JSON Schema, <code>execute</code>) that the OpenAI Agents SDK, the Vercel AI SDK and
+        LangGraph accept as they are. They hold no security logic: <code>palisec_send_transaction</code> calls <code>sendTransaction</code>, so it sends only on ALLOW and returns
+        &quot;sent&quot;, &quot;held_for_approval&quot; or &quot;denied&quot; as text the model can act on. The toolkit is unit-tested; the framework wiring below follows each framework&apos;s documented tool API.
+      </p>
+      <CodeBlock code={FRAMEWORKS} title="frameworks.ts" />
 
       <h2 id="config">Configuration</h2>
       <CodeBlock code={CONFIG} title="config.ts" />

@@ -7,6 +7,7 @@ import { listOperations, summary } from "../approvals";
 import { CHAINS } from "../config";
 import { getAgent, getOrganization, getPolicy, listAudit, starterPolicy } from "../control";
 import { db, type Row } from "../db";
+import { policyChanges } from "../diff";
 import { HttpError } from "../http";
 import { listIntegrations } from "../integrations";
 import { dryRun, getOperation, parseIntent, testDraft } from "../operations";
@@ -113,17 +114,10 @@ export function explainPolicy(doc: Record<string, any>): string[] { // eslint-di
   return out;
 }
 
-function diff(a: unknown, b: unknown, path = "$", out: { path: string; from: unknown; to: unknown }[] = []) {
-  if (JSON.stringify(a) === JSON.stringify(b)) return out;
-  if (a && b && typeof a === "object" && typeof b === "object" && !Array.isArray(a) && !Array.isArray(b)) {
-    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diff((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], `${path}.${k}`, out);
-  } else out.push({ path, from: a ?? null, to: b ?? null });
-  return out;
-}
 
 const SDK_DOCS = {
   typescript: {
-    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.3.0.tgz viem",
+    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem",
     methods: [
       "createPalisec({ apiKey }) -> client",
       "authorize(intent) -> decision record (ALLOW | DENY | REQUIRES_HUMAN_SIGNATURE); retry-safe",
@@ -464,7 +458,7 @@ export const TOOLS: Tool[] = [
       const from = rows.find((r) => r.version === from_version)?.document;
       const to = to_version === undefined ? rows[0]!.draft : rows.find((r) => r.version === to_version)?.document;
       if (!from || !to) throw new HttpError(404, "PS_REQUEST_001", "Version not found");
-      const changes = diff(from, to).filter((c) => !["$.version", "$.status"].includes(c.path));
+      const changes = policyChanges(from, to);
       return { output: { policy_id, from: from_version, to: to_version ?? "draft", changes }, evidence: [{ type: "policy", id: policy_id }] };
     },
   }),

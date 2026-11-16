@@ -9,6 +9,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.9.1",
+    date: "2026-11-16",
+    tag: "Pre-release · testnet",
+    changes: [
+      "New PALISEC logo: a hexagonal P around the protected cube, in the site, console and browser icon.",
+      "TypeScript SDK 0.4.0: createPalisecTools gives the OpenAI Agents SDK, the Vercel AI SDK and LangGraph the same framework-neutral tools (evaluate, send only on ALLOW, read an operation, explain a reason code).",
+      "PALISEC Agent: free-tier rate limits are waited out and retried; a run that still hits the limit pauses with Continue instead of failing.",
+      "Console: Usage page with requests and decisions per agent and key, and a version comparison in the policy editor.",
+    ],
+  },
+  {
     version: "0.9.0",
     date: "2026-11-16",
     tag: "Pre-release · testnet · PALISEC 2.0",
