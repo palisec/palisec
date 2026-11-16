@@ -38,15 +38,10 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
 export function CodeBlock({ code, title, lang, pseudo = false }: { code: string; title?: string; lang?: string; pseudo?: boolean }) {
   return (
     <div className="panel my-6 overflow-hidden">
-      <div className="flex items-start justify-between gap-3 border-b border-line bg-[linear-gradient(180deg,rgb(237_255_254/0.03),transparent)] px-3 py-1.5">
-        <span aria-hidden className="mr-1 flex gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-line-strong" />
-          <span className="h-2 w-2 rounded-full bg-line-strong" />
-          <span className="h-2 w-2 rounded-full bg-aqua/70 shadow-[0_0_6px_#9cf6ee]" />
-        </span>
-        <p className="label !mb-0 mr-auto flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="min-w-0 break-words [overflow-wrap:anywhere]">{title ?? lang}</span>
-          {pseudo && <span className="min-w-0 !text-lilac">◆ pseudocode · not yet runnable</span>}
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
+        <p className="label !mb-0 mr-auto flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
+          <span className="min-w-0 break-words font-mono !text-[12px] !font-normal text-mist [overflow-wrap:anywhere]">{title ?? lang}</span>
+          {pseudo && <span className="min-w-0 !text-review">Pseudocode, not yet runnable</span>}
         </p>
         <CopyButton text={code} label={`Copy ${title ?? "code"}`} />
       </div>

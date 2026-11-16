@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/sdk/python" },
 };
 
-const INSTALL = `pip install https://palisec.tech/sdk/palisec-0.2.0-py3-none-any.whl
+const INSTALL = `pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl
 # optional, to send with web3.py:
 pip install web3`;
 
@@ -83,11 +83,12 @@ export default function PythonSdk() {
       title="Python SDK"
       lede="palisec asks Palisec before every transaction and sends with your account only on ALLOW. Async, typed, and no third-party dependencies. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="palisec 0.2.0 · Python 3.10+ · Schema 1.0 · testnet 46630"
+      compat="palisec 0.3.0 · Python 3.10+ · Schema 1.0 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
-        <code>send_transaction</code> refuses to send a denied or unapproved transaction from your process. Until the on-chain account module
-        ships, a key used outside the SDK can still transact, so keep the agent&apos;s key only where this code runs.
+        <code>send_transaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can
+        still transact. <code>execute_with_smart_account</code> is enforced on chain: the agent&apos;s 
+        <Link href="/docs/account-abstraction">PALISEC smart account</Link> moves nothing without PALISEC&apos;s co-signature.
       </Note>
 
       <h2 id="install">Install</h2>

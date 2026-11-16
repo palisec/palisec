@@ -1,7 +1,7 @@
 /** Route-level loading state for the public site. */
 export default function SiteLoading() {
   return (
-    <div role="status" aria-live="polite" className="mx-auto flex min-h-[80vh] w-full max-w-[1280px] flex-col justify-center px-4 pb-24 pt-28 sm:px-8">
+    <div role="status" aria-live="polite" className="mx-auto flex min-h-[80vh] w-full max-w-[2200px] flex-col justify-center px-4 pb-24 pt-28 sm:px-8">
       <span className="sr-only">Loading</span>
       <div className="h-3 w-32 c-shimmer rounded-[2px]" />
       <div className="mt-8 h-16 w-3/4 max-w-[720px] c-shimmer rounded-[4px]" />

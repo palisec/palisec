@@ -330,7 +330,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
         )}
       </Panel>
 
-      <Panel title="Recent operations" actions={<Link href="/console/operations" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">All →</Link>}>
+      <Panel title="Recent operations" actions={<Link href="/console/operations" className="font-utility text-[12.5px] text-silver hover:text-aqua">All →</Link>}>
         {!recent.data ? (
           <Loading what="operations" />
         ) : recent.data.operations.length === 0 ? (

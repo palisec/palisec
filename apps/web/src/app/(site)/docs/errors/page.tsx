@@ -73,6 +73,20 @@ export default function ErrorsPage() {
         policy failures.
       </p>
 
+      <h2 id="api-errors">API errors outside policy decisions</h2>
+      <table>
+        <thead><tr><th>Code</th><th>When</th><th>Retry</th></tr></thead>
+        <tbody>
+          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_001</td><td>Missing or invalid credentials, or a scope the key does not hold.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_002</td><td>Smart accounts: the operation is not allowed or approved, or its authorization expired.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_003</td><td>Smart accounts: the signature is not from an owner of the account (or is PALISEC&apos;s own).</td><td className="font-mono text-[11px] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_ACCOUNT_001</td><td>Smart accounts: the agent&apos;s account is not a Safe with the 4337 module, PALISEC as an owner and a threshold of 2.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_CHAIN_001</td><td>The chain RPC or the bundler is unavailable, or the bundler refused the operation (its message is included).</td><td className="font-mono text-[11px] text-muted">after condition clears</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_REPLAY_001</td><td>A request ID reused, or an operation already submitted.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_RATE_001</td><td>Too many requests from one address in a minute.</td><td className="font-mono text-[11px] text-muted">after a minute</td></tr>
+        </tbody>
+      </table>
+
       <h2 id="denied-is-not-reverted">A denial is not a revert</h2>
       <p>
         When the gateway denies an operation before broadcast, it returns a structured JSON-RPC error. No transaction exists, so

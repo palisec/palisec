@@ -58,7 +58,7 @@ export default function ApiReference() {
                   {e.path}
                 </p>
                 <p className="mt-1 text-sm text-soft">{e.summary}</p>
-                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-dim">
+                <p className="mt-1 font-mono text-[13px] text-dim">
                   {AUTH_TEXT[e.auth]}
                   {e.role ? ` · ${e.role} or above` : ""}
                 </p>

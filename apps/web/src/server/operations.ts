@@ -76,7 +76,7 @@ interface Prepared {
 const reportEngine = (d: Disagreement) => logEvent("error", "policy_engine.fail_closed", d);
 
 const LIVE_DETAIL =
-  "Not performed by this deployment yet. Palisec records the decision; your agent submits the transaction itself, and nothing on-chain enforces it until the account module ships.";
+  "Performed at execution, not at decision: when the agent executes through a PALISEC smart account (POST /v1/operations/{id}/user-operation, then /submit), PALISEC co-signs this exact payload and the Safe validates both signatures on chain. An agent that sends from a plain key is not enforced on chain.";
 
 /** Fee bound, price and code check for one request. Each lookup may be null, and the evaluator fails closed. */
 async function liveEnvironment(input: Pick<IntentInput, "chain_id" | "to" | "gas_limit">, now: number, emergencyStop: boolean, pausedAgents: string[]) {
@@ -212,7 +212,7 @@ export interface DecisionResponse {
   state: string;
   authorization_id: string | null;
   expires_at: string | null;
-  transaction_hash: null;
+  transaction_hash: string | null;
   retryable: boolean;
   message: string;
   checks: CheckResult[];
@@ -318,7 +318,7 @@ export function toDecision(row: Row): DecisionResponse & { agent_id: string; cre
     state,
     authorization_id: usable ? row.authorization_id : null,
     expires_at: row.expires_at ? new Date(row.expires_at).toISOString() : null,
-    transaction_hash: null,
+    transaction_hash: row.transaction_hash ?? null,
     retryable: row.reason_code ? (RETRYABLE[row.reason_code as ReasonCode] ?? false) : false,
     message: row.message,
     checks: row.checks,
@@ -338,6 +338,14 @@ export function toDecision(row: Row): DecisionResponse & { agent_id: string; cre
       agent_name: row.agent_name,
       decided_by: row.decided_by_address ?? null,
       decided_at: row.decided_at ? new Date(row.decided_at).toISOString() : null,
+      execution: row.user_op_hash || row.submitted_at
+        ? {
+            user_op_hash: row.user_op_hash ?? null,
+            submitted_at: row.submitted_at ? new Date(row.submitted_at).toISOString() : null,
+            executed_at: row.executed_at ? new Date(row.executed_at).toISOString() : null,
+            success: row.execution_success ?? null,
+          }
+        : null,
     },
   };
 }

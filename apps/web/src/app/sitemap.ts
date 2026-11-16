@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/site";
 
 const ROUTES = [
   "/", "/product", "/architecture", "/security", "/attestation", "/status", "/pricing", "/changelog", "/terms", "/privacy",
-  "/docs", "/docs/quickstart", "/docs/api", "/docs/policies", "/docs/errors", "/docs/account-abstraction",
+  "/docs", "/docs/concepts", "/docs/quickstart", "/docs/api", "/docs/policies", "/docs/errors", "/docs/account-abstraction",
   "/docs/sdk/typescript", "/docs/sdk/python",
 ];
 

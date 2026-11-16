@@ -26,7 +26,7 @@
   --color-mist: #edfffe;
   --color-pearl: #e6f3f1;
   --color-foam: #d3e2e0;
-  --color-silver: #bbc7c6;
+  --color-silver: #b3d1cc;
   --color-drift: #93a3a1;
 
   /* Semantic aliases used by components */
@@ -35,7 +35,7 @@
   --color-raised: #0a4541;
   --color-fg: #ffffff;
   --color-soft: #edfffe;
-  --color-muted: #bbc7c6;
+  --color-muted: #b3d1cc;
   --color-dim: #93a3a1;
   --color-line: #0b3f3b;
   --color-line-strong: #17554f;
@@ -96,7 +96,7 @@
   --aurora: linear-gradient(90deg, rgb(203 255 252) 0%, rgb(237 255 254) 26.25%, rgb(255 253 250) 47.57%, rgb(250 209 255) 88.96%);
   --biolum: linear-gradient(90deg, rgb(0 130 124) 0%, rgb(203 255 252) 100%);
   --shadow-button: none;
-  --shadow-button-hover: 0 0 0 1px rgb(250 209 255 / 0.5), 0 0 28px -6px rgb(203 255 252 / 0.55);
+  --shadow-button-hover: 0 6px 16px -8px rgb(0 0 0 / 0.55);
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 .9  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
@@ -259,14 +259,12 @@
 /* Headings are medium weight only: no bold, no light, at every display size. */
 .font-heading, .font-display { font-weight: 500; }
 
-/* Uppercase instrument label: wide tracking is the signature. */
+/* Small field and group label: sentence case, set in the UI face, readable at a glance. */
 @utility label {
   font-family: var(--font-utility);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--color-silver);
 }
 
@@ -298,26 +296,12 @@
   font-variation-settings: "wdth" 112;
 }
 
-/* Type lit from the surface above: white at the cap line, cooling toward the baseline. */
+/* Headline colours are solid: emphasis comes from colour and weight, never gradient text. */
 @utility text-lit {
-  color: var(--color-platinum);
-  background-image: linear-gradient(180deg, #ffffff 0%, #edfffe 45%, #a9cfca 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-mist);
 }
-/* Bioluminescent type: aqua into lavender, with a slow pass of light across it. */
 @utility text-signal {
   color: var(--color-aqua);
-  background-image:
-    linear-gradient(100deg, transparent 38%, rgb(255 255 255 / 0.9) 50%, transparent 62%),
-    linear-gradient(90deg, #9cf6ee 0%, #cbfffc 45%, #f6d6ff 100%);
-  background-size: 260% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: text-sweep 7s var(--ease-out-quint) 1.8s infinite;
 }
 
 @layer components {
@@ -380,71 +364,52 @@
     transition: transform 0.35s var(--ease-out-quint), box-shadow 0.35s var(--ease-out-quint), background-color 0.35s var(--ease-out-quint), color 0.35s var(--ease-out-quint), border-color 0.35s var(--ease-out-quint);
   }
   .btn:active { transform: translateY(1px) scale(0.99); }
-  .btn-solid {
-    padding: 0.85rem 1.4rem;
+  .btn-solid,
+  .btn-ghost,
+  .btn-ghost-dark {
+    padding: 0.8rem 1.25rem;
     font-family: var(--font-action);
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    text-transform: none;
   }
-  /* The aurora: the only place the full gradient appears. */
+  /* Primary: the aqua of the palette as a solid, with deep-sea text. */
   .btn-primary {
-    color: var(--color-abyss);
-    background: var(--aurora);
-    box-shadow: var(--shadow-button);
+    color: var(--color-deep);
+    background: var(--color-aqua);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.35) inset, 0 8px 20px -12px rgb(156 246 238 / 0.55);
   }
   .btn-primary:hover {
+    background: var(--color-aqua-hi);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-button-hover);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.4) inset, 0 12px 26px -12px rgb(156 246 238 / 0.65);
   }
-  /* Periodic glint, like light catching a raised edge. */
-  .btn-primary::after {
-    content: "";
-    position: absolute;
-    inset: -20% auto -20% 0;
-    width: 34%;
-    z-index: -1;
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.75), transparent);
-    animation: sheen 6.5s var(--ease-out-quint) 2s infinite;
-    pointer-events: none;
-  }
-  .btn-dark {
-    color: var(--color-platinum);
+  /* Secondary: a kelp surface with a visible edge. */
+  .btn-ghost {
+    color: var(--color-mist);
     background: var(--color-kelp);
-    box-shadow: inset 0 1px 0 rgb(237 255 254 / 0.08);
+    box-shadow: inset 0 0 0 1px var(--color-line-strong);
+  }
+  .btn-ghost:hover {
+    color: var(--color-platinum);
+    background: var(--color-raised);
+    box-shadow: inset 0 0 0 1px rgb(156 246 238 / 0.45);
+  }
+  /* On the light band. */
+  .btn-dark {
+    color: var(--color-aqua);
+    background: var(--color-abyss);
   }
   .btn-dark:hover {
     transform: translateY(-1px);
-    background: var(--color-raised);
-  }
-  .btn-ghost {
-    padding: 0.72rem 1.2rem;
-    font-family: var(--font-utility);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-mist);
-    background: rgb(3 81 75 / 0.35);
-    box-shadow: inset 0 0 0 1px rgb(237 255 254 / 0.14);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-  .btn-ghost:hover {
     color: var(--color-aqua-hi);
-    background: rgb(3 81 75 / 0.6);
-    box-shadow: inset 0 0 0 1px rgb(156 246 238 / 0.5), 0 0 26px -10px rgb(156 246 238 / 0.6);
+    background: var(--color-deep);
   }
   .btn-ghost-dark {
-    padding: 0.72rem 1.2rem;
-    font-family: var(--font-utility);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: var(--color-abyss);
-    box-shadow: inset 0 0 0 1px var(--color-abyss);
+    box-shadow: inset 0 0 0 1.5px var(--color-abyss);
   }
   .btn-ghost-dark:hover {
     color: var(--color-mist);
@@ -488,11 +453,7 @@
   content: "";
   position: absolute;
   inset: -64px 0 0;
-  background-image:
-    linear-gradient(to right, rgb(156 246 238 / 0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(156 246 238 / 0.3) 1px, transparent 1px);
-  background-size: 64px 64px;
-  animation: ground-move 3.2s linear infinite;
+  background: radial-gradient(60% 70% at 50% 100%, rgb(156 246 238 / 0.14), transparent 70%);
 }
 @keyframes ground-move {
   to { transform: translateY(64px); }
@@ -504,7 +465,6 @@
   height: 1px;
   overflow: hidden;
   background: linear-gradient(90deg, transparent, rgb(156 246 238 / 0.55) 30%, rgb(203 255 252 / 0.9) 50%, rgb(156 246 238 / 0.55) 70%, transparent);
-  box-shadow: 0 0 18px 1px rgb(156 246 238 / 0.35), 0 0 60px 6px rgb(156 246 238 / 0.12);
 }
 .horizon::after {
   content: "";
@@ -539,7 +499,7 @@
   border: 1px solid rgb(203 255 252 / 0.7);
   background:
     linear-gradient(135deg, rgb(203 255 252 / 0.78) 0%, rgb(0 130 124 / 0.62) 48%, rgb(3 81 75 / 0.78) 78%, rgb(250 209 255 / 0.55) 100%);
-  box-shadow: inset 0 0 calc(var(--s) * 0.28) rgb(203 255 252 / 0.35);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
   backface-visibility: visible;
 }
 .cube-face::after {
@@ -659,7 +619,6 @@
     margin-right: 12px;
     vertical-align: middle;
     background: var(--color-aqua);
-    box-shadow: 0 0 12px rgb(156 246 238 / 0.6);
   }
   .prose-ps h3 { font-family: var(--font-heading); color: var(--color-platinum); font-size: 20px; font-weight: 500; letter-spacing: -0.015em; margin: 2rem 0 0.5rem; }
   .prose-ps p { margin-bottom: 1rem; max-width: 68ch; text-wrap: pretty; }
@@ -693,10 +652,8 @@
     text-align: left;
     font-family: var(--font-utility);
     font-variation-settings: "wdth" 87.5;
-    font-size: 10.5px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--color-silver);
     padding: 0.6rem 1rem 0.6rem 0;
     border-bottom: 1px solid var(--color-drift);
@@ -762,7 +719,7 @@
   to { transform: scaleX(1); }
 }
 @keyframes c-flash {
-  from { color: var(--color-aqua); text-shadow: 0 0 8px rgb(156 246 238 / 0.6); }
+  from { color: var(--color-aqua); }
 }
 @keyframes c-burst {
   from { box-shadow: 0 0 0 0 rgb(156 246 238 / 0.7); }
@@ -819,5 +776,10 @@
   .console .panel, .console .panel :is(tbody, ul, ol) > *, .c-bar { animation: none !important; opacity: 1; transform: none; filter: none; }
   .c-grid { stroke-dashoffset: 0; }
   .c-axis { opacity: 1; }
-  .btn-primary::after, .horizon::after { display: none; }
+  .horizon::after { display: none; }
+}
+
+/* Body copy: no single-word last lines. */
+@layer base {
+  p, li, dd { text-wrap: pretty; }
 }

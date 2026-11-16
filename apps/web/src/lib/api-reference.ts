@@ -38,6 +38,11 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "POST", path: "/authorizations/evaluate", auth: "key", summary: "Dry run: the same evaluation against live state, reserving nothing and consuming no request_id.", body: { "…": "same fields as POST /operations" } },
       { method: "GET", path: "/operations/{id}", auth: "session or key", role: "viewer", summary: "One operation. An API key can read only its own agent's operations." },
       { method: "POST", path: "/operations/{id}/cancel", auth: "session or key", role: "operator", summary: "With an API key: withdraw a pending approval. In the console: release an unused, unexpired authorization's budget." },
+      { method: "POST", path: "/operations/{id}/user-operation", auth: "key", summary: "Smart accounts (scope operations:write): build the exact user operation PALISEC will co-sign for an allowed or approved operation. Returns EIP-712 typed_data for the agent to sign, safe_op_hash and max_cost_wei." },
+      { method: "POST", path: "/operations/{id}/submit", auth: "key", summary: "Smart accounts (scope operations:write): send the agent's signature over typed_data. PALISEC co-signs once and submits through the bundler. 202 with user_op_hash." },
+      { method: "GET", path: "/operations/{id}/execution", auth: "session or key", role: "viewer", summary: "Execution status: not_prepared, prepared, submitted, executed or reverted, with the transaction hash once included." },
+      { method: "GET", path: "/smart-accounts", auth: "session or key", role: "viewer", summary: "Co-signer address, contract addresses and whether submission is available. Members also get each agent's account, inspected on chain." },
+      { method: "GET", path: "/smart-accounts/{address}", auth: "session or key", role: "viewer", summary: "Reads an account on chain: Safe owners, threshold, 4337 module, and whether PALISEC enforces it." },
     ],
   },
   {
@@ -183,9 +188,9 @@ export function openApiDocument(serverUrl: string) {
     openapi: "3.1.0",
     info: {
       title: "Palisec API",
-      version: "0.4.0",
+      version: "0.5.0",
       description:
-        "Pre-release, Robinhood Chain Testnet (46630) only. Decisions are recorded and enforced for agents that call the API; nothing is signed or broadcast by this release.",
+        "Pre-release, Robinhood Chain Testnet (46630) only. Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
     },
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {

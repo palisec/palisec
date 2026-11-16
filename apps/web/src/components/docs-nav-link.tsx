@@ -15,7 +15,7 @@ export function DocsNavLink({ href, children }: { href: string; children: ReactN
         active ? "border-aqua text-mist" : "border-transparent text-muted hover:border-fg hover:text-fg"
       }`}
     >
-      <span aria-hidden className={`h-1 w-1 ${active ? "bg-aqua shadow-[0_0_6px_#9cf6ee]" : "bg-transparent"}`} />
+      <span aria-hidden className={`h-1 w-1 ${active ? "bg-aqua" : "bg-transparent"}`} />
       {children}
     </Link>
   );

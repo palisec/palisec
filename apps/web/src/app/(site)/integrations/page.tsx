@@ -56,7 +56,7 @@ export default function IntegrationsPage() {
         lede="Your agent keeps its reasoning and workflow. PALISEC provides the authorization and protected-execution layer, the same way through every interface. Independent agents never need the native PALISEC Agent."
       />
 
-      <Section index="01" label="External agent architecture">
+      <Section label="External agent architecture">
         <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`Your agent (any framework, any language)
    │  intent: to · value · data · gas limit · request ID
    ▼
@@ -69,12 +69,12 @@ PALISEC authorization: deterministic engine · atomic reservation · replay · a
 ALLOW → your agent sends exactly that transaction · DENY → nothing is sent · REVIEW → a human signs first`}</pre>
       </Section>
 
-      <Section index="02" label="Interfaces">
+      <Section label="Interfaces">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {SURFACES.map((s) => (
             <Link key={s.name} href={s.href} className="panel flex flex-col p-6 transition-colors hover:border-aqua/50">
               <div className="mb-5 flex items-center justify-between gap-2">
-                <h2 className="font-heading text-[21px] font-medium text-mist">{s.name}</h2>
+                <h3 className="font-heading text-[21px] font-medium text-mist">{s.name}</h3>
                 <MaturityBadge maturity={capability(s.cap).maturity} />
               </div>
               <p className="text-[14px] leading-relaxed text-silver">{s.body}</p>
@@ -83,11 +83,11 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
         </div>
       </Section>
 
-      <Section index="03" label="Framework adapters" id="frameworks">
+      <Section label="Framework adapters" id="frameworks">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="space-y-4 text-[15.5px] leading-relaxed text-silver">
             <div className="flex items-center gap-3">
-              <h2 id="frameworks-title" className="font-heading text-[26px] font-medium text-mist">OpenAI Agents SDK · LangGraph · Vercel AI SDK</h2>
+              <h3 className="font-heading text-[24px] font-medium text-mist">OpenAI Agents SDK, LangGraph, Vercel AI SDK</h3>
             </div>
             <MaturityBadge maturity={capability("framework-adapters").maturity} />
             <p><code>createPalisecTools</code> in the TypeScript SDK gives every framework the same tested tools: evaluate, send (only on ALLOW), read an operation, explain a reason code. There is no framework-specific security logic, and MCP-capable frameworks can use the MCP server instead.</p>
@@ -97,7 +97,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
         </div>
       </Section>
 
-      <Section index="04" label="Authentication and permission scopes">
+      <Section label="Authentication and permission scopes">
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
             <p className="text-[15.5px] leading-relaxed text-silver">
@@ -118,7 +118,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
             <ul className="space-y-2.5 text-[14.5px] text-silver">
               {CANNOT.map((c) => (
                 <li key={c} className="flex gap-3">
-                  <span aria-hidden className="text-deny">■</span>
+                  <span aria-hidden className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-deny" />
                   {c}
                 </li>
               ))}
@@ -127,7 +127,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
         </div>
       </Section>
 
-      <Section index="05" label="Integration examples">
+      <Section label="Integration examples">
         <ul className="divide-y divide-line border-y border-line">
           {[
             ["Quickstart: first authorized operation on testnet", "/docs/quickstart"],

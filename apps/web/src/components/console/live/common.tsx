@@ -97,7 +97,7 @@ export function LoadError({ error }: { error: ApiError | null }) {
 }
 
 export function Loading({ what }: { what: string }) {
-  return <p className="px-4 py-6 text-center font-utility text-[10.5px] uppercase tracking-[0.08em] text-dim">Loading {what}…</p>;
+  return <p className="px-4 py-6 text-center font-utility text-[12.5px] text-dim">Loading {what}…</p>;
 }
 
 /** Runs an API action and reports its outcome in a notice; returns the result or null. */

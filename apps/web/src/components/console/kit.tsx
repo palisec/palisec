@@ -39,10 +39,10 @@ export function Panel({ title, actions, children, className = "", bodyClassName 
 
 type BtnVariant = "primary" | "ghost" | "danger" | "quiet";
 const BTN: Record<BtnVariant, string> = {
-  primary: "btn btn-primary px-3 py-1.5 font-utility text-[11px] font-semibold uppercase tracking-[0.06em]",
+  primary: "btn btn-primary px-3 py-1.5 font-utility text-[13px] font-semibold",
   ghost: "btn btn-ghost !px-3 !py-1.5 !text-[11px]",
-  danger: "btn px-3 py-1.5 font-utility text-[11px] uppercase tracking-[0.06em] text-deny shadow-[inset_0_0_0_1px_rgb(255_122_140/0.55)] hover:bg-deny/10 hover:shadow-[inset_0_0_0_1px_rgb(255_122_140/0.8),0_8px_22px_-10px_rgb(255_122_140/0.6)]",
-  quiet: "btn px-2 py-1 font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5),0_6px_18px_-10px_rgb(156_246_238/0.5)]",
+  danger: "btn px-3 py-1.5 font-utility text-[13px] text-deny shadow-[inset_0_0_0_1px_rgb(255_122_140/0.55)] hover:bg-deny/10 hover:shadow-[inset_0_0_0_1px_rgb(255_122_140/0.8),0_8px_22px_-10px_rgb(255_122_140/0.6)]",
+  quiet: "btn px-2 py-1 font-utility text-[12.5px] text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5),0_6px_18px_-10px_rgb(156_246_238/0.5)]",
 };
 
 export function Btn({ variant = "ghost", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant }) {
@@ -109,7 +109,7 @@ const TONE: Record<Tone, string> = {
 };
 
 export function Pill({ tone = "muted", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
-  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[4px] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.06em] transition-colors duration-300 ${TONE[tone]} ${className}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[4px] px-1.5 py-0.5 font-utility text-[11.5px] transition-colors duration-300 ${TONE[tone]} ${className}`}>{children}</span>;
 }
 
 export function KV({ rows, className = "" }: { rows: [ReactNode, ReactNode][]; className?: string }) {
@@ -249,7 +249,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`relative shrink-0 whitespace-nowrap px-2.5 py-1.5 font-utility text-[10.5px] uppercase tracking-[0.05em] transition-colors duration-300 active:scale-[0.97] ${on ? `text-abyss ${thumb ? "" : "bg-aqua"}` : "text-soft hover:bg-raised"}`}
+            className={`relative shrink-0 whitespace-nowrap px-2.5 py-1.5 font-utility text-[12.5px] transition-colors duration-300 active:scale-[0.97] ${on ? `text-abyss ${thumb ? "" : "bg-aqua"}` : "text-soft hover:bg-raised"}`}
           >
             {o.label}
             {o.count !== undefined && <span className={`ml-1.5 tabular-nums transition-colors ${on ? "text-abyss/70" : "text-dim"}`}>{o.count}</span>}
@@ -301,7 +301,7 @@ export function Meter({ fraction, label, danger = false }: { fraction: number; l
   return (
     <div ref={ref} className="h-1.5 overflow-hidden rounded-full bg-line" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(f * 100)} aria-label={label}>
       <div
-        className={`c-meter h-full w-full rounded-full ${danger ? "bg-deny shadow-[0_0_10px_rgb(255_122_140/0.7)]" : "bg-[linear-gradient(90deg,#00827c,#9cf6ee)] shadow-[0_0_10px_rgb(156_246_238/0.5)]"}`}
+        className={`c-meter h-full w-full rounded-full ${danger ? "bg-deny" : "bg-[linear-gradient(90deg,#00827c,#9cf6ee)]"}`}
         style={{ transform: `scaleX(${seen ? f : 0})` }}
       />
     </div>

@@ -16,7 +16,7 @@ const SERVICES: { name: string; deployed: boolean; note: string }[] = [
   { name: "Webhooks and security events", deployed: true, note: "Signed deliveries; deterministic detectors on demand" },
   { name: "PALISEC Agent", deployed: true, note: "Model provider: Groq free tier, when PALISEC_AGENT_API_KEY is configured" },
   { name: "Signing enclave", deployed: false, note: "" },
-  { name: "Chain worker · bundler", deployed: false, note: "" },
+  { name: "Smart-account co-signing and bundler", deployed: true, note: "Testnet: Safe + 4337 module, Alchemy bundler" },
   { name: "Telemetry ingestion", deployed: false, note: "" },
 ];
 
@@ -26,9 +26,9 @@ export default function StatusPage() {
       <PageHeader
         eyebrow="Status"
         title="Testnet, pre-release."
-        lede="The authorization API and console run on Robinhood Chain Testnet. Signing, submission and the on-chain module are not deployed. Live status comes only from a real health check."
+        lede="The authorization API, console and smart-account execution run on Robinhood Chain Testnet. The signing enclave for mainnet is not deployed. Live status comes only from a real health check."
       />
-      <Section index="01" label="Services">
+      <Section label="Services">
         <ul className="divide-y divide-line border-y border-line">
           {SERVICES.map((s) => (
             <li key={s.name} className="flex flex-wrap items-center justify-between gap-4 py-4">
@@ -41,7 +41,7 @@ export default function StatusPage() {
           ))}
         </ul>
       </Section>
-      <Section index="02" label="Live check">
+      <Section label="Live check">
         <HealthCheck />
         <Note title="Service objectives">
           API availability, authorization latency, recovery time and telemetry lag objectives will be published only after they are

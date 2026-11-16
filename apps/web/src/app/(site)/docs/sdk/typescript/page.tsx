@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/sdk/typescript" },
 };
 
-const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem
-# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem`;
+const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem
+# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
@@ -106,11 +106,12 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="@palisec/sdk 0.4.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
+      compat="@palisec/sdk 0.5.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
-        <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process. Until the on-chain account module ships,
-        a key used outside the SDK can still transact, so keep the agent&apos;s key only where this code runs.
+        <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can
+        still transact. <code>executeWithSmartAccount</code> is enforced on chain: the agent&apos;s 
+        <Link href="/docs/account-abstraction">PALISEC smart account</Link> moves nothing without PALISEC&apos;s co-signature.
       </Note>
 
       <h2 id="install">Install</h2>

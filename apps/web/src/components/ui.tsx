@@ -1,79 +1,95 @@
 import Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
-import { MATURITY_LABEL, type Maturity } from "@/lib/capabilities";
-import { Cube, PixelIcon } from "./cube";
+import { MATURITY_LABEL, MATURITY_SHORT, type Maturity } from "@/lib/capabilities";
+import { Cube } from "./cube";
 import { Reveal } from "./motion";
 
 export function Container({ className = "", ...props }: ComponentProps<"div">) {
-  return <div className={`mx-auto w-full max-w-[1280px] px-4 sm:px-8 ${className}`} {...props} />;
+  return <div className={`mx-auto w-full max-w-[2200px] px-[clamp(20px,4.5vw,112px)] ${className}`} {...props} />;
 }
 
-/** A full-width dark band opened by a running head: label, a rule that lights as it draws, index. */
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+/**
+ * A page band. With `label`, the label is the section's heading, set in a left rail beside the content
+ * (sticky on wide screens), so sections read across the screen instead of down a centred column.
+ */
 export function Section({
-  index,
   label,
+  intro,
   children,
   className = "",
   id,
 }: {
+  /** Kept for call-site compatibility; section numbers are not shown. */
   index?: string;
   label?: string;
+  intro?: ReactNode;
   children: ReactNode;
   className?: string;
   id?: string;
 }) {
+  const headingId = id ? `${id}-title` : label ? `s-${slug(label)}` : undefined;
   return (
-    <section id={id} className={`relative ${className}`} aria-labelledby={id ? `${id}-title` : undefined}>
-      <Container className="py-20 sm:py-28">
-        {label && (
-          <Reveal>
-            <p className="label mb-14 flex items-center gap-4">
-              <span className="h-1.5 w-1.5 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.55)]" />
-              <span className="!text-mist">{label}</span>
-              <span aria-hidden className="section-rule" />
-              {index && <span className="tabular-nums text-drift">{index}</span>}
-            </p>
-          </Reveal>
+    <section id={id} className={`relative ${className}`} aria-labelledby={label || id ? headingId : undefined}>
+      <Container className="py-16 sm:py-20 lg:py-24">
+        {label ? (
+          <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[minmax(200px,3fr)_minmax(0,9fr)]">
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <h2 id={headingId} className="font-heading text-[clamp(24px,2.2vw,32px)] font-medium leading-[1.1] tracking-[-0.025em] text-mist [text-wrap:balance]">
+                {label}
+              </h2>
+              {intro && <p className="mt-4 max-w-[36ch] text-[15px] leading-relaxed text-silver">{intro}</p>}
+            </div>
+            <div className="min-w-0">{children}</div>
+          </div>
+        ) : (
+          children
         )}
-        {children}
       </Container>
     </section>
   );
 }
 
-const MATURITY_GLYPH: Record<Maturity, string> = { local: "●", service: "●", specified: "◐", planned: "○" };
+/** Status marks are drawn shapes; text always accompanies them, so status is never colour alone. */
+const MATURITY_MARK: Record<Maturity, string> = {
+  local: "bg-current",
+  service: "bg-current",
+  specified: "bg-[linear-gradient(90deg,currentColor_50%,transparent_50%)] ring-1 ring-current",
+  planned: "ring-1 ring-current",
+};
 
-/** Text always accompanies the glyph: status is never conveyed by colour alone. */
 export function MaturityBadge({ maturity }: { maturity: Maturity }) {
-  const tone =
-    maturity === "local" || maturity === "service"
-      ? "text-aqua bg-aqua/[0.07] shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4),0_0_18px_-6px_rgb(156_246_238/0.5)]"
-      : "text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)]";
+  const tone = maturity === "local" || maturity === "service" ? "text-aqua bg-aqua/[0.08] ring-1 ring-inset ring-aqua/35" : "text-silver ring-1 ring-inset ring-line-strong";
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-[4px] px-2 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.05em] ${tone}`}>
-      <span aria-hidden>{MATURITY_GLYPH[maturity]}</span>
-      {MATURITY_LABEL[maturity]}
+    <span title={MATURITY_LABEL[maturity]} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-utility text-[12.5px] font-semibold ${tone}`}>
+      <span aria-hidden className={`h-[7px] w-[7px] rounded-full ${MATURITY_MARK[maturity]}`} />
+      <span aria-hidden>{MATURITY_SHORT[maturity]}</span>
+      <span className="sr-only">{MATURITY_LABEL[maturity]}</span>
     </span>
   );
 }
 
 export type DecisionTone = "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
 
-const DECISION_STYLE: Record<DecisionTone, { cls: string; glyph: string; text: string }> = {
-  ALLOW: {
-    cls: "text-abyss bg-[linear-gradient(180deg,#d4f9e3,#74dfa0_45%,#2e9c62)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_6px_18px_-6px_rgb(116_223_160/0.55)]",
-    glyph: "→",
-    text: "ALLOW",
-  },
-  DENY: { cls: "text-deny bg-deny/[0.08] shadow-[inset_0_0_0_1px_rgb(255_122_140/0.6),0_6px_18px_-8px_rgb(255_122_140/0.55)]", glyph: "■", text: "DENY" },
-  REQUIRES_HUMAN_SIGNATURE: { cls: "text-review border border-dashed border-review/60", glyph: "◆", text: "HUMAN REVIEW" },
+const DECISION_STYLE: Record<DecisionTone, { cls: string; text: string }> = {
+  ALLOW: { cls: "text-deep bg-allow", text: "Allow" },
+  DENY: { cls: "text-deny bg-deny/[0.1] ring-1 ring-inset ring-deny/60", text: "Deny" },
+  REQUIRES_HUMAN_SIGNATURE: { cls: "text-review bg-review/[0.08] ring-1 ring-inset ring-review/60", text: "Needs approval" },
 };
+
+function DecisionMark({ decision }: { decision: DecisionTone }) {
+  const common = { width: 10, height: 10, viewBox: "0 0 10 10", "aria-hidden": true, className: "shrink-0" } as const;
+  if (decision === "ALLOW") return <svg {...common}><path d="M1.5 5.3 4 7.6 8.5 2.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  if (decision === "DENY") return <svg {...common}><path d="M2 2l6 6M8 2 2 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
+  return <svg {...common}><path d="M5 1 9 5 5 9 1 5Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>;
+}
 
 export function DecisionBadge({ decision, className = "" }: { decision: DecisionTone; className?: string }) {
   const s = DECISION_STYLE[decision];
   return (
-    <span key={decision} className={`inline-flex animate-[pop_.45s_ease-out] items-center gap-2 rounded-[4px] px-2.5 py-1 font-utility text-[10px] font-medium tracking-[0.06em] ${s.cls} ${className}`}>
-      <span aria-hidden>{s.glyph}</span>
+    <span key={decision} className={`inline-flex animate-[pop_.45s_ease-out] items-center gap-1.5 rounded-[4px] px-2.5 py-1 font-utility text-[12px] font-semibold ${s.cls} ${className}`}>
+      <DecisionMark decision={decision} />
       {s.text}
     </span>
   );
@@ -86,21 +102,30 @@ const BUTTON: Record<"primary" | "ghost" | "dark" | "ghost-dark", string> = {
   "ghost-dark": "btn btn-ghost-dark",
 };
 
+/**
+ * A link styled as a button. A leading icon names the kind of destination; the trailing arrow is kept
+ * for the primary action only, so a row of buttons does not repeat the same mark.
+ */
 export function ButtonLink({
   href,
   children,
   variant = "primary",
+  icon,
 }: {
   href: string;
   children: ReactNode;
   variant?: "primary" | "ghost" | "dark" | "ghost-dark";
+  icon?: ReactNode;
 }) {
+  const arrow = !icon && (variant === "primary" || variant === "dark");
   return (
     <Link href={href} className={`group ${BUTTON[variant]}`}>
-      {(variant === "primary" || variant === "dark") && <PixelIcon dark={variant === "primary"} />}
+      {icon && <span aria-hidden className="-ml-0.5 shrink-0 opacity-90">{icon}</span>}
       {children}
-      {(variant === "ghost" || variant === "ghost-dark") && (
-        <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+      {arrow && (
+        <svg aria-hidden width="14" height="14" viewBox="0 0 14 14" className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5">
+          <path d="M2 7h9.5M7.5 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       )}
     </Link>
   );
@@ -124,49 +149,44 @@ export function Mono({ children, className = "" }: { children: ReactNode; classN
   return <span className={`font-mono text-[0.92em] ${className}`}>{children}</span>;
 }
 
-/** Interior page header: condensed lit capitals under a pool of light, with a spinning cube. */
-export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow: string; title: string; lede?: ReactNode; compat?: string; children?: ReactNode }) {
+/**
+ * Interior page header: a large left-aligned title, with the lede and actions in the right column,
+ * so the header spans the screen instead of stacking in the centre.
+ */
+export function PageHeader({ title, lede, compat, children }: { eyebrow?: string; title: string; lede?: ReactNode; compat?: string; children?: ReactNode }) {
   return (
-    <header className="relative overflow-hidden">
+    <header className="relative overflow-hidden border-b border-line">
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="aurora right-[4%] top-[-30%] h-[460px] w-[620px] bg-aqua/[0.13] animate-[drift-a_20s_ease-in-out_infinite]" />
-        <div className="aurora left-[-10%] top-[10%] h-[360px] w-[520px] bg-[#00827c]/[0.06] animate-[drift-b_26s_ease-in-out_infinite]" />
+        <div className="aurora right-[-6%] top-[-40%] h-[520px] w-[720px] bg-aqua/[0.10] animate-[drift-a_22s_ease-in-out_infinite]" />
       </div>
-      <Container className="relative grid gap-10 pb-16 pt-20 sm:pb-24 sm:pt-28 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
-        <div>
-          <p className="label mb-8 flex items-center gap-3">
-            <span className="h-1.5 w-1.5 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.55)]" />
-            {eyebrow}
-          </p>
-          <h1 className="display max-w-[16ch] text-mist">
-            {title.split(" ").reduce<string[][]>((rows, w, i) => {
-              const r = Math.floor(i / 3);
-              (rows[r] ??= []).push(w);
-              return rows;
-            }, []).map((row, i) => (
-              <span key={i} className="line-mask" style={{ "--d": `${i * 90}ms` } as CSSProperties}>
-                <span className="text-lit">{row.join(" ")}</span>
-              </span>
-            ))}
-          </h1>
+      <Container className="relative grid gap-x-16 gap-y-10 pb-14 pt-12 sm:pb-16 sm:pt-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
+        <h1 className="display max-w-[20ch] text-[clamp(40px,4.8vw,96px)] text-mist">
+          {title.split(" ").reduce<string[][]>((rows, w, i) => {
+            const r = Math.floor(i / 3);
+            (rows[r] ??= []).push(w);
+            return rows;
+          }, []).map((row, i) => (
+            <span key={i} className="line-mask" style={{ "--d": `${i * 90}ms` } as CSSProperties}>
+              <span>{row.join(" ")}</span>
+            </span>
+          ))}
+        </h1>
+        <div className="lg:pb-3">
           {lede && (
-            <Reveal delay={300}>
-              <p className="mt-8 max-w-[560px] text-base leading-relaxed text-silver sm:text-lg">{lede}</p>
+            <Reveal delay={250}>
+              <p className="max-w-[52ch] text-[17px] leading-relaxed text-silver">{lede}</p>
             </Reveal>
           )}
           {compat && (
-            <Reveal delay={380}>
-              <p className="label mt-6 [text-wrap:balance]">{compat}</p>
+            <Reveal delay={320}>
+              <p className="mt-5 font-mono text-[12px] text-dim [text-wrap:balance]">{compat}</p>
             </Reveal>
           )}
           {children}
         </div>
-        <div className="hidden justify-center lg:flex">
-          <Cube size={110} spinSeconds={22} />
-        </div>
       </Container>
-      <div className="relative mx-auto h-px max-w-[1280px] bg-gradient-to-r from-transparent via-line-strong to-transparent">
-        <div className="absolute inset-x-[20%] -top-px h-[3px] bg-[radial-gradient(closest-side,rgb(156_246_238/0.5),transparent)] blur-[2px]" />
+      <div aria-hidden className="absolute right-[clamp(20px,4.5vw,112px)] top-8 hidden opacity-80 xl:block">
+        <Cube size={64} spinSeconds={26} />
       </div>
     </header>
   );
@@ -175,8 +195,17 @@ export function PageHeader({ eyebrow, title, lede, compat, children }: { eyebrow
 /** Callout for limits, caveats and corrections. */
 export function Note({ kind = "note", title, children }: { kind?: "note" | "warning"; title: string; children: ReactNode }) {
   return (
-    <aside className={`panel my-6 px-5 py-4 ${kind === "warning" ? "bg-raised/60 [--panel-ring:rgb(237_255_254/0.28)]" : ""}`}>
-      <p className={`label mb-1.5 ${kind === "warning" ? "!text-mist" : "!text-aqua"}`}>{kind === "warning" ? "▲ " : "● "}{title}</p>
+    <aside className={`my-6 rounded-[12px] border px-5 py-4 ${kind === "warning" ? "border-review/40 bg-review/[0.05]" : "border-line-strong bg-raised/40"}`}>
+      <p className={`mb-1.5 flex items-center gap-2 font-utility text-[13px] font-semibold ${kind === "warning" ? "text-review" : "text-aqua"}`}>
+        <svg aria-hidden width="14" height="14" viewBox="0 0 14 14" className="shrink-0">
+          {kind === "warning" ? (
+            <path d="M7 1.5 13 12.5H1Z M7 5.5v3.2 M7 10.4v.1" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          ) : (
+            <path d="M7 1.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z M7 6.3V10 M7 4.2v.1" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          )}
+        </svg>
+        {title}
+      </p>
       <div className="text-sm leading-relaxed text-silver [&_code]:text-mist">{children}</div>
     </aside>
   );

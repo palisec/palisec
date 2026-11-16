@@ -7,6 +7,7 @@ const DOCS_NAV = [
     title: "Start",
     items: [
       { href: "/docs", label: "Overview" },
+      { href: "/docs/concepts", label: "Concepts" },
       { href: "/docs/quickstart", label: "Quickstart" },
     ],
   },

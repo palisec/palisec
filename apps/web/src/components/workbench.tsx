@@ -19,7 +19,18 @@ import {
 } from "@palisec/policy-schema";
 import { Codes, DecisionBadge } from "./ui";
 import { CopyButton } from "./copy-button";
-import { ResetIcon } from "./icons";
+import type { ReactNode } from "react";
+import { ArrowRightIcon, BanIcon, CheckIcon, ClockIcon, CloseIcon, GaugeIcon, GlobeIcon, HandIcon, KeyIcon, PlayIcon, RepeatIcon, ResetIcon, SlidersIcon, ZapIcon } from "./icons";
+
+const SCENARIO_ICON: Record<string, ReactNode> = {
+  "token-transfer": <ArrowRightIcon size={16} />,
+  swap: <RepeatIcon size={16} />,
+  "large-swap": <RepeatIcon size={16} />,
+  "over-limit": <GaugeIcon size={16} />,
+  "unknown-method": <KeyIcon size={16} />,
+  "unknown-target": <GlobeIcon size={16} />,
+  "denied-target": <BanIcon size={16} />,
+};
 import { formatUnits, parseUnits } from "@/lib/units";
 
 
@@ -141,13 +152,13 @@ export function Workbench() {
     <div className="panel panel-beam overflow-hidden">
       {/* toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <p className="flex items-center gap-2.5 font-utility text-[11px] tracking-[0.08em] text-mist"><span aria-hidden className="tick-dot" />POLICY WORKBENCH</p>
-          <p className="label !text-lilac">◆ Simulation · example data · nothing is signed or broadcast</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="flex items-center gap-2 font-utility text-[14px] font-semibold text-mist"><SlidersIcon size={16} className="text-aqua" />Workbench</p>
+          <p title="Example data. Nothing is signed or broadcast." className="rounded-full px-2.5 py-0.5 font-utility text-[12px] font-semibold text-review ring-1 ring-inset ring-review/40">Simulated</p>
         </div>
         <div className="flex items-center gap-1 font-mono text-xs">
-          <span className="mr-2 text-muted" aria-live="polite">
-            CLOCK <span className="text-fg">T+{clock}s</span>
+          <span className="mr-2 flex items-center gap-1.5 text-muted" aria-live="polite">
+            <ClockIcon size={14} aria-label="Simulated clock" role="img" aria-hidden={false} /> <span className="text-fg">T+{clock}s</span>
           </span>
           {[15, 60].map((s) => (
             <button key={s} type="button" onClick={() => setClock((c) => c + s)} className="rounded-[4px] border border-reef px-2 py-1 text-mist transition-colors hover:border-aqua hover:text-aqua" aria-label={`Advance simulated clock by ${s} seconds`}>
@@ -170,24 +181,24 @@ export function Workbench() {
         {/* inputs */}
         <div className="border-b border-line lg:border-b-0 lg:border-r">
           <fieldset className="border-b border-line p-4">
-            <legend className="label float-left mb-3 w-full">1 · Transaction</legend>
-            <div className="clear-both space-y-px">
+            <legend className="label float-left mb-3 w-full">Transaction</legend>
+            <div className="clear-both grid grid-cols-2 gap-1.5">
               {SCENARIOS.map((s) => (
                 <label
                   key={s.id}
-                  className={`flex cursor-pointer items-start gap-3 rounded-[8px] border px-3 py-2.5 transition-colors ${
-                    s.id === scenarioId ? "border-aqua/50 bg-raised" : "border-transparent hover:bg-raised/60"
+                  title={s.summary}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-[8px] border px-3 py-2 text-[13.5px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-aqua ${
+                    s.id === scenarioId ? "border-aqua/50 bg-raised text-mist" : "border-line text-soft hover:bg-raised/60"
                   }`}
                 >
-                  <input type="radio" name={`${uid}-scenario`} value={s.id} checked={s.id === scenarioId} onChange={() => setScenarioId(s.id)} className="mt-1 accent-[#9cf6ee]" />
-                  <span className="min-w-0">
-                    <span className="block text-sm text-fg">{s.label}</span>
-                    <span className="block text-xs text-muted">{s.summary}</span>
-                  </span>
+                  <input type="radio" name={`${uid}-scenario`} value={s.id} checked={s.id === scenarioId} onChange={() => setScenarioId(s.id)} className="sr-only" />
+                  <span aria-hidden className={s.id === scenarioId ? "text-aqua" : "text-dim"}>{SCENARIO_ICON[s.id]}</span>
+                  <span className="min-w-0 truncate">{s.label}</span>
                 </label>
               ))}
             </div>
-            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-line pt-3 font-mono text-[11px]">
+            <p className="mt-3 text-[13px] text-muted">{scenario.summary}</p>
+            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-line pt-3 font-mono text-[12px]">
               <dt className="text-muted">to</dt>
               <dd className="truncate text-soft">{scenario.intent.to}</dd>
               <dt className="text-muted">selector</dt>
@@ -198,7 +209,7 @@ export function Workbench() {
           </fieldset>
 
           <fieldset className="border-b border-line p-4">
-            <legend className="label float-left mb-3 w-full">2 · Policy</legend>
+            <legend className="label float-left mb-3 w-full">Policy</legend>
             <div className="clear-both grid grid-cols-2 gap-3">
               <NumField id={`${uid}-max`} label="Max value / tx" unit="ETH" value={controls.maxValueEth} onChange={(v) => set("maxValueEth", v)} />
               <NumField id={`${uid}-budget`} label="Hourly budget" unit="USD" value={controls.hourlyBudgetUsd} onChange={(v) => set("hourlyBudgetUsd", v)} />
@@ -209,9 +220,10 @@ export function Workbench() {
               <p className="label mb-1.5" id={`${uid}-unk`}>Unknown methods</p>
               <div role="radiogroup" aria-labelledby={`${uid}-unk`} className="grid grid-cols-2 overflow-hidden rounded-[4px] border border-reef">
                 {(["review", "deny"] as const).map((v) => (
-                  <label key={v} className={`cursor-pointer px-3 py-1.5 text-center font-mono text-xs ${controls.unknownMethods === v ? "bg-aqua text-abyss" : "text-soft hover:bg-raised"}`}>
+                  <label key={v} className={`flex cursor-pointer items-center justify-center gap-2 px-3 py-1.5 font-utility text-[13px] font-semibold ${controls.unknownMethods === v ? "bg-aqua text-abyss" : "text-soft hover:bg-raised"}`}>
                     <input type="radio" className="sr-only" name={`${uid}-unk`} checked={controls.unknownMethods === v} onChange={() => set("unknownMethods", v)} />
-                    {v === "review" ? "Human review" : "Deny"}
+                    {v === "review" ? <HandIcon size={15} /> : <BanIcon size={15} />}
+                    {v === "review" ? "Review" : "Deny"}
                   </label>
                 ))}
               </div>
@@ -219,11 +231,11 @@ export function Workbench() {
           </fieldset>
 
           <fieldset className="p-4">
-            <legend className="label float-left mb-3 w-full">3 · Failure injection</legend>
-            <div className="clear-both space-y-2">
-              <Toggle label="Global emergency stop" checked={controls.emergencyStop} onChange={(v) => set("emergencyStop", v)} />
-              <Toggle label="Fee estimator unavailable" checked={controls.feeOffline} onChange={(v) => set("feeOffline", v)} />
-              <Toggle label="Price feed unavailable" checked={controls.priceOffline} onChange={(v) => set("priceOffline", v)} />
+            <legend className="label float-left mb-3 w-full">Inject a failure</legend>
+            <div className="clear-both space-y-2.5">
+              <Toggle label="Emergency stop" checked={controls.emergencyStop} onChange={(v) => set("emergencyStop", v)} />
+              <Toggle label="Fee estimator down" checked={controls.feeOffline} onChange={(v) => set("feeOffline", v)} />
+              <Toggle label="Price feed down" checked={controls.priceOffline} onChange={(v) => set("priceOffline", v)} />
             </div>
             {(inputErrors.length > 0 || schemaErrors.length > 0) && (
               <ul className="mt-3 space-y-1 border-l-2 border-deny pl-3 font-mono text-[11px] text-deny" role="alert">
@@ -237,8 +249,8 @@ export function Workbench() {
               disabled={blocked}
               className="btn btn-solid btn-primary group mt-4 h-12 w-full justify-between !px-4 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
-              Evaluate locally
-              <span className="font-mono text-xs">ps_req_sim_{String(history.length + 1).padStart(4, "0")}</span>
+              <span className="flex items-center gap-2"><PlayIcon size={15} fill="currentColor" />Evaluate</span>
+              <span className="font-mono text-xs opacity-70">#{String(history.length + 1).padStart(4, "0")}</span>
             </button>
           </fieldset>
         </div>
@@ -256,13 +268,10 @@ export function Workbench() {
                 <p key={latest.request_id} className="mt-3 max-w-[60ch] animate-[fade-up_.4s_ease-out] text-sm leading-relaxed text-soft">{latest.message}</p>
               </div>
             ) : (
-              <div>
-                <p className="font-mono text-xs text-muted">NO EVALUATION YET</p>
-                <p className="mt-2 max-w-[56ch] text-sm leading-relaxed text-muted">
-                  Pick a transaction and evaluate it. Submit the same one twice to trigger loop detection, advance the clock to clear
-                  cooldowns, or keep allowing swaps until the hourly budget runs out.
-                </p>
-              </div>
+              <p className="flex items-center gap-2.5 text-[14px] text-muted">
+                <ZapIcon size={16} className="text-aqua" />
+                Pick a transaction, then evaluate. Repeat one to trip loop detection.
+              </p>
             )}
           </div>
 
@@ -270,8 +279,8 @@ export function Workbench() {
             {([
               ["checks", "Checks"],
               ["response", "Response"],
-              ["policy", "Policy JSON"],
-              ["ledger", `Ledger · ${ledger.reservations.length}`],
+              ["policy", "Policy"],
+              ["ledger", `Ledger ${ledger.reservations.length}`],
             ] as [Tab, string][]).map(([id, label]) => (
               <button
                 key={id}
@@ -280,7 +289,7 @@ export function Workbench() {
                 aria-selected={tab === id}
                 aria-controls={`${uid}-panel`}
                 onClick={() => setTab(id)}
-                className={`relative shrink-0 border-r border-line px-4 py-2.5 text-[12px] font-medium tracking-[0.032em] transition-colors ${tab === id ? "bg-raised text-aqua" : "text-muted hover:text-soft"}`}
+                className={`relative shrink-0 border-r border-line px-4 py-2.5 font-utility text-[13px] font-semibold transition-colors ${tab === id ? "bg-raised text-aqua" : "text-muted hover:text-soft"}`}
               >
                 {label}
               </button>
@@ -289,7 +298,7 @@ export function Workbench() {
 
           <div id={`${uid}-panel`} role="tabpanel" aria-labelledby={`${uid}-tab-${tab}`} className="min-h-[420px] flex-1">
             {tab === "checks" && <ChecksView checks={latest?.checks ?? null} />}
-            {tab === "response" && (response ? <JsonView json={JSON.stringify(response, null, 2)} label="Copy response JSON" /> : <Empty text="Evaluate a transaction to see the API response shape." />)}
+            {tab === "response" && (response ? <JsonView json={JSON.stringify(response, null, 2)} label="Copy response JSON" /> : <Empty text="Evaluate a transaction to see the API response." />)}
             {tab === "policy" && <JsonView json={policyJson} label="Copy policy JSON" />}
             {tab === "ledger" && <LedgerView ledger={ledger} now={now} />}
           </div>
@@ -341,22 +350,21 @@ export function Toggle({ label, checked, onChange }: { label: string; checked: b
   return (
     <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-soft">
       {label}
-      <span className="flex items-center gap-2">
-        <span className={`font-mono text-[11px] ${checked ? "text-deny" : "text-dim"}`}>{checked ? "ON" : "OFF"}</span>
+      <span className="flex items-center">
         <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
-        <span aria-hidden className={`relative h-4 w-7 border transition-colors peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-fg ${checked ? "border-deny bg-deny/20" : "border-line-strong"}`}>
-          <span className={`absolute top-0.5 h-2.5 w-2.5 transition-all ${checked ? "left-3.5 bg-deny" : "left-0.5 bg-muted"}`} />
+        <span aria-hidden className={`relative h-5 w-9 rounded-full border transition-colors peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-fg ${checked ? "border-deny bg-deny/20" : "border-line-strong"}`}>
+          <span className={`absolute top-[3px] h-3 w-3 rounded-full transition-all ${checked ? "left-[19px] bg-deny" : "left-[3px] bg-muted"}`} />
         </span>
       </span>
     </label>
   );
 }
 
-const STATUS_STYLE: Record<CheckResult["status"], { glyph: string; cls: string; text: string }> = {
-  pass: { glyph: "✓", cls: "text-allow", text: "PASS" },
-  fail: { glyph: "■", cls: "text-deny", text: "FAIL" },
-  review: { glyph: "◆", cls: "text-review", text: "REVIEW" },
-  skipped: { glyph: "·", cls: "text-dim", text: "SKIP" },
+const STATUS_STYLE: Record<CheckResult["status"], { icon: ReactNode; cls: string; text: string }> = {
+  pass: { icon: <CheckIcon size={15} strokeWidth={2.2} />, cls: "text-allow", text: "Pass" },
+  fail: { icon: <CloseIcon size={15} strokeWidth={2.2} />, cls: "text-deny", text: "Fail" },
+  review: { icon: <HandIcon size={15} />, cls: "text-review", text: "Review" },
+  skipped: { icon: <span className="block h-px w-3 bg-current" />, cls: "text-dim", text: "Skipped" },
 };
 
 export function ChecksView({ checks }: { checks: CheckResult[] | null }) {
@@ -368,7 +376,7 @@ export function ChecksView({ checks }: { checks: CheckResult[] | null }) {
       <ol className="divide-y divide-line">
         {local.map((c, i) => <CheckRow key={`${c.id}-${c.detail}`} check={c} index={i + 1} />)}
       </ol>
-      <p className="label border-y border-line bg-ink px-4 py-2">Requires a live protected account · not run here</p>
+      <p className="label border-y border-line bg-ink px-4 py-2">Needs a live account. Not run here.</p>
       <ol className="divide-y divide-line opacity-70">
         {live.map((c, i) => <CheckRow key={c.id} check={c} index={local.length + i + 1} />)}
       </ol>
@@ -380,13 +388,13 @@ function CheckRow({ check, index }: { check: CheckResult; index: number }) {
   const s = STATUS_STYLE[check.status];
   return (
     <li
-      className="grid animate-[fade-up_.35s_ease-out_both] grid-cols-[2rem_4.5rem_minmax(0,1fr)] gap-x-2 px-4 py-2"
+      className="grid animate-[fade-up_.35s_ease-out_both] grid-cols-[2rem_1.75rem_minmax(0,1fr)] items-start gap-x-2 px-4 py-2"
       style={{ animationDelay: `${index * 35}ms` }}
     >
       <span className="font-mono text-[11px] text-dim">{String(index).padStart(2, "0")}</span>
-      <span className={`font-mono text-[11px] ${s.cls}`}>
-        <span aria-hidden>{s.glyph} </span>
-        {s.text}
+      <span className={`grid h-5 place-items-center ${s.cls}`} title={s.text}>
+        <span aria-hidden>{s.icon}</span>
+        <span className="sr-only">{s.text}</span>
       </span>
       <span className="min-w-0">
         <span className={`block text-[13px] ${check.status === "skipped" ? "text-muted" : "text-fg"}`}>{check.label}</span>
@@ -402,12 +410,15 @@ const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "p
 function OrderPreview() {
   return (
     <div>
-      <p className="px-4 pb-2 pt-4 text-sm text-muted">Press Evaluate locally to run the queued checks, in this order. Checks marked not run need a live protected account and never run here.</p>
+      <p className="px-4 pb-2 pt-4 text-[13px] text-muted">The checks, in the order they run.</p>
       <ol className="divide-y divide-line">
         {ORDER.map((c, i) => (
-          <li key={c.id} className="grid grid-cols-[2rem_4.5rem_minmax(0,1fr)] gap-x-2 px-4 py-2">
+          <li key={c.id} className="grid grid-cols-[2rem_1.75rem_minmax(0,1fr)] items-center gap-x-2 px-4 py-2">
             <span className="font-mono text-[11px] text-dim">{String(i + 1).padStart(2, "0")}</span>
-            <span className="font-mono text-[11px] text-dim"><span aria-hidden>{c.enforcement === "live" ? "— " : "· "}</span>{c.enforcement === "live" ? "NOT RUN" : "QUEUED"}</span>
+            <span className="grid place-items-center" title={c.enforcement === "live" ? "Needs a live account" : "Queued"}>
+              <span aria-hidden className={`h-3 w-3 rounded-full ${c.enforcement === "live" ? "border border-dashed border-dim" : "border border-line-strong"}`} />
+              <span className="sr-only">{c.enforcement === "live" ? "Not run here" : "Queued"}</span>
+            </span>
             <span className={`text-[13px] ${c.enforcement === "live" ? "text-muted" : "text-soft"}`}>{c.label}</span>
           </li>
         ))}
@@ -430,14 +441,14 @@ export function JsonView({ json, label }: { json: string; label: string }) {
 }
 
 function LedgerView({ ledger, now }: { ledger: LedgerState; now: number }) {
-  if (ledger.reservations.length === 0) return <Empty text="No reservations. Allowed and pending operations reserve budget here until they finalize, expire or are released." />;
+  if (ledger.reservations.length === 0) return <Empty text="No reservations yet. Allowed and pending operations hold budget here." />;
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[520px] font-mono text-[11px]">
         <thead>
           <tr className="text-left text-muted">
             {["reservation", "request", "amount", "state", "expires"].map((h) => (
-              <th key={h} className="border-b border-line-strong px-4 py-2 font-normal uppercase tracking-[0.08em]">{h}</th>
+              <th key={h} className="border-b border-line-strong px-4 py-2 font-normal">{h}</th>
             ))}
           </tr>
         </thead>

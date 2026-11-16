@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/site";
 
 // Five families, one job each:
 //   Funnel Display  headings and the hero, medium weight only
-//   Instrument Sans navigation, buttons and tracked uppercase labels
+//   Instrument Sans navigation, buttons and sentence-case labels
 //   Hanken Grotesk  body copy
 //   Martian Mono    codes, figures, addresses and data
 //   Anybody         the wordmark and oversized kinetic type (its width axis animates)

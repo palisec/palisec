@@ -24,9 +24,9 @@ const PATHS = {
 } as const;
 
 const PACKETS = [
-  { id: "allow", color: "#9cf6ee", begin: 0 },
+  { id: "allow", color: "#74dfa0", begin: 0 },
   { id: "deny", color: "#ff7a8c", begin: 1.1 },
-  { id: "review", color: "#e3c4ee", begin: 2.2 },
+  { id: "review", color: "#f2bf5e", begin: 2.2 },
 ] as const;
 
 const DURATION = 2.2;
@@ -77,7 +77,7 @@ export function BoundaryDiagram() {
   return (
     <figure className="panel panel-beam overflow-hidden">
       <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <p className="label">Fig. 1 · Authorization boundary</p>
+        <p className="label">Authorization boundary</p>
         <button
           type="button"
           onClick={() => setRun((r) => r + 1)}
@@ -118,7 +118,7 @@ export function BoundaryDiagram() {
         {/* entry channel, with current flowing toward the engine */}
         <path d="M0 150 H250 M0 170 H250" stroke="#2c6a64" strokeWidth="1" fill="none" />
         <path d="M0 160 H242" stroke="#9cf6ee" strokeOpacity="0.4" strokeDasharray="2 14" fill="none" className="animate-dash" />
-        <text x="0" y="138" className="fill-[#bbc7c6] font-mono text-[11px] tracking-[0.08em]">PROPOSED INTENT</text>
+        <text x="20" y="136" className="fill-[#b3d1cc] font-utility text-[12px] font-semibold">Proposed transaction</text>
 
         {/* engine */}
         <ellipse cx="310" cy="160" rx="120" ry="90" fill="url(#ps-engine-light)" />
@@ -126,32 +126,31 @@ export function BoundaryDiagram() {
           <animate attributeName="stroke-opacity" values="0.05;0.45;0.05" dur="2.4s" repeatCount="indefinite" />
         </rect>
         <rect x="250" y="112" width="120" height="96" fill="#012624" stroke="#9cf6ee" rx="4" />
-        <text x="310" y="150" textAnchor="middle" className="fill-[#edfffe] font-mono text-[11px] tracking-[0.08em]">POLICY</text>
-        <text x="310" y="164" textAnchor="middle" className="fill-[#edfffe] font-mono text-[11px] tracking-[0.08em]">ENGINE</text>
-        <text x="310" y="190" textAnchor="middle" className="fill-[#93a3a1] font-mono text-[10px]">v7 · 15 checks</text>
+        <text x="310" y="154" textAnchor="middle" className="fill-[#edfffe] font-utility text-[13px] font-semibold">Policy engine</text>
+        <text x="310" y="176" textAnchor="middle" className="fill-[#93a3a1] font-utility text-[11px]">Version 7, 15 checks</text>
         {[124, 132, 140].map((x) => (
           <line key={x} x1={250 + (x - 112)} y1="112" x2={250 + (x - 112)} y2="118" stroke="#9cf6ee" />
         ))}
 
         {/* exits */}
-        <path d="M370 160 H556" stroke="rgba(156,246,238,0.45)" fill="none" />
-        <path d="M410 160 V60 H556" stroke="rgba(227,196,238,0.45)" fill="none" strokeDasharray="3 3" />
+        <path d="M370 160 H556" stroke="rgba(116,223,160,0.5)" fill="none" />
+        <path d="M410 160 V60 H556" stroke="rgba(242,191,94,0.5)" fill="none" strokeDasharray="3 3" />
         <path d="M410 160 V260 H514" stroke="rgba(255,122,140,0.45)" fill="none" />
 
         {/* allow → account */}
-        <rect x="556" y="136" width="150" height="48" fill="#012624" stroke="rgba(156,246,238,0.5)" />
-        <text x="568" y="156" className="fill-[#9cf6ee] font-mono text-[11px] tracking-[0.08em]">→ ALLOW</text>
-        <text x="568" y="172" className="fill-[#bbc7c6] font-mono text-[10px]">ERC-4337 smart account</text>
+        <rect x="556" y="136" width="158" height="48" rx="4" fill="#012624" stroke="rgba(116,223,160,0.55)" />
+        <text x="568" y="156" className="fill-[#74dfa0] font-utility text-[12px] font-semibold">Allow</text>
+        <text x="568" y="173" className="fill-[#bbc7c6] font-utility text-[11px]">Signed and sent</text>
 
         {/* review */}
-        <rect x="556" y="36" width="150" height="48" fill="#012624" stroke="rgba(227,196,238,0.5)" strokeDasharray="3 3" />
-        <text x="568" y="56" className="fill-[#e3c4ee] font-mono text-[11px] tracking-[0.08em]">◆ HUMAN REVIEW</text>
-        <text x="568" y="72" className="fill-[#bbc7c6] font-mono text-[10px]">Pending · unsigned</text>
+        <rect x="556" y="36" width="158" height="48" rx="4" fill="#012624" stroke="rgba(242,191,94,0.55)" strokeDasharray="3 3" />
+        <text x="568" y="56" className="fill-[#f2bf5e] font-utility text-[12px] font-semibold">Needs approval</text>
+        <text x="568" y="73" className="fill-[#bbc7c6] font-utility text-[11px]">Held until approved</text>
 
         {/* deny wall */}
         <rect x="514" y="226" width="8" height="68" fill="#ff7a8c" filter="url(#ps-glow)" />
-        <text x="534" y="256" className="fill-[#ff7a8c] font-mono text-[11px] tracking-[0.08em]">■ DENY</text>
-        <text x="534" y="272" className="fill-[#bbc7c6] font-mono text-[10px]">No signature · no broadcast</text>
+        <text x="534" y="256" className="fill-[#ff7a8c] font-utility text-[12px] font-semibold">Deny</text>
+        <text x="534" y="273" className="fill-[#bbc7c6] font-utility text-[11px]">Never signed or sent</text>
 
         {/* packets */}
         {PACKETS.map((p) => {
@@ -180,11 +179,6 @@ export function BoundaryDiagram() {
         })}
       </svg>
       </div>
-      <figcaption className="grid grid-cols-3 border-t border-line font-utility text-[10px] tracking-[0.08em]">
-        <span className="border-r border-line px-4 py-2.5 text-allow">→ ALLOW</span>
-        <span className="border-r border-line px-4 py-2.5 text-review">◆ REVIEW</span>
-        <span className="px-4 py-2.5 text-deny">■ DENY</span>
-      </figcaption>
     </figure>
   );
 }

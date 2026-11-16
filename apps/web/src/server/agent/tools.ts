@@ -117,7 +117,7 @@ export function explainPolicy(doc: Record<string, any>): string[] { // eslint-di
 
 const SDK_DOCS = {
   typescript: {
-    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem",
+    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem",
     methods: [
       "createPalisec({ apiKey }) -> client",
       "authorize(intent) -> decision record (ALLOW | DENY | REQUIRES_HUMAN_SIGNATURE); retry-safe",
@@ -131,7 +131,7 @@ const SDK_DOCS = {
     docs: "https://palisec.tech/docs/sdk/typescript",
   },
   python: {
-    install: "pip install https://palisec.tech/sdk/palisec-0.2.0-py3-none-any.whl",
+    install: "pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl",
     methods: [
       "Palisec(api_key) async client",
       "authorize(**intent), evaluate(**intent), send_transaction(sender, ...)",
@@ -299,7 +299,7 @@ export const TOOLS: Tool[] = [
   }),
   define({
     name: "get_execution_status",
-    description: "Authorization and execution state of an operation. This deployment authorizes only; it does not sign, submit or observe on-chain execution.",
+    description: "Authorization and on-chain execution state of an operation. Execution is observed only for agents that execute through a PALISEC smart account.",
     risk: "read", minAutonomy: 0, permission: "read", schema: opRef,
     async run(ctx, { operation_id }) {
       const op = await operation(ctx, operation_id);
@@ -309,9 +309,8 @@ export const TOOLS: Tool[] = [
           authorization_state: op.state,
           authorization_id: op.authorization_id,
           expires_at: op.expires_at,
-          signing: "not_performed (protected signing is not deployed)",
-          execution: "not_observed (the agent sends the transaction itself; receipt reconciliation is not deployed)",
-          transaction_hash: null,
+          execution: (op.details as { execution?: unknown } | undefined)?.execution ?? "not_observed (not executed through a PALISEC smart account; a plain-key agent sends by itself)",
+          transaction_hash: op.transaction_hash ?? null,
         },
         evidence: [{ type: "operation", id: operation_id }],
       };

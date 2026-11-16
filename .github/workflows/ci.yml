@@ -91,3 +91,46 @@ jobs:
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/adversarial.mjs
       - if: failure()
         run: cat server.log
+
+  # Smart-account execution against a fork of Robinhood Chain Testnet: the real Safe, 4337 module and
+  # EntryPoint contracts, a throwaway co-signing key, and a local test bundler (never deployed).
+  smart-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      PALISEC_EXTRA_HOSTS: localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      RH_TESTNET_RPC_URL: http://127.0.0.1:8545
+      PALISEC_TEST_BUNDLER_URL: http://127.0.0.1:4337
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @palisec/web build
+      - name: Start the fork, the test bundler and the server
+        run: |
+          anvil --fork-url https://rpc.testnet.chain.robinhood.com --chain-id 46630 --silent > anvil.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -X POST -H 'content-type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' http://127.0.0.1:8545 > /dev/null && break; sleep 1; done
+          node --experimental-strip-types --no-warnings apps/web/scripts/test-bundler.mjs http://127.0.0.1:8545 4337 > bundler.log 2>&1 &
+          export PALISEC_SECRETS_KEY=$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64'))")
+          export PALISEC_SIGNER_KEY=0x$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))")
+          pnpm --filter @palisec/web start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
+          cat server.log; exit 1
+      - run: RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-smart-account.mjs
+      - if: failure()
+        run: cat server.log bundler.log

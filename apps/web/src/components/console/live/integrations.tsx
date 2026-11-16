@@ -61,7 +61,7 @@ interface Delivery {
 function SecretOnce({ secret, what }: { secret: string; what: string }) {
   return (
     <div className="rounded-[8px] border border-review/50 bg-review/[0.05] p-3">
-      <p className="font-utility text-[10.5px] uppercase tracking-[0.08em] text-review">◆ Copy this {what} now. It is not shown again.</p>
+      <p className="font-utility text-[12.5px] font-semibold text-review">Copy this {what} now. It is not shown again.</p>
       <div className="mt-2 flex items-center gap-2">
         <Mono className="min-w-0 flex-1 break-all text-[12px] text-mist">{secret}</Mono>
         <CopyButton text={secret} label={`Copy ${what}`} />
@@ -86,7 +86,7 @@ function KeyRow({ c, onChange }: { c: Credential; onChange: () => void }) {
           </span>
         </span>
         <span className="flex items-center gap-2">
-          <span className="font-utility text-[10px] uppercase tracking-[0.06em] text-dim">{c.last_used_at ? `used ${ago(c.last_used_at)}` : "never used"}</span>
+          <span className="font-utility text-[12px] text-dim">{c.last_used_at ? `used ${ago(c.last_used_at)}` : "never used"}</span>
           {can.manage(org?.role) && (
             <>
               <Confirm
@@ -196,7 +196,7 @@ function Webhooks() {
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
                   <Pill tone={h.status === "active" ? (h.consecutive_failures ? "review" : "allow") : "deny"}>{h.status}{h.consecutive_failures ? ` · ${h.consecutive_failures} failing` : ""}</Pill>
-                  <span className="font-utility text-[10px] uppercase tracking-[0.06em] text-dim">{h.deliveries_24h} / 24h · {h.failed_24h} failed</span>
+                  <span className="font-utility text-[12px] text-dim">{h.deliveries_24h} / 24h · {h.failed_24h} failed</span>
                   <Btn variant="quiet" onClick={() => setOpen(open === h.id ? null : h.id)}>{open === h.id ? "Hide" : "Deliveries"}</Btn>
                   {can.manage(org?.role) && (
                     <>
@@ -265,7 +265,7 @@ export function LiveIntegrations() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="min-w-0">
                       <Link href={`/console/agents?id=${i.id}`} className="text-[14px] text-mist underline-offset-4 hover:underline">{i.name}</Link>
-                      <span className="ml-2 font-utility text-[10.5px] uppercase tracking-[0.06em] text-dim">{i.framework ?? "framework not set"}</span>
+                      <span className="ml-2 font-utility text-[12.5px] text-dim">{i.framework ?? "framework not set"}</span>
                       <Mono className="block text-[11.5px] text-dim">{i.account}</Mono>
                     </span>
                     <span className="flex flex-wrap items-center gap-2">

@@ -75,7 +75,7 @@ export function LiveSecurityEvents() {
                     <span className="text-[13.5px] text-mist">{f.title}</span>
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="font-utility text-[10px] uppercase tracking-[0.06em] text-dim">
+                    <span className="font-utility text-[12px] text-dim">
                       {f.category.replaceAll("_", " ")} · {f.source}{f.occurrences > 1 ? ` · ${f.occurrences}×` : ""} · {ago(f.updated_at)}
                     </span>
                     {can.operate(org?.role) && f.status === "open" && <Btn variant="quiet" onClick={() => set(f.id, "acknowledged")}>Acknowledge</Btn>}

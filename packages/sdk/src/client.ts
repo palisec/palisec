@@ -14,6 +14,7 @@ import {
   type PalisecConfig,
   type SupportedChainId,
 } from "./types";
+import { safeOpTypedData, type Execution, type PreparedExecution, type PreparedUserOperation, type TypedDataSigner } from "./smart-account";
 
 const KEY = /^ps_test_[0-9a-f]{48}$/;
 const DEFAULT_BASE = "https://palisec.tech/api/v1";
@@ -314,7 +315,90 @@ export class PalisecClient {
     });
     return { operation: op, hash };
   }
+
+  /* ───────── PALISEC smart accounts: on-chain enforcement ───────── */
+
+  /** Builds the one user operation PALISEC will co-sign for an allowed or approved operation. Nothing is sent. */
+  async prepareExecution(operationId: string): Promise<PreparedExecution> {
+    if (!/^[0-9a-f-]{36}$/i.test(operationId)) throw new PalisecConfigError("operationId must be an operation's id");
+    const r = await this.request<{
+      operation_id: string;
+      safe_op_hash: Hex;
+      user_operation: PreparedUserOperation;
+      max_cost_wei: string;
+      valid_until: string;
+      typed_data: Record<string, unknown>;
+    }>("POST", `/operations/${operationId}/user-operation`, { retry: true });
+    return {
+      operationId: r.operation_id,
+      safeOpHash: r.safe_op_hash,
+      userOperation: r.user_operation,
+      maxCostWei: BigInt(r.max_cost_wei),
+      validUntil: new Date(r.valid_until),
+      typedDataJson: r.typed_data,
+    };
+  }
+
+  /** Sends the agent's signature. PALISEC adds its co-signature once and submits through the bundler. */
+  async submitExecution(operationId: string, signature: Hex): Promise<Execution> {
+    if (!/^0x[0-9a-fA-F]{130}$/.test(signature)) throw new PalisecConfigError("signature must be 65 bytes of hex");
+    await this.request<Record<string, unknown>>("POST", `/operations/${operationId}/submit`, { body: { signature }, retry: false });
+    return this.getExecution(operationId);
+  }
+
+  /** Where a submitted operation is. Asking also records the receipt once the bundler has it. */
+  async getExecution(operationId: string): Promise<Execution> {
+    return toExecution(await this.request<RawExecution>("GET", `/operations/${operationId}/execution`, { retry: true }));
+  }
+
+  /**
+   * Authorizes, then executes through the agent's PALISEC smart account: PALISEC prepares the exact
+   * operation, `signer` (the agent's key) signs it, PALISEC co-signs and submits, and this waits for the
+   * transaction. The account enforces it on chain: without PALISEC's co-signature nothing moves.
+   * Throws PalisecDeniedError on DENY. A held operation is awaited when `waitForApproval` is set.
+   */
+  async executeWithSmartAccount(
+    signer: TypedDataSigner,
+    intent: Intent,
+    opts: { waitForApproval?: boolean; approvalTimeoutMs?: number; receiptTimeoutMs?: number; signal?: AbortSignal } = {},
+  ): Promise<{ operation: Operation; execution: Execution }> {
+    const requestId = intent.requestId ?? crypto.randomUUID();
+    let op: Operation = await this.authorize({ ...intent, requestId });
+    if (op.decision === "DENY") throw new PalisecDeniedError(op);
+    if (op.state === "pending_approval") {
+      if (!opts.waitForApproval) return { operation: op, execution: { operationId: op.operationId!, status: "not_prepared", userOpHash: null, transactionHash: null, submittedAt: null, executedAt: null } };
+      op = await this.waitForApproval(op.operationId!, { ...(opts.approvalTimeoutMs ? { timeoutMs: opts.approvalTimeoutMs } : {}) });
+    }
+    if (!USABLE.has(op.state) || !op.operationId) throw new PalisecDeniedError(op);
+    const prepared = await this.prepareExecution(op.operationId);
+    const signature = await signer.signTypedData(safeOpTypedData(prepared.userOperation, this.chainId));
+    let execution = await this.submitExecution(op.operationId, signature);
+    const until = Date.now() + (opts.receiptTimeoutMs ?? 90_000);
+    while (execution.status === "submitted" && Date.now() < until) {
+      await sleep(3000, opts.signal);
+      execution = await this.getExecution(op.operationId);
+    }
+    return { operation: op, execution };
+  }
 }
+
+interface RawExecution {
+  operation_id: string;
+  status: Execution["status"];
+  user_op_hash: Hex | null;
+  transaction_hash: Hex | null;
+  submitted_at: string | null;
+  executed_at: string | null;
+}
+
+const toExecution = (r: RawExecution): Execution => ({
+  operationId: r.operation_id,
+  status: r.status,
+  userOpHash: r.user_op_hash,
+  transactionHash: r.transaction_hash,
+  submittedAt: r.submitted_at ? new Date(r.submitted_at) : null,
+  executedAt: r.executed_at ? new Date(r.executed_at) : null,
+});
 
 /** Creates a client. Keep the API key server-side. */
 export function createPalisec(config: PalisecConfig): PalisecClient {

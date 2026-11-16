@@ -1,5 +1,6 @@
 import { engineStatus } from "@palisec/policy-engine";
 import { secretsConfigured } from "@/server/secrets";
+import { smartAccountsStatus } from "@/server/smart-accounts";
 import { CHAINS, isDatabaseConfigured } from "@/server/config";
 import { db } from "@/server/db";
 import { handle, ok } from "@/server/http";
@@ -36,19 +37,21 @@ export const GET = handle(async (req: Request) => {
   }
   // Decisions need both the Rust engine and the reference evaluator; without the engine they fail closed.
   const engine = engineStatus();
+  const accounts = smartAccountsStatus();
   return ok({
     status: database === "ok" && engine.ok ? "ok" : "degraded",
     components: {
       database,
       auth: database === "ok" ? "ok" : "unavailable",
       policy_engine: engine.ok ? "ok" : "unavailable",
-      signer: "not_deployed",
-      bundler: "not_deployed",
+      // Testnet co-signer (a server-held key); the enclave signer for mainnet is not deployed.
+      signer: accounts.signer ? "testnet_cosigner" : "not_configured",
+      bundler: accounts.bundler ? "configured" : "not_configured",
     },
     schema_migration: schema,
     policy_engine: { implementation: "rust-wasm+reference", version: engine.version, source_hash: engine.source_hash.slice(0, 12) },
     // Whether optional features are configured on this deployment (never the values).
-    features: { agent_model: Boolean(process.env.PALISEC_AGENT_API_KEY), webhooks: secretsConfigured(), mcp: true },
+    features: { agent_model: Boolean(process.env.PALISEC_AGENT_API_KEY), webhooks: secretsConfigured(), mcp: true, smart_accounts: accounts.signer && accounts.bundler },
     chains: Object.entries(CHAINS).map(([id, c]) => ({ chain_id: Number(id), name: c.name, enabled: c.enabled })),
   });
 });

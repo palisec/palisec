@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
+import { TerminalIcon } from "@/components/icons";
 import { ButtonLink, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
@@ -19,10 +20,10 @@ const STEPS: { n: string; title: string; body: string; href: string }[] = [
 ];
 
 const INSTALL = `# TypeScript (viem or ethers)
-npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem
+npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem
 
 # Python 3.10+
-pip install https://palisec.tech/sdk/palisec-0.2.0-py3-none-any.whl`;
+pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl`;
 
 const PY = `import os
 from palisec import Palisec, PalisecDeniedError
@@ -41,29 +42,29 @@ export default function DevelopersPage() {
       <PageHeader eyebrow="Developers" title="Integrate once. Secure autonomous execution." lede="Everything here runs on Robinhood Chain Testnet (46630) today, and every snippet is the real SDK, tested against the live API in CI.">
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/docs/quickstart">Quickstart</ButtonLink>
-          <ButtonLink href="/console" variant="ghost">Launch the console</ButtonLink>
+          <ButtonLink href="/console" variant="ghost" icon={<TerminalIcon size={17} />}>Console</ButtonLink>
         </div>
       </PageHeader>
-      <Section index="01" label="From zero to a protected transaction">
+      <Section label="From zero to a protected transaction">
         <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((s) => (
             <li key={s.n}>
               <Link href={s.href} className="panel flex h-full flex-col p-6 transition-colors hover:border-aqua/50">
                 <span className="font-mono text-[12px] text-dim">{s.n}</span>
-                <h2 className="mt-3 font-heading text-[19px] font-medium text-mist">{s.title}</h2>
+                <h3 className="mt-3 font-heading text-[19px] font-medium text-mist">{s.title}</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-silver">{s.body}</p>
               </Link>
             </li>
           ))}
         </ol>
       </Section>
-      <Section index="02" label="Installation">
+      <Section label="Installation">
         <CodeBlock code={INSTALL} title="terminal" />
       </Section>
-      <Section index="03" label="Python integration">
+      <Section label="Python integration">
         <CodeBlock code={PY} title="agent.py" />
       </Section>
-      <Section index="04" label="References">
+      <Section label="References">
         <ul className="grid gap-px overflow-hidden rounded-[16px] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {[
             ["API reference", "/docs/api"],

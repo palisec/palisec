@@ -31,15 +31,15 @@ export function HealthCheck() {
       <button type="button" onClick={check} disabled={state === "checking"} className="border border-line-strong px-4 py-2 text-sm text-fg hover:border-aqua/60 disabled:opacity-50">
         {state === "checking" ? "Checking…" : "Check now"}
       </button>
-      {state === "error" && <p className="font-mono text-[11px] tracking-[0.08em] text-deny">■ THE API DID NOT RESPOND</p>}
+      {state === "error" && <p className="font-utility text-[13px] font-semibold text-deny">The API did not respond</p>}
       {h && (
         <div>
           <ul className="divide-y divide-line border-y border-line">
             {Object.entries(h.components).map(([k, v]) => (
               <li key={k} className="flex items-center justify-between py-3 text-sm">
                 <span className="text-soft">{k.replace(/_/g, " ")}</span>
-                <span className={`font-mono text-[11px] uppercase tracking-[0.08em] ${v === "ok" ? "text-allow" : v === "not_deployed" ? "text-dim" : "text-deny"}`}>
-                  {v === "ok" ? "● ok" : v === "not_deployed" ? "○ not deployed" : `■ ${v}`}
+                <span className={`font-mono text-[13px] ${v === "ok" || v === "configured" || v === "testnet_cosigner" ? "text-allow" : v === "not_deployed" || v === "not_configured" ? "text-dim" : "text-deny"}`}>
+                  {String(v).replace(/_/g, " ")}
                 </span>
               </li>
             ))}

@@ -66,20 +66,20 @@ const BOUNDARIES: [string, string][] = [
   ["A · External agent → PALISEC", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
   ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
   ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
-  ["D · Agent → signing", "No path exists. The agent never receives keys, enclave secrets or signing credentials; signing is a separate protected service (specified, not deployed)."],
-  ["E · PALISEC API → smart account", "The account must enforce the authorization independently, so a compromised agent or API cannot gain unrestricted execution. Specified; until it is deployed, a key that skips PALISEC can still transact."],
+  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. On testnet the co-signer is a server-held key; the enclave signer is specified, not deployed."],
+  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Live on testnet. A compromised API on testnet could co-sign, which is why mainnet signing belongs in the enclave."],
 ];
 
 export default function SecurityPage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · API on testnet · signing not deployed"
+        compat="Schema 1.0 · pre-release · testnet · enclave signing not deployed"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature."
       />
-      <Section index="01" label="Threats addressed">
+      <Section label="Threats addressed">
         <ol className="grid gap-px border border-line bg-line md:grid-cols-2">
           {THREATS.map((t, i) => (
             <li key={t} className="flex gap-4 bg-ink p-4 text-sm leading-relaxed text-soft">
@@ -89,10 +89,10 @@ export default function SecurityPage() {
           ))}
         </ol>
       </Section>
-      <Section index="02" label="TEE guarantees">
+      <Section label="TEE guarantees">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
           <div>
-            <h2 className="text-2xl font-medium leading-tight text-fg">The enclave is a component, not a guarantee.</h2>
+            <h3 className="text-2xl font-medium leading-tight text-fg">The enclave is a component, not a guarantee.</h3>
             <Note kind="warning" title="Limits">
               A TEE does not prevent every compromise, side channel, misconfiguration or supply-chain attack. An attestation page
               that shows a PCR hash is informational; it does not prove that every transaction passes through that enclave.
@@ -103,7 +103,7 @@ export default function SecurityPage() {
           </ul>
         </div>
       </Section>
-      <Section index="03" label="Signing keys">
+      <Section label="Signing keys">
         <dl className="divide-y divide-line border-y border-line">
           {KEYS.map(([k, v]) => (
             <div key={k} className="grid gap-1 py-4 md:grid-cols-[240px_1fr]">
@@ -113,7 +113,7 @@ export default function SecurityPage() {
           ))}
         </dl>
       </Section>
-      <Section index="04" label="Production release gates">
+      <Section label="Production release gates">
         <p className="mb-6 max-w-[60ch] text-sm leading-relaxed text-muted">
           No production release proceeds until every gate is met. None are met today: Palisec is pre-release.
         </p>
@@ -126,7 +126,7 @@ export default function SecurityPage() {
           ))}
         </ul>
       </Section>
-      <Section index="05" label="Incident response">
+      <Section label="Incident response">
         <ol className="grid gap-px border border-line bg-line md:grid-cols-2">
           {INCIDENT.map(([k, v], i) => (
             <li key={k} className="bg-ink p-5">
@@ -149,7 +149,7 @@ export default function SecurityPage() {
           </p>
         </div>
       </Section>
-      <Section index="06" label="Agentic trust boundaries" id="agentic">
+      <Section label="Agentic trust boundaries" id="agentic">
         <dl className="divide-y divide-line border-y border-line">
           {BOUNDARIES.map(([k, v]) => (
             <div key={k} className="grid gap-2 py-5 md:grid-cols-[300px_1fr]">
@@ -159,7 +159,7 @@ export default function SecurityPage() {
           ))}
         </dl>
       </Section>
-      <Section index="07" label="Prompt injection and untrusted data" id="injection">
+      <Section label="Prompt injection and untrusted data" id="injection">
         <div className="grid gap-8 lg:grid-cols-2">
           <p className="text-[15.5px] leading-relaxed text-silver">
             The PALISEC Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.

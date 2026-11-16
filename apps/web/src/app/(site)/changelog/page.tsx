@@ -9,6 +9,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "0.10.0",
+    date: "2026-11-17",
+    tag: "Pre-release · testnet · on-chain enforcement",
+    changes: [
+      "Smart accounts: a Safe (Safe 4337 module, EntryPoint v0.7) with a threshold of 2 and PALISEC's co-signer as an owner. PALISEC co-signs only an allowed or approved operation, for exactly that payload and until its authorization expires, and submits it through an ERC-4337 bundler. The agent's key alone cannot move funds; an organization recovery owner can.",
+      "API: POST /v1/operations/{id}/user-operation and /submit, GET /v1/operations/{id}/execution, GET /v1/smart-accounts and /v1/smart-accounts/{address}. New webhook events operation.submitted and operation.executed.",
+      "Console: Smart accounts page to create an account with your wallet and see which agents are enforced on chain.",
+      "SDKs: TypeScript 0.5.0 executeWithSmartAccount, Python 0.3.0 execute_with_smart_account.",
+      "Site: redesigned with full-width layouts, line icons and tool logos, a new architecture page, and a Concepts page in the docs.",
+    ],
+  },
+  {
     version: "0.9.1",
     date: "2026-11-16",
     tag: "Pre-release · testnet",

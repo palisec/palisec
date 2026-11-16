@@ -103,7 +103,7 @@ export function LiveAudit() {
                         <td colSpan={5} className="px-4 py-3">
                           <pre className="overflow-auto whitespace-pre-wrap break-all font-mono text-[11.5px] text-soft">{JSON.stringify({ event_id: e.event_id, ...e.detail }, null, 2)}</pre>
                           {typeof e.detail.operation_id === "string" && (
-                            <Link href={`/console/operations?id=${e.detail.operation_id}`} className="mt-2 inline-block font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Open operation →</Link>
+                            <Link href={`/console/operations?id=${e.detail.operation_id}`} className="mt-2 inline-block font-utility text-[12.5px] text-silver hover:text-aqua">Open operation →</Link>
                           )}
                         </td>
                       </tr>

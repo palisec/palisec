@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActivityIcon, AgentIcon, ArrowRightIcon, BookIcon, FileCheckIcon, SearchIcon, SlidersIcon, StopIcon, UserCheckIcon } from "@/components/icons";
 import { ButtonLink, MaturityBadge, PageHeader, Section } from "@/components/ui";
 import { capability } from "@/lib/capabilities";
 
@@ -60,12 +61,12 @@ export default function AgentPage() {
       >
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <MaturityBadge maturity={capability("agent").maturity} />
-          <ButtonLink href="/console/agent">Open the agent workspace</ButtonLink>
-          <ButtonLink href="/docs/agent" variant="ghost">Agent documentation</ButtonLink>
+          <ButtonLink href="/console/agent" icon={<AgentIcon size={17} />}>Open the agent</ButtonLink>
+          <ButtonLink href="/docs/agent" variant="ghost" icon={<BookIcon size={17} />}>Docs</ButtonLink>
         </div>
       </PageHeader>
 
-      <Section index="01" label="What it is">
+      <Section label="What it is">
         <div className="grid gap-8 lg:grid-cols-2">
           <p className="text-[17px] leading-relaxed text-silver">
             The PALISEC Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
@@ -79,10 +80,10 @@ export default function AgentPage() {
       </Section>
 
       {DOMAINS.map((d, i) => (
-        <Section key={d.id} id={d.id} index={String(i + 2).padStart(2, "0")} label={d.title}>
+        <Section key={d.id} id={d.id} label={d.title} className={i % 2 ? "" : "border-y border-line bg-deep/40"}>
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div>
-              <h2 id={`${d.id}-title`} className="heading text-mist">{d.lede}</h2>
+              <p className="font-heading text-[clamp(26px,2.6vw,38px)] leading-[1.1] tracking-[-0.03em] text-mist [text-wrap:balance]">{d.lede}</p>
               <ul className="mt-8 space-y-2.5 text-[15px] text-silver">
                 {d.items.map((x) => (
                   <li key={x} className="flex gap-3">
@@ -104,7 +105,7 @@ export default function AgentPage() {
         </Section>
       ))}
 
-      <Section index="05" label="Tool permissions">
+      <Section label="Tool permissions">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <div className="space-y-4 text-[15.5px] leading-relaxed text-silver">
             <p>Every tool declares a strict input schema, a risk class (read, draft, action), the minimum autonomy level and the role it needs. The model is shown only the tools the signed-in member may use, and the server checks again on every call.</p>
@@ -121,18 +122,29 @@ export default function AgentPage() {
         </div>
       </Section>
 
-      <Section index="06" label="Human confirmation">
-        <ol className="grid gap-3 md:grid-cols-4">
-          {["The agent prepares an action and its impact", "A request is recorded with run and tool-call IDs", "A member with the required role confirms or rejects", "It runs once, through the existing control plane, and is audited"].map((s, i) => (
-            <li key={s} className="panel p-5">
-              <span className="font-mono text-[12px] text-dim">0{i + 1}</span>
-              <p className="mt-3 text-[15px] text-mist">{s}</p>
+      <Section label="Human confirmation">
+        <ol className="grid gap-y-6 md:grid-cols-4">
+          {[
+            [<AgentIcon key="i" size={20} />, "Agent prepares", "The action and its impact"],
+            [<FileCheckIcon key="i" size={20} />, "Request recorded", "With run and tool-call IDs"],
+            [<UserCheckIcon key="i" size={20} />, "Member decides", "Confirm or reject, by role"],
+            [<ActivityIcon key="i" size={20} />, "Runs once", "Through the control plane, audited"],
+          ].map(([icon, t, b], i) => (
+            <li key={t as string} className="relative flex gap-4 md:flex-col md:pr-6">
+              <span className="flex items-center gap-3">
+                <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ring-1 ${i === 2 ? "bg-review/10 text-review ring-review/45" : "bg-raised/70 text-aqua ring-line-strong"}`}>{icon}</span>
+                {i < 3 && <span aria-hidden className="hidden h-px flex-1 bg-line-strong md:block" />}
+              </span>
+              <span>
+                <span className="block text-[16px] font-medium text-mist">{t}</span>
+                <span className="mt-1 block text-[14px] text-silver">{b}</span>
+              </span>
             </li>
           ))}
         </ol>
       </Section>
 
-      <Section index="07" label="Agent architecture">
+      <Section label="Agent architecture">
         <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`PALISEC AGENT RUNTIME (isolated module in the API, never inside the policy engine)
   ├─ Orchestrator        runs stored in Postgres; a few steps per request, within a time budget
   ├─ Provider adapter    OpenAI-compatible chat completions (Groq by default; swap by configuration)
@@ -143,22 +155,32 @@ export default function AgentPage() {
   └─ Audit and tracing   run → tool call → evidence → action → audit event`}</pre>
       </Section>
 
-      <Section index="08" label="Example workflows">
-        <div className="grid gap-4 md:grid-cols-3">
+      <Section label="Example workflows">
+        <div className="space-y-4">
           {[
             ["Investigate a denial", "get_authorization_decision → the deciding check and reason code → links to the operation and policy version → a suggested next step."],
             ["Draft and adopt a policy", "draft_policy → validate_policy → simulate_policy (live and history replay) → submit_policy_draft (level 2) → a member confirms → the operator reviews and activates in the policy editor."],
             ["Respond to unusual activity", "get_security_events → evidence → create_security_alert → prepare_account_pause → request_account_pause → an operator confirms."],
-          ].map(([t, b]) => (
-            <div key={t} className="panel p-5">
-              <h3 className="font-heading text-[19px] font-medium text-mist">{t}</h3>
-              <p className="mt-2 font-mono text-[12px] leading-relaxed text-silver">{b}</p>
+          ].map(([t, b], k) => (
+            <div key={t} className="grid gap-4 rounded-[14px] border border-line-strong bg-deep/60 p-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:items-center">
+              <h3 className="flex items-center gap-3 text-[17px] font-medium text-mist">
+                <span aria-hidden className="text-aqua">{[<SearchIcon key="i" size={19} />, <SlidersIcon key="i" size={19} />, <StopIcon key="i" size={19} />][k]}</span>
+                {t}
+              </h3>
+              <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+                {b.split(" → ").map((step, j, all) => (
+                  <li key={step} className="flex items-center gap-1.5">
+                    <span className={`rounded-[7px] px-2.5 py-1 text-[12.5px] ${/^[a-z_]+( \(.*\))?$/.test(step) ? "bg-raised font-mono text-mist" : step.includes("confirm") ? "bg-review/10 text-review" : "text-silver"}`}>{step}</span>
+                    {j < all.length - 1 && <ArrowRightIcon size={13} className="text-dim" />}
+                  </li>
+                ))}
+              </ol>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section index="09" label="Security boundaries">
+      <Section label="Security boundaries">
         <ul className="grid gap-px overflow-hidden rounded-[16px] border border-line bg-line md:grid-cols-2">
           {BOUNDARIES.map((b) => (
             <li key={b} className="bg-ink p-5 text-[14.5px] leading-relaxed text-silver">{b}</li>

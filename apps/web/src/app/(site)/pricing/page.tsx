@@ -13,7 +13,7 @@ const PLANS = [
     price: "Free",
     body: "The hosted authorization API and live console on Robinhood Chain Testnet, plus a policy workbench that evaluates examples in your browser.",
     items: ["Testnet authorization API and console", "Agents, policies, approvals and audit", "Policy workbench in the browser"],
-    note: "Testnet only. Decisions are enforced for agents that call the API; nothing is signed or broadcast yet.",
+    note: "Testnet only. Decisions are enforced for agents that call the API; smart accounts are enforced on chain.",
     available: true,
   },
   {
@@ -42,22 +42,23 @@ export default function PricingPage() {
         title="Metered on decisions and signatures."
         lede="Simple enough to understand, precise enough to reconcile with usage. Billing is tracked separately from authorization and can never bypass a check."
       />
-      <Section index="01" label="Plans">
+      <Section label="Plans">
         <div className="grid gap-px border border-line bg-line lg:grid-cols-3">
           {PLANS.map((p) => (
             <article key={p.name} className="flex flex-col bg-ink p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-fg">{p.name}</h2>
-                <span className={`font-mono text-[10px] tracking-[0.08em] ${p.available ? "text-soft" : "text-dim"}`}>
-                  {p.available ? "● AVAILABLE" : "○ NOT YET OFFERED"}
+                <h3 className="text-lg font-medium text-fg">{p.name}</h3>
+                <span className={`inline-flex items-center gap-2 font-utility text-[13px] font-semibold ${p.available ? "text-allow" : "text-muted"}`}>
+                  <span aria-hidden className={`h-2 w-2 rounded-full ${p.available ? "bg-allow" : "ring-1 ring-muted"}`} />
+                  {p.available ? "Available" : "Not yet offered"}
                 </span>
               </div>
-              <p className="mt-6 font-mono text-2xl text-fg">{p.price}</p>
+              <p className="mt-6 font-heading text-[32px] font-medium tracking-[-0.03em] text-mist">{p.price}</p>
               <p className="mt-4 text-sm leading-relaxed text-muted">{p.body}</p>
-              <ul className="mt-6 space-y-1.5 border-t border-line pt-4 font-mono text-[12px] text-soft">
-                {p.items.map((i) => <li key={i}><span className="text-dim">— </span>{i}</li>)}
+              <ul className="mt-6 space-y-2 border-t border-line pt-4 text-[14.5px] text-soft">
+                {p.items.map((i) => <li key={i} className="flex gap-3"><span aria-hidden className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-aqua" />{i}</li>)}
               </ul>
-              <p className="mt-auto pt-8 text-xs text-muted">{p.note}</p>
+              <p className="mt-auto pt-8 text-[13px] text-muted">{p.note}</p>
             </article>
           ))}
         </div>

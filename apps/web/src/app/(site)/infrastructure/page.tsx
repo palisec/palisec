@@ -64,7 +64,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Protected signing",
     body: [
       "Specified: a signer in an AWS Nitro Enclave whose key is released only to the measured image, signing only payloads bound to a recorded authorization, with no arbitrary-signing interface.",
-      "Not deployed. Today PALISEC authorizes and records; the agent signs and sends its own transaction after an ALLOW.",
+      "Not deployed. On testnet, PALISEC co-signs allowed operations for smart accounts with a server-held testnet key; the enclave is what makes that key safe for mainnet.",
     ],
     link: ["/attestation", "Attestation"],
   },
@@ -73,8 +73,8 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     cap: "account",
     title: "Smart-account enforcement",
     body: [
-      "A gateway cannot guard a key it does not hold. The protected path is an ERC-4337 account whose validation rejects any operation without a valid PALISEC authorization, so an agent that skips PALISEC cannot execute.",
-      "Not deployed. Until it is, an agent key that bypasses PALISEC can still transact; this is stated wherever it matters.",
+      "A gateway cannot guard a key it does not hold. The protected path is a Safe smart account (ERC-4337) whose threshold is 2 and whose owners include PALISEC's co-signer, so an agent that skips PALISEC cannot execute.",
+      "Live on testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
     ],
     link: ["/docs/account-abstraction", "Account abstraction"],
   },
@@ -115,51 +115,43 @@ export default function InfrastructurePage() {
         title="The deterministic security infrastructure."
         lede="An agent may propose an action. PALISEC evaluates it against explicit policies, authoritative state and spending limits before anything executes. This is the layer every agent, including PALISEC's own, must pass through."
       />
-      <Section index="01" label="Components">
-        <div className="grid border-l border-t border-line sm:grid-cols-2 lg:grid-cols-3">
+      <Section label="Components" intro="Six parts, one boundary. Status comes from the live capability list, so nothing unbuilt is presented as shipped.">
+        <ul className="border-t border-line">
           {PRODUCTS.map((p) => {
             const c = CAPABILITIES.find((x) => x.id === p.cap)!;
             return (
-              <article key={p.n} className="flex flex-col border-b border-r border-line p-6">
-                <div className="mb-6 flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs text-dim">{p.n}</span>
-                  <MaturityBadge maturity={c.maturity} />
-                </div>
-                <h2 className="text-lg font-medium text-fg">{p.name}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{p.body}</p>
-              </article>
+              <li key={p.n} className="grid gap-x-8 gap-y-2 border-b border-line py-6 md:grid-cols-[minmax(0,4fr)_minmax(0,7fr)_190px] md:items-center [&>span]:md:justify-self-end">
+                <h3 className="text-[19px] font-medium text-mist">{p.name}</h3>
+                <p className="text-[15px] leading-relaxed text-silver">{p.body}</p>
+                <MaturityBadge maturity={c.maturity} />
+              </li>
             );
           })}
-        </div>
+        </ul>
       </Section>
       {SECTIONS.map((s, i) => (
-        <Section key={s.id} id={s.id} index={String(i + 2).padStart(2, "0")} label={s.title}>
-          <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
-            <div>
-              <h2 id={`${s.id}-title`} className="font-heading text-[26px] font-medium tracking-[-0.02em] text-mist">{s.title}</h2>
-              <div className="mt-3">
-                <MaturityBadge maturity={capability(s.cap).maturity} />
-              </div>
-            </div>
-            <div className="max-w-[720px] space-y-4 text-[15.5px] leading-relaxed text-silver">
-              {s.body.map((b) => (
-                <p key={b}>{b}</p>
-              ))}
-              {s.link && (
-                <Link href={s.link[0]} className="inline-block font-utility text-[12px] uppercase tracking-[0.1em] text-aqua underline-offset-4 hover:underline">
-                  {s.link[1]} →
-                </Link>
-              )}
-            </div>
+        <Section key={s.id} id={s.id} label={s.title} className={i % 2 ? "border-y border-line bg-deep/40" : ""}>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <MaturityBadge maturity={capability(s.cap).maturity} />
+            {s.link && (
+              <Link href={s.link[0]} className="inline-flex items-center gap-1.5 text-[15px] font-medium text-aqua underline-offset-4 hover:underline">
+                {s.link[1]} <span aria-hidden>&rarr;</span>
+              </Link>
+            )}
+          </div>
+          <div className="mt-6 gap-x-16 text-[clamp(16px,1.05vw,18px)] leading-relaxed text-silver xl:columns-2 [&>p]:mb-4 [&>p]:break-inside-avoid">
+            {s.body.map((b) => (
+              <p key={b}>{b}</p>
+            ))}
           </div>
         </Section>
       ))}
-      <Section index="10" label="Rule types · schema 1.0">
+      <Section label="Rule types in schema 1.0">
         <dl className="divide-y divide-line border-y border-line">
           {RULES.map(([k, v]) => (
             <div key={k} className="grid gap-2 py-5 md:grid-cols-[260px_1fr]">
-              <dt className="text-fg">{k}</dt>
-              <dd className="text-sm leading-relaxed text-muted">{v}</dd>
+              <dt className="text-[16px] font-medium text-mist">{k}</dt>
+              <dd className="text-[15px] leading-relaxed text-silver">{v}</dd>
             </div>
           ))}
         </dl>

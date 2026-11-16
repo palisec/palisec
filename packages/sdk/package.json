@@ -1,6 +1,6 @@
 {
   "name": "@palisec/sdk",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "TypeScript client for Palisec: ask before every agent transaction, send only on ALLOW. viem and ethers.",
   "license": "UNLICENSED",
   "homepage": "https://palisec.tech/docs/sdk/typescript",

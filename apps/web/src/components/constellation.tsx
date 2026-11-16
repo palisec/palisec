@@ -63,7 +63,7 @@ export function Constellation() {
               >
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap font-utility text-[8.5px] uppercase tracking-[0.08em] text-silver sm:text-[9.5px]">
+              <span className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap font-utility text-[11px] text-silver sm:text-[11.5px]">
                 {name}
               </span>
             </li>

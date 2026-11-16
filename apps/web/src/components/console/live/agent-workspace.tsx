@@ -135,7 +135,7 @@ function DecisionSummary({ output }: { output: unknown }) {
       <ol className="divide-y divide-line rounded-[6px] border border-line">
         {output.checks.map((c) => (
           <li key={c.id} className="flex gap-3 px-3 py-1.5 text-[12px]">
-            <span className={`w-14 shrink-0 font-mono uppercase ${c.status === "pass" ? "text-allow" : c.status === "fail" ? "text-deny" : c.status === "review" ? "text-review" : "text-dim"}`}>{c.status}</span>
+            <span className={`w-14 shrink-0 font-mono ${c.status === "pass" ? "text-allow" : c.status === "fail" ? "text-deny" : c.status === "review" ? "text-review" : "text-dim"}`}>{c.status}</span>
             <span className="min-w-0 text-soft">
               <Mono className="text-mist">{c.id}</Mono> · {c.detail}
             </span>
@@ -254,7 +254,7 @@ export function LiveAgentWorkspace() {
                     <li key={r.id}>
                       <button type="button" onClick={() => open(r.id)} aria-pressed={run?.id === r.id} className={`block w-full px-4 py-2.5 text-left transition-colors hover:bg-raised/60 ${run?.id === r.id ? "bg-raised" : ""}`}>
                         <span className="line-clamp-2 text-[12.5px] text-mist">{r.title}</span>
-                        <span className="mt-0.5 flex items-center gap-2 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">
+                        <span className="mt-0.5 flex items-center gap-2 font-utility text-[12px] text-dim">
                           {ago(r.updated_at)}
                           {r.pending_actions > 0 && <span className="text-amber">{r.pending_actions} to confirm</span>}
                         </span>
@@ -286,7 +286,7 @@ export function LiveAgentWorkspace() {
                 {direct.error && <p className="text-[13px] text-deny">{direct.error}</p>}
                 <DecisionSummary output={direct.output} />
                 <details open={!isDecision(direct.output)}>
-                  <summary className="cursor-pointer font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver">Raw result</summary>
+                  <summary className="cursor-pointer font-utility text-[12.5px] text-silver">Raw result</summary>
                   <pre className="mt-2 overflow-x-auto rounded-[6px] border border-line bg-ink p-3 font-mono text-[11.5px] leading-relaxed text-soft">{JSON.stringify(direct.output, null, 2)}</pre>
                 </details>
               </div>
@@ -315,7 +315,7 @@ export function LiveAgentWorkspace() {
                 )}
                 {run.tool_calls.length > 0 && (
                   <details className="rounded-[6px] border border-line">
-                    <summary className="cursor-pointer px-3 py-2 font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver">Tool activity · {run.tool_calls.length}</summary>
+                    <summary className="cursor-pointer px-3 py-2 font-utility text-[12.5px] text-silver">Tool activity · {run.tool_calls.length}</summary>
                     <ul className="divide-y divide-line border-t border-line">
                       {run.tool_calls.map((c) => (
                         <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-[12px]">
@@ -332,7 +332,7 @@ export function LiveAgentWorkspace() {
                 )}
                 {run.action_requests.map((a) => (
                   <div key={a.id} className="rounded-[8px] border border-amber/50 bg-amber/[0.05] p-3">
-                    <p className="font-utility text-[10.5px] uppercase tracking-[0.08em] text-amber">◆ Needs your confirmation · {a.action.replace("_", " ")}</p>
+                    <p className="font-utility text-[12.5px] font-semibold text-amber">Needs your confirmation · {a.action.replace("_", " ")}</p>
                     <p className="mt-1.5 text-[13px] leading-relaxed text-soft">{a.impact}</p>
                     {a.status === "pending" ? (
                       <div className="mt-2.5 flex gap-2">
@@ -340,7 +340,7 @@ export function LiveAgentWorkspace() {
                         <Btn variant="quiet" disabled={busy} onClick={() => decide(a.id, "reject")}>Reject</Btn>
                       </div>
                     ) : (
-                      <p className="mt-2 font-utility text-[10.5px] uppercase tracking-[0.06em] text-dim">{a.status}{a.decided_by ? ` by ${a.decided_by.slice(0, 8)}…` : ""}</p>
+                      <p className="mt-2 font-utility text-[12.5px] text-dim">{a.status}{a.decided_by ? ` by ${a.decided_by.slice(0, 8)}…` : ""}</p>
                     )}
                   </div>
                 ))}
@@ -444,12 +444,12 @@ export function LiveAgentWorkspace() {
                   </Btn>
                 )}
                 <details>
-                  <summary className="cursor-pointer font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver">Tools available to you · {t.tools.filter((x) => x.available).length}/{t.tools.length}</summary>
+                  <summary className="cursor-pointer font-utility text-[12.5px] text-silver">Tools available to you · {t.tools.filter((x) => x.available).length}/{t.tools.length}</summary>
                   <ul className="mt-2 space-y-1">
                     {t.tools.map((x) => (
                       <li key={x.name} className="flex items-center justify-between gap-2 text-[11.5px]" title={x.description}>
                         <Mono className={x.available ? "text-soft" : "text-dim line-through"}>{x.name}</Mono>
-                        <span className="font-utility text-[9.5px] uppercase text-dim">{x.risk}</span>
+                        <span className="font-utility text-[11.5px] text-dim">{x.risk}</span>
                       </li>
                     ))}
                   </ul>

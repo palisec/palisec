@@ -14,6 +14,7 @@ import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/
 const NAV: { href: string; label: string; group?: string }[] = [
   { href: "/console", label: "Dashboard", group: "Overview" },
   { href: "/console/agents", label: "Agents", group: "Security" },
+  { href: "/console/smart-accounts", label: "Smart accounts" },
   { href: "/console/policies", label: "Policies" },
   { href: "/console/operations", label: "Operations" },
   { href: "/console/approvals", label: "Approvals" },
@@ -75,14 +76,14 @@ function Shell({ children }: { children: ReactNode }) {
             <span className="font-brand text-[15px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
           </Link>
           <span className="hidden h-5 w-px bg-line-strong sm:block" />
-          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[11.5px] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
             ● Testnet
           </span>
-          <dl className="hidden items-center gap-4 font-utility text-[10.5px] uppercase tracking-[0.06em] md:flex">
+          <dl className="hidden items-center gap-4 font-utility text-[12.5px] md:flex">
             <div className="flex gap-1.5"><dt className="text-dim">Network</dt><dd className="text-soft">Robinhood Testnet · 46630</dd></div>
             <div className="flex gap-1.5"><dt className="text-dim">Signed in</dt><dd className="font-mono normal-case text-soft">{session.me ? shortHex(session.me.address) : "…"}</dd></div>
           </dl>
-          <ul aria-label="System health" className="ml-auto hidden items-center gap-3 font-utility text-[10.5px] uppercase tracking-[0.05em] xl:flex">
+          <ul aria-label="System health" className="ml-auto hidden items-center gap-3 font-utility text-[12.5px] xl:flex">
             {HEALTH.map((h) => (
               <li key={h.label} className="flex items-center gap-1.5">
                 <span aria-hidden className={h.ok ? "text-aqua" : "text-silver"}>{h.ok ? "●" : "○"}</span>
@@ -91,9 +92,9 @@ function Shell({ children }: { children: ReactNode }) {
               </li>
             ))}
           </ul>
-          <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[10.5px] uppercase tracking-[0.08em] text-silver transition-colors hover:text-aqua xl:ml-4">Docs</Link>
+          <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[12.5px] text-silver transition-colors hover:text-aqua xl:ml-4">Docs</Link>
         </div>
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap border-t border-line px-4 py-1.5 font-utility text-[10px] uppercase tracking-[0.05em] xl:hidden">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap border-t border-line px-4 py-1.5 font-utility text-[12px] xl:hidden">
           <div className="flex gap-1.5 md:hidden"><dt className="text-dim">Network</dt><dd className="text-soft">Testnet · 46630</dd></div>
           {HEALTH.map((h) => (
             <div key={h.label} className="flex items-center gap-1.5">
@@ -102,12 +103,12 @@ function Shell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </dl>
-        <div aria-hidden className="c-progress absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#9cf6ee_40%,#cbfffc)] shadow-[0_0_10px_#9cf6ee]" />
+        <div aria-hidden className="c-progress absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#9cf6ee_40%,#cbfffc)]" />
       </header>
 
       {org.data?.emergency_stop && (
         <div role="alert" className="c-alarm border-b border-deny/50 bg-deny/[0.08] px-4 py-2 text-[13px] text-soft">
-          <span className="font-utility text-[10.5px] uppercase tracking-[0.08em] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
+          <span className="font-utility text-[12.5px] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
           <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>.</span>
           <Link href="/console/security" className="ml-3 text-mist underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
         </div>
@@ -129,7 +130,7 @@ function Shell({ children }: { children: ReactNode }) {
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <span aria-hidden className={`h-1.5 w-1.5 transition-all duration-500 ${active ? "scale-125 bg-aqua shadow-[0_0_10px_2px_rgb(156_246_238/0.6)]" : "bg-line-strong group-hover:bg-silver"}`} />
+                      <span aria-hidden className={`h-1.5 w-1.5 transition-all duration-500 ${active ? "scale-125 bg-aqua" : "bg-line-strong group-hover:bg-silver"}`} />
                       {n.label}
                     </span>
                     {n.href === "/console/approvals" && pending > 0 && (
@@ -158,7 +159,7 @@ function Shell({ children }: { children: ReactNode }) {
                 ) : (
                   <p className="mt-1 truncate text-[12.5px] text-soft">{org.data?.name ?? session.org?.name}</p>
                 )}
-                <p className="mt-1 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">Role · {session.org?.role}</p>
+                <p className="mt-1 font-utility text-[12px] text-dim">Role · {session.org?.role}</p>
               </div>
               <IconBtn label="Sign out" onClick={signOut} className="mt-3">
                 <SignOutIcon size={15} />
@@ -168,7 +169,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>
 
         <main id="console-main" className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
-          {session.status === "loading" && <p className="py-10 text-center font-utility text-[11px] uppercase tracking-[0.08em] text-dim">Checking your session…</p>}
+          {session.status === "loading" && <p className="py-10 text-center font-utility text-[13px] text-dim">Checking your session…</p>}
           {session.status === "unavailable" && (
             <div role="alert" className="max-w-[60ch] py-10">
               <p className="font-mono text-xs tracking-[0.08em] text-deny">■ PS_STATE_001 · SERVICE UNAVAILABLE</p>
@@ -188,7 +189,7 @@ function Shell({ children }: { children: ReactNode }) {
           {ready && (
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
-                <span className="font-utility text-[10px] uppercase tracking-[0.08em] text-aqua">● Testnet · pre-release · </span>
+                <span className="font-utility text-[12px] text-aqua">● Testnet · pre-release · </span>
                 Palisec records and enforces each authorization decision. It does not sign or broadcast yet: your agent sends the transaction itself after an
                 ALLOW, and nothing on-chain blocks a transaction that skips Palisec. <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
               </p>

@@ -22,7 +22,7 @@ export default function LoginPage() {
           <BrandMark size={22} />
           <span className="font-brand text-[17px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
         </span>
-        <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[9.5px] uppercase tracking-[0.08em] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">
+        <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[11.5px] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">
           ● Testnet · pre-release
         </span>
       </header>
@@ -50,7 +50,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <footer className="relative flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-line px-6 py-4 font-utility text-[10.5px] uppercase tracking-[0.08em]">
+      <footer className="relative flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-line px-6 py-4 font-utility text-[12.5px]">
         {[
           ["/", "Overview"],
           ["/docs/quickstart", "Quickstart"],

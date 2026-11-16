@@ -25,11 +25,11 @@ export default function AttestationPage() {
         title="Measurements, and what they do and do not prove."
         lede="This page will publish expected enclave measurements and the latest verification result, with its scope and timestamp."
       />
-      <Section index="01" label="Current measurements">
+      <Section label="Current measurements">
         <div className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="label">Enclave · production</p>
-            <p className="font-mono text-[11px] tracking-[0.08em] text-review">◆ NO ENCLAVE DEPLOYED</p>
+            <p className="font-utility text-[13px] font-semibold text-review">No enclave deployed yet</p>
           </div>
           <dl className="grid grid-cols-[auto_1fr] font-mono text-xs">
             {["PCR0 · image", "PCR1 · kernel", "PCR2 · application", "Signer public key", "Last verified"].map((k) => (
@@ -45,7 +45,7 @@ export default function AttestationPage() {
           ones, so none are shown.
         </Note>
       </Section>
-      <Section index="02" label="Verification procedure">
+      <Section label="Verification procedure">
         <ol className="divide-y divide-line border-y border-line">
           {STEPS.map(([k, v], i) => (
             <li key={k} className="grid gap-2 py-4 md:grid-cols-[3rem_220px_1fr]">

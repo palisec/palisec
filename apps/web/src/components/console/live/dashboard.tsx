@@ -81,7 +81,7 @@ function OutcomeChart({ hourly }: { hourly: Summary["hourly"] }) {
           );
         })}
       </div>
-      <figcaption className="mt-2 flex flex-wrap justify-between gap-2 font-utility text-[10px] uppercase tracking-[0.06em] text-dim">
+      <figcaption className="mt-2 flex flex-wrap justify-between gap-2 font-utility text-[12px] text-dim">
         <span>{series[0]!.hour.slice(11, 13)}:00 UTC</span>
         <span className="flex gap-3">
           <span><span aria-hidden className="text-allow">■</span> Allowed</span>
@@ -140,7 +140,7 @@ export function LiveDashboard() {
                 <span aria-hidden className={`font-mono ${st.done ? "text-aqua" : "text-dim"}`}>{st.done ? "✓" : String(i + 1)}</span>
                 <span className={st.done ? "text-muted line-through decoration-line-strong" : "text-soft"}>{st.text}</span>
                 {!st.done && (
-                  <Link href={st.href} className="ml-auto font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Open →</Link>
+                  <Link href={st.href} className="ml-auto font-utility text-[12.5px] text-silver hover:text-aqua">Open →</Link>
                 )}
               </li>
             ))}
@@ -171,7 +171,7 @@ export function LiveDashboard() {
             {!s ? <Loading what="decisions" /> : total === 0 ? <Empty title="No operations in the last 24 hours">Decisions appear here as soon as an agent calls the API.</Empty> : <OutcomeChart hourly={s.hourly} />}
           </Panel>
 
-          <Panel title="Recent security events" actions={<Link href="/console/audit" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Full audit →</Link>}>
+          <Panel title="Recent security events" actions={<Link href="/console/audit" className="font-utility text-[12.5px] text-silver hover:text-aqua">Full audit →</Link>}>
             {!events.data ? (
               <Loading what="events" />
             ) : events.data.events.length === 0 ? (
@@ -194,7 +194,7 @@ export function LiveDashboard() {
         </div>
 
         <div className="space-y-4">
-          <Panel title="Agents" actions={<Link href="/console/agents" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Manage →</Link>}>
+          <Panel title="Agents" actions={<Link href="/console/agents" className="font-utility text-[12.5px] text-silver hover:text-aqua">Manage →</Link>}>
             {!agents.data ? (
               <Loading what="agents" />
             ) : a.length === 0 ? (
@@ -217,7 +217,7 @@ export function LiveDashboard() {
             )}
           </Panel>
 
-          <Panel title="Policies" actions={<Link href="/console/policies" className="font-utility text-[10.5px] uppercase tracking-[0.06em] text-silver hover:text-aqua">Edit →</Link>}>
+          <Panel title="Policies" actions={<Link href="/console/policies" className="font-utility text-[12.5px] text-silver hover:text-aqua">Edit →</Link>}>
             {!policies.data ? (
               <Loading what="policies" />
             ) : p.length === 0 ? (

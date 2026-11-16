@@ -38,6 +38,8 @@ export default function WebhookDocs() {
         <li><code>approval.approved</code>, <code>approval.rejected</code>: a human decision on a held operation.</li>
         <li><code>organization.emergency_stop</code>, <code>agent.status_changed</code>, <code>credential.revoked</code>.</li>
         <li><code>security.finding</code>: a new finding from the detectors or the PALISEC Agent.</li>
+        <li><code>operation.submitted</code>: PALISEC co-signed an operation for a smart account and the bundler accepted it.</li>
+        <li><code>operation.executed</code>: the operation was included on chain, with its transaction hash and whether it succeeded.</li>
         <li><code>ping</code>: sent by Test in the console.</li>
       </ul>
       <h2 id="delivery">Delivery</h2>

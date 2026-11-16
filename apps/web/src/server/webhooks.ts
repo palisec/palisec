@@ -24,6 +24,8 @@ export const EVENT_TYPES = [
   "agent.status_changed",
   "credential.revoked",
   "security.finding",
+  "operation.submitted",
+  "operation.executed",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 

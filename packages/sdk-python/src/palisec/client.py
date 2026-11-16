@@ -351,6 +351,116 @@ class Palisec:
         tx_hash = await _maybe_await(sender.send_transaction(tx))
         return SendResult(operation=op, hash=str(tx_hash))
 
+    # ───────── PALISEC smart accounts: on-chain enforcement ─────────
+
+    async def prepare_execution(self, operation_id: str) -> dict:
+        """Builds the one user operation PALISEC will co-sign for an allowed or approved operation.
+        Returns ``user_operation``, ``safe_op_hash``, ``max_cost_wei`` and ``valid_until``. Nothing is sent."""
+        if not _OP_ID.match(operation_id or ""):
+            raise PalisecConfigError("operation_id must be an operation's id")
+        return await self._request("POST", f"/operations/{operation_id}/user-operation", retry=True)
+
+    async def submit_execution(self, operation_id: str, signature: str) -> dict:
+        """Sends the agent's signature; PALISEC co-signs once and submits through the bundler. Never retried."""
+        sig = signature if signature.startswith("0x") else "0x" + signature
+        if not re.fullmatch(r"0x[0-9a-fA-F]{130}", sig):
+            raise PalisecConfigError("signature must be 65 bytes of hex")
+        await self._request("POST", f"/operations/{operation_id}/submit", body={"signature": sig}, retry=False)
+        return await self.get_execution(operation_id)
+
+    async def get_execution(self, operation_id: str) -> dict:
+        """``status`` is not_prepared, prepared, submitted, executed or reverted, with ``transaction_hash`` once known."""
+        return await self._request("GET", f"/operations/{operation_id}/execution", retry=True)
+
+    async def execute_with_smart_account(
+        self,
+        sign_typed_data: Callable[[dict], Union[str, Awaitable[str]]],
+        intent: Optional[Intent] = None,
+        *,
+        wait_for_approval: bool = False,
+        approval_timeout: float = 900.0,
+        receipt_timeout: float = 90.0,
+        **kwargs: Any,
+    ) -> dict:
+        """Authorizes, then executes through the agent's PALISEC smart account.
+
+        ``sign_typed_data`` signs EIP-712 data with the agent's key, for example with eth-account::
+
+            acct = Account.from_key(agent_key)
+            sign = lambda td: acct.sign_typed_data(full_message=td).signature.hex()
+
+        PALISEC co-signs the same operation and the Safe checks both signatures on chain, so the
+        agent's key alone cannot move funds. Raises PalisecDeniedError on DENY. Returns
+        ``{"operation": Operation, "execution": dict}``.
+        """
+        it = self._intent(intent, kwargs)
+        if it.request_id is None:
+            it = Intent(**{**it.__dict__, "request_id": str(uuid.uuid4())})
+        op = await self.authorize(it)
+        if op.decision == "DENY":
+            raise PalisecDeniedError(op)
+        if op.state == "pending_approval":
+            if not wait_for_approval:
+                return {"operation": op, "execution": {"operation_id": op.operation_id, "status": "not_prepared"}}
+            assert op.operation_id is not None
+            op = await self.wait_for_approval(op.operation_id, timeout=approval_timeout)
+        if not op.allowed or op.operation_id is None:
+            raise PalisecDeniedError(op)
+        prepared = await self.prepare_execution(op.operation_id)
+        signature = await _maybe_await(sign_typed_data(safe_op_typed_data(prepared["user_operation"], self.chain_id)))
+        execution = await self.submit_execution(op.operation_id, str(signature))
+        until = time.monotonic() + receipt_timeout
+        while execution.get("status") == "submitted" and time.monotonic() < until:
+            await asyncio.sleep(3.0)
+            execution = await self.get_execution(op.operation_id)
+        return {"operation": op, "execution": execution}
+
+
+_SAFE_4337_MODULE = "0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226"
+_ENTRY_POINT_V07 = "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+
+
+def safe_op_typed_data(user_operation: dict, chain_id: int) -> dict:
+    """The EIP-712 data the agent signs for a prepared user operation, with integers as ints."""
+    u = user_operation
+    return {
+        "domain": {"chainId": chain_id, "verifyingContract": _SAFE_4337_MODULE},
+        "types": {
+            "EIP712Domain": [{"name": "chainId", "type": "uint256"}, {"name": "verifyingContract", "type": "address"}],
+            "SafeOp": [
+                {"name": "safe", "type": "address"},
+                {"name": "nonce", "type": "uint256"},
+                {"name": "initCode", "type": "bytes"},
+                {"name": "callData", "type": "bytes"},
+                {"name": "verificationGasLimit", "type": "uint128"},
+                {"name": "callGasLimit", "type": "uint128"},
+                {"name": "preVerificationGas", "type": "uint256"},
+                {"name": "maxPriorityFeePerGas", "type": "uint128"},
+                {"name": "maxFeePerGas", "type": "uint128"},
+                {"name": "paymasterAndData", "type": "bytes"},
+                {"name": "validAfter", "type": "uint48"},
+                {"name": "validUntil", "type": "uint48"},
+                {"name": "entryPoint", "type": "address"},
+            ],
+        },
+        "primaryType": "SafeOp",
+        "message": {
+            "safe": u["sender"],
+            "nonce": int(u["nonce"], 16),
+            "initCode": "0x",
+            "callData": u["callData"],
+            "verificationGasLimit": int(u["verificationGasLimit"], 16),
+            "callGasLimit": int(u["callGasLimit"], 16),
+            "preVerificationGas": int(u["preVerificationGas"], 16),
+            "maxPriorityFeePerGas": int(u["maxPriorityFeePerGas"], 16),
+            "maxFeePerGas": int(u["maxFeePerGas"], 16),
+            "paymasterAndData": "0x",
+            "validAfter": int(u["validAfter"]),
+            "validUntil": int(u["validUntil"]),
+            "entryPoint": _ENTRY_POINT_V07,
+        },
+    }
+
 
 class _Transactions:
     """Aliases grouped under the 2.0 naming. Existing method names keep working."""

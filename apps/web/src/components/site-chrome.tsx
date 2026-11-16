@@ -25,7 +25,7 @@ export const NAV = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3">
+    <header className="sticky top-0 z-50 px-[clamp(8px,3.4vw,96px)] pt-3">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
         Skip to content
       </a>
@@ -33,18 +33,18 @@ export function SiteHeader() {
         <Wordmark />
         <nav aria-label="Primary" className="hidden items-center gap-7 xl:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="group relative font-utility text-[12px] font-medium uppercase tracking-[0.12em] text-silver transition-colors hover:text-platinum">
+            <Link key={n.href} href={n.href} className="group relative font-utility text-[15px] font-medium text-silver transition-colors hover:text-platinum">
               {n.label}
-              <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-aqua shadow-[0_0_8px_#9cf6ee] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
+              <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-aqua transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-x-100" />
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/docs" className="hidden font-utility text-[12px] font-medium uppercase tracking-[0.12em] text-silver transition-colors hover:text-platinum xl:inline">
+          <Link href="/docs" className="hidden font-utility text-[15px] font-medium text-silver transition-colors hover:text-platinum xl:inline">
             Docs
           </Link>
           <span className="hidden sm:inline-flex">
-            <ButtonLink href="/console">Launch Console</ButtonLink>
+            <ButtonLink href="/console">Console</ButtonLink>
           </span>
           <details className="group relative xl:hidden">
             <summary className="btn btn-ghost h-10 w-10 cursor-pointer list-none items-center justify-center !p-0 [&::-webkit-details-marker]:hidden">
@@ -58,8 +58,8 @@ export function SiteHeader() {
               </span>
             </summary>
             <nav aria-label="Mobile" className="panel absolute right-0 top-12 w-60 animate-[fade-up_.25s_ease-out] overflow-hidden !rounded-[8px]">
-              {[...NAV, { href: "/docs", label: "Documentation" }, { href: "/console", label: "Launch Console" }].map((n) => (
-                <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[11px] uppercase tracking-[0.08em] text-mist last:border-b-0 hover:bg-raised hover:text-aqua">
+              {[...NAV, { href: "/docs", label: "Docs" }, { href: "/console", label: "Console" }].map((n) => (
+                <Link key={n.href} href={n.href} className="block border-b border-line px-4 py-3 font-utility text-[15px] font-medium text-mist last:border-b-0 hover:bg-raised hover:text-aqua">
                   {n.label}
                 </Link>
               ))}
