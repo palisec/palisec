@@ -86,7 +86,6 @@ const run = async (cookie, message, steps) => {
   script = steps;
   return call("POST", "/agent/runs", { cookie, body: { message } });
 };
-const lastRequest = () => JSON.parse(requests[requests.length - 1] ?? "{}");
 
 // ---- tools and configuration -------------------------------------------------------------------
 {
