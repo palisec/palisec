@@ -6,7 +6,7 @@ import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Quickstart",
-  description: "Sign in, write a policy, register an agent and authorize your first operation on Robinhood Chain Testnet, or evaluate policies locally.",
+  description: "Sign in, write a policy, register an agent and authorize your first operation on Robinhood Chain, or evaluate policies locally.",
   alternates: { canonical: "/docs/quickstart" },
 };
 
@@ -44,7 +44,7 @@ async function authorize(tx: { to: string; value: bigint; data: string; gas: num
     },
     body: JSON.stringify({
       request_id: requestId,
-      chain_id: 46630,                            // Robinhood Chain Testnet
+      chain_id: 4663,                             // Robinhood Chain (46630 for testnet)
       to: tx.to,
       value_wei: tx.value.toString(),             // integers as strings, never floats
       data: tx.data,
@@ -75,14 +75,14 @@ export default function Quickstart() {
   return (
     <DocArticle
       title="Quickstart"
-      lede="Part one runs on the hosted testnet service today: sign in, write a policy, register an agent and ask Palisec before every transaction. Part two evaluates policies locally with the reference evaluator."
+      lede="Part one runs on the hosted service today: sign in, write a policy, register an agent and ask Palisec before every transaction. Part two evaluates policies locally with the reference evaluator."
       maturity="service"
     >
-      <h2 id="hosted">1 · Your first authorized operation (testnet)</h2>
+      <h2 id="hosted">1 · Your first authorized operation</h2>
       <Note kind="warning" title="What this release enforces">
         Palisec records each decision and enforces budgets, cooldowns, replay protection and approvals for agents that ask it. An agent
         that sends from a plain key is enforced only in its own process; for on-chain enforcement, give it a{" "}
-        <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Start on testnet (chain 46630). Move to mainnet (4663) only with a PALISEC smart account, a tested policy and a small balance.
+        <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Try it on testnet first (chain 46630, switch in the console&apos;s top bar), then use mainnet (4663) with a PALISEC smart account, a tested policy and a small balance.
       </Note>
       <ol>
         <li><strong>Sign in.</strong> Open <Link href="/login">/login</Link> and sign the message with your wallet. Your first sign-in creates an organization with you as owner.</li>

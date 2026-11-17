@@ -1,6 +1,6 @@
 import "server-only";
-import { createPublicClient, http, type Address } from "viem";
-import { CHAINS, type ChainId } from "./config";
+import { createPublicClient, type Address } from "viem";
+import { CHAINS, chainTransport, type ChainId } from "./config";
 
 /**
  * External inputs to an evaluation. Each lookup may fail; a failure returns null and the evaluator
@@ -25,8 +25,8 @@ async function cached<T>(key: string, ttl: number, load: () => Promise<T>): Prom
 
 function client(chainId: number) {
   const chain = CHAINS[chainId as ChainId];
-  if (!chain?.enabled || !chain.rpc) return null;
-  return createPublicClient({ transport: http(chain.rpc, { timeout: 5000, retryCount: 1 }) });
+  if (!chain?.enabled) return null;
+  return createPublicClient({ transport: chainTransport(chainId as ChainId, 5000) });
 }
 
 /** Current gas price in wei, or null when the chain cannot be reached. */

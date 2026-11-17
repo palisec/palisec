@@ -190,7 +190,7 @@ export function openApiDocument(serverUrl: string) {
       title: "Palisec API",
       version: "0.6.0",
       description:
-        "Pre-release. Robinhood Chain Testnet (46630), and Robinhood Chain mainnet (4663) where the deployment enables it; an agent's key says which (ps_test_ or ps_live_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
+        "Pre-release. Robinhood Chain mainnet (4663) and Robinhood Chain Testnet (46630); an agent's key says which (ps_live_ or ps_test_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
     },
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {

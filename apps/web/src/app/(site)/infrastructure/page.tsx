@@ -64,7 +64,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Protected signing",
     body: [
       "Specified: a signer in an AWS Nitro Enclave whose key is released only to the measured image, signing only payloads bound to a recorded authorization, with no arbitrary-signing interface.",
-      "Not deployed. On testnet, PALISEC co-signs allowed operations for smart accounts with a server-held testnet key; the enclave is what makes that key safe for mainnet.",
+      "Not deployed yet. Today PALISEC co-signs allowed operations for smart accounts with a server-held key per network (a separate key for mainnet). The co-signer cannot move funds alone; the enclave will also protect it from anyone with server access.",
     ],
     link: ["/attestation", "Attestation"],
   },
@@ -74,7 +74,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Smart-account enforcement",
     body: [
       "A gateway cannot guard a key it does not hold. The protected path is a Safe smart account (ERC-4337) whose threshold is 2 and whose owners include PALISEC's co-signer, so an agent that skips PALISEC cannot execute.",
-      "Live on testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
+      "Live on Robinhood Chain mainnet and testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
     ],
     link: ["/docs/account-abstraction", "Account abstraction"],
   },

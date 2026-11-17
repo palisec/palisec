@@ -66,15 +66,15 @@ const BOUNDARIES: [string, string][] = [
   ["A · External agent → PALISEC", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
   ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
   ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
-  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. On testnet the co-signer is a server-held key; the enclave signer is specified, not deployed."],
-  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Live on testnet. A compromised API on testnet could co-sign, which is why mainnet signing belongs in the enclave."],
+  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. The co-signer is a server-held key, one per network; the enclave signer is specified, not deployed."],
+  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Live on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
 ];
 
 export default function SecurityPage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · testnet · enclave signing not deployed"
+        compat="Schema 1.0 · pre-release · mainnet and testnet · enclave signing not deployed"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature."
@@ -143,8 +143,8 @@ export default function SecurityPage() {
             three working days and credit researchers who ask to be named.
           </p>
           <p>
-            Test only against your own organization on testnet. Do not access other organizations&apos; data, degrade the service, or use real
-            funds. Good-faith research within these rules will not be pursued. Machine-readable contact:{" "}
+            Test only against your own organization, on testnet. Do not access other organizations&apos; data, degrade the service, or put
+            anyone&apos;s funds at risk. Good-faith research within these rules will not be pursued. Machine-readable contact:{" "}
             <a href="/.well-known/security.txt" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security.txt</a>.
           </p>
         </div>

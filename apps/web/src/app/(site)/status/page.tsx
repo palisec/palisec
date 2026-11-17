@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const services = (mainnet: boolean): { name: string; deployed: boolean; note: string }[] => [
-  { name: "Authorization API", deployed: true, note: mainnet ? "Mainnet 4663 and testnet 46630" : "Testnet 46630 (mainnet 4663 is built and off)" },
+  { name: "Authorization API", deployed: true, note: mainnet ? "Mainnet 4663 and testnet 46630" : "Testnet 46630 (mainnet switched off by the operator)" },
   { name: "Policy engine", deployed: true, note: "Rust engine (WebAssembly) and the reference evaluator; both must agree or the request is denied" },
   { name: "Control plane and console", deployed: true, note: "Wallet sign-in, agents, policies, approvals, audit" },
   { name: "MCP server", deployed: true, note: "Streamable HTTP at /api/mcp" },
@@ -32,7 +32,7 @@ export default function StatusPage() {
         lede={
           mainnet
             ? "The authorization API, console and smart-account execution run on Robinhood Chain mainnet and testnet, each with its own co-signer key. The signing enclave is a later upgrade. Live status comes only from a real health check."
-            : "The authorization API, console and smart-account execution run on Robinhood Chain Testnet. Mainnet support is built and switched off. Live status comes only from a real health check."
+            : "The authorization API, console and smart-account execution run on Robinhood Chain Testnet; mainnet is switched off by the operator. Live status comes only from a real health check."
         }
       />
       <Section label="Services">

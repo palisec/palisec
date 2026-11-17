@@ -11,9 +11,10 @@ const ENTRIES = [
   {
     version: "0.11.0",
     date: "2026-11-18",
-    tag: "Pre-release · mainnet support",
+    tag: "Pre-release · mainnet",
     changes: [
-      "Robinhood Chain mainnet (4663) alongside testnet (46630), switched on per deployment. The same Safe and ERC-4337 contracts, with identical code, on both; PALISEC co-signs with a separate key on each network, and a signature for one network is never valid on the other.",
+      "Robinhood Chain mainnet is the primary network. Terms of Service updated for real funds, custody and the PALISEC token.",
+      "Robinhood Chain mainnet (4663) alongside testnet (46630). The same Safe and ERC-4337 contracts, with identical code, on both; PALISEC co-signs with a separate key on each network, and a signature for one network is never valid on the other.",
       "Mainnet agents get ps_live_ keys and testnet agents ps_test_ keys. GET /v1/health lists the enabled networks, the default network and whether smart accounts are available on each.",
       "Console: a network switch in the top bar (mainnet in the caution colour). Agents, policies, smart accounts and approvals follow it, and the wallet is moved to the right network before anything is signed.",
       "SDKs: TypeScript 0.6.0 and Python 0.4.0 take the network from the key and refuse a mismatched chain.",

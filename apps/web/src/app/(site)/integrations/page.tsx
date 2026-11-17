@@ -130,7 +130,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
       <Section label="Integration examples">
         <ul className="divide-y divide-line border-y border-line">
           {[
-            ["Quickstart: first authorized operation on testnet", "/docs/quickstart"],
+            ["Quickstart: first authorized operation", "/docs/quickstart"],
             ["TypeScript: send only on ALLOW with viem or ethers", "/docs/sdk/typescript"],
             ["Python: async client with web3.py", "/docs/sdk/python"],
             ["MCP: connect an MCP client to PALISEC", "/docs/mcp"],

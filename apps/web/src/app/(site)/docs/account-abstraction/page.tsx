@@ -89,8 +89,9 @@ export default function SmartAccounts() {
       <ol>
         <li>In the console, open <Link href="/console/smart-accounts">Smart accounts</Link>.</li>
         <li>Enter the address of the key your agent signs with, and a recovery owner (your wallet is one click).</li>
-        <li><strong>Create with my wallet</strong>: your wallet sends one testnet transaction to the Safe factory.</li>
-        <li>Send the new account a little testnet ETH; it pays its own gas.</li>
+        <li>Choose the network in the console&apos;s top bar: <strong>Mainnet</strong> (real funds) or <strong>Testnet</strong>.</li>
+        <li><strong>Create with my wallet</strong>: your wallet sends one transaction to the Safe factory on that network.</li>
+        <li>Send the new account a little ETH; it pays its own gas. On mainnet, start with a small amount.</li>
         <li>Register the agent with the new address as its account, and point its policy at the same address.</li>
       </ol>
 
@@ -137,12 +138,13 @@ export default function SmartAccounts() {
       </table>
 
       <h2 id="limits">Limits of this release</h2>
-      <Note kind="warning" title="Testnet co-signer">
+      <Note kind="warning" title="Server-held co-signer">
         <span className="inline-flex items-start gap-2">
           <KeyIcon size={16} className="mt-0.5 shrink-0" />
           <span>
-            PALISEC&apos;s co-signing key is held by the server on testnet. A compromise of the server could co-sign, which is why
-            mainnet co-signing belongs in the attested enclave (<Link href="/attestation">attestation</Link>). Agents that send
+            PALISEC&apos;s co-signing keys (one per network) are held by the server. The co-signer cannot move funds alone, but a
+            compromise of the server together with an agent&apos;s key could co-sign outside policy, so keep mainnet balances
+            modest until signing moves into the attested enclave (<Link href="/attestation">attestation</Link>). Agents that send
             from a plain key are not enforced on chain; only smart accounts are.
           </span>
         </span>

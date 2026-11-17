@@ -11,14 +11,17 @@ identical code.
 
 ## Decision
 
-- Support mainnet alongside testnet. It is **off** unless `PALISEC_MAINNET=enabled`; off means every mainnet
-  request is refused with `PS_CHAIN_001`.
+- Support mainnet alongside testnet, as the primary network. It is **on** unless `PALISEC_MAINNET=off`
+  (the emergency switch); off means every mainnet request is refused with `PS_CHAIN_001`. Without
+  `PALISEC_MAINNET_SIGNER_KEY`, mainnet decisions work but nothing is co-signed. (Amended 2026-11-18: first
+  shipped off by default; the owner asked for mainnet to be the default.)
 - Mainnet co-signs with **its own key** (`PALISEC_MAINNET_SIGNER_KEY`). The server refuses a mainnet key equal to
   the testnet key. SafeOp signatures name the chain in their EIP-712 domain, so one network's signature cannot be
   replayed on the other.
 - Agents are per network. Mainnet agents get `ps_live_` keys; the SDKs take the network from the key and refuse a
   mismatch.
-- The server reads mainnet through Alchemy when a key is set, as Robinhood recommends for production.
+- The server reads each network through Alchemy when a key is set, as Robinhood recommends for production, and
+  falls back to the public endpoint if Alchemy fails, so decisions keep working.
 
 ## Why this is acceptable before the enclave
 
@@ -31,5 +34,6 @@ identical code.
 
 - Operators must keep the mainnet key only in Vercel (Production, Sensitive). Rotating it means creating new
   accounts (it is a Safe owner), or a Safe owner swap signed by the recovery owner and the agent.
-- The Terms of Service still say testnet only; they must be updated (a legal decision) before mainnet is enabled.
+- The Terms of Service were updated for mainnet (real-funds risk, no custody, the PALISEC token) with the owner's
+  permission, pending their legal review and the legal entity details.
 - Part 11 (enclave) remains the path before holding significant value.

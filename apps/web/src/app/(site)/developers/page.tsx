@@ -39,7 +39,7 @@ async with Palisec(os.environ["PALISEC_API_KEY"]) as palisec:
 export default function DevelopersPage() {
   return (
     <>
-      <PageHeader eyebrow="Developers" title="Integrate once. Secure autonomous execution." lede="Everything here runs on Robinhood Chain Testnet (46630) and, where it is enabled, mainnet (4663). Every snippet is the real SDK, tested against the live API in CI.">
+      <PageHeader eyebrow="Developers" title="Integrate once. Secure autonomous execution." lede="Everything here runs on Robinhood Chain mainnet (4663) and testnet (46630). Every snippet is the real SDK, tested against the live API in CI.">
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/docs/quickstart">Quickstart</ButtonLink>
           <ButtonLink href="/console" variant="ghost" icon={<TerminalIcon size={17} />}>Console</ButtonLink>

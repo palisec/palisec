@@ -11,9 +11,9 @@ const PLANS = [
   {
     name: "Sandbox",
     price: "Free",
-    body: "The hosted authorization API and live console on Robinhood Chain Testnet, plus a policy workbench that evaluates examples in your browser.",
-    items: ["Testnet authorization API and console", "Agents, policies, approvals and audit", "Policy workbench in the browser"],
-    note: "Testnet only. Decisions are enforced for agents that call the API; smart accounts are enforced on chain.",
+    body: "The hosted authorization API and live console on Robinhood Chain mainnet and testnet, plus a policy workbench that evaluates examples in your browser.",
+    items: ["Authorization API and console, mainnet and testnet", "Smart accounts enforced on chain", "Agents, policies, approvals and audit"],
+    note: "Free during pre-release. Decisions are enforced for agents that call the API; smart accounts are enforced on chain.",
     available: true,
   },
   {

@@ -21,7 +21,7 @@ from palisec import Palisec, PalisecDeniedError
 from palisec.web3 import Web3Sender
 
 # The agent's own account: the one you registered in Console → Agents.
-w3 = AsyncWeb3(AsyncHTTPProvider("https://rpc.testnet.chain.robinhood.com"))
+w3 = AsyncWeb3(AsyncHTTPProvider("https://rpc.mainnet.chain.robinhood.com"))  # testnet: rpc.testnet.chain.robinhood.com
 sender = Web3Sender(w3, Account.from_key(os.environ["AGENT_KEY"]))
 
 async with Palisec(os.environ["PALISEC_API_KEY"]) as palisec:   # server-side only

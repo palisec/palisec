@@ -1,7 +1,7 @@
 import "server-only";
-import { createPublicClient, http, isHex, keccak256, verifyTypedData, type Hex } from "viem";
+import { createPublicClient, isHex, keccak256, verifyTypedData, type Hex } from "viem";
 import type { AgentContext, MemberContext } from "./access";
-import { CHAINS, chainEnabled, VERIFY_CHAIN } from "./config";
+import { chainEnabled, chainTransport, VERIFY_CHAIN } from "./config";
 import { db } from "./db";
 import { BadRequest, HttpError } from "./http";
 import { AUTHORIZATION_TTL_SECONDS, getOperation, toDecision } from "./operations";
@@ -83,8 +83,7 @@ export async function listApprovals(ctx: MemberContext, params: URLSearchParams)
 async function signatureFrom(address: Hex, typed: ReturnType<typeof typedDataFor>, signature: Hex, chainId: number) {
   if (await verifyTypedData({ address, signature, ...typed }).catch(() => false)) return true;
   // Smart-contract wallets (ERC-1271) verify against the operation's own network.
-  const rpc = chainEnabled(chainId) ? CHAINS[chainId].rpc : CHAINS[VERIFY_CHAIN].rpc;
-  const client = createPublicClient({ transport: http(rpc, { timeout: 8000, retryCount: 1 }) });
+  const client = createPublicClient({ transport: chainTransport(chainEnabled(chainId) ? chainId : VERIFY_CHAIN) });
   return client.verifyTypedData({ address, signature, ...typed }).catch(() => false);
 }
 

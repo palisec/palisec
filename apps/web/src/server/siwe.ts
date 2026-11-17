@@ -1,7 +1,7 @@
 import "server-only";
-import { createPublicClient, getAddress, http, isAddress, isHex, verifyMessage, type Hex } from "viem";
+import { createPublicClient, getAddress, isAddress, isHex, verifyMessage, type Hex } from "viem";
 import { createSiweMessage } from "viem/siwe";
-import { CHAINS, CHALLENGE_TTL_SECONDS, VERIFY_CHAIN } from "./config";
+import { CHALLENGE_TTL_SECONDS, chainTransport, enabledChainIds } from "./config";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 import { db } from "./db";
 import { BadRequest } from "./http";
@@ -64,10 +64,12 @@ export type VerifyResult = { ok: true; userId: string; address: string; created:
 async function signatureValid(address: `0x${string}`, message: string, signature: Hex): Promise<boolean> {
   // EOA signatures verify locally, with no network dependency.
   if (await verifyMessage({ address, message, signature }).catch(() => false)) return true;
-  // Smart-contract wallets (ERC-1271, or ERC-6492 if undeployed) verify against the chain.
-  const chain = CHAINS[VERIFY_CHAIN];
-  const client = createPublicClient({ transport: http(chain.rpc, { timeout: 8000, retryCount: 1 }) });
-  return client.verifyMessage({ address, message, signature }).catch(() => false);
+  // Smart-contract wallets (ERC-1271, or ERC-6492 if undeployed) verify against the chain: mainnet first, then testnet.
+  for (const id of enabledChainIds()) {
+    const client = createPublicClient({ transport: chainTransport(id) });
+    if (await client.verifyMessage({ address, message, signature }).catch(() => false)) return true;
+  }
+  return false;
 }
 
 /** Consumes the challenge exactly once, checks the signature, and resolves (or creates) the user. */

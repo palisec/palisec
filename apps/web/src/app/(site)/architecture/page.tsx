@@ -263,7 +263,7 @@ const STACK: { brand?: Brand; icon?: ReactNode; name: string; role: string; live
   { brand: "python", name: "Python SDK", role: "async client, web3.py sender", live: true },
   { brand: "modelcontextprotocol", name: "MCP SDK", role: "Streamable HTTP server", live: true },
   { icon: <CpuIcon size={20} />, name: "Groq", role: "Model for the PALISEC Agent", live: true },
-  { brand: "ethereum", name: "Safe 1.4.1 + 4337 module", role: "Smart accounts, testnet", live: true },
+  { brand: "ethereum", name: "Safe 1.4.1 + 4337 module", role: "Smart accounts, mainnet and testnet", live: true },
   { icon: <ZapIcon size={20} />, name: "Alchemy bundler", role: "ERC-4337 submission", live: true },
   { icon: <LockIcon size={20} />, name: "AWS Nitro Enclaves", role: "Protected signing", live: false },
 ];
@@ -278,7 +278,7 @@ export default function ArchitecturePage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · testnet · enclave signing not deployed"
+        compat="Schema 1.0 · pre-release · mainnet and testnet · enclave signing not deployed"
         title="Decide off chain. Enforce on chain. Fail closed everywhere."
         lede="What runs where, the path of one request, what is stored, and what happens when something breaks."
       />

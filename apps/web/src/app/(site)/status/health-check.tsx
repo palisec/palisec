@@ -38,7 +38,7 @@ export function HealthCheck() {
             {Object.entries(h.components).map(([k, v]) => (
               <li key={k} className="flex items-center justify-between py-3 text-sm">
                 <span className="text-soft">{k.replace(/_/g, " ")}</span>
-                <span className={`font-mono text-[13px] ${v === "ok" || v === "configured" || v === "testnet_cosigner" ? "text-allow" : v === "not_deployed" || v === "not_configured" ? "text-dim" : "text-deny"}`}>
+                <span className={`font-mono text-[13px] ${v === "ok" || v === "configured" || v === "testnet_cosigner" || v === "mainnet_cosigner" || v === "enabled" || v === "reachable" ? "text-allow" : v === "not_deployed" || v === "not_configured" ? "text-dim" : "text-deny"}`}>
                   {String(v).replace(/_/g, " ")}
                 </span>
               </li>

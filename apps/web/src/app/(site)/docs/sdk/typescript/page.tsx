@@ -16,7 +16,7 @@ const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
 
-const provider = new JsonRpcProvider("https://rpc.testnet.chain.robinhood.com");
+const provider = new JsonRpcProvider("https://rpc.mainnet.chain.robinhood.com"); // testnet: rpc.testnet.chain.robinhood.com
 const wallet = await fromEthers(new Wallet(process.env.AGENT_KEY!, provider)); // checks the network
 
 const { hash } = await palisec.sendTransaction(wallet, { to: TOKEN, data, gasLimit: 90_000 });`;
@@ -30,7 +30,7 @@ const palisec = createPalisec({ apiKey: process.env.PALISEC_API_KEY! }); // serv
 // The agent's own account: the one you registered in Console → Agents.
 const wallet = createWalletClient({
   account: privateKeyToAccount(process.env.AGENT_KEY as \`0x\${string}\`),
-  transport: http("https://rpc.testnet.chain.robinhood.com"),
+  transport: http("https://rpc.mainnet.chain.robinhood.com"), // testnet: rpc.testnet.chain.robinhood.com
 });
 
 try {

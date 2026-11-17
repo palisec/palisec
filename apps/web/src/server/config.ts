@@ -1,26 +1,36 @@
 import "server-only";
+import { fallback, http, type Transport } from "viem";
 import { isNetworkId, MAINNET, NETWORKS, TESTNET, type NetworkId } from "@/lib/networks";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * Networks the control plane accepts. Testnet is always on. Mainnet (real funds) is on only when the
- * operator sets PALISEC_MAINNET=enabled; until then mainnet requests are refused with PS_CHAIN_001.
- * Chain 4663 was verified against Robinhood's public RPC (eth_chainId 0x1237) on 2026-11-18.
+ * Networks the control plane accepts. Mainnet (4663, real funds) is the primary network and is on unless
+ * the operator sets PALISEC_MAINNET=off, which refuses every mainnet request with PS_CHAIN_001. Testnet
+ * (46630) is always on for trying things out. Chain 4663 verified against Robinhood's RPC on 2026-11-18.
  */
-export const mainnetEnabled = () => (process.env.PALISEC_MAINNET || "").trim().toLowerCase() === "enabled";
+export const mainnetEnabled = () => !["off", "disabled", "false", "0"].includes((process.env.PALISEC_MAINNET || "").trim().toLowerCase());
 
-/** Server-side RPC: an explicit override, else Alchemy when a key is set, else the public endpoint. */
-function rpcFor(id: NetworkId, override: string | undefined): string {
-  if (override?.trim()) return override.trim();
+/**
+ * Server-side RPCs, in order: an explicit override alone (tests point it at a local fork), otherwise
+ * Alchemy when a key is set with the public endpoint as fallback, otherwise the public endpoint.
+ */
+function rpcsFor(id: NetworkId, override: string | undefined): string[] {
+  if (override?.trim()) return [override.trim()];
   const key = (process.env.ALCHEMY_API_KEY || "").trim();
-  if (/^[A-Za-z0-9_-]{8,128}$/.test(key)) return `https://${NETWORKS[id].alchemy}.g.alchemy.com/v2/${key}`;
-  return NETWORKS[id].publicRpc;
+  if (/^[A-Za-z0-9_-]{8,128}$/.test(key)) return [`https://${NETWORKS[id].alchemy}.g.alchemy.com/v2/${key}`, NETWORKS[id].publicRpc];
+  return [NETWORKS[id].publicRpc];
 }
 
-export const CHAINS: Record<NetworkId, { name: string; rpc: string; enabled: boolean; testnet: boolean }> = {
-  [MAINNET]: { name: NETWORKS[MAINNET].name, rpc: rpcFor(MAINNET, process.env.RH_MAINNET_RPC_URL), enabled: mainnetEnabled(), testnet: false },
-  [TESTNET]: { name: NETWORKS[TESTNET].name, rpc: rpcFor(TESTNET, process.env.RH_TESTNET_RPC_URL), enabled: true, testnet: true },
+export const CHAINS: Record<NetworkId, { name: string; rpcs: string[]; enabled: boolean; testnet: boolean }> = {
+  [MAINNET]: { name: NETWORKS[MAINNET].name, rpcs: rpcsFor(MAINNET, process.env.RH_MAINNET_RPC_URL), enabled: mainnetEnabled(), testnet: false },
+  [TESTNET]: { name: NETWORKS[TESTNET].name, rpcs: rpcsFor(TESTNET, process.env.RH_TESTNET_RPC_URL), enabled: true, testnet: true },
 };
+
+/** A viem transport for a network: the first RPC, falling back to the next if it errors or times out. */
+export function chainTransport(id: NetworkId, timeout = 8000): Transport {
+  const list = CHAINS[id].rpcs.map((u) => http(u, { timeout, retryCount: 1 }));
+  return list.length === 1 ? list[0]! : fallback(list);
+}
 
 export type ChainId = NetworkId;
 /** Sign-in messages name testnet; the chain only matters for verifying smart-contract wallet signatures. */

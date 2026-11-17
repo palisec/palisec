@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient, getAddress, http, isAddress, recoverAddress, type Address, type Hex, type PrivateKeyAccount } from "viem";
+import { createPublicClient, getAddress, isAddress, recoverAddress, type Address, type Hex, type PrivateKeyAccount } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   ENTRYPOINT_ABI,
@@ -18,7 +18,7 @@ import {
 } from "@/lib/safe-op";
 import type { AgentContext } from "./access";
 import { MAINNET, NETWORKS, TESTNET, isNetworkId, networkLabel } from "@/lib/networks";
-import { CHAINS, chainEnabled, defaultChain } from "./config";
+import { chainEnabled, chainTransport, defaultChain } from "./config";
 import { db, type Row } from "./db";
 import { afterChange } from "./events";
 import { BadRequest, HttpError, logEvent } from "./http";
@@ -49,6 +49,38 @@ export function palisecSigner(chainId: number): PrivateKeyAccount | null {
   return account;
 }
 
+/** The co-signer's state for health reporting: present or not, never its value. */
+export function signerState(chainId: number): "configured" | "not_configured" | "same_as_testnet" {
+  if (palisecSigner(chainId)) return "configured";
+  if (chainId === MAINNET && KEY_RE.test(readKey(SIGNER_ENV[MAINNET])) && sharesTestnetKey()) return "same_as_testnet";
+  return "not_configured";
+}
+
+/** Does the network's bundler answer? One cheap call, remembered for five minutes. Never reveals the URL. */
+const bundlerSeen = new Map<number, { at: number; ok: boolean }>();
+export async function bundlerReachable(chainId: number): Promise<boolean | null> {
+  const url = bundlerUrl(chainId);
+  if (!url) return null;
+  const hit = bundlerSeen.get(chainId);
+  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.ok;
+  let ok = false;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_supportedEntryPoints", params: [] }),
+      signal: AbortSignal.timeout(5000),
+      cache: "no-store",
+    });
+    const body = (await res.json().catch(() => null)) as { result?: string[] } | null;
+    ok = res.ok && Array.isArray(body?.result) && body.result.some((e) => e.toLowerCase() === SAFE_4337.entryPoint.toLowerCase());
+  } catch {
+    ok = false;
+  }
+  bundlerSeen.set(chainId, { at: Date.now(), ok });
+  return ok;
+}
+
 /** Why a network's co-signer is unavailable, in words an operator can act on. */
 function signerProblem(chainId: number): string {
   if (chainId === MAINNET && KEY_RE.test(readKey(SIGNER_ENV[MAINNET])) && sharesTestnetKey())
@@ -75,8 +107,7 @@ export function smartAccountsStatus(chainId: number) {
 
 function chainClient(chainId: number) {
   if (!chainEnabled(chainId)) return null;
-  const chain = CHAINS[chainId];
-  return createPublicClient({ transport: http(chain.rpc, { timeout: 8000, retryCount: 1 }) });
+  return createPublicClient({ transport: chainTransport(chainId) });
 }
 
 async function bundlerRpc<T>(chainId: number, method: string, params: unknown[]): Promise<T> {
