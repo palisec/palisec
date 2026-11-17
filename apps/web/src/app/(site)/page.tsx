@@ -147,7 +147,7 @@ export default function Home() {
         </div>
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgb(1_38_36/0.9)_0%,rgb(1_38_36/0.6)_45%,rgb(1_38_36/0.05)_80%)]" />
         <Container className="relative grid gap-x-16 gap-y-10 pb-12 pt-[calc(76px+clamp(28px,5vh,64px))]">
-          <h1 id="hero-title" className="display text-[clamp(44px,6.2vw,128px)] leading-[0.98] text-mist">
+          <h1 id="hero-title" className="display text-[clamp(40px,5.2vw,100px)] leading-[0.98] text-mist">
             {["Security infrastructure", "for the autonomous", "agent economy."].map((line, i) => (
               <span key={line} className="line-mask wide" style={{ "--d": `${120 + i * 110}ms` } as CSSProperties}>
                 <span className={i === 2 ? "text-aqua" : ""}>{line}</span>
@@ -395,7 +395,7 @@ export default function Home() {
       <ReversalBand>
         <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] lg:items-start">
           <div>
-            <h2 className="kinetic text-[clamp(34px,4.6vw,84px)] leading-[1.02] text-mist [text-wrap:balance]">
+            <h2 className="kinetic text-[clamp(30px,3.8vw,68px)] leading-[1.02] text-mist [text-wrap:balance]">
               {["Intelligence is", "not the authority.", "Enforcement is."].map((l, i) => (
                 <Reveal key={l} as="span" delay={i * 90} className={`block ${i === 2 ? "text-aqua" : ""}`}>{l}</Reveal>
               ))}
@@ -493,7 +493,7 @@ export default function Home() {
         <div aria-hidden className="aurora right-[-10%] top-[-20%] h-[520px] w-[820px] bg-aqua/[0.08]" />
         <Container className="relative py-28 sm:py-36">
           <Reveal>
-            <h2 id="close-title" className="display text-[clamp(40px,5.4vw,112px)] text-mist">
+            <h2 id="close-title" className="display text-[clamp(34px,4.4vw,84px)] text-mist">
               <span className="block">Build autonomous agents.</span>
               <span className="block text-aqua">Give their execution a boundary.</span>
             </h2>

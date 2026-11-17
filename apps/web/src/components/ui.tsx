@@ -160,7 +160,7 @@ export function PageHeader({ title, lede, compat, children }: { eyebrow?: string
         <div className="aurora right-[-6%] top-[-40%] h-[520px] w-[720px] bg-aqua/[0.10] animate-[drift-a_22s_ease-in-out_infinite]" />
       </div>
       <Container className="relative grid gap-x-16 gap-y-10 pb-14 pt-12 sm:pb-16 sm:pt-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
-        <h1 className="display max-w-[20ch] text-[clamp(40px,4.8vw,96px)] text-mist">
+        <h1 className="display max-w-[20ch] text-[clamp(36px,4.2vw,80px)] text-mist">
           {title.split(" ").reduce<string[][]>((rows, w, i) => {
             const r = Math.floor(i / 3);
             (rows[r] ??= []).push(w);
