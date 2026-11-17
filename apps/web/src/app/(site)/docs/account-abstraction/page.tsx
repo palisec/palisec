@@ -62,7 +62,7 @@ export default function SmartAccounts() {
       title="Smart accounts"
       lede="On-chain enforcement: the agent's funds live in a Safe that needs PALISEC's co-signature, so a stolen agent key cannot move them."
       maturity="service"
-      compat={`Testnet 46630 · Safe 1.4.1 · Safe 4337 module v0.3.0 · EntryPoint v0.7`}
+      compat={`Mainnet 4663 · Testnet 46630 · Safe 1.4.1 · Safe 4337 module v0.3.0 · EntryPoint v0.7`}
     >
       <h2 id="model">How it works</h2>
       <p>
@@ -119,7 +119,12 @@ export default function SmartAccounts() {
         </span>
       </p>
 
-      <h2 id="contracts">Contracts on Robinhood Chain Testnet</h2>
+      <h2 id="contracts">Contracts on Robinhood Chain</h2>
+      <p>
+        The same contracts, with byte-for-byte identical code, are deployed at the same addresses on mainnet (4663) and
+        testnet (46630). PALISEC co-signs with a different key on each network, and the signed data names the network, so a
+        signature made for one can never be used on the other.
+      </p>
       <table>
         <thead><tr><th>Contract</th><th>Address</th></tr></thead>
         <tbody>

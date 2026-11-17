@@ -58,12 +58,12 @@ export function LiveSecurity() {
               ["Budget reservations and replay", <Pill key="b" tone="allow">● Live · atomic in Postgres</Pill>],
               ["Human approvals", <Pill key="h" tone="allow">● Live · EIP-712 signatures</Pill>],
               ["Protected signing (TEE)", <Pill key="s" tone="muted">○ Not deployed</Pill>],
-              ["Bundler submission", <Pill key="u" tone="muted">○ Not deployed</Pill>],
-              ["On-chain validation module", <Pill key="v" tone="muted">○ Not deployed</Pill>],
+              ["Smart-account co-signing", <Pill key="v" tone="allow">● Live · Safe + 4337 module</Pill>],
+              ["Bundler submission", <Pill key="u" tone="allow">● Live · Alchemy</Pill>],
             ]}
           />
           <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
-            Until the account module ships, Palisec is a gate your agent must call: it records and limits authorizations, but a key that bypasses it can still send transactions. See{" "}
+            Agents with a PALISEC smart account cannot skip PALISEC: the account needs its co-signature. An agent that sends from a plain key is only gated if it calls PALISEC first. See{" "}
             <Link href="/security" className="text-soft underline underline-offset-4 hover:text-aqua">security</Link> for the threat model.
           </p>
         </Panel>

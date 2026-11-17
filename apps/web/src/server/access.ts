@@ -77,8 +77,8 @@ export interface AgentContext {
   emergencyStop: boolean;
 }
 
-/** API keys look like ps_test_ followed by 48 hex characters (192 random bits). */
-export const API_KEY_PATTERN = /^ps_test_[0-9a-f]{48}$/;
+/** API keys: ps_live_ (mainnet agents) or ps_test_ (testnet), then 48 hex characters (192 random bits). */
+export const API_KEY_PATTERN = /^ps_(?:live|test)_[0-9a-f]{48}$/;
 
 /**
  * Authenticates an agent's API key from `Authorization: Bearer …`. Keys are never accepted in URLs.

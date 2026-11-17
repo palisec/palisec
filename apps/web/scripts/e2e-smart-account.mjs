@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
  * Smart-account execution end to end: a Safe (threshold 2: agent key, PALISEC co-signer, recovery owner)
- * on a fork of Robinhood Chain Testnet, an allowed operation prepared, signed by the agent, co-signed and
- * submitted by PALISEC, executed on chain, and every refusal path.
+ * on a fork of Robinhood Chain Testnet or mainnet, an allowed operation prepared, signed by the agent,
+ * co-signed and submitted by PALISEC, executed on chain, and every refusal path.
  *
- *   RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-smart-account.mjs
+ *   RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 [CHAIN_ID=4663] node apps/web/scripts/e2e-smart-account.mjs
  *
- * The server must run with RH_TESTNET_RPC_URL=$RPC_URL (an anvil fork), PALISEC_SIGNER_KEY set, and
- * PALISEC_TEST_BUNDLER_URL pointing at scripts/test-bundler.mjs.
+ * Testnet (default): the server runs with RH_TESTNET_RPC_URL=$RPC_URL (an anvil fork) and PALISEC_SIGNER_KEY.
+ * Mainnet (CHAIN_ID=4663): PALISEC_MAINNET=enabled, RH_MAINNET_RPC_URL=$RPC_URL (an anvil fork of mainnet)
+ * and PALISEC_MAINNET_SIGNER_KEY, a different key. Both need PALISEC_TEST_BUNDLER_URL (scripts/test-bundler.mjs).
  */
 import { createPublicClient, createWalletClient, encodeFunctionData, hashTypedData, http, parseAbi, parseEther } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -15,6 +16,8 @@ import { createPalisec } from "../../../packages/sdk/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const RPC = process.env.RPC_URL ?? "http://127.0.0.1:8545";
+const CHAIN = Number(process.env.CHAIN_ID ?? 46630);
+const KEY_PREFIX = CHAIN === 4663 ? "ps_live_" : "ps_test_";
 const FACTORY = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67";
 const SINGLETON = "0x41675C099F32341bf84BFc5382aF534df5C7461a";
 const MODULE = "0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226";
@@ -57,7 +60,9 @@ const stranger = privateKeyToAccount(generatePrivateKey());
 const recipient = privateKeyToAccount(generatePrivateKey()).address;
 const cookie = await signIn(owner);
 
-const cfg = await call("GET", "/smart-accounts", { cookie });
+const forkChain = await pub.getChainId();
+check(`setup: the fork reports chain ${CHAIN}`, forkChain === CHAIN, forkChain);
+const cfg = await call("GET", `/smart-accounts?chain_id=${CHAIN}`, { cookie });
 check("config: co-signer and submission are available", cfg.status === 200 && /^0x[0-9a-fA-F]{40}$/.test(cfg.body.palisec_signer ?? "") && cfg.body.submission === "available", cfg.body);
 const palisec = cfg.body.palisec_signer;
 
@@ -76,7 +81,7 @@ check("chain: Safe created and funded on the fork", ((await pub.getCode({ addres
 
 // ---- control plane: policy and agent bound to the Safe --------------------------------------------
 async function policyFor(account, label, allow) {
-  const p = await call("POST", "/policies", { cookie, body: { name: `${label} policy`, policy_key: `${label}_${Date.now()}`, chain_id: 46630, account } });
+  const p = await call("POST", "/policies", { cookie, body: { name: `${label} policy`, policy_key: `${label}_${Date.now()}`, chain_id: CHAIN, account } });
   const draft = {
     ...p.body.draft,
     limits: { ...p.body.draft.limits, max_price_age_seconds: 120, max_pending_operations: 50, max_transaction_value_wei: parseEther("0.05").toString(), hourly_budget_usd_micros: "1000000000" },
@@ -91,21 +96,21 @@ async function policyFor(account, label, allow) {
 }
 async function agentFor(account, label, allow) {
   const policyId = await policyFor(account, label, allow);
-  const a = await call("POST", "/agents", { cookie, body: { name: `${label} agent`, chain_id: 46630, account, policy_id: policyId } });
+  const a = await call("POST", "/agents", { cookie, body: { name: `${label} agent`, chain_id: CHAIN, account, policy_id: policyId } });
   const k = await call("POST", `/agents/${a.body.id}/credentials`, { cookie, body: { label: "default" } });
   return { agentId: a.body.id, key: k.body.secret };
 }
 const S = await agentFor(safe, "safe", recipient);
-check("setup: agent registered with the Safe as its account", /^ps_test_/.test(S.key ?? ""), S);
+check(`setup: agent registered with the Safe as its account (${KEY_PREFIX} key)`, (S.key ?? "").startsWith(KEY_PREFIX), S);
 
 const transfer = "0xa9059cbb" + "00".repeat(64);
 const now = () => Math.floor(Date.now() / 1000);
-const intent = (over = {}) => ({ request_id: `sa-${crypto.randomUUID()}`, chain_id: 46630, to: recipient, value_wei: parseEther("0.001").toString(), data: transfer, gas_limit: 200000, deadline: now() + 120, ...over });
+const intent = (over = {}) => ({ request_id: `sa-${crypto.randomUUID()}`, chain_id: CHAIN, to: recipient, value_wei: parseEther("0.001").toString(), data: transfer, gas_limit: 200000, deadline: now() + 120, ...over });
 
 {
   const r = await call("GET", `/smart-accounts/${safe}`, { key: S.key });
   check("inspect: the Safe is enforced (threshold 2, PALISEC an owner, module on)", r.status === 200 && r.body.enforced && r.body.threshold === 2 && r.body.owners.length === 3 && r.body.palisec_is_owner, r.body);
-  const list = await call("GET", "/smart-accounts", { cookie });
+  const list = await call("GET", `/smart-accounts?chain_id=${CHAIN}`, { cookie });
   check("console list: the agent's account shows as enforced", list.body.agents?.some((a) => a.agent_id === S.agentId && a.account?.enforced), list.body.agents);
 }
 
@@ -117,7 +122,7 @@ const prep = await call("POST", `/operations/${id}/user-operation`, { key: S.key
 check("prepare: returns typed data, hash and a bounded cost", prep.status === 200 && /^0x[0-9a-f]{64}$/.test(prep.body.safe_op_hash) && BigInt(prep.body.max_cost_wei) > 0n, prep.body);
 const u = prep.body.user_operation;
 const typed = {
-  domain: { chainId: 46630, verifyingContract: MODULE },
+  domain: { chainId: CHAIN, verifyingContract: MODULE },
   types: { SafeOp: prep.body.typed_data.types.SafeOp },
   primaryType: "SafeOp",
   message: {
@@ -191,7 +196,14 @@ check("chain: the recipient received exactly the authorized value", (await pub.g
 }
 
 const health = await fetch(`${BASE}/api/v1/health`).then((r) => r.json());
-check("health: signer and bundler reported as configured, values never shown", health.components?.signer === "testnet_cosigner" && health.components?.bundler === "configured" && health.features?.smart_accounts === true && !JSON.stringify(health).includes("alchemy"), health.components);
+const signerState = CHAIN === 4663 ? health.components?.mainnet_signer === "mainnet_cosigner" : health.components?.signer === "testnet_cosigner";
+check("health: signer and bundler reported as configured, values never shown", signerState && health.components?.bundler === "configured" && health.features?.smart_accounts === true && !JSON.stringify(health).includes("alchemy"), health.components);
+if (CHAIN === 4663) {
+  // Mainnet never shares the testnet co-signer.
+  const test = await call("GET", "/smart-accounts?chain_id=46630", { cookie });
+  check("mainnet: its co-signer is a different key from testnet's", test.status === 200 && test.body.palisec_signer !== palisec, { mainnet: palisec, testnet: test.body.palisec_signer });
+  check("health: mainnet listed as enabled and the default network", health.default_chain === 4663 && health.chains?.some((c) => c.chain_id === 4663 && c.enabled && c.smart_accounts), health.chains);
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

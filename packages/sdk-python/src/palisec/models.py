@@ -19,8 +19,11 @@ OperationState = Literal[
     "not_recorded",
 ]
 
-#: Chains this release accepts. Mainnet (4663) is not enabled yet.
-SUPPORTED_CHAINS: tuple[int, ...] = (46630,)
+#: Chains this release accepts: Robinhood Chain (4663, real funds, where the deployment enables it) and
+#: Robinhood Chain Testnet (46630). A ps_live_ key is a mainnet agent's; a ps_test_ key, testnet's.
+SUPPORTED_CHAINS: tuple[int, ...] = (4663, 46630)
+MAINNET = 4663
+TESTNET = 46630
 
 
 @dataclass(frozen=True)

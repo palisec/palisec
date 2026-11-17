@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ENDPOINTS } from "@/lib/api-reference";
 import { ROLES, type AgentContext, type MemberContext, type Permission } from "../access";
 import { listOperations, summary } from "../approvals";
-import { CHAINS } from "../config";
+import { chainEnabled } from "../config";
 import { getAgent, getOrganization, getPolicy, listAudit, starterPolicy } from "../control";
 import { db, type Row } from "../db";
 import { policyChanges } from "../diff";
@@ -117,7 +117,7 @@ export function explainPolicy(doc: Record<string, any>): string[] { // eslint-di
 
 const SDK_DOCS = {
   typescript: {
-    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem",
+    install: "npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem",
     methods: [
       "createPalisec({ apiKey }) -> client",
       "authorize(intent) -> decision record (ALLOW | DENY | REQUIRES_HUMAN_SIGNATURE); retry-safe",
@@ -131,7 +131,7 @@ const SDK_DOCS = {
     docs: "https://palisec.tech/docs/sdk/typescript",
   },
   python: {
-    install: "pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl",
+    install: "pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl",
     methods: [
       "Palisec(api_key) async client",
       "authorize(**intent), evaluate(**intent), send_transaction(sender, ...)",
@@ -162,7 +162,7 @@ const GUIDANCE: Partial<Record<ReasonCode, string>> = {
   PS_HUMAN_001: "A human approver must sign this exact operation in Console -> Approvals.",
   PS_PAUSED_001: "The agent is paused or the organization's emergency stop is engaged.",
   PS_STATE_001: "Authoritative state, price or the policy engines were unavailable or disagreed; the request failed closed. Retry later.",
-  PS_CHAIN_001: "The chain is not enabled on this deployment (only Robinhood Chain Testnet 46630).",
+  PS_CHAIN_001: "The network is not enabled on this deployment (testnet 46630 always; mainnet 4663 only when the operator turns it on), or smart-account execution is not configured for it.",
   PS_REQUEST_001: "The request did not match the schema. Check field formats against the API reference.",
 };
 
@@ -402,7 +402,7 @@ export const TOOLS: Tool[] = [
       doc.contracts.denylist = i.denylist as `0x${string}`[];
       doc.human_approval.require_for_unknown_methods = i.unknown_methods === "review";
       if (!i.contracts.length) missing.push("allowed contracts (none: every call will be denied)");
-      if (!(i.chain_id in CHAINS)) missing.push(`chain ${i.chain_id} is not supported`);
+      if (!chainEnabled(i.chain_id)) missing.push(`chain ${i.chain_id} is not enabled on this deployment`);
       const errors = validatePolicy(doc);
       return { output: { draft: doc, valid: errors.length === 0, errors, missing_information: missing, explanation: explainPolicy(doc as never), status: "draft (not saved, not active)" } };
     },

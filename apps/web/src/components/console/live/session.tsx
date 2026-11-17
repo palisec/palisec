@@ -18,6 +18,9 @@ export interface Org {
 export interface Me {
   address: string;
   organizations: Org[];
+  /** Networks this deployment accepts (testnet always; mainnet when the operator turned it on). */
+  networks?: { chain_id: number; smart_accounts: boolean }[];
+  default_chain?: number;
 }
 export type Status = "loading" | "ready" | "unavailable" | "no_org";
 
@@ -26,6 +29,10 @@ interface SessionValue {
   me: Me | null;
   org: Org | null;
   setOrgId: (id: string) => void;
+  /** The network the console is working on: new agents, policies and smart accounts use it. */
+  network: number;
+  networks: { chain_id: number; smart_accounts: boolean }[];
+  setNetwork: (id: number) => void;
   /** Bumped after any change, so views and the shell refetch. */
   version: number;
   refresh: () => void;
@@ -33,6 +40,8 @@ interface SessionValue {
 
 const Ctx = createContext<SessionValue | null>(null);
 const ORG_KEY = "ps.console.org";
+const NETWORK_KEY = "ps.console.network";
+const FALLBACK_NETWORKS = [{ chain_id: 46630, smart_accounts: false }];
 
 export class ApiError extends Error {
   constructor(
@@ -69,6 +78,7 @@ export function ConsoleSessionProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [orgId, setOrgIdState] = useState<string | null>(null);
+  const [network, setNetworkState] = useState(46630);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
@@ -85,6 +95,9 @@ export function ConsoleSessionProvider({ children }: { children: ReactNode }) {
         if (!r.ok) return setStatus("unavailable");
         const m = (await r.json()) as Me;
         setMe(m);
+        const nets = m.networks?.length ? m.networks : FALLBACK_NETWORKS;
+        const savedNet = Number(localStorage.getItem(NETWORK_KEY));
+        setNetworkState(nets.some((n) => n.chain_id === savedNet) ? savedNet : (m.default_chain ?? nets[0]!.chain_id));
         if (!m.organizations?.length) return setStatus("no_org");
         const saved = localStorage.getItem(ORG_KEY);
         const id = m.organizations.some((o) => o.id === saved) ? saved! : m.organizations[0]!.id;
@@ -107,10 +120,17 @@ export function ConsoleSessionProvider({ children }: { children: ReactNode }) {
     setVersion((v) => v + 1);
   }, []);
 
+  const setNetwork = useCallback((id: number) => {
+    localStorage.setItem(NETWORK_KEY, String(id));
+    setNetworkState(id);
+    setVersion((v) => v + 1);
+  }, []);
+
   const org = me?.organizations.find((o) => o.id === orgId) ?? null;
+  const networks = me?.networks?.length ? me.networks : FALLBACK_NETWORKS;
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
-  return <Ctx.Provider value={{ status, me, org, setOrgId, version, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ status, me, org, setOrgId, network, networks, setNetwork, version, refresh }}>{children}</Ctx.Provider>;
 }
 
 export function useConsoleSession(): SessionValue {

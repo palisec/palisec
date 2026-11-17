@@ -1,13 +1,17 @@
 import { hasBearer, requireAgent, requireMember } from "@/server/access";
 import { handle, ok } from "@/server/http";
-import { agentAccounts, smartAccountConfig } from "@/server/smart-accounts";
+import { agentAccounts, requestedChain, smartAccountConfig } from "@/server/smart-accounts";
 
-/** Smart-account configuration (addresses only). Members also get each agent's account, inspected on chain. */
+/**
+ * Smart-account configuration for one network (?chain_id=, default: the deployment's main network).
+ * Addresses only. An agent gets its own network; members also get each agent's account, inspected on chain.
+ */
 export const GET = handle(async (req: Request) => {
   if (hasBearer(req)) {
-    await requireAgent(req, null);
-    return ok(smartAccountConfig());
+    const agent = await requireAgent(req, null);
+    return ok(smartAccountConfig(agent.chainId));
   }
   const m = await requireMember(req, "read");
-  return ok({ ...smartAccountConfig(), agents: await agentAccounts(m.orgId) });
+  const chainId = requestedChain(req);
+  return ok({ ...smartAccountConfig(chainId), agents: await agentAccounts(m.orgId, chainId) });
 });

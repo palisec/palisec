@@ -1,17 +1,35 @@
 import "server-only";
+import { isNetworkId, MAINNET, NETWORKS, TESTNET, type NetworkId } from "@/lib/networks";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * Networks the control plane accepts. Only testnet is enabled: the mainnet chain ID comes from the
- * specification and has not been verified against a live RPC (spec §6.4).
+ * Networks the control plane accepts. Testnet is always on. Mainnet (real funds) is on only when the
+ * operator sets PALISEC_MAINNET=enabled; until then mainnet requests are refused with PS_CHAIN_001.
+ * Chain 4663 was verified against Robinhood's public RPC (eth_chainId 0x1237) on 2026-11-18.
  */
-export const CHAINS = {
-  46630: { name: "Robinhood Chain Testnet", rpc: process.env.RH_TESTNET_RPC_URL || "https://rpc.testnet.chain.robinhood.com", enabled: true },
-  4663: { name: "Robinhood Chain", rpc: process.env.RH_MAINNET_RPC_URL || "", enabled: false },
-} as const;
+export const mainnetEnabled = () => (process.env.PALISEC_MAINNET || "").trim().toLowerCase() === "enabled";
 
-export type ChainId = keyof typeof CHAINS;
-export const VERIFY_CHAIN: ChainId = 46630;
+/** Server-side RPC: an explicit override, else Alchemy when a key is set, else the public endpoint. */
+function rpcFor(id: NetworkId, override: string | undefined): string {
+  if (override?.trim()) return override.trim();
+  const key = (process.env.ALCHEMY_API_KEY || "").trim();
+  if (/^[A-Za-z0-9_-]{8,128}$/.test(key)) return `https://${NETWORKS[id].alchemy}.g.alchemy.com/v2/${key}`;
+  return NETWORKS[id].publicRpc;
+}
+
+export const CHAINS: Record<NetworkId, { name: string; rpc: string; enabled: boolean; testnet: boolean }> = {
+  [MAINNET]: { name: NETWORKS[MAINNET].name, rpc: rpcFor(MAINNET, process.env.RH_MAINNET_RPC_URL), enabled: mainnetEnabled(), testnet: false },
+  [TESTNET]: { name: NETWORKS[TESTNET].name, rpc: rpcFor(TESTNET, process.env.RH_TESTNET_RPC_URL), enabled: true, testnet: true },
+};
+
+export type ChainId = NetworkId;
+/** Sign-in messages name testnet; the chain only matters for verifying smart-contract wallet signatures. */
+export const VERIFY_CHAIN: ChainId = TESTNET;
+
+export const chainEnabled = (id: number): id is ChainId => isNetworkId(id) && CHAINS[id].enabled;
+export const enabledChainIds = (): ChainId[] => ([MAINNET, TESTNET] as const).filter((id) => CHAINS[id].enabled);
+/** The network new agents and policies start on: mainnet when it is on, otherwise testnet. */
+export const defaultChain = (): ChainId => (CHAINS[MAINNET].enabled ? MAINNET : TESTNET);
 
 export const databaseUrl = () => process.env.DATABASE_URL || "";
 export const isDatabaseConfigured = () => databaseUrl() !== "";

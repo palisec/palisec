@@ -30,8 +30,8 @@ from .errors import (
 )
 from .models import SUPPORTED_CHAINS, Intent, LogEvent, Operation, SendResult
 
-_KEY = re.compile(r"^ps_test_[0-9a-f]{48}$")
-_KEY_ANYWHERE = re.compile(r"ps_test_[0-9a-f]{8,}")
+_KEY = re.compile(r"^ps_(live|test)_[0-9a-f]{48}$")
+_KEY_ANYWHERE = re.compile(r"ps_(?:live|test)_[0-9a-f]{8,}")
 _ADDRESS = re.compile(r"^0x[0-9a-fA-F]{40}$")
 _HEX = re.compile(r"^0x([0-9a-fA-F]{2})*$")
 _OP_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
@@ -106,17 +106,25 @@ class Palisec:
         self,
         api_key: str,
         *,
-        chain_id: int = 46630,
+        chain_id: Optional[int] = None,
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 15.0,
         max_retries: int = 2,
         logger: Optional[Callable[[LogEvent], None]] = None,
         transport: Optional[Transport] = None,
     ) -> None:
-        if not isinstance(api_key, str) or not _KEY.match(api_key):
-            raise PalisecConfigError("api_key must be a Palisec agent key (ps_test_ followed by 48 hex characters)")
+        match = _KEY.match(api_key) if isinstance(api_key, str) else None
+        if not match:
+            raise PalisecConfigError("api_key must be a Palisec agent key (ps_live_ or ps_test_ followed by 48 hex characters)")
+        # The key decides the network, so a mainnet key is never pointed at testnet by accident, or the reverse.
+        key_chain = 4663 if match.group(1) == "live" else 46630
+        if chain_id is None:
+            chain_id = key_chain
         if chain_id not in SUPPORTED_CHAINS:
             raise PalisecConfigError(f"chain_id {chain_id} is not supported; supported: {', '.join(map(str, SUPPORTED_CHAINS))}")
+        if chain_id != key_chain:
+            kind = "mainnet (ps_live_)" if key_chain == 4663 else "testnet (ps_test_)"
+            raise PalisecConfigError(f"This is a {kind} key, so chain_id must be {key_chain}, not {chain_id}")
         base = base_url.rstrip("/")
         if not base.startswith("https://") and not _LOCAL.match(base + "/"):
             raise PalisecConfigError("base_url must use HTTPS (plain HTTP is allowed only for localhost)")

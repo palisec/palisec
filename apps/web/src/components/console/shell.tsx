@@ -3,12 +3,48 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { network as networkOf, networkLabel } from "@/lib/networks";
 import { shortHex } from "@/lib/units";
 import { BrandMark } from "../brand-mark";
 import { PointerLight } from "../pointer-light";
 import { SignOutIcon } from "../icons";
 import { IconBtn } from "./kit";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
+
+/**
+ * The network the console works on. Mainnet moves real funds, so it is drawn in the caution colour;
+ * when only testnet is enabled this is a plain badge, not a control.
+ */
+function NetworkSwitch() {
+  const { network, networks, setNetwork } = useConsoleSession();
+  const tone = (id: number) => (networkOf(id)?.testnet === false ? "text-review bg-review/[0.08] shadow-[inset_0_0_0_1px_rgb(255_200_120/0.45)]" : "text-aqua bg-aqua/[0.06] shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]");
+  if (networks.length < 2)
+    return (
+      <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] px-1.5 py-0.5 font-utility text-[11.5px] ${tone(network)}`} title={networkLabel(network)}>
+        ● {networkOf(network)?.short ?? network}
+      </span>
+    );
+  return (
+    <div role="group" aria-label="Network" className="inline-flex shrink-0 items-center gap-0.5 rounded-[6px] p-0.5 shadow-[inset_0_0_0_1px_var(--color-line-strong)]">
+      {networks.map((n) => {
+        const on = n.chain_id === network;
+        return (
+          <button
+            key={n.chain_id}
+            type="button"
+            aria-pressed={on}
+            title={networkLabel(n.chain_id)}
+            onClick={() => setNetwork(n.chain_id)}
+            className={`whitespace-nowrap rounded-[4px] px-2 py-0.5 font-utility text-[11.5px] transition-colors ${on ? tone(n.chain_id) : "text-dim hover:text-mist"}`}
+          >
+            {on ? "● " : ""}
+            {networkOf(n.chain_id)?.short ?? n.chain_id}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /** Grouped as in the 2.0 console; each entry is an existing or additive route. */
 const NAV: { href: string; label: string; group?: string }[] = [
@@ -53,8 +89,12 @@ function Shell({ children }: { children: ReactNode }) {
   const HEALTH = [
     { label: "Database", value: c ? (c.database === "ok" ? "OK" : c.database) : "…", ok: c?.database === "ok" },
     { label: "Policy engine", value: c ? (c.policy_engine === "ok" ? "Rust + ref" : c.policy_engine) : "…", ok: c?.policy_engine === "ok" },
-    { label: "Signing", value: "Not deployed", ok: false },
+    (() => {
+      const on = session.network === 4663 ? c?.mainnet_signer === "mainnet_cosigner" : c?.signer === "testnet_cosigner";
+      return { label: "Co-signer", value: c ? (on ? "Configured" : "Not configured") : "…", ok: on };
+    })(),
   ];
+  const live = networkOf(session.network)?.testnet === false;
 
   async function signOut() {
     await api("/auth/logout", { method: "POST" }).catch(() => null);
@@ -76,11 +116,9 @@ function Shell({ children }: { children: ReactNode }) {
             <span className="font-brand text-[15px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
           </Link>
           <span className="hidden h-5 w-px bg-line-strong sm:block" />
-          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[11.5px] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]" title="Robinhood Chain Testnet. Mainnet is not enabled.">
-            ● Testnet
-          </span>
+          <NetworkSwitch />
           <dl className="hidden items-center gap-4 font-utility text-[12.5px] md:flex">
-            <div className="flex gap-1.5"><dt className="text-dim">Network</dt><dd className="text-soft">Robinhood Testnet · 46630</dd></div>
+            <div className="flex gap-1.5"><dt className="text-dim">Network</dt><dd className="text-soft">{networkLabel(session.network)}</dd></div>
             <div className="flex gap-1.5"><dt className="text-dim">Signed in</dt><dd className="font-mono normal-case text-soft">{session.me ? shortHex(session.me.address) : "…"}</dd></div>
           </dl>
           <ul aria-label="System health" className="ml-auto hidden items-center gap-3 font-utility text-[12.5px] xl:flex">
@@ -95,7 +133,7 @@ function Shell({ children }: { children: ReactNode }) {
           <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[12.5px] text-silver transition-colors hover:text-aqua xl:ml-4">Docs</Link>
         </div>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap border-t border-line px-4 py-1.5 font-utility text-[12px] xl:hidden">
-          <div className="flex gap-1.5 md:hidden"><dt className="text-dim">Network</dt><dd className="text-soft">Testnet · 46630</dd></div>
+          <div className="flex gap-1.5 md:hidden"><dt className="text-dim">Network</dt><dd className="text-soft">{networkLabel(session.network, "short")}</dd></div>
           {HEALTH.map((h) => (
             <div key={h.label} className="flex items-center gap-1.5">
               <dt className="text-dim">{h.label}</dt>
@@ -189,9 +227,10 @@ function Shell({ children }: { children: ReactNode }) {
           {ready && (
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
-                <span className="font-utility text-[12px] text-aqua">● Testnet · pre-release · </span>
-                Palisec records and enforces each authorization decision. It does not sign or broadcast yet: your agent sends the transaction itself after an
-                ALLOW, and nothing on-chain blocks a transaction that skips Palisec. <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
+                <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · pre-release · " : "● Testnet · pre-release · "}</span>
+                PALISEC records and enforces each authorization decision. Agents with a PALISEC smart account are enforced on chain: PALISEC
+                co-signs only what it allowed. An agent that sends from a plain key is only as safe as its own code.{" "}
+                <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
               </p>
               {children}
             </>

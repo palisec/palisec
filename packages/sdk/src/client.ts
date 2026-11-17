@@ -16,14 +16,14 @@ import {
 } from "./types";
 import { safeOpTypedData, type Execution, type PreparedExecution, type PreparedUserOperation, type TypedDataSigner } from "./smart-account";
 
-const KEY = /^ps_test_[0-9a-f]{48}$/;
+const KEY = /^ps_(live|test)_[0-9a-f]{48}$/;
 const DEFAULT_BASE = "https://palisec.tech/api/v1";
 const RETRY_STATUS = new Set([429, 502, 503, 504]);
 const USABLE = new Set(["authorized", "approved"]);
 
 /** Masks Palisec API keys anywhere in a string, for logs and error reports. */
 export function redact(text: string): string {
-  return text.replace(/ps_test_[0-9a-f]{8,}/g, (k) => `${k.slice(0, 12)}…[redacted]`);
+  return text.replace(/ps_(?:live|test)_[0-9a-f]{8,}/g, (k) => `${k.slice(0, 12)}…[redacted]`);
 }
 
 /** The minimum of a viem WalletClient that `sendTransaction` needs. `fromEthers` adapts an ethers signer to it. */
@@ -88,10 +88,15 @@ export class PalisecClient {
   private readonly fetchImpl: typeof fetch;
 
   constructor(config: PalisecConfig) {
-    if (!KEY.test(config.apiKey ?? "")) throw new PalisecConfigError("apiKey must be a Palisec agent key (ps_test_ followed by 48 hex characters)");
-    const chainId = config.chainId ?? 46630;
+    const kind = KEY.exec(config.apiKey ?? "")?.[1];
+    if (!kind) throw new PalisecConfigError("apiKey must be a Palisec agent key (ps_live_ or ps_test_ followed by 48 hex characters)");
+    // The key decides the network, so a mainnet key can never be pointed at testnet by accident, or the reverse.
+    const keyChain: SupportedChainId = kind === "live" ? 4663 : 46630;
+    const chainId = config.chainId ?? keyChain;
     if (!(SUPPORTED_CHAINS as readonly number[]).includes(chainId))
       throw new PalisecConfigError(`chainId ${chainId} is not supported; supported: ${SUPPORTED_CHAINS.join(", ")}`);
+    if (chainId !== keyChain)
+      throw new PalisecConfigError(`This is a ${kind === "live" ? "mainnet (ps_live_)" : "testnet (ps_test_)"} key, so chainId must be ${keyChain}, not ${chainId}`);
     const base = (config.baseUrl ?? DEFAULT_BASE).replace(/\/+$/, "");
     if (!/^https:\/\//.test(base) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(`${base}/`))
       throw new PalisecConfigError("baseUrl must use HTTPS (plain HTTP is allowed only for localhost)");

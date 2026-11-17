@@ -20,7 +20,9 @@ export default function ApiReference() {
       maturity="service"
     >
       <Note kind="warning" title="Testnet, pre-release">
-        Only Robinhood Chain Testnet (46630) is enabled. Decisions are recorded and enforced for agents that call the API; this release
+        Robinhood Chain Testnet (46630) is always enabled; Robinhood Chain mainnet (4663, real funds) is enabled per
+        deployment, and <code>GET /v1/health</code> lists which. Mainnet agents get <code>ps_live_</code> keys and testnet agents
+        <code>ps_test_</code> keys. Decisions are recorded and enforced for agents that call the API; this release
         does not sign or broadcast transactions.
       </Note>
 

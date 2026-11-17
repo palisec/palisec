@@ -55,7 +55,7 @@ export default function McpDocs() {
       title="MCP server"
       lede="An official PALISEC MCP server for MCP-compatible agents and applications. It is a standard interface to the same authorization path as the REST API, not a separate security mechanism."
       maturity="service"
-      compat="MCP TypeScript SDK 2.4 · Streamable HTTP (stateless) · testnet 46630"
+      compat="MCP TypeScript SDK 2.4 · Streamable HTTP (stateless) · mainnet 4663 · testnet 46630"
     >
       <Note kind="warning" title="MCP is an interface, not the authority">
         Every tool runs under the API key&apos;s scopes, tenant boundary, rate limits and audit. A model reading ALLOW cannot turn it into an authorization: only the recorded operation is one.

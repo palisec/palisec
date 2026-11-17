@@ -4,6 +4,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import {
   ENTRYPOINT_ABI,
   SAFE_4337,
+  SAFE_4337_CHAINS,
   SAFE_ABI,
   dummySafeSignature,
   executeCallData,
@@ -16,7 +17,8 @@ import {
   type SafeUserOp,
 } from "@/lib/safe-op";
 import type { AgentContext } from "./access";
-import { CHAINS, type ChainId } from "./config";
+import { MAINNET, NETWORKS, TESTNET, isNetworkId, networkLabel } from "@/lib/networks";
+import { CHAINS, chainEnabled, defaultChain } from "./config";
 import { db, type Row } from "./db";
 import { afterChange } from "./events";
 import { BadRequest, HttpError, logEvent } from "./http";
@@ -24,15 +26,34 @@ import { effectiveState } from "./operations";
 
 /* ───────── Configuration (values never leave the server) ───────── */
 
-const ALCHEMY_NETWORK: Partial<Record<number, string>> = { 46630: "robinhood-testnet" };
+/**
+ * PALISEC's co-signer for each network, a server-held key in an environment variable. Mainnet has its
+ * own key: the testnet key is never used for real funds, even if the same value is put in both variables.
+ * The co-signer needs no ETH (each Safe pays its own gas) and cannot move funds alone (threshold 2).
+ */
+const SIGNER_ENV = { [MAINNET]: "PALISEC_MAINNET_SIGNER_KEY", [TESTNET]: "PALISEC_SIGNER_KEY" } as const;
+const readKey = (name: string) => (process.env[name] || "").trim();
+const KEY_RE = /^0x[0-9a-fA-F]{64}$/;
+const sharesTestnetKey = () => readKey(SIGNER_ENV[MAINNET]).toLowerCase() === readKey(SIGNER_ENV[TESTNET]).toLowerCase();
+const signerCache = new Map<number, { key: string; account: PrivateKeyAccount }>();
 
-let signerCache: { key: string; account: PrivateKeyAccount } | null = null;
-/** PALISEC's testnet co-signer. On mainnet this moves into the enclave and this function goes away. */
-export function palisecSigner(): PrivateKeyAccount | null {
-  const key = (process.env.PALISEC_SIGNER_KEY || "").trim();
-  if (!/^0x[0-9a-fA-F]{64}$/.test(key)) return null;
-  if (signerCache?.key !== key) signerCache = { key, account: privateKeyToAccount(key as Hex) };
-  return signerCache.account;
+export function palisecSigner(chainId: number): PrivateKeyAccount | null {
+  if (!isNetworkId(chainId)) return null;
+  const key = readKey(SIGNER_ENV[chainId]);
+  if (!KEY_RE.test(key)) return null;
+  if (chainId === MAINNET && sharesTestnetKey()) return null;
+  const hit = signerCache.get(chainId);
+  if (hit?.key === key) return hit.account;
+  const account = privateKeyToAccount(key as Hex);
+  signerCache.set(chainId, { key, account });
+  return account;
+}
+
+/** Why a network's co-signer is unavailable, in words an operator can act on. */
+function signerProblem(chainId: number): string {
+  if (chainId === MAINNET && KEY_RE.test(readKey(SIGNER_ENV[MAINNET])) && sharesTestnetKey())
+    return "The mainnet co-signer key is the same as the testnet key. Give mainnet its own key.";
+  return `PALISEC's co-signer for ${networkLabel(chainId)} is not configured on this deployment.`;
 }
 
 /** Bundler endpoint. A local test bundler may be named outside Vercel only, never in a deployment. */
@@ -40,18 +61,21 @@ export function bundlerUrl(chainId: number): string | null {
   const testUrl = process.env.PALISEC_TEST_BUNDLER_URL;
   if (testUrl && process.env.VERCEL !== "1") return testUrl;
   const key = (process.env.ALCHEMY_API_KEY || "").trim();
-  const network = ALCHEMY_NETWORK[chainId];
-  if (!key || !network || !/^[A-Za-z0-9_-]{8,128}$/.test(key)) return null;
-  return `https://${network}.g.alchemy.com/v2/${key}`;
+  if (!isNetworkId(chainId) || !key || !/^[A-Za-z0-9_-]{8,128}$/.test(key)) return null;
+  return `https://${NETWORKS[chainId].alchemy}.g.alchemy.com/v2/${key}`;
 }
 
-export function smartAccountsStatus() {
-  return { signer: palisecSigner() !== null, bundler: bundlerUrl(SAFE_4337.chainId) !== null };
+/** Per network: is it on, is its co-signer set, is a bundler configured. Never the values. */
+export function smartAccountsStatus(chainId: number) {
+  const enabled = chainEnabled(chainId) && SAFE_4337_CHAINS.includes(chainId);
+  const signer = palisecSigner(chainId) !== null;
+  const bundler = bundlerUrl(chainId) !== null;
+  return { enabled, signer, bundler, available: enabled && signer && bundler };
 }
 
 function chainClient(chainId: number) {
-  const chain = CHAINS[chainId as ChainId];
-  if (!chain?.enabled || !chain.rpc) return null;
+  if (!chainEnabled(chainId)) return null;
+  const chain = CHAINS[chainId];
   return createPublicClient({ transport: http(chain.rpc, { timeout: 8000, retryCount: 1 }) });
 }
 
@@ -98,10 +122,10 @@ export interface AccountReport {
 export async function inspectAccount(chainId: number, raw: string): Promise<AccountReport> {
   if (!isAddress(raw, { strict: false })) throw new BadRequest("address must be a 20-byte hex address");
   const address = getAddress(raw);
-  const signer = palisecSigner()?.address ?? null;
+  const signer = palisecSigner(chainId)?.address ?? null;
   const base: AccountReport = { chain_id: chainId, address, deployed: false, owners: [], threshold: 0, module_enabled: false, palisec_signer: signer, palisec_is_owner: false, enforced: false, reason: null };
   const c = chainClient(chainId);
-  if (!c) return { ...base, reason: "This chain is not enabled." };
+  if (!c) return { ...base, reason: `${networkLabel(chainId)} is not enabled on this deployment.` };
   const code = await c.getCode({ address }).catch(() => null);
   if (code === null) throw new HttpError(503, "PS_CHAIN_001", "The chain RPC did not respond.", true);
   if (!code || code === "0x") return { ...base, reason: "No contract at this address. It is a plain key account, which PALISEC cannot enforce." };
@@ -120,7 +144,7 @@ export async function inspectAccount(chainId: number, raw: string): Promise<Acco
       : !moduleEnabled
         ? "The Safe 4337 module is not enabled on this account."
         : signer === null
-          ? "PALISEC's co-signer is not configured on this deployment."
+          ? signerProblem(chainId)
           : !isOwner
             ? "PALISEC's co-signer is not an owner of this account."
             : "The threshold is 1, so a single key can still move funds.";
@@ -147,7 +171,10 @@ function requireUsable(row: Row) {
   if (state !== "authorized" && state !== "approved")
     throw new HttpError(409, "PS_AUTH_002", `Only an allowed or approved operation can be executed; this one is ${state}.`);
   if (row.submitted_at) throw new HttpError(409, "PS_REPLAY_001", "This operation was already submitted.");
-  if (Number(row.chain_id) !== SAFE_4337.chainId) throw new HttpError(409, "PS_CHAIN_001", "Smart-account execution is available on Robinhood Chain Testnet (46630) only.");
+  const chainId = Number(row.chain_id);
+  if (!chainEnabled(chainId) || !SAFE_4337_CHAINS.includes(chainId))
+    throw new HttpError(409, "PS_CHAIN_001", `Smart-account execution is not enabled for ${networkLabel(chainId)} on this deployment.`);
+  return chainId;
 }
 
 const hex = (n: bigint): Hex => `0x${n.toString(16)}`;
@@ -155,6 +182,7 @@ const withMargin = (n: bigint, pct: bigint) => (n * (100n + pct)) / 100n;
 
 export interface PreparedExecution {
   operation_id: string;
+  chain_id: number;
   safe_op_hash: Hex;
   typed_data: ReturnType<typeof safeOpTypedDataJson>;
   user_operation: SafeUserOp;
@@ -169,18 +197,18 @@ export interface PreparedExecution {
  */
 export async function prepareExecution(agent: AgentContext, id: string): Promise<PreparedExecution> {
   const row = await loadOperation(agent.orgId, id, agent.agentId);
-  requireUsable(row);
-  if (!palisecSigner()) throw new HttpError(503, "PS_CHAIN_001", "PALISEC's co-signer is not configured on this deployment.", true);
-  const report = await inspectAccount(SAFE_4337.chainId, row.account);
+  const chainId = requireUsable(row);
+  if (!palisecSigner(chainId)) throw new HttpError(503, "PS_CHAIN_001", signerProblem(chainId), true);
+  const report = await inspectAccount(chainId, row.account);
   if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a PALISEC smart account: ${report.reason}`);
 
-  const c = chainClient(SAFE_4337.chainId)!;
+  const c = chainClient(chainId)!;
   const sender = getAddress(row.account);
   const callData = executeCallData(getAddress(row.target), BigInt(row.value_wei), row.data as Hex);
   const [nonce, block, tip] = await Promise.all([
     c.readContract({ address: SAFE_4337.entryPoint, abi: ENTRYPOINT_ABI, functionName: "getNonce", args: [sender, 0n] }),
     c.getBlock({ blockTag: "latest" }),
-    bundlerRpc<Hex>(SAFE_4337.chainId, "rundler_maxPriorityFeePerGas", []).catch(() => c.estimateMaxPriorityFeePerGas().then(hex)),
+    bundlerRpc<Hex>(chainId, "rundler_maxPriorityFeePerGas", []).catch(() => c.estimateMaxPriorityFeePerGas().then(hex)),
   ]).catch((e) => {
     if (e instanceof HttpError) throw e;
     throw new HttpError(503, "PS_CHAIN_001", "The chain RPC did not respond.", true);
@@ -201,7 +229,7 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
     validAfter: 0,
     validUntil,
   };
-  const est = await bundlerRpc<{ preVerificationGas: Hex; verificationGasLimit: Hex; callGasLimit: Hex }>(SAFE_4337.chainId, "eth_estimateUserOperationGas", [
+  const est = await bundlerRpc<{ preVerificationGas: Hex; verificationGasLimit: Hex; callGasLimit: Hex }>(chainId, "eth_estimateUserOperationGas", [
     toRpcUserOp(draft, dummySafeSignature(report.threshold)),
     SAFE_4337.entryPoint,
   ]);
@@ -222,8 +250,9 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
   if (!stored[0]) throw new HttpError(409, "PS_AUTH_002", "The authorization expired or was used while preparing. Propose the operation again.");
   return {
     operation_id: row.id,
-    safe_op_hash: safeOpHash(op),
-    typed_data: safeOpTypedDataJson(op),
+    chain_id: chainId,
+    safe_op_hash: safeOpHash(op, chainId),
+    typed_data: safeOpTypedDataJson(op, chainId),
     user_operation: op,
     max_cost_wei: maxCostWei(op).toString(),
     valid_until: new Date(validUntil * 1000).toISOString(),
@@ -244,17 +273,17 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
     throw new BadRequest((e as Error).message);
   }
   const row = await loadOperation(agent.orgId, id, agent.agentId);
-  requireUsable(row);
+  const chainId = requireUsable(row);
   if (!row.user_op) throw new HttpError(409, "PS_REQUEST_001", "Prepare the operation first: POST /v1/operations/{id}/user-operation.");
   const op = row.user_op as SafeUserOp;
   if (getAddress(op.sender) !== getAddress(row.account)) throw new HttpError(409, "PS_STATE_001", "Prepared operation does not match the agent's account.");
   if (op.validUntil <= Math.floor(Date.now() / 1000) + 5) throw new HttpError(409, "PS_AUTH_002", "The authorization is about to expire. Propose the operation again.");
 
-  const signer = palisecSigner();
-  if (!signer) throw new HttpError(503, "PS_CHAIN_001", "PALISEC's co-signer is not configured on this deployment.", true);
-  const hash = safeOpHash(op);
+  const signer = palisecSigner(chainId);
+  if (!signer) throw new HttpError(503, "PS_CHAIN_001", signerProblem(chainId), true);
+  const hash = safeOpHash(op, chainId);
   const agentSigner = await recoverAddress({ hash, signature: agentSig }).catch(() => null);
-  const report = await inspectAccount(SAFE_4337.chainId, op.sender);
+  const report = await inspectAccount(chainId, op.sender);
   if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a PALISEC smart account: ${report.reason}`);
   if (!agentSigner || agentSigner === signer.address || !report.owners.includes(agentSigner))
     throw new HttpError(403, "PS_AUTH_003", "The signature is not from an owner of this smart account. Sign typed_data with the agent's key.");
@@ -269,7 +298,7 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
     )
     INSERT INTO audit_events (org_id, type, detail)
     SELECT org_id, 'operation.cosigned', jsonb_build_object('operation_id', id, 'agent_id', agent_id, 'account', ${op.sender}::text,
-           'agent_signer', ${agentSigner}::text, 'palisec_signer', ${signer.address}::text, 'safe_op_hash', ${hash}::text)
+           'agent_signer', ${agentSigner}::text, 'palisec_signer', ${signer.address}::text, 'safe_op_hash', ${hash}::text, 'chain_id', ${chainId}::int)
     FROM c RETURNING event_id`;
   if (!claimed[0]) throw new HttpError(409, "PS_REPLAY_001", "This operation was already submitted or its authorization expired.");
 
@@ -280,7 +309,7 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
   ]);
   let userOpHash: Hex;
   try {
-    userOpHash = await bundlerRpc<Hex>(SAFE_4337.chainId, "eth_sendUserOperation", [toRpcUserOp(op, signature), SAFE_4337.entryPoint]);
+    userOpHash = await bundlerRpc<Hex>(chainId, "eth_sendUserOperation", [toRpcUserOp(op, signature), SAFE_4337.entryPoint]);
   } catch (e) {
     // Nothing reached the chain: release the claim so the same prepared operation can be retried.
     await db()`
@@ -290,12 +319,13 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
     throw e;
   }
   await db()`UPDATE operations SET user_op_hash = ${userOpHash.toLowerCase()} WHERE id = ${row.id}::uuid`;
-  afterChange(agent.orgId, "operation.submitted", { operation_id: row.id, agent_id: agent.agentId, account: op.sender, user_op_hash: userOpHash });
-  return { operation_id: row.id, status: "submitted", user_op_hash: userOpHash, safe_op_hash: hash };
+  afterChange(agent.orgId, "operation.submitted", { operation_id: row.id, agent_id: agent.agentId, chain_id: chainId, account: op.sender, user_op_hash: userOpHash });
+  return { operation_id: row.id, chain_id: chainId, status: "submitted", user_op_hash: userOpHash, safe_op_hash: hash };
 }
 
 export interface ExecutionStatus {
   operation_id: string;
+  chain_id: number;
   status: "not_prepared" | "prepared" | "submitted" | "executed" | "reverted";
   user_op_hash: string | null;
   transaction_hash: string | null;
@@ -305,6 +335,7 @@ export interface ExecutionStatus {
 
 const statusOf = (row: Row): ExecutionStatus => ({
   operation_id: row.id,
+  chain_id: Number(row.chain_id),
   status: row.executed_at ? (row.execution_success ? "executed" : "reverted") : row.submitted_at ? "submitted" : row.user_op ? "prepared" : "not_prepared",
   user_op_hash: row.user_op_hash ?? null,
   transaction_hash: row.transaction_hash ?? null,
@@ -316,7 +347,7 @@ const statusOf = (row: Row): ExecutionStatus => ({
 export async function executionStatus(orgId: string, id: string, agentId?: string): Promise<ExecutionStatus> {
   const row = await loadOperation(orgId, id, agentId);
   if (!row.user_op_hash || row.executed_at) return statusOf(row);
-  const receipt = await bundlerRpc<{ success: boolean; receipt: { transactionHash: Hex } } | null>(SAFE_4337.chainId, "eth_getUserOperationReceipt", [row.user_op_hash]).catch(() => null);
+  const receipt = await bundlerRpc<{ success: boolean; receipt: { transactionHash: Hex } } | null>(Number(row.chain_id), "eth_getUserOperationReceipt", [row.user_op_hash]).catch(() => null);
   if (!receipt?.receipt?.transactionHash) return statusOf(row);
   const tx = receipt.receipt.transactionHash.toLowerCase();
   const updated = await db()`
@@ -331,25 +362,36 @@ export async function executionStatus(orgId: string, id: string, agentId?: strin
   return statusOf({ ...row, transaction_hash: tx, executed_at: new Date(), execution_success: receipt.success });
 }
 
-/** Public configuration agents and the console need. Addresses only. */
-export function smartAccountConfig() {
-  const s = smartAccountsStatus();
+/** The network a request names with ?chain_id=, or the deployment's default. Disabled networks are refused. */
+export function requestedChain(req: Request): number {
+  const raw = new URL(req.url).searchParams.get("chain_id");
+  if (raw === null || raw === "") return defaultChain();
+  const id = Number(raw);
+  if (!Number.isInteger(id) || !chainEnabled(id))
+    throw new HttpError(400, "PS_CHAIN_001", `chain_id must be an enabled network: ${[MAINNET, TESTNET].filter((n) => chainEnabled(n)).join(", ")}`);
+  return id;
+}
+
+/** Public configuration agents and the console need, for one network. Addresses only. */
+export function smartAccountConfig(chainId: number) {
+  const s = smartAccountsStatus(chainId);
   return {
-    chain_id: SAFE_4337.chainId,
-    palisec_signer: palisecSigner()?.address ?? null,
+    chain_id: chainId,
+    network: networkLabel(chainId),
+    palisec_signer: palisecSigner(chainId)?.address ?? null,
     threshold: 2,
     entry_point: SAFE_4337.entryPoint,
     safe_4337_module: SAFE_4337.module,
     safe_module_setup: SAFE_4337.moduleSetup,
     safe_singleton: SAFE_4337.singleton,
     safe_proxy_factory: SAFE_4337.proxyFactory,
-    submission: s.signer && s.bundler ? "available" : "not_configured",
+    submission: s.available ? "available" : "not_configured",
   };
 }
 
-/** Each registered agent's account, inspected, for the console. */
-export async function agentAccounts(orgId: string) {
-  const agents = await db()`SELECT id, name, status, chain_id, account FROM agents WHERE org_id = ${orgId}::uuid ORDER BY created_at DESC LIMIT 25`;
+/** Each registered agent's account on one network, inspected, for the console. */
+export async function agentAccounts(orgId: string, chainId: number) {
+  const agents = await db()`SELECT id, name, status, chain_id, account FROM agents WHERE org_id = ${orgId}::uuid AND chain_id = ${chainId}::int ORDER BY created_at DESC LIMIT 25`;
   return Promise.all(
     agents.map(async (a) => ({
       agent_id: a.id,

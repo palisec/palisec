@@ -53,9 +53,19 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 describe("configuration", () => {
   it("rejects malformed keys, unsupported chains and plain HTTP", () => {
     expect(() => createPalisec({ apiKey: "sk_live_x" })).toThrow(PalisecConfigError);
-    expect(() => createPalisec({ apiKey: KEY, chainId: 4663 as never })).toThrow(/not supported/);
+    expect(() => createPalisec({ apiKey: KEY, chainId: 1 as never })).toThrow(/not supported/);
     expect(() => createPalisec({ apiKey: KEY, baseUrl: "http://example.com/api/v1" })).toThrow(/HTTPS/);
     expect(() => createPalisec({ apiKey: KEY, baseUrl: "http://localhost:3000/api/v1", fetch: server([]).fetch })).not.toThrow();
+  });
+
+  it("takes the network from the key and refuses a mismatch", () => {
+    const LIVE = `ps_live_${"cd".repeat(24)}`;
+    expect(createPalisec({ apiKey: KEY }).chainId).toBe(46630);
+    expect(createPalisec({ apiKey: LIVE }).chainId).toBe(4663);
+    expect(createPalisec({ apiKey: LIVE, chainId: 4663 }).chainId).toBe(4663);
+    expect(() => createPalisec({ apiKey: LIVE, chainId: 46630 })).toThrow(/mainnet \(ps_live_\) key/);
+    expect(() => createPalisec({ apiKey: KEY, chainId: 4663 })).toThrow(/testnet \(ps_test_\) key/);
+    expect(redact(`key ${LIVE} end`)).not.toContain("cdcdcdcdcdcdcdcd");
   });
 });
 

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/sdk/typescript" },
 };
 
-const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem
-# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem`;
+const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
+# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
@@ -93,7 +93,7 @@ const lcTools = tools.map((t) => new DynamicStructuredTool({ name: t.name, descr
 
 const CONFIG = `createPalisec({
   apiKey: process.env.PALISEC_API_KEY!,  // ps_test_… ; validated on construction
-  chainId: 46630,                        // Robinhood Chain Testnet, the only chain enabled
+  // chainId is optional: a ps_live_ key is mainnet (4663), a ps_test_ key is testnet (46630)
   baseUrl: "https://palisec.tech/api/v1",
   timeoutMs: 15_000,                     // per request
   maxRetries: 2,                         // network errors, 429 and 5xx, on safe calls only
@@ -106,7 +106,7 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="@palisec/sdk 0.5.0 · viem or ethers v6 · Schema 1.0 · testnet 46630"
+      compat="@palisec/sdk 0.6.0 · viem or ethers v6 · Schema 1.0 · mainnet 4663 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can

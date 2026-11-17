@@ -3,6 +3,7 @@
 import { EXAMPLE_POLICY, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
+import { networkLabel } from "@/lib/networks";
 import { formatUnits, parseUnits } from "@/lib/units";
 import { CopyButton } from "../../copy-button";
 import { CloseIcon } from "../../icons";
@@ -97,6 +98,7 @@ function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
   const [key, setKey] = useState("");
   const [account, setAccount] = useState("");
   const { run, busy, notice } = useAction();
+  const { network } = useConsoleSession();
   const derivedKey = key || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 64);
   return (
     <Panel title="Create a policy" bodyClassName="grid gap-3 p-4 md:grid-cols-3">
@@ -106,7 +108,7 @@ function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
       <Field id={`${uid}-k`} label="Policy ID" hint="a-z, 0-9 and _; cannot change later.">
         <input id={`${uid}-k`} className={inputCls} value={derivedKey} onChange={(e) => setKey(e.target.value)} placeholder="treasury_bot" spellCheck={false} />
       </Field>
-      <Field id={`${uid}-a`} label="Smart account (testnet 46630)">
+      <Field id={`${uid}-a`} label={`Smart account (${networkLabel(network, "short")})`}>
         <input id={`${uid}-a`} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value.trim())} placeholder="0x…" spellCheck={false} />
       </Field>
       <div className="md:col-span-3">
@@ -114,7 +116,7 @@ function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
           variant="primary"
           disabled={busy || !name.trim() || !derivedKey || !account}
           onClick={async () => {
-            const r = await run(() => api<{ id: string }>("/policies", { method: "POST", body: { name, policy_key: derivedKey, chain_id: 46630, account } }), "Draft created. Edit it below, then activate.");
+            const r = await run(() => api<{ id: string }>("/policies", { method: "POST", body: { name, policy_key: derivedKey, chain_id: network, account } }), "Draft created. Edit it below, then activate.");
             if (r) {
               setName("");
               setKey("");

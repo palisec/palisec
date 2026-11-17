@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/sdk/python" },
 };
 
-const INSTALL = `pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl
+const INSTALL = `pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl
 # optional, to send with web3.py:
 pip install web3`;
 
@@ -58,7 +58,7 @@ except PalisecError as e:
 
 const CONFIG = `Palisec(
     os.environ["PALISEC_API_KEY"],      # ps_test_… ; validated on construction
-    chain_id=46630,                     # Robinhood Chain Testnet, the only chain enabled
+    # chain_id is optional: a ps_live_ key is mainnet (4663), a ps_test_ key is testnet (46630)
     base_url="https://palisec.tech/api/v1",
     timeout=15.0,                       # seconds, per request
     max_retries=2,                      # network errors, 429 and 5xx, on safe calls only
@@ -83,7 +83,7 @@ export default function PythonSdk() {
       title="Python SDK"
       lede="palisec asks Palisec before every transaction and sends with your account only on ALLOW. Async, typed, and no third-party dependencies. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="palisec 0.3.0 · Python 3.10+ · Schema 1.0 · testnet 46630"
+      compat="palisec 0.4.0 · Python 3.10+ · Schema 1.0 · mainnet 4663 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>send_transaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can

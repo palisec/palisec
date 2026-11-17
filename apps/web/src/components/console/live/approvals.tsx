@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { network as networkOf, networkLabel, walletChainParams } from "@/lib/networks";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
@@ -81,6 +82,17 @@ function ApprovalCard({ a, onChange }: { a: Approval; onChange: () => void }) {
       const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
       if (!accounts.some((x) => x.toLowerCase() === me.address.toLowerCase()))
         throw new Error(`Switch your wallet to the signed-in account ${shortHex(me.address)} first.`);
+      // Wallets sign typed data only on the network its domain names: move to the operation's network.
+      const net = networkOf(Number(d.chain_id));
+      if (net) {
+        const params = walletChainParams(net.chainId);
+        try {
+          await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: params.chainId }] });
+        } catch (e) {
+          if ((e as { code?: number }).code !== 4902) throw e;
+          await eth.request({ method: "wallet_addEthereumChain", params: [params] });
+        }
+      }
       const signature = (await eth.request({ method: "eth_signTypedData_v4", params: [me.address, JSON.stringify(a.typed_data)] })) as string;
       return api(`/approvals/${a.operation_id}/approve`, { method: "POST", body: { signature } });
     }, "Approved. The agent can now proceed with this exact operation until the authorization expires.");
@@ -103,7 +115,7 @@ function ApprovalCard({ a, onChange }: { a: Approval; onChange: () => void }) {
             ["Exposure", usd(d.exposure_usd_micros)],
             ["Fee bound", d.fee_estimate_wei ? `${formatUnits(d.fee_estimate_wei, 18)} ETH` : "unavailable"],
             ["Policy", <Mono key="p">{a.policy_id} v{a.policy_version}</Mono>],
-            ["Account · chain", <Mono key="a">{shortHex(d.account)} · {d.chain_id}</Mono>],
+            ["Account · network", <Mono key="a">{shortHex(d.account)} · {networkLabel(Number(d.chain_id), "short")}</Mono>],
             ["Created", utc(a.created_at)],
             ["Decided by", d.decided_by ? <Mono key="db">{shortHex(d.decided_by)} · {utc(d.decided_at)}</Mono> : "—"],
           ]}

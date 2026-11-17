@@ -25,7 +25,7 @@ const TOOL_TIMEOUT_MS = 10_000;
 const MAX_TOOL_OUTPUT = 6_000;
 const HISTORY = 24;
 
-const SYSTEM = `You are the PALISEC Agent, the security operator built into PALISEC, a deterministic transaction-authorization system for autonomous on-chain agents (Robinhood Chain Testnet 46630).
+const SYSTEM = `You are the PALISEC Agent, the security operator built into PALISEC, a deterministic transaction-authorization system for autonomous on-chain agents on Robinhood Chain (mainnet 4663, when this deployment enables it) and Robinhood Chain Testnet (46630). Mainnet moves real funds: say which network an agent or operation is on whenever it matters.
 
 Rules you must follow:
 - You are not the authority. The deterministic policy engine decides ALLOW, DENY or REQUIRES_HUMAN_SIGNATURE. Never claim a transaction is authorized, approved, safe or executed unless a tool result shows it.
@@ -90,7 +90,7 @@ export async function listToolsFor(ctx: MemberContext) {
 
 // ---------------------------------------------------------------- tool execution
 
-const redactKeys = (s: string) => s.replace(/ps_test_[0-9a-f]{8,}/g, "ps_test_…[redacted]").replace(/whsec_[0-9a-f]{8,}/g, "whsec_…[redacted]");
+const redactKeys = (s: string) => s.replace(/ps_(live|test)_[0-9a-f]{8,}/g, "ps_$1_…[redacted]").replace(/whsec_[0-9a-f]{8,}/g, "whsec_…[redacted]");
 
 /** Runs one tool for a member: availability, schema, authorization, timeout, audit. Never throws. */
 export async function executeTool(

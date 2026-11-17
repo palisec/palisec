@@ -1,7 +1,8 @@
 import "server-only";
 import { SCHEMA_VERSION, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { SCOPES, type MemberContext, type Scope } from "./access";
-import { CHAINS } from "./config";
+import { chainEnabled, enabledChainIds } from "./config";
+import { MAINNET } from "@/lib/networks";
 import { db, type Row } from "./db";
 import { BadRequest, HttpError } from "./http";
 import type { Role } from "./session";
@@ -27,8 +28,17 @@ function optionalText(v: unknown, field: string, max: number): string | null {
 }
 
 function chainId(v: unknown): number {
-  if (typeof v !== "number" || !(v in CHAINS)) throw new BadRequest(`chain_id must be one of ${Object.keys(CHAINS).join(", ")}`);
+  if (typeof v !== "number" || !chainEnabled(v)) throw new BadRequest(`chain_id must be an enabled network: ${enabledChainIds().join(", ")}`);
   return v;
+}
+
+/** Keys say which money they touch: ps_live_ for a mainnet agent, ps_test_ for testnet (as Stripe does). */
+const keyPrefixFor = (chain: number) => (chain === MAINNET ? "ps_live_" : "ps_test_");
+async function agentChain(orgId: string, where: { agentId?: string; credentialId?: string }): Promise<number | null> {
+  const rows = where.agentId
+    ? await db()`SELECT chain_id FROM agents WHERE id = ${where.agentId}::uuid AND org_id = ${orgId}::uuid`
+    : await db()`SELECT a.chain_id FROM api_credentials c JOIN agents a ON a.id = c.agent_id WHERE c.id = ${where.credentialId!}::uuid AND c.org_id = ${orgId}::uuid`;
+  return rows[0] ? Number(rows[0].chain_id) : null;
 }
 
 function requireConfirm(body: Record<string, unknown>) {
@@ -401,7 +411,9 @@ export async function setAgentStatus(ctx: MemberContext, id: string, to: "paused
 export async function createCredential(ctx: MemberContext, agentId: string, body: Record<string, unknown>) {
   const label = body.label === undefined ? "API key" : text(body.label, "label");
   const scopes = parseScopes(body.scopes);
-  const secret = `ps_test_${randomHex(24)}`;
+  const chain = await agentChain(ctx.orgId, { agentId });
+  if (chain === null) throw notFound("Active agent");
+  const secret = `${keyPrefixFor(chain)}${randomHex(24)}`;
   const prefix = secret.slice(0, 16);
   const a = audit("credential.created", { agent_id: agentId, prefix, label, scopes });
   const rows = await db()`
@@ -432,7 +444,8 @@ function parseScopes(v: unknown): Scope[] {
  * statement, so there is never a moment with both or neither. The new secret is returned once.
  */
 export async function rotateCredential(ctx: MemberContext, id: string) {
-  const secret = `ps_test_${randomHex(24)}`;
+  const chain = await agentChain(ctx.orgId, { credentialId: id });
+  const secret = `${keyPrefixFor(chain ?? 0)}${randomHex(24)}`;
   const prefix = secret.slice(0, 16);
   const rows = await db()`
     WITH old AS (

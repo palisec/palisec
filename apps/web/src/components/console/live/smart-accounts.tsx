@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getAddress, isAddress, type Address, type Hex } from "viem";
+import { explorerAddress, network as networkOf, networkLabel, walletChainParams, type NetworkId } from "@/lib/networks";
 import { createSafeCalldata, SAFE_4337 } from "@/lib/safe-op";
 import { shortHex } from "@/lib/units";
 import { Btn, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
@@ -34,22 +35,22 @@ interface Config {
 interface Eip1193 {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
 }
-const CHAIN_HEX = `0x${SAFE_4337.chainId.toString(16)}`;
-
-async function wallet(): Promise<{ eth: Eip1193; from: Address }> {
+/** Connects the browser wallet and moves it to the console's network, adding the network if needed. */
+async function wallet(chainId: NetworkId): Promise<{ eth: Eip1193; from: Address }> {
+  const params = walletChainParams(chainId);
   const eth = (window as unknown as { ethereum?: Eip1193 }).ethereum;
   if (!eth) throw new Error("No browser wallet found. Install MetaMask or another EIP-1193 wallet.");
   const [from] = (await eth.request({ method: "eth_requestAccounts" })) as string[];
   if (!from) throw new Error("The wallet returned no account.");
   try {
-    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: params.chainId }] });
   } catch (e) {
     if ((e as { code?: number }).code !== 4902) throw e;
-    await eth.request({
-      method: "wallet_addEthereumChain",
-      params: [{ chainId: CHAIN_HEX, chainName: "Robinhood Chain Testnet", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://rpc.testnet.chain.robinhood.com"] }],
-    });
+    await eth.request({ method: "wallet_addEthereumChain", params: [params] });
   }
+  // Never send on the wrong network: confirm the wallet really moved before anything is signed.
+  const now = (await eth.request({ method: "eth_chainId" })) as string;
+  if (Number(now) !== chainId) throw new Error(`Your wallet is on chain ${Number(now)}. Switch it to ${networkLabel(chainId)} and try again.`);
   return { eth, from: getAddress(from) };
 }
 
@@ -60,8 +61,10 @@ function EnforcedPill({ r }: { r: Report | null }) {
 
 /** Smart accounts: create a Safe PALISEC co-signs for, and see which agents are enforced on chain. */
 export function LiveSmartAccounts() {
-  const { me, org } = useConsoleSession();
-  const cfg = useLive<Config>("/smart-accounts");
+  const { me, org, network } = useConsoleSession();
+  const chain = (networkOf(network)?.chainId ?? 46630) as NetworkId;
+  const live = networkOf(network)?.testnet === false;
+  const cfg = useLive<Config>(`/smart-accounts?chain_id=${chain}`);
   const act = useAction();
   const [agentKey, setAgentKey] = useState("");
   const [recovery, setRecovery] = useState("");
@@ -84,7 +87,7 @@ export function LiveSmartAccounts() {
 
   const predict = () =>
     act.run(async () => {
-      const { eth, from } = await wallet();
+      const { eth, from } = await wallet(chain);
       const data = createSafeCalldata(owners(), salt);
       const out = (await eth.request({ method: "eth_call", params: [{ from, to: SAFE_4337.proxyFactory, data }, "latest"] })) as Hex;
       const address = getAddress(`0x${out.slice(26, 66)}`);
@@ -94,7 +97,7 @@ export function LiveSmartAccounts() {
 
   const deploy = () =>
     act.run(async () => {
-      const { eth, from } = await wallet();
+      const { eth, from } = await wallet(chain);
       const list = owners();
       const data = createSafeCalldata(list, salt);
       const out = (await eth.request({ method: "eth_call", params: [{ from, to: SAFE_4337.proxyFactory, data }, "latest"] })) as Hex;
@@ -116,7 +119,7 @@ export function LiveSmartAccounts() {
 
   const inspect = () =>
     act.run(async () => {
-      const r = await api<Report>(`/smart-accounts/${encodeURIComponent(lookup.trim())}`);
+      const r = await api<Report>(`/smart-accounts/${encodeURIComponent(lookup.trim())}?chain_id=${chain}`);
       setReport(r);
       return r;
     });
@@ -167,9 +170,10 @@ export function LiveSmartAccounts() {
               {!operate ? (
                 <p className="text-[13px] text-muted">Creating accounts needs the operator, admin or owner role.</p>
               ) : !signer ? (
-                <Notice tone="review">PALISEC&apos;s co-signer is not configured on this deployment, so accounts cannot be created yet.</Notice>
+                <Notice tone="review">{`PALISEC's co-signer for ${networkLabel(chain)} is not configured on this deployment, so accounts cannot be created there yet.`}</Notice>
               ) : (
                 <>
+                  {live && <Notice tone="review">Mainnet: this account will hold real funds. Use a recovery owner your organization controls, and start with a small amount.</Notice>}
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field id="sa-agent" label="Agent signing address" hint="The address of the key your agent signs with. Never paste the key itself.">
                       <input id="sa-agent" className={inputCls} value={agentKey} onChange={(e) => setAgentKey(e.target.value)} placeholder="0x…" spellCheck={false} autoComplete="off" />
@@ -185,7 +189,7 @@ export function LiveSmartAccounts() {
                     rows={[
                       ["PALISEC co-signer", <Mono key="s">{signer}</Mono>],
                       ["Threshold", "2 of 3"],
-                      ["Network", "Robinhood Chain Testnet (46630)"],
+                      ["Network", networkLabel(chain)],
                       ["Predicted address", predicted ? <Mono key="p" className="text-aqua">{predicted}</Mono> : "—"],
                     ]}
                   />
@@ -196,7 +200,10 @@ export function LiveSmartAccounts() {
                   {act.notice}
                   {deployed && (
                     <ol className="list-decimal space-y-1.5 pl-5 text-[13px] text-soft">
-                      <li>Send a little testnet ETH to <Mono>{deployed.address}</Mono>: it pays its own gas.</li>
+                      <li>
+                        Send a little {live ? "ETH" : "testnet ETH"} to <Mono>{deployed.address}</Mono>: it pays its own gas.{" "}
+                        <a className="text-aqua underline-offset-4 hover:underline" href={explorerAddress(chain, deployed.address) ?? "#"} target="_blank" rel="noopener noreferrer">View on the explorer</a>
+                      </li>
                       <li>Register the agent (or a new one) with this address as its account, and point its policy at the same address.</li>
                       <li>In your agent, call <Mono>executeWithSmartAccount</Mono> (TypeScript) or <Mono>execute_with_smart_account</Mono> (Python) with the agent key.</li>
                     </ol>
@@ -207,7 +214,7 @@ export function LiveSmartAccounts() {
           </div>
 
           <div className="min-w-0 space-y-4">
-            <Panel title="PALISEC co-signing" bodyClassName="p-4">
+            <Panel title={`PALISEC co-signing · ${networkOf(chain)?.short}`} bodyClassName="p-4">
               <KV
                 rows={[
                   ["Submission", cfg.data.submission === "available" ? <Pill key="s" tone="allow">Available</Pill> : <Pill key="s" tone="review">Not configured</Pill>],
@@ -217,7 +224,9 @@ export function LiveSmartAccounts() {
                 ]}
               />
               <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
-                Testnet co-signer: a key held by the PALISEC server. For mainnet it moves into the signing enclave.
+                {live
+                  ? "Mainnet co-signer: its own key, held by the PALISEC server and never shared with testnet. It holds no funds and cannot move funds alone."
+                  : "Testnet co-signer: a key held by the PALISEC server, separate from the mainnet key."}
               </p>
             </Panel>
             <Panel title="Check an account" bodyClassName="space-y-3 p-4">

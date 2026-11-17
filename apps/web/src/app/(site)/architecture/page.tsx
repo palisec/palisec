@@ -119,7 +119,7 @@ function SystemMap() {
           <Node icon={<GaugeIcon size={18} />} title="Price feed" sub="Coinbase, Kraken fallback, 15 s cache" />
           <Node icon={<ZapIcon size={18} />} title="Bundler" sub="Alchemy, ERC-4337 (EntryPoint v0.7)" />
           <Node icon={<WalletIcon size={18} />} title="Safe smart accounts" sub="Threshold 2; PALISEC co-signs, the Safe checks" accent />
-          <Node icon={<KeyIcon size={18} />} title="Testnet co-signer" sub="Server-held key, testnet only" />
+          <Node icon={<KeyIcon size={18} />} title="Co-signers" sub="Server-held, one key per network" />
           <Node icon={<LockIcon size={18} />} title="Nitro enclave signer" sub="Mainnet co-signing" planned />
         </Column>
       </div>

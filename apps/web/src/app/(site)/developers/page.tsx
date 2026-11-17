@@ -20,10 +20,10 @@ const STEPS: { n: string; title: string; body: string; href: string }[] = [
 ];
 
 const INSTALL = `# TypeScript (viem or ethers)
-npm install https://palisec.tech/sdk/palisec-sdk-0.5.0.tgz viem
+npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
 
 # Python 3.10+
-pip install https://palisec.tech/sdk/palisec-0.3.0-py3-none-any.whl`;
+pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`;
 
 const PY = `import os
 from palisec import Palisec, PalisecDeniedError
@@ -39,7 +39,7 @@ async with Palisec(os.environ["PALISEC_API_KEY"]) as palisec:
 export default function DevelopersPage() {
   return (
     <>
-      <PageHeader eyebrow="Developers" title="Integrate once. Secure autonomous execution." lede="Everything here runs on Robinhood Chain Testnet (46630) today, and every snippet is the real SDK, tested against the live API in CI.">
+      <PageHeader eyebrow="Developers" title="Integrate once. Secure autonomous execution." lede="Everything here runs on Robinhood Chain Testnet (46630) and, where it is enabled, mainnet (4663). Every snippet is the real SDK, tested against the live API in CI.">
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/docs/quickstart">Quickstart</ButtonLink>
           <ButtonLink href="/console" variant="ghost" icon={<TerminalIcon size={17} />}>Console</ButtonLink>

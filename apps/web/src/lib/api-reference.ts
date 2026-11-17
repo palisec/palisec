@@ -26,7 +26,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
         summary: "Evaluate a transaction intent and record the decision with its budget reservation.",
         body: {
           request_id: "string, 1-128 of A-Z a-z 0-9 _ . : -; unique per agent",
-          chain_id: "integer; 46630 (Robinhood Chain Testnet)",
+          chain_id: "integer; the agent's network: 4663 (mainnet, ps_live_ key) or 46630 (testnet, ps_test_ key)",
           to: "address",
           value_wei: "decimal integer string",
           data: "0x hex calldata, at most 65536 bytes; \"0x\" for a native transfer",
@@ -188,14 +188,14 @@ export function openApiDocument(serverUrl: string) {
     openapi: "3.1.0",
     info: {
       title: "Palisec API",
-      version: "0.5.0",
+      version: "0.6.0",
       description:
-        "Pre-release, Robinhood Chain Testnet (46630) only. Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
+        "Pre-release. Robinhood Chain Testnet (46630), and Robinhood Chain mainnet (4663) where the deployment enables it; an agent's key says which (ps_test_ or ps_live_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
     },
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {
       securitySchemes: {
-        apiKey: { type: "http", scheme: "bearer", description: "Agent API key: ps_test_ followed by 48 hex characters." },
+        apiKey: { type: "http", scheme: "bearer", description: "Agent API key: ps_live_ (mainnet agent) or ps_test_ (testnet agent) followed by 48 hex characters." },
         session: { type: "apiKey", in: "cookie", name: "__Host-ps_session", description: "Console session from wallet sign-in. State changes must send an Origin header for this site." },
       },
       schemas: {

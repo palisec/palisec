@@ -89,6 +89,16 @@ class ConfigTests(unittest.TestCase):
             Palisec(KEY, base_url="http://palisec.tech/api/v1")
         Palisec(KEY, base_url="http://localhost:3000/api/v1")
 
+    def test_network_comes_from_the_key(self):
+        live = "ps_live_" + "cd" * 24
+        self.assertEqual(Palisec(KEY).chain_id, 46630)
+        self.assertEqual(Palisec(live).chain_id, 4663)
+        self.assertEqual(Palisec(live, chain_id=4663).chain_id, 4663)
+        with self.assertRaisesRegex(PalisecConfigError, "mainnet"):
+            Palisec(live, chain_id=46630)
+        with self.assertRaisesRegex(PalisecConfigError, "testnet"):
+            Palisec(KEY, chain_id=4663)
+
     def test_repr_never_shows_the_key(self):
         self.assertNotIn(KEY, repr(Palisec(KEY)))
 

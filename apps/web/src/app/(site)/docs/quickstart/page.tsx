@@ -82,7 +82,7 @@ export default function Quickstart() {
       <Note kind="warning" title="What this release enforces">
         Palisec records each decision and enforces budgets, cooldowns, replay protection and approvals for agents that ask it. An agent
         that sends from a plain key is enforced only in its own process; for on-chain enforcement, give it a{" "}
-        <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Use testnet (chain 46630) and never treasury funds.
+        <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Start on testnet (chain 46630). Move to mainnet (4663) only with a PALISEC smart account, a tested policy and a small balance.
       </Note>
       <ol>
         <li><strong>Sign in.</strong> Open <Link href="/login">/login</Link> and sign the message with your wallet. Your first sign-in creates an organization with you as owner.</li>

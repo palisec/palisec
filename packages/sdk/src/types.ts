@@ -3,8 +3,13 @@ import type { ReasonCode } from "@palisec/policy-schema";
 export type Hex = `0x${string}`;
 export type Address = `0x${string}`;
 
-/** Chains this release of Palisec accepts. Mainnet (4663) is not enabled yet. */
-export const SUPPORTED_CHAINS = [46630] as const;
+/**
+ * Chains this release of Palisec accepts: Robinhood Chain (4663, real funds, where the deployment enables
+ * it) and Robinhood Chain Testnet (46630). A ps_live_ key is a mainnet agent's; a ps_test_ key, testnet's.
+ */
+export const SUPPORTED_CHAINS = [4663, 46630] as const;
+export const MAINNET = 4663;
+export const TESTNET = 46630;
 export type SupportedChainId = (typeof SUPPORTED_CHAINS)[number];
 
 export interface LogEvent {
@@ -21,6 +26,7 @@ export interface LogEvent {
 export interface PalisecConfig {
   /** Agent API key from Console → Agents → Create key. Server-side only; never ship it to a browser. */
   apiKey: string;
+  /** Optional: the key already says which network (ps_live_ → 4663, ps_test_ → 46630). A mismatch is refused. */
   chainId?: SupportedChainId;
   /** Defaults to https://palisec.tech/api/v1. */
   baseUrl?: string;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandMark as BrandIcon } from "./brand-icons";
 import { BrandMark } from "./brand-mark";
 import { CaChip } from "./ca-chip";
+import { mainnetEnabled } from "@/server/config";
 import { NavShell } from "./nav-shell";
 import { ButtonLink, Container } from "./ui";
 
@@ -123,7 +124,7 @@ export function SiteFooter() {
         ))}
       </Container>
       <Container className="relative flex flex-col gap-2 border-t border-line py-6 sm:flex-row sm:justify-between">
-        <p className="label">Pre-release · Robinhood Chain Testnet</p>
+        <p className="label">{mainnetEnabled() ? "Pre-release · Robinhood Chain mainnet and testnet" : "Pre-release · Robinhood Chain Testnet"}</p>
         <p className="label">No third-party tracking</p>
       </Container>
     </footer>

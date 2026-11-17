@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { MAINNET, networkLabel } from "@/lib/networks";
 import { shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Empty, KV, Mono, PageTitle, Panel, Pill } from "../kit";
 import { ago, LoadError, Loading, usd, utc } from "./common";
-import { useLive } from "./session";
+import { useConsoleSession, useLive } from "./session";
 
 interface Summary {
   allowed: number;
@@ -126,6 +127,8 @@ export function LiveDashboard() {
   const loaded = agents.data && policies.data && org.data;
   const setupDone = steps.every((x) => x.done);
   const c = health.data?.components;
+  const { network } = useConsoleSession();
+  const cosigner = network === MAINNET ? c?.mainnet_signer === "mainnet_cosigner" : c?.signer === "testnet_cosigner";
 
   return (
     <>
@@ -261,9 +264,9 @@ export function LiveDashboard() {
               rows={[
                 ["Authorization state", c ? <Pill key="d" tone={c.database === "ok" ? "allow" : "deny"}>{c.database}</Pill> : "…"],
                 ["Policy engine", c ? <Pill key="p" tone={c.policy_engine === "ok" ? "allow" : "deny"}>{c.policy_engine === "ok" ? "rust + reference · agree" : c.policy_engine}</Pill> : "…"],
-                ["Chain", <span key="c" className="text-soft">Robinhood Testnet · 46630</span>],
-                ["Signing service", <Pill key="s" tone="muted">○ not deployed</Pill>],
-                ["Bundler", <Pill key="b" tone="muted">○ not deployed</Pill>],
+                ["Network", <span key="c" className="text-soft">{networkLabel(network)}</span>],
+                ["Co-signer", c ? <Pill key="s" tone={cosigner ? "allow" : "muted"}>{cosigner ? "configured" : "○ not configured"}</Pill> : "…"],
+                ["Bundler", c ? <Pill key="b" tone={c.bundler === "configured" ? "allow" : "muted"}>{c.bundler === "configured" ? "configured" : "○ not configured"}</Pill> : "…"],
               ]}
             />
           </Panel>

@@ -92,11 +92,22 @@ jobs:
       - if: failure()
         run: cat server.log
 
-  # Smart-account execution against a fork of Robinhood Chain Testnet: the real Safe, 4337 module and
-  # EntryPoint contracts, a throwaway co-signing key, and a local test bundler (never deployed).
+  # Smart-account execution against a fork of Robinhood Chain Testnet and of mainnet: the real Safe, 4337
+  # module and EntryPoint contracts, throwaway co-signing keys (a different one per network), and a local
+  # test bundler (never deployed). No real funds move: anvil forks are local copies of the chain.
   smart-accounts:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - network: testnet
+            chain: 46630
+            fork: https://rpc.testnet.chain.robinhood.com
+          - network: mainnet
+            chain: 4663
+            fork: https://rpc.mainnet.chain.robinhood.com
     services:
       postgres:
         image: postgres:17
@@ -109,7 +120,6 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
       PALISEC_EXTRA_HOSTS: localhost:3000
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      RH_TESTNET_RPC_URL: http://127.0.0.1:8545
       PALISEC_TEST_BUNDLER_URL: http://127.0.0.1:4337
     steps:
       - uses: actions/checkout@v7
@@ -123,14 +133,20 @@ jobs:
       - run: pnpm --filter @palisec/web build
       - name: Start the fork, the test bundler and the server
         run: |
-          anvil --fork-url https://rpc.testnet.chain.robinhood.com --chain-id 46630 --silent > anvil.log 2>&1 &
+          anvil --fork-url ${{ matrix.fork }} --chain-id ${{ matrix.chain }} --silent > anvil.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -X POST -H 'content-type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' http://127.0.0.1:8545 > /dev/null && break; sleep 1; done
           node --experimental-strip-types --no-warnings apps/web/scripts/test-bundler.mjs http://127.0.0.1:8545 4337 > bundler.log 2>&1 &
           export PALISEC_SECRETS_KEY=$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64'))")
           export PALISEC_SIGNER_KEY=0x$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))")
+          if [ "${{ matrix.network }}" = mainnet ]; then
+            export PALISEC_MAINNET=enabled RH_MAINNET_RPC_URL=http://127.0.0.1:8545
+            export PALISEC_MAINNET_SIGNER_KEY=0x$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))")
+          else
+            export RH_TESTNET_RPC_URL=http://127.0.0.1:8545
+          fi
           pnpm --filter @palisec/web start -p 3000 > server.log 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
           cat server.log; exit 1
-      - run: RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-smart-account.mjs
+      - run: RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 CHAIN_ID=${{ matrix.chain }} node apps/web/scripts/e2e-smart-account.mjs
       - if: failure()
         run: cat server.log bundler.log

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
+import { network as networkOf, networkLabel } from "@/lib/networks";
 import { formatUnits, shortHex } from "@/lib/units";
 import { CopyButton } from "../../copy-button";
 import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
@@ -92,7 +93,7 @@ export function LiveAgents() {
                         <td className="px-4 py-2.5">
                           <button type="button" onClick={() => setSelected(a.id)} aria-pressed={a.id === current} className="text-left">
                             <span className="block text-mist underline-offset-4 hover:underline">{a.name}</span>
-                            <Mono className="text-dim">{shortHex(a.account)}</Mono>
+                            <Mono className="text-dim">{shortHex(a.account)} · {networkOf(a.chain_id)?.short ?? a.chain_id}</Mono>
                           </button>
                         </td>
                         <td className="px-4 py-2.5"><StatusPill status={a.status} /></td>
@@ -125,8 +126,12 @@ export function LiveAgents() {
   );
 }
 
-function RegisterAgent({ policies, onCreated }: { policies: PolicyRow[]; onCreated: (id: string) => void }) {
+function RegisterAgent({ policies: all, onCreated }: { policies: PolicyRow[]; onCreated: (id: string) => void }) {
   const uid = useId();
+  const { network } = useConsoleSession();
+  const live = networkOf(network)?.testnet === false;
+  // Only policies for the network the console is on: an agent and its policy share one network.
+  const policies = all.filter((p) => !p.account || p.account.chain_id === network);
   const [name, setName] = useState("");
   const [account, setAccount] = useState("");
   const [policyId, setPolicyId] = useState("");
@@ -135,8 +140,8 @@ function RegisterAgent({ policies, onCreated }: { policies: PolicyRow[]; onCreat
 
   async function submit() {
     const r = await run(
-      () => api<{ id: string }>("/agents", { method: "POST", body: { name, chain_id: 46630, account: chosen?.account?.address ?? account, policy_id: policyId || null } }),
-      "Agent registered. Create an API key for it next.",
+      () => api<{ id: string }>("/agents", { method: "POST", body: { name, chain_id: chosen?.account?.chain_id ?? network, account: chosen?.account?.address ?? account, policy_id: policyId || null } }),
+      live ? "Mainnet agent registered. Its API key will start with ps_live_." : "Agent registered. Create an API key for it next.",
     );
     if (r) {
       setName("");
@@ -146,7 +151,8 @@ function RegisterAgent({ policies, onCreated }: { policies: PolicyRow[]; onCreat
   }
 
   return (
-    <Panel title="Register an agent" bodyClassName="space-y-3 p-4">
+    <Panel title={`Register an agent · ${networkOf(network)?.short ?? network}`} bodyClassName="space-y-3 p-4">
+      {live && <Notice tone="review">Mainnet: this agent will act on real funds. Give it a PALISEC smart account and a policy before you issue a key.</Notice>}
       <Field id={`${uid}-name`} label="Name">
         <input id={`${uid}-name`} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Treasury rebalancer" maxLength={80} />
       </Field>
@@ -161,13 +167,13 @@ function RegisterAgent({ policies, onCreated }: { policies: PolicyRow[]; onCreat
         </select>
       </Field>
       {!chosen && (
-        <Field id={`${uid}-account`} label="Smart account address" hint="The account on Robinhood Chain Testnet (46630) that this agent acts for.">
+        <Field id={`${uid}-account`} label="Smart account address" hint={`The account on ${networkLabel(network)} that this agent acts for.`}>
           <input id={`${uid}-account`} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value.trim())} placeholder="0x…" spellCheck={false} />
         </Field>
       )}
       {chosen?.account && (
         <p className="text-[12.5px] text-muted">
-          Account <Mono className="text-soft">{chosen.account.address}</Mono> on chain {chosen.account.chain_id}.
+          Account <Mono className="text-soft">{chosen.account.address}</Mono> on {networkLabel(chosen.account.chain_id)}.
         </p>
       )}
       <Btn variant="primary" disabled={busy || !name.trim() || (!chosen && !account)} onClick={submit}>
@@ -209,7 +215,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
             ["Agent ID", <Mono key="id" className="text-soft">{a.id}</Mono>],
             ["Owner", a.created_by ? <Mono key="o" className="text-soft">{shortHex(a.created_by)}</Mono> : "—"],
             ["Account", <Mono key="acct" className="text-soft">{a.account}</Mono>],
-            ["Chain", `Robinhood Chain Testnet · ${a.chain_id}`],
+            ["Network", networkLabel(a.chain_id)],
             ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-aqua"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
             ["Last hour", `${a.last_hour.allowed} allowed · ${a.last_hour.denied} denied · ${a.last_hour.reviewed} review · ${usd(a.last_hour.reserved_usd_micros)} reserved`],
             ["Status changed", a.status_changed_at ? `${utc(a.status_changed_at)}${a.status_changed_by ? ` by ${shortHex(a.status_changed_by)}` : ""}` : "—"],

@@ -20,7 +20,7 @@ export const MCP_VERSION = "1.0.0";
 
 const intentShape = z.object({
   request_id: z.string().regex(/^[A-Za-z0-9_.:-]{1,128}$/).describe("Unique per intended transaction; reusing it returns the original decision"),
-  chain_id: z.number().int().describe("46630 (Robinhood Chain Testnet) is the only chain enabled"),
+  chain_id: z.number().int().describe("The agent's own network: 4663 (Robinhood Chain mainnet, when enabled) or 46630 (Robinhood Chain Testnet)"),
   to: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Target contract or recipient"),
   value_wei: z.string().regex(/^(0|[1-9][0-9]{0,77})$/).describe("Native value in wei, as a decimal string"),
   data: z.string().regex(/^0x([0-9a-fA-F]{2})*$/).default("0x").describe("Calldata, 0x-prefixed hex"),

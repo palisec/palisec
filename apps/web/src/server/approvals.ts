@@ -1,7 +1,7 @@
 import "server-only";
 import { createPublicClient, http, isHex, keccak256, verifyTypedData, type Hex } from "viem";
 import type { AgentContext, MemberContext } from "./access";
-import { CHAINS, VERIFY_CHAIN } from "./config";
+import { CHAINS, chainEnabled, VERIFY_CHAIN } from "./config";
 import { db } from "./db";
 import { BadRequest, HttpError } from "./http";
 import { AUTHORIZATION_TTL_SECONDS, getOperation, toDecision } from "./operations";
@@ -80,10 +80,11 @@ export async function listApprovals(ctx: MemberContext, params: URLSearchParams)
   return rows.map((r) => ({ ...toDecision(r), typed_data: r.state === "pending_approval" ? typedDataJson(r) : null }));
 }
 
-async function signatureFrom(address: Hex, typed: ReturnType<typeof typedDataFor>, signature: Hex) {
+async function signatureFrom(address: Hex, typed: ReturnType<typeof typedDataFor>, signature: Hex, chainId: number) {
   if (await verifyTypedData({ address, signature, ...typed }).catch(() => false)) return true;
-  // Smart-contract wallets (ERC-1271) verify against the chain.
-  const client = createPublicClient({ transport: http(CHAINS[VERIFY_CHAIN].rpc, { timeout: 8000, retryCount: 1 }) });
+  // Smart-contract wallets (ERC-1271) verify against the operation's own network.
+  const rpc = chainEnabled(chainId) ? CHAINS[chainId].rpc : CHAINS[VERIFY_CHAIN].rpc;
+  const client = createPublicClient({ transport: http(rpc, { timeout: 8000, retryCount: 1 }) });
   return client.verifyTypedData({ address, signature, ...typed }).catch(() => false);
 }
 
@@ -94,7 +95,7 @@ export async function approve(ctx: MemberContext, id: string, body: Record<strin
   if (op.state !== "pending_approval") throw new HttpError(409, "PS_REPLAY_001", `Operation is ${op.state}, not pending approval`);
   if (new Date(op.expires_at).getTime() <= Date.now()) throw new HttpError(409, "PS_REPLAY_001", "The approval window has expired");
   const typed = typedDataFor(op);
-  if (!(await signatureFrom(ctx.user.address as Hex, typed, signature)))
+  if (!(await signatureFrom(ctx.user.address as Hex, typed, signature, Number(op.chain_id))))
     throw new HttpError(401, "PS_AUTH_001", "Signature does not match this operation and your signed-in wallet");
 
   // One statement: every precondition is re-read at the moment of approval.

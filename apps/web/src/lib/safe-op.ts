@@ -1,6 +1,7 @@
 /**
- * Safe smart accounts with the Safe 4337 module (v0.3.0, EntryPoint v0.7), as deployed on Robinhood Chain
- * Testnet. Pure functions only: shared by the API, the console and the tests.
+ * Safe smart accounts with the Safe 4337 module (v0.3.0, EntryPoint v0.7). The same contracts, with the
+ * same code, are deployed at the same addresses on Robinhood Chain (4663) and its testnet (46630); checked
+ * on 2026-11-18. Pure functions only: shared by the API, the console and the tests.
  *
  * Enforcement model: a Safe whose threshold is 2 and whose owners include PALISEC's co-signer. The agent's
  * key is one owner; PALISEC adds the second signature only for an operation it allowed (or a person
@@ -22,13 +23,15 @@ import {
 } from "viem";
 
 export const SAFE_4337 = {
-  chainId: 46630,
   entryPoint: "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
   module: "0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226",
   moduleSetup: "0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47",
   singleton: "0x41675C099F32341bf84BFc5382aF534df5C7461a",
   proxyFactory: "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
-} as const satisfies Record<string, string | number>;
+} as const satisfies Record<string, string>;
+
+/** Networks where these exact contracts are deployed. */
+export const SAFE_4337_CHAINS: readonly number[] = [4663, 46630];
 
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -110,7 +113,7 @@ export const SAFE_OP_TYPES = {
 } as const;
 
 /** The EIP-712 data every owner signs (domain: chain ID and the 4337 module). */
-export function safeOpTypedData(op: SafeUserOp, chainId: number = SAFE_4337.chainId) {
+export function safeOpTypedData(op: SafeUserOp, chainId: number) {
   return {
     domain: { chainId, verifyingContract: SAFE_4337.module as Address },
     types: SAFE_OP_TYPES,
@@ -134,7 +137,7 @@ export function safeOpTypedData(op: SafeUserOp, chainId: number = SAFE_4337.chai
 }
 
 /** The same typed data with every integer as a decimal string, for JSON and for eth_signTypedData_v4. */
-export function safeOpTypedDataJson(op: SafeUserOp, chainId: number = SAFE_4337.chainId) {
+export function safeOpTypedDataJson(op: SafeUserOp, chainId: number) {
   const t = safeOpTypedData(op, chainId);
   return {
     domain: t.domain,
@@ -144,7 +147,7 @@ export function safeOpTypedDataJson(op: SafeUserOp, chainId: number = SAFE_4337.
   };
 }
 
-export const safeOpHash = (op: SafeUserOp, chainId: number = SAFE_4337.chainId): Hex => hashTypedData(safeOpTypedData(op, chainId));
+export const safeOpHash = (op: SafeUserOp, chainId: number): Hex => hashTypedData(safeOpTypedData(op, chainId));
 
 /** Normalizes a 65-byte ECDSA signature to v = 27 or 28, the form Safe treats as a direct signature. */
 export function normalizeSignature(sig: Hex): Hex {
