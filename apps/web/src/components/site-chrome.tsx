@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandMark as BrandIcon } from "./brand-icons";
 import { BrandMark } from "./brand-mark";
+import { CaChip } from "./ca-chip";
 import { NavShell } from "./nav-shell";
 import { ButtonLink, Container } from "./ui";
 
@@ -65,6 +66,7 @@ export function SiteHeader() {
           <span className="hidden sm:inline-flex">
             <ButtonLink href="/console">Console</ButtonLink>
           </span>
+          <CaChip />
           <XLink />
           <details className="group relative xl:hidden">
             <summary className="btn btn-ghost h-10 w-10 cursor-pointer list-none items-center justify-center !p-0 [&::-webkit-details-marker]:hidden">
