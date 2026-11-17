@@ -6,6 +6,6 @@ import { handle, ok, readJson } from "@/server/http";
 export const POST = handle<RouteContext<"/api/v1/approvals/[id]/reject">>(async (req, ctx) => {
   const m = await requireMember(req, "approve");
   const op = await reject(m, await idParam(ctx), await readJson(req));
-  if (op) afterChange(m.orgId, "approval.rejected", { operation_id: op.operation_id, request_id: op.request_id }, true);
+  if (op) afterChange(m.orgId, "approval.rejected", { operation_id: op.operation_id, request_id: op.request_id, chain_id: op.details?.chain_id ?? null }, true);
   return ok(op);
 });

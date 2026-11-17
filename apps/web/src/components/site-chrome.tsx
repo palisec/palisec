@@ -124,7 +124,7 @@ export function SiteFooter() {
         ))}
       </Container>
       <Container className="relative flex flex-col gap-2 border-t border-line py-6 sm:flex-row sm:justify-between">
-        <p className="label">{mainnetEnabled() ? "Live on Robinhood Chain mainnet" : "Robinhood Chain Testnet"}</p>
+        <p className="label">{mainnetEnabled() ? "Robinhood Chain mainnet 4663 · testnet 46630" : "Robinhood Chain Testnet 46630"}</p>
         <p className="label">No third-party tracking</p>
       </Container>
     </footer>

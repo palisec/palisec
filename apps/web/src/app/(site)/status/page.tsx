@@ -17,7 +17,7 @@ const services = (mainnet: boolean): { name: string; deployed: boolean; note: st
   { name: "Webhooks and security events", deployed: true, note: "Signed deliveries; deterministic detectors on demand" },
   { name: "PALISEC Agent", deployed: true, note: "Model provider: Groq free tier, when PALISEC_AGENT_API_KEY is configured" },
   { name: "Signing enclave", deployed: false, note: "" },
-  { name: "Smart-account co-signing and bundler", deployed: true, note: mainnet ? "Mainnet and testnet, a separate co-signer key for each: Safe + 4337 module, Alchemy bundler" : "Testnet: Safe + 4337 module, Alchemy bundler" },
+  { name: "Smart-account co-signing", deployed: true, note: mainnet ? "Mainnet and testnet, a separate co-signer key for each (server-held). Submission also needs the bundler: see the live check" : "Testnet: Safe + 4337 module. Submission also needs the bundler: see the live check" },
   { name: "Telemetry ingestion", deployed: false, note: "" },
 ];
 
@@ -31,8 +31,8 @@ export default function StatusPage() {
         title={mainnet ? "Robinhood Chain mainnet and testnet." : "Robinhood Chain Testnet."}
         lede={
           mainnet
-            ? "The authorization API, console and smart-account execution run on Robinhood Chain mainnet and testnet, each with its own co-signer key. Enclave signing is on the roadmap. Live status comes only from a real health check."
-            : "The authorization API, console and smart-account execution run on Robinhood Chain Testnet; mainnet is switched off by the operator. Live status comes only from a real health check."
+            ? "The authorization API and console run on Robinhood Chain mainnet and testnet. Smart-account execution co-signs with a separate key per network and submits through the bundler, which the live check below tests. Enclave signing is on the roadmap."
+            : "The authorization API and console run on Robinhood Chain Testnet; mainnet is switched off by the operator. The live check below tests each dependency."
         }
       />
       <Section label="Services">
@@ -43,7 +43,7 @@ export default function StatusPage() {
                 {s.name}
                 {s.note && <span className="ml-3 text-sm text-muted">{s.note}</span>}
               </span>
-              <span className={`font-mono text-[11px] tracking-[0.08em] ${s.deployed ? "text-allow" : "text-dim"}`}>{s.deployed ? "● LIVE" : "○ ROADMAP"}</span>
+              <span className={`font-mono text-[11px] tracking-[0.08em] ${s.deployed ? "text-allow" : "text-dim"}`}>{s.deployed ? "● DEPLOYED" : "○ ROADMAP"}</span>
             </li>
           ))}
         </ul>

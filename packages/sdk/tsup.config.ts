@@ -1,9 +1,9 @@
 import { defineConfig } from "tsup";
 
-// The reason codes come from the canonical schema package and are bundled in, so the published
-// SDK has no workspace dependency. viem stays external: customers bring their own.
+// The schema package is bundled in (code and types), so the published SDK has no workspace
+// dependency. viem stays external: customers bring their own.
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: { index: "src/index.ts", policy: "src/policy.ts" },
   format: ["esm"],
   dts: true,
   clean: true,

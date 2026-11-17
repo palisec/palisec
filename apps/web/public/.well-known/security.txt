@@ -1,4 +1,4 @@
-Contact: mailto:security@palisec.tech
+Contact: https://x.com/palisecagents
 Expires: 2027-11-08T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://palisec.tech/.well-known/security.txt

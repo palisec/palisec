@@ -1,4 +1,4 @@
-import { REASON_CODES, RETRYABLE, type ReasonCode } from "@palisec/policy-schema";
+import { REASON_CODES, RETRYABLE, type ReasonCode } from "./schema";
 import type { PalisecClient, SendingWallet } from "./client";
 import { PalisecDeniedError, PalisecError } from "./errors";
 import type { Address, Hex } from "./types";

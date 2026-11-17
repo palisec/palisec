@@ -15,8 +15,15 @@ const DECISION_EVENT: Record<string, EventType> = {
   REQUIRES_HUMAN_SIGNATURE: "operation.review_required",
 };
 
+/** The network an operation belongs to, so receivers never mix mainnet and testnet events. */
+function chainOf(body: Record<string, unknown>): number | null {
+  const direct = body.chain_id ?? (body.details as { chain_id?: unknown } | undefined)?.chain_id;
+  const n = Number(direct);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
 /** After an agent's operation is recorded (REST or MCP). Replayed idempotent results emit nothing. */
-export function afterOperation(orgId: string, body: Record<string, unknown>, replayed: boolean) {
+export function afterOperation(orgId: string, body: Record<string, unknown>, replayed: boolean, chainId?: number) {
   if (replayed || typeof body.operation_id !== "string") return;
   const type = DECISION_EVENT[String(body.decision)];
   if (!type) return;
@@ -24,6 +31,7 @@ export function afterOperation(orgId: string, body: Record<string, unknown>, rep
     await emit(orgId, type, {
       operation_id: body.operation_id,
       request_id: body.request_id,
+      chain_id: chainId ?? chainOf(body),
       decision: body.decision,
       reason_code: body.reason_code ?? null,
       state: body.state,
@@ -38,6 +46,7 @@ export function afterOperation(orgId: string, body: Record<string, unknown>, rep
 
 /** After any other control-plane change worth announcing. */
 export function afterChange(orgId: string, type: EventType, data: Record<string, unknown>, runDetection = false) {
+  if (type.startsWith("operation.") || type.startsWith("approval.")) data = { ...data, chain_id: chainOf(data) };
   after(async () => {
     await emit(orgId, type, data);
     if (runDetection) await detect(orgId, true);

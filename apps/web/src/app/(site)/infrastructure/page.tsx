@@ -74,7 +74,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Smart-account enforcement",
     body: [
       "A gateway cannot guard a key it does not hold. The protected path is a Safe smart account (ERC-4337) whose threshold is 2 and whose owners include PALISEC's co-signer, so an agent that skips PALISEC cannot execute.",
-      "Live on Robinhood Chain mainnet and testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
+      "Deployed on Robinhood Chain mainnet and testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
     ],
     link: ["/docs/account-abstraction", "Account abstraction"],
   },

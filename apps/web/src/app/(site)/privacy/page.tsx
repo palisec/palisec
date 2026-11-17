@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
-import { CONTACT_EMAIL, PRIVACY_VERSION } from "@/lib/legal";
+import { CONTACT_LABEL, CONTACT_URL, PRIVACY_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
           <h2 id="rights">Your rights</h2>
           <p>
             You can ask for a copy of your personal data, ask us to correct it, or ask us to delete your organization and the personal data in it by
-            writing to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from an address you control, and proving control of your wallet when we ask.
+            messaging <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer">{CONTACT_LABEL}</a> and proving control of your wallet when we ask.
             We answer within 30 days. Because the audit trail is append-only, deletion removes your organization as a whole rather than individual
             records within it. You may also complain to your local data-protection authority.
           </p>
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
 
           <h2 id="contact">Contact</h2>
           <p>
-            Privacy questions and requests: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+            Privacy questions and requests: <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer">{CONTACT_LABEL}</a>.
           </p>
         </article>
       </Container>

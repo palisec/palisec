@@ -1,4 +1,4 @@
-import type { ReasonCode } from "@palisec/policy-schema";
+import type { ReasonCode } from "./schema";
 import type { Operation } from "./types";
 
 /** Every failure carries a stable code; match on `code`, never on `message`. */

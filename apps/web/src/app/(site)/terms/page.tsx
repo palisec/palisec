@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
-import { CONTACT_EMAIL, TERMS_VERSION } from "@/lib/legal";
+import { CONTACT_LABEL, CONTACT_URL, TERMS_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -134,8 +134,8 @@ export default function TermsPage() {
 
           <h2 id="termination">13. Ending use</h2>
           <p>
-            You may stop using the Service at any time and ask us to delete your organization by writing to{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Your smart accounts are yours and keep working without us through your recovery
+            You may stop using the Service at any time and ask us to delete your organization by messaging{" "}
+            <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer">{CONTACT_LABEL}</a>. Your smart accounts are yours and keep working without us through your recovery
             owner. We may suspend or end your access if you breach these terms or if we discontinue the Service, with notice where reasonably
             possible. Sections 3, 4, 5, 7, 10, 11 and 12 survive termination.
           </p>
@@ -148,7 +148,7 @@ export default function TermsPage() {
 
           <h2 id="contact">15. Contact</h2>
           <p>
-            Questions about these terms: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Security reports:{" "}
+            Questions about these terms: <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer">{CONTACT_LABEL}</a>. Security reports:{" "}
             <Link href="/security#disclosure">disclosure policy</Link>.
           </p>
         </article>

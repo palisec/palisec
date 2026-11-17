@@ -1,4 +1,4 @@
-import { RETRYABLE, type ReasonCode } from "@palisec/policy-schema";
+import { RETRYABLE, type ReasonCode } from "./schema";
 import { PalisecApprovalError, PalisecConfigError, PalisecDeniedError, PalisecError, PalisecTimeoutError } from "./errors";
 import {
   SUPPORTED_CHAINS,

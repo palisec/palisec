@@ -4,5 +4,6 @@
  */
 export const TERMS_VERSION = "2026-11-18";
 export const PRIVACY_VERSION = "2026-11-08";
-export const CONTACT_EMAIL = "contact@palisec.tech";
-export const SECURITY_EMAIL = "security@palisec.tech";
+/** The one contact channel that is monitored: direct messages to PALISEC on X. No mailbox is published until one is staffed. */
+export const CONTACT_URL = "https://x.com/palisecagents";
+export const CONTACT_LABEL = "@palisecagents on X (direct message)";

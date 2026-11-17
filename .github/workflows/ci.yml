@@ -23,6 +23,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+      # The deployment manifests against the live chains and the app's addresses (read-only).
+      - run: node --experimental-strip-types --no-warnings apps/web/scripts/verify-manifest.mjs
 
   # The Rust policy engine: native parity against the shared fixtures, and a WebAssembly build.
   # (pnpm test in `verify` checks the embedded WebAssembly against the reference on random cases

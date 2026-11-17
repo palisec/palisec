@@ -117,7 +117,7 @@ export function buildMcpServer(agent: AgentContext) {
     intentShape,
     async (i) => {
       const { body, replayed } = await createOperation(agent, parseIntent(i), i.request_id);
-      afterOperation(agent.orgId, body as unknown as Record<string, unknown>, replayed);
+      afterOperation(agent.orgId, body as unknown as Record<string, unknown>, replayed, agent.chainId);
       return { ...body, idempotent_replay: replayed };
     },
     { idempotentHint: true },

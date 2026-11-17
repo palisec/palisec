@@ -12,7 +12,8 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const ORIGIN = new URL(BASE).origin;
-const CHAIN = 46630;
+const CHAIN = Number(process.env.CHAIN_ID ?? 46630);
+const OTHER_CHAIN = CHAIN === 4663 ? 46630 : 4663;
 let passed = 0;
 let failed = 0;
 
@@ -99,7 +100,7 @@ r = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Rebalancer"
 check("create agent", r.status === 201 && r.body.status === "active", r.body);
 const agentId = r.body.id;
 r = await call("POST", `/agents/${agentId}/credentials`, { cookie: o.cookie, body: { label: "e2e" } });
-check("create API key (secret shown once)", r.status === 201 && /^ps_test_[0-9a-f]{48}$/.test(r.body.secret), r.body);
+check("create API key (secret shown once)", r.status === 201 && new RegExp(`^${CHAIN === 4663 ? "ps_live_" : "ps_test_"}[0-9a-f]{48}$`).test(r.body.secret), r.body);
 const KEY = r.body.secret;
 const credId = r.body.id;
 r = await call("GET", `/agents/${agentId}`, { cookie: o.cookie });
@@ -134,7 +135,7 @@ r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "200
 check("value over the per-transaction limit is PS_BUDGET_001", r.body.reason_code === "PS_BUDGET_001", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ deadline: now() - 1 }) });
 check("expired deadline is PS_REPLAY_001", r.body.reason_code === "PS_REPLAY_001", r.body);
-r = await call("POST", "/operations", { key: KEY, body: intent({ chain_id: 4663 }) });
+r = await call("POST", "/operations", { key: KEY, body: intent({ chain_id: OTHER_CHAIN }) });
 check("wrong chain is denied", r.body.decision === "DENY", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent({ data: approveData(rand()) }) });
 check("unknown method goes to human review", r.status === 201 && r.body.decision === "REQUIRES_HUMAN_SIGNATURE" && r.body.state === "pending_approval" && r.body.authorization_id === null, r.body);

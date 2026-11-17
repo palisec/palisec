@@ -1,4 +1,4 @@
-import type { ReasonCode } from "@palisec/policy-schema";
+import type { ReasonCode } from "./schema";
 
 export type Hex = `0x${string}`;
 export type Address = `0x${string}`;

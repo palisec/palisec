@@ -181,6 +181,8 @@ const verify = (r) => {
   await call("POST", "/operations", { key: A.key, body: idem, headers: { "idempotency-key": idem.request_id } });
   await sleep(1200);
   const after = received.filter((r) => JSON.parse(r.body).data?.operation_id === first.body.operation_id).length;
+  const ev = received.map((r) => JSON.parse(r.body)).find((e) => e.data?.operation_id === first.body.operation_id);
+  check("operation events name their network (chain_id)", ev?.data?.chain_id === 46630, ev?.data);
   check("an idempotent retry emits no second event", count === 1 && after === 1, [count, after]);
 
   const tampered = { ...received[received.length - 1], body: received[received.length - 1].body.replace("ALLOW", "DENY") };

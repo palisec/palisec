@@ -66,7 +66,7 @@ const BOUNDARIES: [string, string][] = [
   ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
   ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
   ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. The co-signer is a server-held key, one per network; enclave signing is on the roadmap."],
-  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Live on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
+  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Deployed on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
 ];
 
 export default function SecurityPage() {
@@ -137,8 +137,9 @@ export default function SecurityPage() {
         <div id="disclosure" className="mt-10 max-w-[68ch] scroll-mt-28 space-y-3 text-sm leading-relaxed text-muted">
           <p className="label !text-mist">Reporting a vulnerability</p>
           <p>
-            Email <a href="mailto:security@palisec.tech" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security@palisec.tech</a> with
-            the affected component, steps to reproduce and the impact you observed. Do not open a public issue. We acknowledge reports within
+            Send a direct message to <a href="https://x.com/palisecagents" target="_blank" rel="noopener noreferrer" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">@palisecagents on X</a> saying
+            you have a security report; we reply with a private channel for the details (affected component, steps to reproduce, impact).
+            Do not post details publicly. We acknowledge reports within
             three working days and credit researchers who ask to be named.
           </p>
           <p>

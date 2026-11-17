@@ -403,7 +403,7 @@ export async function executionStatus(orgId: string, id: string, agentId?: strin
     INSERT INTO audit_events (org_id, type, detail)
     SELECT org_id, 'operation.executed', jsonb_build_object('operation_id', id, 'agent_id', agent_id, 'transaction_hash', ${tx}::text, 'success', ${receipt.success}::boolean)
     FROM u RETURNING event_id`;
-  if (updated[0]) afterChange(orgId, "operation.executed", { operation_id: row.id, agent_id: row.agent_id, transaction_hash: tx, success: receipt.success });
+  if (updated[0]) afterChange(orgId, "operation.executed", { operation_id: row.id, agent_id: row.agent_id, chain_id: Number(row.chain_id), transaction_hash: tx, success: receipt.success });
   return statusOf({ ...row, transaction_hash: tx, executed_at: new Date(), execution_success: receipt.success });
 }
 

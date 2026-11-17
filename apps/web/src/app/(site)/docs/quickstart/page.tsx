@@ -10,13 +10,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/quickstart" },
 };
 
-const LOCAL = `# from a checkout of the Palisec repository (access is currently private)
-pnpm install
-pnpm --filter @palisec/policy-schema test`;
+const LOCAL = `# the evaluator ships inside the TypeScript SDK
+npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz`;
 
 const EVALUATE = `import {
   EMPTY_STATE, EXAMPLE_ENV, EXAMPLE_POLICY, SCENARIOS, evaluate,
-} from "@palisec/policy-schema";
+} from "@palisec/sdk/policy";
 
 const swap = SCENARIOS.find((s) => s.id === "swap")!;
 
@@ -96,7 +95,7 @@ export default function Quickstart() {
       <p>Try a request without reserving anything: the dry run returns the same decision and evaluation sequence, and consumes no request ID or budget.</p>
       <CodeBlock code={DRY_RUN} title="terminal" />
       <ul>
-        <li><strong>Authorization is not execution.</strong> <code>transaction_hash</code> stays <code>null</code>: Palisec did not broadcast anything.</li>
+        <li><strong>Authorization is not execution.</strong> For an agent that sends from its own key, <code>transaction_hash</code> stays <code>null</code>: Palisec did not broadcast anything. Agents with a <Link href="/docs/account-abstraction">PALISEC smart account</Link> execute through PALISEC, and the hash is recorded.</li>
         <li><strong>Budget is held until it expires.</strong> An allowed amount counts against the hourly budget even if you never send, because nobody can prove you did not. Only a console operator can release it.</li>
         <li><strong>Approvals bind the exact operation.</strong> An approver signs the request hash, target, value, calldata hash, policy version and expiry. Changing any of them needs a new approval.</li>
       </ul>
@@ -108,7 +107,7 @@ export default function Quickstart() {
       </p>
 
       <h2 id="local">2 · Evaluate locally</h2>
-      <p>Requires Node 22 and pnpm 10. The test suite covers each rule, precedence, replay, cooldowns and fail-closed behaviour.</p>
+      <p>Requires Node 18 or later. The same evaluator runs in the API next to the Rust engine.</p>
       <CodeBlock code={LOCAL} title="terminal" />
       <p>Evaluate an intent from TypeScript:</p>
       <CodeBlock code={EVALUATE} title="evaluate.ts" />
