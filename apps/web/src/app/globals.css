@@ -271,8 +271,8 @@
 /* Hero headline: medium weight, tight tracking compensates for the geometric forms at scale. */
 @utility display {
   font-family: var(--font-display);
-  font-size: clamp(44px, 7.2vw, 96px);
-  line-height: 1;
+  font-size: clamp(38px, 4.9vw, 76px);
+  line-height: 1.03;
   letter-spacing: -0.045em;
   font-weight: 500;
   text-wrap: balance;
@@ -280,9 +280,9 @@
 
 @utility heading {
   font-family: var(--font-heading);
-  font-size: clamp(34px, 4.8vw, 61px);
-  line-height: 1;
-  letter-spacing: -0.04em;
+  font-size: clamp(30px, 3.3vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
   font-weight: 500;
   text-wrap: balance;
 }

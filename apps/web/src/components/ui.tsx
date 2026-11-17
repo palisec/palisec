@@ -1,11 +1,11 @@
 import Link from "next/link";
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { MATURITY_LABEL, MATURITY_SHORT, type Maturity } from "@/lib/capabilities";
 import { Cube } from "./cube";
 import { Reveal } from "./motion";
 
 export function Container({ className = "", ...props }: ComponentProps<"div">) {
-  return <div className={`mx-auto w-full max-w-[2200px] px-[clamp(20px,4.5vw,112px)] ${className}`} {...props} />;
+  return <div className={`mx-auto w-full max-w-[1480px] px-[clamp(20px,4.5vw,64px)] ${className}`} {...props} />;
 }
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -32,17 +32,18 @@ export function Section({
   const headingId = id ? `${id}-title` : label ? `s-${slug(label)}` : undefined;
   return (
     <section id={id} className={`relative ${className}`} aria-labelledby={label || id ? headingId : undefined}>
-      <Container className="py-16 sm:py-20 lg:py-24">
+      <Container className="py-16 sm:py-20">
         {label ? (
-          <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[minmax(200px,3fr)_minmax(0,9fr)]">
-            <div className="lg:sticky lg:top-28 lg:self-start">
-              <h2 id={headingId} className="font-heading text-[clamp(24px,2.2vw,32px)] font-medium leading-[1.1] tracking-[-0.025em] text-mist [text-wrap:balance]">
+          <>
+            {/* Heading, then intro, then content: one left edge, read top to bottom. */}
+            <div className="mb-10 max-w-[760px]">
+              <h2 id={headingId} className="font-heading text-[clamp(26px,2.6vw,38px)] font-medium leading-[1.12] tracking-[-0.025em] text-mist [text-wrap:balance]">
                 {label}
               </h2>
-              {intro && <p className="mt-4 max-w-[36ch] text-[15px] leading-relaxed text-silver">{intro}</p>}
+              {intro && <p className="mt-3 max-w-[60ch] text-[18px] leading-relaxed text-silver">{intro}</p>}
             </div>
             <div className="min-w-0">{children}</div>
-          </div>
+          </>
         ) : (
           children
         )}
@@ -159,33 +160,25 @@ export function PageHeader({ title, lede, compat, children }: { eyebrow?: string
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="aurora right-[-6%] top-[-40%] h-[520px] w-[720px] bg-aqua/[0.10] animate-[drift-a_22s_ease-in-out_infinite]" />
       </div>
-      <Container className="relative grid gap-x-16 gap-y-10 pb-14 pt-12 sm:pb-16 sm:pt-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
-        <h1 className="display max-w-[20ch] text-[clamp(32px,3.7vw,70px)] text-mist">
-          {title.split(" ").reduce<string[][]>((rows, w, i) => {
-            const r = Math.floor(i / 3);
-            (rows[r] ??= []).push(w);
-            return rows;
-          }, []).map((row, i) => (
-            <span key={i} className="line-mask" style={{ "--d": `${i * 90}ms` } as CSSProperties}>
-              <span>{row.join(" ")}</span>
-            </span>
-          ))}
-        </h1>
-        <div className="lg:pb-3">
+      <Container className="relative pb-14 pt-14 sm:pb-16 sm:pt-20">
+        <div className="max-w-[860px]">
+          <Reveal>
+            <h1 className="display text-mist">{title}</h1>
+          </Reveal>
           {lede && (
-            <Reveal delay={250}>
-              <p className="max-w-[52ch] text-[17px] leading-relaxed text-silver">{lede}</p>
+            <Reveal delay={150}>
+              <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.35vw,21px)] leading-relaxed text-silver">{lede}</p>
             </Reveal>
           )}
           {compat && (
-            <Reveal delay={320}>
-              <p className="mt-5 font-mono text-[12px] text-dim [text-wrap:balance]">{compat}</p>
+            <Reveal delay={220}>
+              <p className="mt-4 font-mono text-[12px] text-dim [text-wrap:balance]">{compat}</p>
             </Reveal>
           )}
           {children}
         </div>
       </Container>
-      <div aria-hidden className="absolute right-[clamp(20px,4.5vw,112px)] top-8 hidden opacity-80 xl:block">
+      <div aria-hidden className="absolute right-[clamp(20px,5vw,72px)] top-8 hidden opacity-70 2xl:block">
         <Cube size={64} spinSeconds={26} />
       </div>
     </header>

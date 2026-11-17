@@ -67,7 +67,7 @@ export default function AgentPage() {
       </PageHeader>
 
       <Section label="What it is">
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="max-w-[68ch] space-y-4">
           <p className="text-[17px] leading-relaxed text-silver">
             The PALISEC Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
             records, through 30 typed tools, and every answer cites the records it used. Citations that no tool returned are flagged as unverified.
@@ -83,7 +83,7 @@ export default function AgentPage() {
         <Section key={d.id} id={d.id} label={d.title} className={i % 2 ? "" : "border-y border-line bg-deep/40"}>
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div>
-              <p className="font-heading text-[clamp(26px,2.6vw,38px)] leading-[1.1] tracking-[-0.03em] text-mist [text-wrap:balance]">{d.lede}</p>
+              <p className="max-w-[48ch] text-[19px] leading-relaxed text-mist">{d.lede}</p>
               <ul className="mt-8 space-y-2.5 text-[15px] text-silver">
                 {d.items.map((x) => (
                   <li key={x} className="flex gap-3">

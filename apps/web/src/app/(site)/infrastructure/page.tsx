@@ -120,7 +120,7 @@ export default function InfrastructurePage() {
           {PRODUCTS.map((p) => {
             const c = CAPABILITIES.find((x) => x.id === p.cap)!;
             return (
-              <li key={p.n} className="grid gap-x-8 gap-y-2 border-b border-line py-6 md:grid-cols-[minmax(0,4fr)_minmax(0,7fr)_190px] md:items-center [&>span]:md:justify-self-end">
+              <li key={p.n} className="grid gap-x-8 gap-y-2 border-b border-line py-6 md:grid-cols-[280px_minmax(0,1fr)_190px] md:items-center [&>span]:md:justify-self-end">
                 <h3 className="text-[19px] font-medium text-mist">{p.name}</h3>
                 <p className="text-[15px] leading-relaxed text-silver">{p.body}</p>
                 <MaturityBadge maturity={c.maturity} />
@@ -139,7 +139,7 @@ export default function InfrastructurePage() {
               </Link>
             )}
           </div>
-          <div className="mt-6 gap-x-16 text-[clamp(16px,1.05vw,18px)] leading-relaxed text-silver xl:columns-2 [&>p]:mb-4 [&>p]:break-inside-avoid">
+          <div className="mt-6 max-w-[68ch] space-y-4 text-[17px] leading-relaxed text-silver">
             {s.body.map((b) => (
               <p key={b}>{b}</p>
             ))}

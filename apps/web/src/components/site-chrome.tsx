@@ -44,7 +44,7 @@ export const NAV = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 px-[clamp(8px,3.4vw,96px)] pt-3">
+    <header className="sticky top-0 z-50 px-[max(8px,calc(4.5vw-16px))] pt-3">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
         Skip to content
       </a>

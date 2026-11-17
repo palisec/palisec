@@ -108,11 +108,19 @@ export function AgentFlow() {
   const reduced = useReducedMotion();
   // One counter drives everything: six stages per scene, three scenes in turn.
   const [tick, setTick] = useState(5);
+  // An outcome the visitor picked plays from its first stage and then stays on screen.
+  const [held, setHeld] = useState(false);
+  const [run, setRun] = useState(0);
   useEffect(() => {
     if (reduced) return;
-    const step = setInterval(() => setTick((t) => t + 1), 700);
+    const step = setInterval(() => setTick((t) => (held && t % 6 === 5 ? t : t + 1)), 700);
     return () => clearInterval(step);
-  }, [reduced]);
+  }, [reduced, held, run]);
+  const show = (k: number) => {
+    setTick(k * 6);
+    setHeld(true);
+    setRun((r) => r + 1);
+  };
   const i = Math.floor(tick / 6) % ORDER.length;
   const s = reduced ? 5 : tick % 6;
   const outcome = ORDER[i]!;
@@ -174,7 +182,7 @@ export function AgentFlow() {
             <button
               key={o}
               type="button"
-              onClick={() => setTick(k * 6 + 5)}
+              onClick={() => show(k)}
               aria-pressed={k === i}
               aria-label={OUTCOME_BUTTON[o].label}
               title={OUTCOME_BUTTON[o].label}
