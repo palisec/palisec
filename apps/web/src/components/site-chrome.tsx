@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark as BrandIcon } from "./brand-icons";
 import { BrandMark } from "./brand-mark";
 import { NavShell } from "./nav-shell";
 import { ButtonLink, Container } from "./ui";
@@ -11,6 +12,24 @@ export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
       </span>
       <span className="font-brand text-[18px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
     </Link>
+  );
+}
+
+export const X_URL = "https://x.com/palisecagents?s=20";
+
+/** PALISEC on X: an icon link that stays in the header at every width. */
+export function XLink({ className = "" }: { className?: string }) {
+  return (
+    <a
+      href={X_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="PALISEC on X (opens in a new tab)"
+      title="PALISEC on X"
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-[10px] text-silver shadow-[inset_0_0_0_1px_var(--color-line-strong)] transition-[color,box-shadow,background-color] duration-300 hover:bg-raised/60 hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5)] focus-visible:text-aqua ${className}`}
+    >
+      <BrandIcon brand="x" size={16} />
+    </a>
   );
 }
 
@@ -46,6 +65,7 @@ export function SiteHeader() {
           <span className="hidden sm:inline-flex">
             <ButtonLink href="/console">Console</ButtonLink>
           </span>
+          <XLink />
           <details className="group relative xl:hidden">
             <summary className="btn btn-ghost h-10 w-10 cursor-pointer list-none items-center justify-center !p-0 [&::-webkit-details-marker]:hidden">
               <span className="sr-only group-open:hidden">Open menu</span>
