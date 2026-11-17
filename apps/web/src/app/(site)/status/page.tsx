@@ -28,10 +28,10 @@ export default function StatusPage() {
     <>
       <PageHeader
         eyebrow="Status"
-        title={mainnet ? "Mainnet and testnet, pre-release." : "Testnet, pre-release."}
+        title={mainnet ? "Robinhood Chain mainnet and testnet." : "Robinhood Chain Testnet."}
         lede={
           mainnet
-            ? "The authorization API, console and smart-account execution run on Robinhood Chain mainnet and testnet, each with its own co-signer key. The signing enclave is a later upgrade. Live status comes only from a real health check."
+            ? "The authorization API, console and smart-account execution run on Robinhood Chain mainnet and testnet, each with its own co-signer key. Enclave signing is on the roadmap. Live status comes only from a real health check."
             : "The authorization API, console and smart-account execution run on Robinhood Chain Testnet; mainnet is switched off by the operator. Live status comes only from a real health check."
         }
       />
@@ -43,7 +43,7 @@ export default function StatusPage() {
                 {s.name}
                 {s.note && <span className="ml-3 text-sm text-muted">{s.note}</span>}
               </span>
-              <span className={`font-mono text-[11px] tracking-[0.08em] ${s.deployed ? "text-allow" : "text-dim"}`}>{s.deployed ? "● DEPLOYED" : "○ NOT DEPLOYED"}</span>
+              <span className={`font-mono text-[11px] tracking-[0.08em] ${s.deployed ? "text-allow" : "text-dim"}`}>{s.deployed ? "● LIVE" : "○ ROADMAP"}</span>
             </li>
           ))}
         </ul>

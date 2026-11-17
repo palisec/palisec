@@ -28,4 +28,4 @@ try {
 - Errors are `PalisecError` subclasses with a stable `code` (`PS_…`). Retries happen only for network errors, 429 and 5xx, and only on calls that are safe to repeat.
 - Log events never contain your API key, request bodies or calldata; `redact()` masks keys in any string.
 
-Palisec is pre-release on Robinhood Chain Testnet (46630). It authorizes; it does not sign or broadcast, and until the on-chain module ships a key that skips Palisec can still transact. Docs: https://palisec.tech/docs/sdk/typescript
+Palisec runs on Robinhood Chain mainnet (4663) and testnet (46630); a `ps_live_` key is mainnet, a `ps_test_` key testnet. Agents with a PALISEC smart account are enforced on chain (`executeWithSmartAccount`); an agent that sends from a plain key is enforced only in its own process. Docs: https://palisec.tech/docs/sdk/typescript

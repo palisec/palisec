@@ -3,17 +3,17 @@ import { Note, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Sandbox, Production Swarm and Institutional plans for Palisec. Prices are not yet set.",
+  description: "Developer, Production Swarm and Institutional plans for Palisec.",
   alternates: { canonical: "/pricing" },
 };
 
 const PLANS = [
   {
-    name: "Sandbox",
+    name: "Developer",
     price: "Free",
     body: "The hosted authorization API and live console on Robinhood Chain mainnet and testnet, plus a policy workbench that evaluates examples in your browser.",
     items: ["Authorization API and console, mainnet and testnet", "Smart accounts enforced on chain", "Agents, policies, approvals and audit"],
-    note: "Free during pre-release. Decisions are enforced for agents that call the API; smart accounts are enforced on chain.",
+    note: "Decisions are enforced for every agent that calls the API; smart accounts are enforced on chain.",
     available: true,
   },
   {
@@ -21,7 +21,7 @@ const PLANS = [
     price: "Monthly + usage",
     body: "Hosted policy enforcement, protected signing, audit history and usage-based metering.",
     items: ["Protected operation evaluations", "Successful signing operations", "Retained audit storage"],
-    note: "Prices and included limits not yet set.",
+    note: "Priced to your volume. Contact us on X @palisecagents.",
     available: false,
   },
   {
@@ -29,7 +29,7 @@ const PLANS = [
     price: "Contracted",
     body: "Dedicated capacity, defined service objectives, advanced access controls and negotiated support.",
     items: ["Dedicated capacity", "Defined objectives", "Advanced access control"],
-    note: "Offered when these capabilities exist.",
+    note: "Contract terms agreed with your team.",
     available: false,
   },
 ];
@@ -50,7 +50,7 @@ export default function PricingPage() {
                 <h3 className="text-lg font-medium text-fg">{p.name}</h3>
                 <span className={`inline-flex items-center gap-2 font-utility text-[13px] font-semibold ${p.available ? "text-allow" : "text-muted"}`}>
                   <span aria-hidden className={`h-2 w-2 rounded-full ${p.available ? "bg-allow" : "ring-1 ring-muted"}`} />
-                  {p.available ? "Available" : "Not yet offered"}
+                  {p.available ? "Available" : "On request"}
                 </span>
               </div>
               <p className="mt-6 font-heading text-[32px] font-medium tracking-[-0.03em] text-mist">{p.price}</p>
@@ -63,8 +63,8 @@ export default function PricingPage() {
           ))}
         </div>
         <Note title="Overages">
-          Behaviour when a paid account exceeds its allowance, including how pending operations and reservations are handled, will
-          be defined before launch. Exceeding an allowance never silently disables security checks.
+          Exceeding an allowance never silently disables security checks: pending operations and reservations keep their
+          guarantees, and the limits that apply are agreed in your plan.
         </Note>
       </Section>
     </>

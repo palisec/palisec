@@ -165,7 +165,7 @@ export function LiveDashboard() {
         ))}
       </div>
       <p className="mt-2 text-[11.5px] text-muted">
-        Reserved is the exposure (value plus fee bound, in USD) held by authorizations in the rolling hour. Spent amounts need receipt reconciliation, which is not deployed.
+        Reserved is the exposure (value plus fee bound, in USD) held by authorizations in the rolling hour. Executed operations show their transaction hash in Operations.
       </p>
 
       <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">

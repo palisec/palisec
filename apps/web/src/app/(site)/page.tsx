@@ -453,7 +453,7 @@ export default function Home() {
             </h2>
             <p className="mt-5 flex items-center gap-3 text-[18px] text-silver">
               <BrandMark brand="ethereum" size={18} className="text-silver/70" />
-              Live on Robinhood Chain. Free during pre-release.
+              Live on Robinhood Chain. Free to start.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/developers">Start building</ButtonLink>

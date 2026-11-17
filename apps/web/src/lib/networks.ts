@@ -48,7 +48,7 @@ export function network(chainId: number): Network | null {
   return isNetworkId(chainId) ? NETWORKS[chainId] : null;
 }
 
-/** "Robinhood Chain · 4663", or the bare number for a chain this release does not know. */
+/** "Robinhood Chain · 4663", or the bare number for a chain PALISEC does not support. */
 export function networkLabel(chainId: number, style: "long" | "short" = "long"): string {
   const n = network(chainId);
   if (!n) return `Chain ${chainId}`;

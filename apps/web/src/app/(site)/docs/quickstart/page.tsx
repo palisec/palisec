@@ -79,7 +79,7 @@ export default function Quickstart() {
       maturity="service"
     >
       <h2 id="hosted">1 · Your first authorized operation</h2>
-      <Note kind="warning" title="What this release enforces">
+      <Note kind="warning" title="What PALISEC enforces">
         Palisec records each decision and enforces budgets, cooldowns, replay protection and approvals for agents that ask it. An agent
         that sends from a plain key is enforced only in its own process; for on-chain enforcement, give it a{" "}
         <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Try it on testnet first (chain 46630, switch in the console&apos;s top bar), then use mainnet (4663) with a PALISEC smart account, a tested policy and a small balance.

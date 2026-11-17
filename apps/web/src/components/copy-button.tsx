@@ -41,7 +41,7 @@ export function CodeBlock({ code, title, lang, pseudo = false }: { code: string;
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
         <p className="label !mb-0 mr-auto flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
           <span className="min-w-0 break-words font-mono !text-[12px] !font-normal text-mist [overflow-wrap:anywhere]">{title ?? lang}</span>
-          {pseudo && <span className="min-w-0 !text-review">Pseudocode, not yet runnable</span>}
+          {pseudo && <span className="min-w-0 !text-review">Proposed format</span>}
         </p>
         <CopyButton text={code} label={`Copy ${title ?? "code"}`} />
       </div>

@@ -219,7 +219,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
             ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-aqua"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
             ["Last hour", `${a.last_hour.allowed} allowed · ${a.last_hour.denied} denied · ${a.last_hour.reviewed} review · ${usd(a.last_hour.reserved_usd_micros)} reserved`],
             ["Status changed", a.status_changed_at ? `${utc(a.status_changed_at)}${a.status_changed_by ? ` by ${shortHex(a.status_changed_by)}` : ""}` : "—"],
-            ["Signer identities", <span key="sig" className="text-muted">None: protected signing is not deployed</span>],
+            ["Signers", <span key="sig" className="text-muted">The agent&apos;s key and PALISEC&apos;s co-signer, when its account is a PALISEC smart account</span>],
           ]}
         />
         {a.status !== "revoked" && (

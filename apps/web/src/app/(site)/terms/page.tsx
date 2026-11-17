@@ -23,7 +23,7 @@ export default function TermsPage() {
             authorized (together, the &ldquo;Service&rdquo;), with this website and its documentation.
           </p>
           <p>
-            The Service is a <strong>pre-release</strong>. It supports <strong>Robinhood Chain mainnet</strong> (chain 4663), where transactions move
+            The Service supports <strong>Robinhood Chain mainnet</strong> (chain 4663), where transactions move
             real funds, and Robinhood Chain Testnet (chain 46630), where they do not. The <Link href="/status">status page</Link> and{" "}
             <Link href="/changelog">changelog</Link> state what is available.
           </p>
@@ -105,8 +105,8 @@ export default function TermsPage() {
 
           <h2 id="availability">9. Availability and changes</h2>
           <p>
-            We aim to keep the Service available but do not promise uninterrupted operation, and we do not offer a service-level agreement during
-            pre-release. When the Service cannot reach its database or a required input, it refuses to authorize (it fails closed) rather than
+            We aim to keep the Service available but do not promise uninterrupted operation, and we do not offer a service-level agreement unless one
+            is agreed in writing. When the Service cannot reach its database or a required input, it refuses to authorize (it fails closed) rather than
             allowing by default. We may change, suspend or discontinue features, including support for a network, and will announce material
             changes in the changelog.
           </p>

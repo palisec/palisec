@@ -10,10 +10,7 @@ interface Org {
   emergency_stop: boolean;
 }
 
-/**
- * Circuit breakers and the honest state of the signing path. Nothing here claims a signer, enclave or
- * on-chain module that is not deployed.
- */
+/** Circuit breakers and the state of the signing path. Only what is running is shown as live. */
 export function LiveSecurity() {
   const { org: member, refresh } = useConsoleSession();
   const org = useLive<Org>("/organization");
@@ -57,7 +54,7 @@ export function LiveSecurity() {
               ["Authorization decisions", <Pill key="a" tone="allow">● Live</Pill>],
               ["Budget reservations and replay", <Pill key="b" tone="allow">● Live · atomic in Postgres</Pill>],
               ["Human approvals", <Pill key="h" tone="allow">● Live · EIP-712 signatures</Pill>],
-              ["Protected signing (TEE)", <Pill key="s" tone="muted">○ Not deployed</Pill>],
+              ["Enclave signing (TEE)", <Pill key="s" tone="muted">○ Roadmap</Pill>],
               ["Smart-account co-signing", <Pill key="v" tone="allow">● Live · Safe + 4337 module</Pill>],
               ["Bundler submission", <Pill key="u" tone="allow">● Live · Alchemy</Pill>],
             ]}

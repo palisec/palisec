@@ -227,7 +227,7 @@ function Shell({ children }: { children: ReactNode }) {
           {ready && (
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
-                <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · pre-release · " : "● Testnet · pre-release · "}</span>
+                <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · " : "● Testnet · "}</span>
                 PALISEC records and enforces each authorization decision. Agents with a PALISEC smart account are enforced on chain: PALISEC
                 co-signs only what it allowed. An agent that sends from a plain key is only as safe as its own code.{" "}
                 <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>

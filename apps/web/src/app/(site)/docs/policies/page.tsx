@@ -113,7 +113,7 @@ export default function PoliciesPage() {
         <li><strong>Native value and fees</strong> are integer wei.</li>
         <li><strong>USD amounts</strong> are integer micros (1 USD = 1,000,000). Conversion rounds up, so limits are never under-counted.</li>
         <li><strong>USD enforcement needs a fresh price.</strong> A missing price, or one older than <code>max_price_age_seconds</code>, fails closed with <code>PS_STATE_001</code>.</li>
-        <li><strong>Exposure</strong> is native value plus estimated fee. Token-denominated allocations are specified but not yet in schema 1.0.</li>
+        <li><strong>Exposure</strong> is native value plus estimated fee. Token-denominated allocations are not part of schema 1.0.</li>
       </ul>
 
       <h2 id="precedence">Precedence</h2>

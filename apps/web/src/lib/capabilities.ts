@@ -7,7 +7,7 @@ export type Maturity = "local" | "service" | "specified" | "planned";
 export const MATURITY_LABEL: Record<Maturity, string> = {
   local: "Available · local simulation",
   service: "Built · control plane",
-  specified: "Specified · not deployed",
+  specified: "Specified · on the roadmap",
   planned: "Planned",
 };
 

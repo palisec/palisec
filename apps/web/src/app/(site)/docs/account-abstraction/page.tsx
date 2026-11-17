@@ -137,7 +137,7 @@ export default function SmartAccounts() {
         </tbody>
       </table>
 
-      <h2 id="limits">Limits of this release</h2>
+      <h2 id="limits">Security model and limits</h2>
       <Note kind="warning" title="Server-held co-signer">
         <span className="inline-flex items-start gap-2">
           <KeyIcon size={16} className="mt-0.5 shrink-0" />

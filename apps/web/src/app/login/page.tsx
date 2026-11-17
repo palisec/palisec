@@ -23,7 +23,7 @@ export default function LoginPage() {
           <span className="font-brand text-[17px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
         </span>
         <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[11.5px] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">
-          ● Robinhood Chain · pre-release
+          ● Robinhood Chain
         </span>
       </header>
 

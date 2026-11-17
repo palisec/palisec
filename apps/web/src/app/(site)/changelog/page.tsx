@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
-    version: "0.11.0",
+    version: "1.0.0",
     date: "2026-11-18",
-    tag: "Pre-release · mainnet",
+    tag: "Mainnet launch",
     changes: [
       "Robinhood Chain mainnet is the primary network. Terms of Service updated for real funds, custody and the PALISEC token.",
       "Robinhood Chain mainnet (4663) alongside testnet (46630). The same Safe and ERC-4337 contracts, with identical code, on both; PALISEC co-signs with a separate key on each network, and a signature for one network is never valid on the other.",
@@ -24,7 +24,7 @@ const ENTRIES = [
   {
     version: "0.10.0",
     date: "2026-11-17",
-    tag: "Pre-release · testnet · on-chain enforcement",
+    tag: "testnet · on-chain enforcement",
     changes: [
       "Smart accounts: a Safe (Safe 4337 module, EntryPoint v0.7) with a threshold of 2 and PALISEC's co-signer as an owner. PALISEC co-signs only an allowed or approved operation, for exactly that payload and until its authorization expires, and submits it through an ERC-4337 bundler. The agent's key alone cannot move funds; an organization recovery owner can.",
       "API: POST /v1/operations/{id}/user-operation and /submit, GET /v1/operations/{id}/execution, GET /v1/smart-accounts and /v1/smart-accounts/{address}. New webhook events operation.submitted and operation.executed.",
@@ -36,7 +36,7 @@ const ENTRIES = [
   {
     version: "0.9.1",
     date: "2026-11-16",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "New PALISEC logo: a hexagonal P around the protected cube, in the site, console and browser icon.",
       "TypeScript SDK 0.4.0: createPalisecTools gives the OpenAI Agents SDK, the Vercel AI SDK and LangGraph the same framework-neutral tools (evaluate, send only on ALLOW, read an operation, explain a reason code).",
@@ -47,7 +47,7 @@ const ENTRIES = [
   {
     version: "0.9.0",
     date: "2026-11-16",
-    tag: "Pre-release · testnet · PALISEC 2.0",
+    tag: "testnet · PALISEC 2.0",
     changes: [
       "PALISEC Agent: a native security operator in the console with 30 server-checked tools for investigation, policy engineering (draft, validate, simulate including history replay, compare, explain) and operations. It cannot authorize, approve, sign or activate; actions are requests a member confirms. Autonomy levels 0-2, evidence-linked answers, unverified citations flagged. Any OpenAI-compatible model; Groq free tier by default.",
       "PALISEC Connect: least-privilege API key scopes (existing keys keep all of them), atomic key rotation, integration activity, and endpoints for a key's own identity, policy version, operations and audit trail.",
@@ -62,7 +62,7 @@ const ENTRIES = [
   {
     version: "0.8.0",
     date: "2026-11-09",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "The Rust policy engine is live. It runs as WebAssembly inside the API next to the TypeScript reference evaluator, and every decision needs both to agree on every field: decision, reason code, each check's wording and the next ledger state. Any difference, or an engine that cannot run, denies with PS_STATE_001 and reserves nothing.",
       "Parity is proven on every change: shared fixtures that cover ALLOW, human review and every DENY reason code are checked natively in Rust and in WebAssembly, and 6,000 seeded random cases compare the two implementations one by one. CI refuses an embedded engine that was not built from the current Rust source.",
@@ -75,7 +75,7 @@ const ENTRIES = [
   {
     version: "0.7.0",
     date: "2026-11-09",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "Python SDK palisec 0.1.0, installed with pip from https://palisec.tech/sdk/palisec-0.1.0-py3-none-any.whl: async, typed, no third-party dependencies. authorize, dry-run evaluate, wait_for_approval, cancel and send_transaction, with the same semantics as the TypeScript SDK.",
       "palisec.web3.Web3Sender sends with web3.py: it checks the RPC's chain, signs locally and pays the gas limit Palisec bounded the fee on.",
@@ -86,7 +86,7 @@ const ENTRIES = [
   {
     version: "0.6.0",
     date: "2026-11-09",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "TypeScript SDK @palisec/sdk 0.1.0, installed from https://palisec.tech/sdk/palisec-sdk-0.1.0.tgz: authorize, dry-run evaluate, waitForApproval, cancel, and sendTransaction, which sends with your viem wallet only on ALLOW and refuses a wallet that is not the agent's account.",
       "Typed errors with stable codes, automatic idempotency keys, timeouts, and retries only on calls that are safe to repeat. Log events never contain API keys, bodies or calldata.",
@@ -97,7 +97,7 @@ const ENTRIES = [
   {
     version: "0.5.0",
     date: "2026-11-04",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "The console requires wallet sign-in: opening any console page without a session leads to /login and back to that page afterwards. palisec.tech itself stays the public overview, and the console logo returns to it.",
       "The console shows real data only. The example-data simulation is gone; an expired session returns you to sign-in and an unreachable control plane is shown as such.",
@@ -110,7 +110,7 @@ const ENTRIES = [
   {
     version: "0.4.0",
     date: "2026-11-04",
-    tag: "Pre-release · testnet",
+    tag: "testnet",
     changes: [
       "Authorization API on Robinhood Chain Testnet (46630): POST /v1/operations records each decision with its budget reservation; POST /v1/authorizations/evaluate is a dry run. Idempotency-Key, request_id replay protection and loop cooldowns.",
       "Budget reservations are serialized per policy in Postgres: one SQL function re-checks budget, pending slots, replay and loop state, so concurrent requests cannot overspend. Tested with 30 simultaneous requests for one slot.",
@@ -120,24 +120,24 @@ const ENTRIES = [
       "Organization emergency stop (operators engage, owners lift), members and roles enforced server-side, append-only audit API.",
       "Fee bound from the testnet RPC gas price; USD conversion from Coinbase with a Kraken fallback. Any missing input fails closed.",
       "The console reads live data when you are signed in; visitors keep the simulation. API reference and OpenAPI 3.1 at /api/v1/openapi.json.",
-      "Not in this release: signing, bundler submission, receipt reconciliation and the on-chain account module.",
+      "Signing, bundler submission and the on-chain account module followed in 0.10.0.",
     ],
   },
   {
     version: "0.3.0",
     date: "2026-10-29",
-    tag: "Pre-release",
+    tag: "Foundations",
     changes: [
       "Control-plane foundation: Postgres schema with an append-only audit log, applied by versioned migrations.",
       "Wallet sign-in (SIWE, EIP-4361) at /login: server-issued one-time challenges bound to the domain, EOA and ERC-1271 signature verification, HttpOnly sessions with revocation and an Origin check on state changes.",
-      "First sign-in creates an organization with the signer as owner. GET /v1/health reports which components are reachable and which are not deployed.",
+      "First sign-in creates an organization with the signer as owner. GET /v1/health reports which components are reachable.",
       "Without a configured database every state-dependent endpoint fails closed with PS_STATE_001.",
     ],
   },
   {
     version: "0.2.0",
     date: "2026-10-23",
-    tag: "Pre-release",
+    tag: "Foundations",
     changes: [
       "Developer console as a simulation workspace: dashboard, agents, policy editor, operations, approval queue, audit, keys and circuit breakers, and organization settings.",
       "Console decisions come from the canonical evaluator and validator; data stays in the browser and nothing is signed or submitted.",
@@ -147,7 +147,7 @@ const ENTRIES = [
   {
     version: "0.1.0",
     date: "2026-10-21",
-    tag: "Pre-release",
+    tag: "Foundations",
     changes: [
       "Canonical policy schema 1.0 with JSON Schema, TypeScript types and validation.",
       "Deterministic reference evaluator with fixed evaluation order and stable reason codes.",

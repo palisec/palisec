@@ -190,7 +190,7 @@ export function openApiDocument(serverUrl: string) {
       title: "Palisec API",
       version: "0.6.0",
       description:
-        "Pre-release. Robinhood Chain mainnet (4663) and Robinhood Chain Testnet (46630); an agent's key says which (ps_live_ or ps_test_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
+        "Robinhood Chain mainnet (4663) and Robinhood Chain Testnet (46630); an agent's key says which (ps_live_ or ps_test_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
     },
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {
@@ -223,7 +223,7 @@ export function openApiDocument(serverUrl: string) {
             state: { enum: ["denied", "authorized", "pending_approval", "approved", "rejected", "cancelled", "expired", "authorization_expired", "not_recorded"] },
             authorization_id: { type: ["string", "null"] },
             expires_at: { type: ["string", "null"], format: "date-time" },
-            transaction_hash: { type: "null", description: "Always null: this release never broadcasts." },
+            transaction_hash: { type: ["string", "null"], description: "Set once the operation executed through a PALISEC smart account; otherwise null." },
             retryable: { type: "boolean" },
             message: { type: "string" },
             checks: { type: "array", items: { type: "object" } },

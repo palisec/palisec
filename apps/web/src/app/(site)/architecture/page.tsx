@@ -278,7 +278,7 @@ export default function ArchitecturePage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · mainnet and testnet · enclave signing not deployed"
+        compat="Schema 1.0 · Robinhood Chain mainnet and testnet"
         title="Decide off chain. Enforce on chain. Fail closed everywhere."
         lede="What runs where, the path of one request, what is stored, and what happens when something breaks."
       />

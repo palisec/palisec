@@ -20,7 +20,7 @@ export default function AttestationPage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · not deployed"
+        compat="Schema 1.0 · enclave signing on the roadmap"
         eyebrow="Attestation"
         title="Measurements, and what they do and do not prove."
         lede="This page will publish expected enclave measurements and the latest verification result, with its scope and timestamp."

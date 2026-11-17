@@ -27,7 +27,7 @@ interface Usage {
   webhook_deliveries_7d: number;
 }
 
-/** API usage from the ledger. Pre-release: there is no billing, and these numbers are not a bill. */
+/** API usage from the ledger. Usage is not billed here, and these numbers are not a bill. */
 export function LiveUsage() {
   const u = useLive<Usage>("/usage");
   const d = u.data;
@@ -35,7 +35,7 @@ export function LiveUsage() {
   const total = (d?.keys ?? []).reduce((s, k) => s + k.requests_7d, 0);
   return (
     <>
-      <PageTitle title="Usage" description="Requests and outcomes per agent and API key over the last 7 days (UTC), straight from the authorization ledger. PALISEC is free during the pre-release; nothing here is billed." />
+      <PageTitle title="Usage" description="Requests and outcomes per agent and API key over the last 7 days (UTC), straight from the authorization ledger. Nothing here is billed." />
       <LoadError error={u.error} />
       {!d ? (
         <Loading what="usage" />

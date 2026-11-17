@@ -64,7 +64,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Protected signing",
     body: [
       "Specified: a signer in an AWS Nitro Enclave whose key is released only to the measured image, signing only payloads bound to a recorded authorization, with no arbitrary-signing interface.",
-      "Not deployed yet. Today PALISEC co-signs allowed operations for smart accounts with a server-held key per network (a separate key for mainnet). The co-signer cannot move funds alone; the enclave will also protect it from anyone with server access.",
+      "On the roadmap. Today PALISEC co-signs allowed operations for smart accounts with a server-held key per network (a separate key for mainnet). The co-signer cannot move funds alone; the enclave will also protect it from anyone with server access.",
     ],
     link: ["/attestation", "Attestation"],
   },

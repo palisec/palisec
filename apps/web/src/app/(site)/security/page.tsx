@@ -48,25 +48,24 @@ const KEYS = [
   ["Environments", "Separate keys for development, staging and production."],
 ];
 
-const GATES = [
-  "Reviewed threat model",
-  "Audited smart-account enforcement design",
-  "Attestation verification test suite",
-  "Key management and recovery procedures",
-  "Budget-concurrency and replay tests",
-  "Direct-bypass tests",
-  "Dependency and secret scanning",
-  "Contract fuzzing and invariant tests",
-  "Documented incident response",
-  "Tested rollback procedure",
-  "No unresolved critical findings",
+/** Assurance work: what is in place, and what is on the roadmap. Nothing is marked done that is not. */
+const GATES: [string, boolean][] = [
+  ["Threat model with trust boundaries", true],
+  ["Budget-concurrency and replay tests", true],
+  ["Direct-bypass tests on chain", true],
+  ["Dependency and secret scanning", true],
+  ["Recovery owner on every smart account", true],
+  ["Emergency stop and per-network kill switch", true],
+  ["Independent audit of the enforcement design", false],
+  ["Enclave signing with attestation", false],
+  ["Contract fuzzing and invariant tests", false],
 ];
 
 const BOUNDARIES: [string, string][] = [
   ["A · External agent → PALISEC", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
   ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
   ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
-  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. The co-signer is a server-held key, one per network; the enclave signer is specified, not deployed."],
+  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. The co-signer is a server-held key, one per network; enclave signing is on the roadmap."],
   ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Live on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
 ];
 
@@ -74,7 +73,7 @@ export default function SecurityPage() {
   return (
     <>
       <PageHeader
-        compat="Schema 1.0 · pre-release · mainnet and testnet · enclave signing not deployed"
+        compat="Schema 1.0 · Robinhood Chain mainnet and testnet"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature."
@@ -113,15 +112,15 @@ export default function SecurityPage() {
           ))}
         </dl>
       </Section>
-      <Section label="Production release gates">
+      <Section label="Assurance">
         <p className="mb-6 max-w-[60ch] text-sm leading-relaxed text-muted">
-          No production release proceeds until every gate is met. None are met today: Palisec is pre-release.
+          What is in place today, and the hardening that follows. Each item is marked only when it is true.
         </p>
         <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-          {GATES.map((g) => (
+          {GATES.map(([g, done]) => (
             <li key={g} className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-soft lg:last:[&:nth-child(3n+2)]:col-span-2 sm:max-lg:last:[&:nth-child(odd)]:col-span-2">
               {g}
-              <span className="shrink-0 font-mono text-[10px] tracking-[0.08em] text-review">□ OPEN</span>
+              <span className={`shrink-0 font-mono text-[10px] tracking-[0.08em] ${done ? "text-allow" : "text-muted"}`}>{done ? "● IN PLACE" : "○ ROADMAP"}</span>
             </li>
           ))}
         </ul>

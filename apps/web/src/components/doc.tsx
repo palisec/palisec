@@ -7,7 +7,7 @@ export function DocArticle({
   title,
   lede,
   maturity,
-  compat = "Schema 1.0 · pre-release",
+  compat = "Schema 1.0",
   children,
 }: {
   title: string;
