@@ -1,6 +1,6 @@
 import { engineStatus } from "@palisec/policy-engine";
 import { secretsConfigured } from "@/server/secrets";
-import { bundlerReachable, signerState, smartAccountsStatus } from "@/server/smart-accounts";
+import { bundlerState, signerState, smartAccountsStatus } from "@/server/smart-accounts";
 import { CHAINS, defaultChain, isDatabaseConfigured } from "@/server/config";
 import { MAINNET, TESTNET } from "@/lib/networks";
 import { db } from "@/server/db";
@@ -39,7 +39,7 @@ export const GET = handle(async (req: Request) => {
   // Decisions need both the Rust engine and the reference evaluator; without the engine they fail closed.
   const engine = engineStatus();
   const main = smartAccountsStatus(MAINNET);
-  const mainnetBundler = await bundlerReachable(MAINNET);
+  const [mainnetBundler, testnetBundler] = await Promise.all([bundlerState(MAINNET), bundlerState(TESTNET)]);
   const test = smartAccountsStatus(TESTNET);
   return ok({
     status: database === "ok" && engine.ok ? "ok" : "degraded",
@@ -51,8 +51,9 @@ export const GET = handle(async (req: Request) => {
       signer: test.signer ? "testnet_cosigner" : "not_configured",
       mainnet: main.enabled ? "enabled" : "switched_off",
       mainnet_signer: { configured: "mainnet_cosigner", not_configured: "not_configured", same_as_testnet: "same_as_testnet_key" }[signerState(MAINNET)],
-      mainnet_bundler: ({ true: "reachable", false: "unreachable", null: "not_configured" } as const)[String(mainnetBundler) as "true" | "false" | "null"],
+      mainnet_bundler: mainnetBundler,
       bundler: test.bundler ? "configured" : "not_configured",
+      testnet_bundler: testnetBundler,
     },
     schema_migration: schema,
     policy_engine: { implementation: "rust-wasm+reference", version: engine.version, source_hash: engine.source_hash.slice(0, 12) },

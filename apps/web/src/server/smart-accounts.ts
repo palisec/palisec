@@ -56,29 +56,43 @@ export function signerState(chainId: number): "configured" | "not_configured" | 
   return "not_configured";
 }
 
-/** Does the network's bundler answer? One cheap call, remembered for five minutes. Never reveals the URL. */
-const bundlerSeen = new Map<number, { at: number; ok: boolean }>();
-export async function bundlerReachable(chainId: number): Promise<boolean | null> {
+/**
+ * Can the network's bundler take user operations? One cheap call, remembered for five minutes.
+ * Reports a category an operator can act on, never the URL, key or raw message.
+ */
+export type BundlerState = "reachable" | "network_not_enabled_in_alchemy" | "invalid_alchemy_key" | "unreachable" | "not_configured";
+const bundlerSeen = new Map<number, { at: number; state: BundlerState }>();
+export async function bundlerState(chainId: number): Promise<BundlerState> {
   const url = bundlerUrl(chainId);
-  if (!url) return null;
+  if (!url) return "not_configured";
   const hit = bundlerSeen.get(chainId);
-  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.ok;
-  let ok = false;
+  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.state;
+  let state: BundlerState = "unreachable";
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_supportedEntryPoints", params: [] }),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(6000),
       cache: "no-store",
     });
-    const body = (await res.json().catch(() => null)) as { result?: string[] } | null;
-    ok = res.ok && Array.isArray(body?.result) && body.result.some((e) => e.toLowerCase() === SAFE_4337.entryPoint.toLowerCase());
+    const raw = await res.text();
+    let body: { result?: unknown; error?: { message?: string } } | null = null;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      body = null;
+    }
+    const msg = `${body?.error?.message ?? ""} ${raw.slice(0, 300)}`.toLowerCase();
+    if (Array.isArray(body?.result) && body.result.some((e) => String(e).toLowerCase() === SAFE_4337.entryPoint.toLowerCase())) state = "reachable";
+    else if (res.status === 401 || /invalid api key|must be authenticated|unauthorized/.test(msg)) state = "invalid_alchemy_key";
+    else if (res.status === 403 || /not enabled|not allowed|is not available|enable the network/.test(msg)) state = "network_not_enabled_in_alchemy";
+    else logEvent("warn", "bundler.probe", { chain_id: chainId, status: res.status, message: msg.replace(/https?:\/\/\S+/g, "[url]").slice(0, 200) });
   } catch {
-    ok = false;
+    state = "unreachable";
   }
-  bundlerSeen.set(chainId, { at: Date.now(), ok });
-  return ok;
+  bundlerSeen.set(chainId, { at: Date.now(), state });
+  return state;
 }
 
 /** Why a network's co-signer is unavailable, in words an operator can act on. */
