@@ -141,7 +141,7 @@ function Ring({ size, items, seconds, reverse = false, dashed = false }: { size:
               <div className="relative -translate-x-1/2 -translate-y-1/2">
                 {i % 3 === 0 && <span className="absolute inset-0 rounded-full border border-aqua animate-pulse-ring" style={{ animationDelay: `${i * 0.4}s` }} />}
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-abyss shadow-[inset_0_0_0_1px_var(--color-reef),inset_0_1px_0_rgb(237_255_254/0.08)]">
-                  <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-aqua" : "bg-mist/70"}`} />
+                  <span className={`h-1.5 w-1.5 ${i % 3 === 0 ? "bg-aqua shadow-[0_0_10px_#9cf6ee]" : "bg-mist/70"}`} />
                 </div>
                 <span className="sr-only">{label}</span>
               </div>
