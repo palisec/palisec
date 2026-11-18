@@ -137,6 +137,7 @@ export function LiveDashboard() {
       <span key={id} className="flex flex-col items-end gap-0.5 text-right">
         <Pill tone={ck.ok ? "allow" : "deny"}>{ck.ok ? (ck.verified ? "operational" : "configured") : "not running"}</Pill>
         {!ck.ok && ck.reason && <span className="max-w-[34ch] text-[11.5px] text-muted">{ck.reason}</span>}
+        {ck.ok && ck.last_success_at && <span className="text-[11.5px] text-muted">last signed {new Date(ck.last_success_at).toISOString().slice(0, 16).replace("T", " ")} UTC</span>}
       </span>
     )];
   };
