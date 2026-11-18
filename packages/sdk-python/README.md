@@ -4,8 +4,10 @@ Python client for [Palisec](https://palisec.tech): your agent asks before every 
 Async, typed, and no third-party dependencies. Python 3.10 or later.
 
 ```bash
-pip install https://palisec.tech/sdk/palisec-0.2.0-py3-none-any.whl
+pip install palisec
 ```
+
+Alternative, straight from palisec.tech: `pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`.
 
 ```python
 import os

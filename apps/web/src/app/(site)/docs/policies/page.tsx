@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { EXAMPLE_POLICY } from "@palisec/policy-schema";
 import schema from "@palisec/policy-schema/policy.schema.json";
@@ -9,7 +10,7 @@ import { Codes, Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Policy schema",
   description: "The canonical Palisec policy schema 1.0: fields, units, precedence, evaluation order and validation.",
-  alternates: { canonical: "/docs/policies" },
+  alternates: { canonical: "/docs/policies" }, openGraph: pageOpenGraph("/docs/policies"),
 };
 
 type Node = {

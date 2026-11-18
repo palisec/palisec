@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
@@ -7,11 +8,15 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "TypeScript SDK",
   description: "@palisec/sdk: ask Palisec before every agent transaction and send with viem or ethers only on ALLOW. Typed decisions, typed errors, idempotent retries.",
-  alternates: { canonical: "/docs/sdk/typescript" },
+  alternates: { canonical: "/docs/sdk/typescript" }, openGraph: pageOpenGraph("/docs/sdk/typescript"),
 };
 
-const INSTALL = `npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
-# or: pnpm add https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem`;
+const INSTALL = `npm install @palisec/sdk viem
+# or: pnpm add @palisec/sdk viem
+# or: yarn add @palisec/sdk viem
+
+# Alternative, straight from palisec.tech:
+# npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
@@ -115,7 +120,7 @@ export default function TypeScriptSdk() {
       </Note>
 
       <h2 id="install">Install</h2>
-      <p>The package is served from palisec.tech; no registry account is needed. Node 18 or later.</p>
+      <p>Published on npm as <code>@palisec/sdk</code> and also served from palisec.tech. Node 18 or later.</p>
       <CodeBlock code={INSTALL} title="terminal" />
       <p>
         You need an agent API key: sign in, create and activate a policy, register the agent and create a key (see the{" "}

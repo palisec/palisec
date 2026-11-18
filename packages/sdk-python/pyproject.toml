@@ -15,13 +15,23 @@ classifiers = [
   "License :: Other/Proprietary License",
   "Framework :: AsyncIO",
   "Typing :: Typed",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
+keywords = ["palisec", "ai-agents", "authorization", "erc-4337", "robinhood-chain", "web3"]
 
 [project.urls]
+Homepage = "https://palisec.tech"
 Documentation = "https://palisec.tech/docs/sdk/python"
+Changelog = "https://palisec.tech/changelog"
 
 [tool.hatch.version]
 path = "src/palisec/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/palisec"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "pyproject.toml"]

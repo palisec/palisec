@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
 import { CONTACT_LABEL, CONTACT_URL, PRIVACY_VERSION } from "@/lib/legal";
@@ -6,7 +7,7 @@ import { CONTACT_LABEL, CONTACT_URL, PRIVACY_VERSION } from "@/lib/legal";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "What Palisec collects, why, where it is stored, how long it is kept, and your rights.",
-  alternates: { canonical: "/privacy" },
+  alternates: { canonical: "/privacy" }, openGraph: pageOpenGraph("/privacy"),
 };
 
 const DATA: [string, string, string][] = [
