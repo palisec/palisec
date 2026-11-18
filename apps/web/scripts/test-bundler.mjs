@@ -25,6 +25,13 @@ const pack = (op) => ({
 });
 
 const methods = {
+  // What the health check asks: the fork's real chain ID and the one EntryPoint this shim supports.
+  async eth_chainId() {
+    return `0x${(await pub.getChainId()).toString(16)}`;
+  },
+  async eth_supportedEntryPoints() {
+    return [SAFE_4337.entryPoint];
+  },
   async rundler_maxPriorityFeePerGas() {
     return "0x3b9aca00";
   },

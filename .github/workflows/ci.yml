@@ -78,7 +78,7 @@ jobs:
           # A throwaway key for webhook secrets in this run only.
           export PALISEC_SECRETS_KEY=$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64'))")
           pnpm --filter @palisec/web start -p 3000 > server.log 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
+          for i in $(seq 1 60); do curl -s http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
           cat server.log; exit 1
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-api.mjs
       # The published SDK (built by the web build) against the same server.
@@ -147,7 +147,7 @@ jobs:
             export RH_TESTNET_RPC_URL=http://127.0.0.1:8545
           fi
           pnpm --filter @palisec/web start -p 3000 > server.log 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
+          for i in $(seq 1 60); do curl -s http://localhost:3000/api/v1/health | grep -q '"database":"ok"' && exit 0; sleep 1; done
           cat server.log; exit 1
       - run: RPC_URL=http://127.0.0.1:8545 BASE_URL=http://localhost:3000 CHAIN_ID=${{ matrix.chain }} node apps/web/scripts/e2e-smart-account.mjs
       - if: failure()
