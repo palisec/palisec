@@ -162,7 +162,9 @@ const buckets = new Map<string, { count: number; resetAt: number }>();
  * not a security boundary, and resets on restart. Requests with no visible address share one bucket.
  */
 export function rateLimited(req: Request, name: string, limit: number, windowMs = 60_000): boolean {
-  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  // Vercel sets x-real-ip and x-forwarded-for itself and overwrites client-supplied values; no other
+  // client header (e.g. cf-connecting-ip, which only means something behind Cloudflare) is trusted.
+  const ip = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const key = `${name}:${ip}`;
   const now = Date.now();
   if (buckets.size > 10_000) {
