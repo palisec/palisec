@@ -20,6 +20,7 @@ export interface LiveOperation {
   message: string;
   checks: CheckResult[];
   created_at: string;
+  transaction_hash?: string | null;
   details: {
     chain_id: number;
     account: string;
@@ -34,6 +35,8 @@ export interface LiveOperation {
     agent_name: string;
     decided_by: string | null;
     decided_at: string | null;
+    /** Set once the operation went through a PALISEC smart account: co-signed and handed to the bundler. */
+    execution?: { user_op_hash: string | null; submitted_at: string | null; executed_at: string | null; success: boolean | null } | null;
   };
 }
 

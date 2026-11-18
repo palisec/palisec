@@ -33,14 +33,15 @@ export const GET = handle(async (req: Request) => {
       try {
         const rows = await db()`SELECT max(version) AS v FROM schema_migrations`;
         // Proof that each co-signer really signs: the time of the last operation PALISEC co-signed that
-        // then succeeded on chain. Only the time is reported; which account or transaction stays private.
+        // then succeeded on chain. Only the UTC day is public: an exact time could be matched to a block and
+        // reveal which account uses PALISEC.
         // A failure here only loses the proof; it never marks the database down.
         const signed: Record<number, string> = {};
         try {
           const last = await db()`
             SELECT chain_id, max(executed_at) AS at FROM operations
             WHERE user_op_hash IS NOT NULL AND execution_success = true GROUP BY chain_id`;
-          for (const r of last) if (r.at) signed[Number(r.chain_id)] = new Date(r.at).toISOString();
+          for (const r of last) if (r.at) signed[Number(r.chain_id)] = new Date(r.at).toISOString().slice(0, 10);
         } catch { /* reported as configured, not verified */ }
         cached = { at: Date.now(), database: "ok", schema: rows[0]?.v ?? null, signed };
       } catch {
@@ -54,7 +55,7 @@ export const GET = handle(async (req: Request) => {
   // "verified" when a real transaction proved the key signs; otherwise only its presence was checked.
   const cosigner = (state: ReturnType<typeof signerState>, chainId: number) => {
     const at = state === "configured" ? signedAt(chainId) : null;
-    return { verified: at !== null, state: at ? "verified_by_transaction" : state, last_success_at: at };
+    return { verified: at !== null, state: at ? "verified_by_transaction" : state, last_success_on: at };
   };
   // Decisions need both the Rust engine and the reference evaluator; without the engine they fail closed.
   const engine = engineStatus();
