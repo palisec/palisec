@@ -10,7 +10,7 @@ npm install @palisec/sdk viem
 # or: yarn add @palisec/sdk viem
 ```
 
-Alternative, straight from palisec.tech: `npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem`.
+Alternative, straight from palisec.tech: `npm install https://palisec.tech/sdk/palisec-sdk-0.6.1.tgz viem`.
 
 Node 18 or later, ESM. `viem` is a peer dependency; ethers v6 works through `fromEthers`.
 

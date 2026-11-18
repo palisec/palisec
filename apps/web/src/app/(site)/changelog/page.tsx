@@ -10,6 +10,14 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.0.2",
+    date: "2026-11-18",
+    tag: "SDK republish",
+    changes: [
+      "TypeScript SDK 0.6.1 and Python SDK 0.4.1: same code as 0.6.0 and 0.4.0, republished from the Palisec company accounts with package links pointing to palisec.tech. 0.6.0 and 0.4.0 are withdrawn from npm and PyPI; their palisec.tech/sdk files keep working.",
+    ],
+  },
+  {
     version: "1.0.1",
     date: "2026-11-18",
     tag: "SDKs on npm and PyPI",
