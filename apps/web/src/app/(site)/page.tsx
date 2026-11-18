@@ -433,7 +433,7 @@ export default function Home() {
       {/* ───────── Workbench ───────── */}
       <section aria-labelledby="workbench-title" className="border-t border-line bg-deep/40">
         <Container className={SECTION}>
-          <SectionHead id="workbench-title" title="Put a transaction against the boundary." lede="Runs the reference evaluator in your browser, on example data.">
+          <SectionHead id="workbench-title" title="Put a transaction against the boundary." lede="Run the reference evaluator in your browser on example data, or send the same example to the live Palisec API on testnet as a dry run: nothing is reserved or sent.">
             <div className="mt-5">
               <MaturityBadge maturity="local" />
             </div>

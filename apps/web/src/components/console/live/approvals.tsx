@@ -6,7 +6,7 @@ import { connectAs } from "@/lib/browser-wallet";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
-import { CheckList, LoadError, Loading, StatePill, usd, useAction, utc, type LiveOperation } from "./common";
+import { CheckList, displayState, LoadError, Loading, StatePill, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 interface Approval extends LiveOperation {
@@ -98,7 +98,7 @@ function ApprovalCard({ a, onChange }: { a: Approval; onChange: () => void }) {
   return (
     <Panel
       title={<span className="flex items-center gap-2">{d.agent_name} <Mono className="text-dim">{a.request_id}</Mono></span>}
-      actions={<span className="flex items-center gap-2">{pending && <Countdown until={a.expires_at} />}<StatePill state={a.state} /></span>}
+      actions={<span className="flex items-center gap-2">{pending && <Countdown until={a.expires_at} />}<StatePill state={displayState(a)} /></span>}
       bodyClassName="grid gap-4 p-4 lg:grid-cols-2"
     >
       <div className="space-y-3">

@@ -157,6 +157,8 @@ export async function cancel(orgId: string, id: string, actor: { agent?: AgentCo
       UPDATE operations SET state = 'cancelled', decided_at = now(), decided_by = ${actor.userId ?? null}::uuid
       WHERE id = ${id}::uuid AND org_id = ${orgId}::uuid AND (${agentId}::uuid IS NULL OR agent_id = ${agentId}::uuid)
         AND state = ANY(${states}::text[]) AND expires_at > now()
+        -- Handed to the bundler: it may have executed, so its budget stays counted.
+        AND submitted_at IS NULL
       RETURNING id, org_id, agent_id, request_id
     ), e AS (
       INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
@@ -170,7 +172,7 @@ export async function cancel(orgId: string, id: string, actor: { agent?: AgentCo
       "PS_REPLAY_001",
       agentId
         ? "Agents can only withdraw operations pending approval; an authorization keeps its budget until it expires"
-        : "Operation cannot be cancelled: it is not an unexpired authorization or pending approval",
+        : "Operation cannot be cancelled: it is not an unexpired authorization or pending approval, or it was already submitted for execution",
     );
   return getOperation(orgId, id);
 }
