@@ -2,16 +2,27 @@
 
 TypeScript client for [Palisec](https://palisec.tech): your agent asks before every transaction and sends only on ALLOW.
 
+## Install
+
 ```bash
-npm install https://palisec.tech/sdk/palisec-sdk-0.4.0.tgz viem
+npm install @palisec/sdk viem
+# or: pnpm add @palisec/sdk viem
+# or: yarn add @palisec/sdk viem
 ```
+
+Alternative, straight from palisec.tech: `npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem`.
+
+Node 18 or later, ESM. `viem` is a peer dependency; ethers v6 works through `fromEthers`.
+
+## Minimal example
 
 ```ts
 import { createPalisec, PalisecDeniedError } from "@palisec/sdk";
 
-const palisec = createPalisec({ apiKey: process.env.PALISEC_API_KEY! }); // server-side only
+// Server-side only. A ps_live_ key is Robinhood Chain mainnet (4663); a ps_test_ key is testnet (46630).
+const palisec = createPalisec({ apiKey: process.env.PALISEC_API_KEY! });
 
-// Let the SDK enforce the decision: it sends with your viem wallet only on ALLOW.
+// The SDK enforces the decision: it sends with your viem wallet only on ALLOW.
 try {
   const { operation, hash } = await palisec.sendTransaction(walletClient, { to: token, data: transferCalldata, gasLimit: 90_000 });
   if (!hash) console.log("Waiting for a human approver:", operation.operationId);
@@ -21,11 +32,19 @@ try {
 }
 ```
 
+## What is in it
+
 - `authorize(intent)` records a decision and returns `ALLOW`, `DENY` or `REQUIRES_HUMAN_SIGNATURE`. Safe to retry: the request ID is the idempotency key.
 - `evaluate(intent)` is a dry run that reserves nothing.
+- `executeWithSmartAccount(agentKey, intent)` authorizes, has PALISEC co-sign, and submits through a PALISEC smart account, so the agent cannot skip the check on chain.
 - `fromEthers(signer)` adapts an ethers v6 signer (checks its network). A wallet on another chain, or another account than the agent's, is refused before sending.
 - `waitForApproval(id)`, `getOperation(id)`, `cancel(id)` (withdraws a pending approval).
+- `createPalisecTools(client)` gives the OpenAI Agents SDK, the Vercel AI SDK and LangGraph the same framework-neutral tools.
+- `verifyWebhook(secret, rawBody, headers)` checks a webhook's HMAC signature and age.
+- `@palisec/sdk/policy` exports the policy schema types, validation and the deterministic local evaluator.
 - Errors are `PalisecError` subclasses with a stable `code` (`PS_…`). Retries happen only for network errors, 429 and 5xx, and only on calls that are safe to repeat.
 - Log events never contain your API key, request bodies or calldata; `redact()` masks keys in any string.
 
-Palisec runs on Robinhood Chain mainnet (4663) and testnet (46630); a `ps_live_` key is mainnet, a `ps_test_` key testnet. Agents with a PALISEC smart account are enforced on chain (`executeWithSmartAccount`); an agent that sends from a plain key is enforced only in its own process. Docs: https://palisec.tech/docs/sdk/typescript
+Agents that send from a plain key are enforced only in their own process; agents with a PALISEC smart account are enforced on chain.
+
+Docs: https://palisec.tech/docs/sdk/typescript

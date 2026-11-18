@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
 
 export const metadata: Metadata = {
   title: "Webhooks",
   description: "Signed PALISEC events for decisions, approvals, pauses, emergency stops and security findings, with stable event IDs, retries and verification helpers.",
-  alternates: { canonical: "/docs/webhooks" },
+  alternates: { canonical: "/docs/webhooks" }, openGraph: pageOpenGraph("/docs/webhooks"),
 };
 
 const PAYLOAD = `POST https://your-service.example/palisec

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandMark, type Brand } from "@/components/brand-icons";
@@ -35,7 +36,7 @@ import { MaturityBadge, PageHeader, Section } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Architecture",
   description: "How PALISEC is built: the system map, a request's path in order, the data model, trust boundaries, failure handling and the stack.",
-  alternates: { canonical: "/architecture" },
+  alternates: { canonical: "/architecture" }, openGraph: pageOpenGraph("/architecture"),
 };
 
 /* ───────── System map ───────── */

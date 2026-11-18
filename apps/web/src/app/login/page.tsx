@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { ParticleSphere } from "@/components/particle-sphere";
@@ -7,7 +8,7 @@ import { WalletSignIn } from "@/components/wallet-sign-in";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  alternates: { canonical: "/login" },
+  alternates: { canonical: "/login" }, openGraph: pageOpenGraph("/login"),
   description: "Sign in to Palisec with your wallet.",
   robots: { index: false, follow: false },
 };

@@ -39,12 +39,15 @@ def metadata() -> bytes:
             "Summary: Python client for Palisec: ask before every agent transaction, send only on ALLOW.",
             "Home-page: https://palisec.tech/docs/sdk/python",
             "Author: Palisec",
-            "License: Proprietary",
+            "License: MIT",
             "Requires-Python: >=3.10",
             "Classifier: Programming Language :: Python :: 3",
-            "Classifier: License :: Other/Proprietary License",
+            "Classifier: License :: OSI Approved :: MIT License",
             "Classifier: Framework :: AsyncIO",
             "Classifier: Typing :: Typed",
+            "Project-URL: Homepage, https://palisec.tech",
+            "Project-URL: Documentation, https://palisec.tech/docs/sdk/python",
+            "Project-URL: Changelog, https://palisec.tech/changelog",
             "Description-Content-Type: text/markdown",
         ]
     )
@@ -56,6 +59,7 @@ def files() -> dict[str, bytes]:
     for p in sorted(SRC.iterdir()):
         if p.suffix == ".py" or p.name == "py.typed":
             out[f"palisec/{p.name}"] = text(p)
+    out[f"{DIST}/LICENSE"] = text(ROOT / "LICENSE")
     out[f"{DIST}/METADATA"] = metadata()
     out[f"{DIST}/WHEEL"] = b"Wheel-Version: 1.0\nGenerator: palisec-build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
     rows = []

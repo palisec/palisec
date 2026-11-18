@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { Codes, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Changelog",
   description: "Versioned changes to Palisec.",
-  alternates: { canonical: "/changelog" },
+  alternates: { canonical: "/changelog" }, openGraph: pageOpenGraph("/changelog"),
 };
 
 const ENTRIES = [
+  {
+    version: "1.0.1",
+    date: "2026-11-18",
+    tag: "SDKs on npm and PyPI",
+    changes: [
+      "SDKs on the public registries: npm install @palisec/sdk and pip install palisec. The palisec.tech/sdk links keep working, including every earlier version (TypeScript 0.1.0 to 0.5.0 rebuilt from their release commits; Python 0.1.0 restored).",
+      "TypeScript SDK 0.6.0 bundles the policy schema code and types, and exports the local evaluator as @palisec/sdk/policy.",
+      "Link previews: every page has its own og:url and a preview image. The sitemap lists every public page; /favicon.ico and a /docs/sdk redirect added.",
+    ],
+  },
   {
     version: "1.0.0",
     date: "2026-11-18",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DocArticle } from "@/components/doc";
@@ -25,7 +26,7 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Concepts",
   description: "The core ideas in PALISEC: agents, policies, operations, decisions, reservations, approvals, authorizations and audit events.",
-  alternates: { canonical: "/docs/concepts" },
+  alternates: { canonical: "/docs/concepts" }, openGraph: pageOpenGraph("/docs/concepts"),
 };
 
 const TERMS: { icon: ReactNode; term: string; def: string; see: [string, string] }[] = [

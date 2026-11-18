@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { EMPTY_STATE, EXAMPLE_ENV, EXAMPLE_POLICY, SCENARIOS, evaluate } from "@palisec/policy-schema";
@@ -41,7 +42,7 @@ import { capability } from "@/lib/capabilities";
 export const metadata: Metadata = {
   title: { absolute: "PALISEC · Security infrastructure for the autonomous agent economy" },
   description: "PALISEC secures autonomous on-chain execution through deterministic transaction authorization, protected signing and intelligent security operations.",
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/" }, openGraph: pageOpenGraph("/"),
 };
 
 /** Generated media is optional: used only if it has been added to /public/media. */

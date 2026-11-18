@@ -2,8 +2,23 @@
   "name": "@palisec/sdk",
   "version": "0.6.0",
   "description": "TypeScript client for Palisec: ask before every agent transaction, send only on ALLOW. viem and ethers.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "homepage": "https://palisec.tech/docs/sdk/typescript",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/palisec/palisec.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": [
+    "palisec",
+    "ai-agents",
+    "authorization",
+    "erc-4337",
+    "safe",
+    "robinhood-chain",
+    "viem",
+    "ethers"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,8 +32,15 @@
       "import": "./dist/policy.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18"
   },

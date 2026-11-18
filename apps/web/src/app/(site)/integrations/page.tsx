@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { MaturityBadge, PageHeader, Section } from "@/components/ui";
@@ -7,7 +8,7 @@ import { capability } from "@/lib/capabilities";
 export const metadata: Metadata = {
   title: "Integrations",
   description: "PALISEC Connect: integrate independently built agents through the TypeScript and Python SDKs, the REST API, the MCP server and signed webhooks, with scoped, revocable credentials.",
-  alternates: { canonical: "/integrations" },
+  alternates: { canonical: "/integrations" }, openGraph: pageOpenGraph("/integrations"),
 };
 
 const SURFACES = [

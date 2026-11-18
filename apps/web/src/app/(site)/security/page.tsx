@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { Note, PageHeader, Section } from "@/components/ui";
 
 const INCIDENT: [string, string][] = [
@@ -13,7 +14,7 @@ const INCIDENT: [string, string][] = [
 export const metadata: Metadata = {
   title: "Security model",
   description: "Threats Palisec addresses, what the TEE does and does not guarantee, key design and release gates.",
-  alternates: { canonical: "/security" },
+  alternates: { canonical: "/security" }, openGraph: pageOpenGraph("/security"),
 };
 
 const THREATS = [
