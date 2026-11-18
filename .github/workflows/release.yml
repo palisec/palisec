@@ -44,5 +44,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" release/* \
             --title "Palisec $GITHUB_REF_NAME" \
-            --notes "Changes: https://palisec.tech/changelog. SDKs install from palisec.tech/sdk; checksums in SHA256SUMS. Pre-release on Robinhood Chain Testnet." \
-            --prerelease
+            --notes "Changes: https://palisec.tech/changelog. SDKs: npm install @palisec/sdk, pip install palisec (or from palisec.tech/sdk); checksums in SHA256SUMS. Robinhood Chain mainnet (4663) and testnet (46630)."

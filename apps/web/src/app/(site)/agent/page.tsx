@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { ActivityIcon, AgentIcon, ArrowRightIcon, BookIcon, FileCheckIcon, SearchIcon, SlidersIcon, StopIcon, UserCheckIcon } from "@/components/icons";
 import { ButtonLink, MaturityBadge, PageHeader, Section } from "@/components/ui";
@@ -7,7 +8,7 @@ import { capability } from "@/lib/capabilities";
 export const metadata: Metadata = {
   title: "PALISEC Agent",
   description: "The native PALISEC Agent: security intelligence, policy engineering and security operations over your real records, built on top of PALISEC's deterministic infrastructure.",
-  alternates: { canonical: "/agent" },
+  alternates: { canonical: "/agent" }, openGraph: pageOpenGraph("/agent"),
 };
 
 const DOMAINS = [

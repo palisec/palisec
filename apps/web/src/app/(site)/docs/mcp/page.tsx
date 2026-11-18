@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
@@ -7,7 +8,7 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "MCP server",
   description: "Connect MCP-compatible agents to PALISEC over Streamable HTTP with a scoped API key. Tools for evaluation, proposals, status, explanations and policy validation.",
-  alternates: { canonical: "/docs/mcp" },
+  alternates: { canonical: "/docs/mcp" }, openGraph: pageOpenGraph("/docs/mcp"),
 };
 
 const CONFIG = `{

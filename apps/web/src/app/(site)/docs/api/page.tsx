@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
@@ -7,7 +8,7 @@ import { ENDPOINTS } from "@/lib/api-reference";
 export const metadata: Metadata = {
   title: "API reference",
   description: "Every Palisec REST endpoint: authentication, roles, request fields, idempotency, pagination and errors. OpenAPI 3.1 included.",
-  alternates: { canonical: "/docs/api" },
+  alternates: { canonical: "/docs/api" }, openGraph: pageOpenGraph("/docs/api"),
 };
 
 const AUTH_TEXT = { none: "Public", session: "Console session", key: "API key", "session or key": "Session or API key" } as const;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { Note, PageHeader, Section } from "@/components/ui";
 import { mainnetEnabled } from "@/server/config";
 import { HealthCheck } from "./health-check";
@@ -6,7 +7,7 @@ import { HealthCheck } from "./health-check";
 export const metadata: Metadata = {
   title: "Status",
   description: "What Palisec runs today, and a live health check of the deployed services.",
-  alternates: { canonical: "/status" },
+  alternates: { canonical: "/status" }, openGraph: pageOpenGraph("/status"),
 };
 
 const services = (mainnet: boolean): { name: string; deployed: boolean; note: string }[] => [

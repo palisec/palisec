@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
 import { CONTACT_LABEL, CONTACT_URL, TERMS_VERSION } from "@/lib/legal";
@@ -6,7 +7,7 @@ import { CONTACT_LABEL, CONTACT_URL, TERMS_VERSION } from "@/lib/legal";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "The terms for using Palisec: the console, the authorization API, smart-account co-signing and the website.",
-  alternates: { canonical: "/terms" },
+  alternates: { canonical: "/terms" }, openGraph: pageOpenGraph("/terms"),
 };
 
 export default function TermsPage() {

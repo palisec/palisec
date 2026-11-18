@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
@@ -7,11 +8,11 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Quickstart",
   description: "Sign in, write a policy, register an agent and authorize your first operation on Robinhood Chain, or evaluate policies locally.",
-  alternates: { canonical: "/docs/quickstart" },
+  alternates: { canonical: "/docs/quickstart" }, openGraph: pageOpenGraph("/docs/quickstart"),
 };
 
-const LOCAL = `# the evaluator ships inside the TypeScript SDK
-npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz`;
+const LOCAL = `# the evaluator ships inside the TypeScript SDK, as @palisec/sdk/policy
+npm install @palisec/sdk`;
 
 const EVALUATE = `import {
   EMPTY_STATE, EXAMPLE_ENV, EXAMPLE_POLICY, SCENARIOS, evaluate,

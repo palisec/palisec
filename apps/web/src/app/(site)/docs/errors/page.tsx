@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { REASON_CODES, RETRYABLE, type ReasonCode } from "@palisec/policy-schema";
 import { CodeBlock } from "@/components/copy-button";
@@ -8,7 +9,7 @@ import { Codes, Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Errors and operations",
   description: "Stable Palisec reason codes, retry semantics, operation states and failure behaviour.",
-  alternates: { canonical: "/docs/errors" },
+  alternates: { canonical: "/docs/errors" }, openGraph: pageOpenGraph("/docs/errors"),
 };
 
 const STATES = [

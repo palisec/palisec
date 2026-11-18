@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
@@ -7,12 +8,15 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Python SDK",
   description: "palisec for Python: async, typed, no dependencies. Ask Palisec before every agent transaction and send only on ALLOW.",
-  alternates: { canonical: "/docs/sdk/python" },
+  alternates: { canonical: "/docs/sdk/python" }, openGraph: pageOpenGraph("/docs/sdk/python"),
 };
 
-const INSTALL = `pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl
+const INSTALL = `pip install palisec
 # optional, to send with web3.py:
-pip install web3`;
+pip install web3
+
+# Alternative, straight from palisec.tech:
+# pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`;
 
 const SEND = `import os
 from web3 import AsyncWeb3, AsyncHTTPProvider
@@ -92,7 +96,7 @@ export default function PythonSdk() {
       </Note>
 
       <h2 id="install">Install</h2>
-      <p>The wheel is served from palisec.tech; no registry account is needed. It has the same semantics as the <Link href="/docs/sdk/typescript">TypeScript SDK</Link> and is tested against the live API on every change.</p>
+      <p>Published on PyPI as <code>palisec</code> and also served from palisec.tech. It has the same semantics as the <Link href="/docs/sdk/typescript">TypeScript SDK</Link> and is tested against the live API on every change.</p>
       <CodeBlock code={INSTALL} title="terminal" />
       <p>
         You need an agent API key: sign in, create and activate a policy, register the agent and create a key (see the{" "}

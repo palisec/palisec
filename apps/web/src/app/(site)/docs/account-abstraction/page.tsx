@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
@@ -9,7 +10,7 @@ import { SAFE_4337 } from "@/lib/safe-op";
 export const metadata: Metadata = {
   title: "Smart accounts",
   description: "On-chain enforcement with a PALISEC smart account: a Safe with the 4337 module whose threshold is 2 and whose owners include PALISEC's co-signer.",
-  alternates: { canonical: "/docs/account-abstraction" },
+  alternates: { canonical: "/docs/account-abstraction" }, openGraph: pageOpenGraph("/docs/account-abstraction"),
 };
 
 const TS = `import { createPalisec } from "@palisec/sdk";

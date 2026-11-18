@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { Note, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Pricing",
   description: "Developer, Production Swarm and Institutional plans for Palisec.",
-  alternates: { canonical: "/pricing" },
+  alternates: { canonical: "/pricing" }, openGraph: pageOpenGraph("/pricing"),
 };
 
 const PLANS = [
