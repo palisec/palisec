@@ -25,6 +25,7 @@ const SCOPES = [
   ["policy:read", "Read the exact policy version it is evaluated against"],
   ["audit:read", "Read the audit events it caused"],
   ["mcp", "Connect through the MCP server"],
+  ["authorizations:evaluate", "Dry runs only: evaluate a transaction without reserving or recording anything"],
 ];
 
 const CANNOT = [

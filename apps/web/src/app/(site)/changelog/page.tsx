@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.0.3",
+    date: "2026-11-18",
+    tag: "Live API demo",
+    changes: [
+      "Homepage workbench: choose In your browser (the evaluator on example data, as before) or Live API, which sends the selected example to the real dry-run endpoint on testnet and shows the server's decision, reason code, every check, the request ID and the server time. Nothing is reserved, recorded or sent. The failure toggles stay in the browser and are labelled simulated.",
+      "API keys: a new authorizations:evaluate scope allows dry runs (POST /v1/authorizations/evaluate) and nothing else.",
+    ],
+  },
+  {
     version: "1.0.2",
     date: "2026-11-18",
     tag: "SDK republish",

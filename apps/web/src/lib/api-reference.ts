@@ -35,7 +35,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
         },
         notes: "Send Idempotency-Key to make retries return the original decision (header Idempotent-Replayed: true). 201 on a new decision, 200 on an idempotent replay, 409 PS_REPLAY_001 for a reused request_id or a key reused with a different body.",
       },
-      { method: "POST", path: "/authorizations/evaluate", auth: "key", summary: "Dry run: the same evaluation against live state, reserving nothing and consuming no request_id.", body: { "…": "same fields as POST /operations" } },
+      { method: "POST", path: "/authorizations/evaluate", auth: "key", summary: "Dry run: the same evaluation against live state, reserving nothing and consuming no request_id. Scope operations:write, or authorizations:evaluate for a key that may only run dry runs.", body: { "…": "same fields as POST /operations" } },
       { method: "GET", path: "/operations/{id}", auth: "session or key", role: "viewer", summary: "One operation. An API key can read only its own agent's operations." },
       { method: "POST", path: "/operations/{id}/cancel", auth: "session or key", role: "operator", summary: "With an API key: withdraw a pending approval. In the console: release an unused, unexpired authorization's budget." },
       { method: "POST", path: "/operations/{id}/user-operation", auth: "key", summary: "Smart accounts (scope operations:write): build the exact user operation PALISEC will co-sign for an allowed or approved operation. Returns EIP-712 typed_data for the agent to sign, safe_op_hash and max_cost_wei." },

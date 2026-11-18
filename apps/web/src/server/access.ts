@@ -60,9 +60,12 @@ export async function requireMember(req: Request, permission: Permission): Promi
 /**
  * What an API key may do. Keys created before scopes existed hold all of them, so existing
  * integrations keep working; new keys can be narrowed. A key can never change its own scopes.
+ * `authorizations:evaluate` allows dry runs only (the homepage's Live API demo holds such a key).
  */
-export const SCOPES = ["operations:write", "operations:read", "policy:read", "audit:read", "mcp"] as const;
+export const SCOPES = ["operations:write", "operations:read", "policy:read", "audit:read", "mcp", "authorizations:evaluate"] as const;
 export type Scope = (typeof SCOPES)[number];
+/** A key created without a scope list gets these (dry runs are already part of operations:write). */
+export const DEFAULT_SCOPES: Scope[] = ["operations:write", "operations:read", "policy:read", "audit:read", "mcp"];
 
 export interface AgentContext {
   credentialId: string;
