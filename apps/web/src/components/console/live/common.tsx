@@ -67,7 +67,21 @@ const STATE: Record<string, [Tone, string, string]> = {
   cancelled: ["muted", "–", "Cancelled"],
   expired: ["muted", "–", "Approval expired"],
   authorization_expired: ["muted", "–", "Authorization expired"],
+  submitted: ["review", "↗", "Submitted"],
+  executed: ["allow", "✓", "Executed"],
+  reverted: ["deny", "×", "Reverted"],
 };
+
+/**
+ * What to show for an operation: once it went through the smart account, the execution outcome tells
+ * more than the authorization's own state (which still reads "authorized" or "expired" afterwards).
+ */
+export function displayState(op: Pick<LiveOperation, "state" | "details">): string {
+  const x = op.details.execution;
+  if (!x) return op.state;
+  if (x.executed_at) return x.success === false ? "reverted" : "executed";
+  return x.user_op_hash ? "submitted" : op.state;
+}
 
 export function StatePill({ state }: { state: string }) {
   const [tone, glyph, text] = STATE[state] ?? ["muted", "·", state];

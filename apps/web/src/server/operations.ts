@@ -235,7 +235,13 @@ export async function dryRun(agent: AgentContext, input: IntentInput): Promise<D
     expires_at: null,
     transaction_hash: null,
     retryable: r.retryable,
-    message: r.decision === "DENY" ? r.message : `${r.message} Dry run: nothing was reserved.`,
+    // The evaluator's ALLOW message describes a real decision ("Budget reserved…"); a dry run reserves nothing.
+    message:
+      r.decision === "DENY"
+        ? r.message
+        : r.decision === "ALLOW"
+          ? "Would be authorized: every check passed. Dry run: nothing was reserved, signed or sent."
+          : `${r.message} Dry run: nothing was reserved.`,
     checks: r.checks,
     dry_run: true,
   };

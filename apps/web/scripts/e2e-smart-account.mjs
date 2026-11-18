@@ -150,6 +150,8 @@ check("chain: the recipient received exactly the authorized value", (await pub.g
 {
   const again = await call("POST", `/operations/${id}/submit`, { key: S.key, body: { signature: await agentKey.signTypedData(typed) } });
   check("submit: an operation executes at most once", again.status === 409, again.body);
+  const release = await call("POST", `/operations/${id}/cancel`, { cookie });
+  check("console: an executed authorization's budget cannot be released", release.status === 409 && release.body.error?.code === "PS_REPLAY_001", release.body);
   const reprep = await call("POST", `/operations/${id}/user-operation`, { key: S.key });
   check("prepare: refused after submission", reprep.status === 409, reprep.body);
   const read = await call("GET", `/operations/${id}`, { key: S.key });

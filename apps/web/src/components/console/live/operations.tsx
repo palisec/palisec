@@ -6,7 +6,7 @@ import { explorerTx } from "@/lib/networks";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Btn, Confirm, Empty, inputCls, KV, Mono, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
-import { CheckList, DecisionPill, LoadError, Loading, StatePill, thCls, usd, useAction, utc, type LiveOperation } from "./common";
+import { CheckList, DecisionPill, displayState, LoadError, Loading, StatePill, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 type Filter = "all" | "ALLOW" | "DENY" | "REQUIRES_HUMAN_SIGNATURE";
@@ -84,7 +84,7 @@ export function LiveOperations() {
                       </td>
                       <td className="px-4 py-2 text-soft">{o.details.agent_name}</td>
                       <td className="px-4 py-2"><DecisionPill decision={o.decision} /></td>
-                      <td className="px-4 py-2"><StatePill state={o.state} /></td>
+                      <td className="px-4 py-2"><StatePill state={displayState(o)} /></td>
                       <td className="px-4 py-2 font-mono text-[11.5px] text-muted">{o.reason_code ?? "—"}</td>
                     </tr>
                   ))}
@@ -134,9 +134,9 @@ function OperationDetail({ op, onChange }: { op: LiveOperation; onChange: () => 
   const { org } = useConsoleSession();
   const { run, busy, notice } = useAction();
   const d = op.details;
-  const releasable = ["authorized", "approved", "pending_approval"].includes(op.state);
+  const releasable = ["authorized", "approved", "pending_approval"].includes(op.state) && !op.details.execution;
   return (
-    <Panel title="Operation" actions={<StatePill state={op.state} />} bodyClassName="p-4 space-y-4">
+    <Panel title="Operation" actions={<StatePill state={displayState(op)} />} bodyClassName="p-4 space-y-4">
       <p className="text-[13px] leading-relaxed text-soft"><Codes text={op.message} /></p>
       <KV
         rows={[
