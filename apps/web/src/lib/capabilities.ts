@@ -44,7 +44,7 @@ export const CAPABILITIES: Capability[] = [
   { id: "integrations", name: "Integrations and scoped keys", maturity: "service", note: "Registered agents with least-privilege key scopes, atomic rotation, revocation, framework metadata and activity." },
   { id: "webhooks", name: "Webhooks", maturity: "service", note: "HMAC-SHA256 signed events with stable IDs, retries and redelivery; public HTTPS endpoints only. Verification helpers in both SDKs." },
   { id: "framework-adapters", name: "Framework tools (OpenAI Agents SDK, LangGraph, Vercel AI SDK)", maturity: "service", note: "createPalisecTools in @palisec/sdk 0.4.0 and later: framework-neutral JSON-schema tools (evaluate, send only on ALLOW, read, explain) accepted by each framework's tool API. Unit-tested; MCP-capable frameworks can use the MCP server." },
-  { id: "console", name: "Developer console", maturity: "service", note: "Wallet sign-in, then agents, policies with a rule builder and test cases, approvals, audit and emergency controls on testnet. Real data only." },
+  { id: "console", name: "Developer console", maturity: "service", note: "Wallet sign-in, then agents, policies with a rule builder and test cases, approvals, audit and emergency controls on mainnet and testnet. Real data only." },
 ];
 
 export const capability = (id: string) => CAPABILITIES.find((c) => c.id === id)!;
