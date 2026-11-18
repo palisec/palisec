@@ -1,6 +1,6 @@
 import "server-only";
 import { SCHEMA_VERSION, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
-import { SCOPES, type MemberContext, type Scope } from "./access";
+import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
 import { chainEnabled, enabledChainIds } from "./config";
 import { MAINNET } from "@/lib/networks";
 import { db, type Row } from "./db";
@@ -431,9 +431,9 @@ export async function createCredential(ctx: MemberContext, agentId: string, body
   return { id: rows[0].id, label, prefix, scopes, created_at: rows[0].created_at, secret, note: "Store this key now. It is not shown again." };
 }
 
-/** Scopes for a new key: a subset of SCOPES, defaulting to all of them. */
+/** Scopes for a new key: a subset of SCOPES, defaulting to DEFAULT_SCOPES. */
 function parseScopes(v: unknown): Scope[] {
-  if (v === undefined) return [...SCOPES];
+  if (v === undefined) return [...DEFAULT_SCOPES];
   if (!Array.isArray(v) || v.length === 0) throw new BadRequest(`scopes must be a non-empty array of: ${SCOPES.join(", ")}`);
   for (const s of v) if (!(SCOPES as readonly unknown[]).includes(s)) throw new BadRequest(`Unknown scope: ${String(s).slice(0, 40)}`);
   return [...new Set(v as Scope[])];

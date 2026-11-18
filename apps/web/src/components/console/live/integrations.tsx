@@ -13,6 +13,7 @@ const SCOPES = [
   ["policy:read", "Read the policy version it is evaluated against"],
   ["audit:read", "Read its own audit events"],
   ["mcp", "Connect through the MCP server"],
+  ["authorizations:evaluate", "Dry runs only: nothing is reserved or recorded"],
 ] as const;
 
 interface Credential {
@@ -110,7 +111,7 @@ function KeyRow({ c, onChange }: { c: Credential; onChange: () => void }) {
 function NewKey({ agentId, onCreated }: { agentId: string; onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState("");
-  const [scopes, setScopes] = useState<string[]>(SCOPES.map((s) => s[0]));
+  const [scopes, setScopes] = useState<string[]>(SCOPES.map((s) => s[0]).filter((s) => s !== "authorizations:evaluate"));
   const [secret, setSecret] = useState<string | null>(null);
   const { run, busy, notice } = useAction();
   if (secret) return <SecretOnce secret={secret} what="API key" />;

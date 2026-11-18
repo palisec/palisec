@@ -16,8 +16,9 @@ import {
   type EvaluationResult,
   type LedgerState,
   type Policy,
+  type ReasonCode,
 } from "@palisec/policy-schema";
-import { Codes, DecisionBadge } from "./ui";
+import { Codes, DecisionBadge, type DecisionTone } from "./ui";
 import { CopyButton } from "./copy-button";
 import type { ReactNode } from "react";
 import { ArrowRightIcon, BanIcon, CheckIcon, ClockIcon, CloseIcon, GaugeIcon, GlobeIcon, HandIcon, KeyIcon, PlayIcon, RepeatIcon, ResetIcon, SlidersIcon, ZapIcon } from "./icons";
@@ -82,14 +83,94 @@ function buildPolicy(c: Controls): { policy: Policy; inputErrors: string[] } {
   return { policy, inputErrors };
 }
 
+/** "browser": the evaluator on example data in this page. "live": the real dry-run endpoint on testnet. */
+type Mode = "browser" | "live";
+
+/** One evaluation as shown, from either mode. A live run without an answer has no decision. */
+interface Shown {
+  request_id: string;
+  decision: DecisionTone | null;
+  reason_code: ReasonCode | null;
+  message: string;
+  checks: CheckResult[] | null;
+  response: unknown;
+  live?: { apiRequestId: string | null; serverTime: string | null; errorCode: string | null };
+}
+
 interface HistoryRow {
   seq: number;
   t: number;
   scenario: string;
-  result: EvaluationResult;
+  mode: Mode;
+  result: Shown;
 }
 
 type Tab = "checks" | "response" | "policy" | "ledger";
+
+const fromBrowser = (r: EvaluationResult): Shown => ({
+  request_id: r.request_id,
+  decision: r.decision,
+  reason_code: r.reason_code,
+  message: r.message,
+  checks: r.checks,
+  response: {
+    request_id: r.request_id,
+    decision: r.decision,
+    reason_code: r.reason_code,
+    policy_id: r.policy_id,
+    policy_version: r.policy_version,
+    authorization_id: r.authorization_id,
+    transaction_hash: r.transaction_hash,
+    retryable: r.retryable,
+    message: r.message,
+  },
+});
+
+/** Asks the site's demo route, which holds the key server-side. Any failure is shown as an error, never a result. */
+async function askLiveApi(scenarioId: string): Promise<Shown> {
+  try {
+    const res = await fetch("/api/demo/evaluate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ scenario: scenarioId }) });
+    const body = (await res.json().catch(() => null)) as {
+      api_request_id?: string | null;
+      server_time?: string;
+      request_id?: string;
+      response?: { request_id?: string; decision?: DecisionTone; reason_code?: ReasonCode | null; message?: string; checks?: CheckResult[]; error?: { code: string; message: string } };
+      error?: { code: string; message: string };
+    } | null;
+    const r = body?.response;
+    if (res.ok && r?.decision) {
+      return {
+        request_id: r.request_id ?? "",
+        decision: r.decision,
+        reason_code: r.reason_code ?? null,
+        message: r.message ?? "",
+        checks: r.checks ?? null,
+        response: body,
+        live: { apiRequestId: body?.api_request_id ?? null, serverTime: body?.server_time ?? null, errorCode: null },
+      };
+    }
+    const err = r?.error ?? body?.error;
+    return {
+      request_id: body?.api_request_id ?? body?.request_id ?? "",
+      decision: null,
+      reason_code: null,
+      message: err ? `${err.message} (HTTP ${res.status})` : `The Palisec API answered HTTP ${res.status} without a decision.`,
+      checks: null,
+      response: body,
+      live: { apiRequestId: body?.api_request_id ?? body?.request_id ?? null, serverTime: body?.server_time ?? null, errorCode: err?.code ?? `HTTP ${res.status}` },
+    };
+  } catch (e) {
+    return {
+      request_id: "",
+      decision: null,
+      reason_code: null,
+      message: `The Palisec API could not be reached: ${e instanceof Error ? e.message : "network error"}.`,
+      checks: null,
+      response: null,
+      live: { apiRequestId: null, serverTime: null, errorCode: "unreachable" },
+    };
+  }
+}
 
 export function Workbench() {
   const uid = useId();
@@ -99,17 +180,28 @@ export function Workbench() {
   const [ledger, setLedger] = useState<LedgerState>(EMPTY_STATE);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [tab, setTab] = useState<Tab>("checks");
+  const [mode, setMode] = useState<Mode>("browser");
+  const [busy, setBusy] = useState(false);
 
   const { policy, inputErrors } = useMemo(() => buildPolicy(controls), [controls]);
   const schemaErrors = useMemo(() => validatePolicy(policy), [policy]);
   const scenario = SCENARIOS.find((s) => s.id === scenarioId)!;
-  const latest = history[0]?.result ?? null;
+  const latest = history.find((h) => h.mode === mode)?.result ?? null;
   const now = SIM_EPOCH + clock;
+  const live = mode === "live";
 
   const set = <K extends keyof Controls>(k: K, v: Controls[K]) => setControls((c) => ({ ...c, [k]: v }));
 
-  function submit() {
+  async function submit() {
     const seq = history.length + 1;
+    if (live) {
+      setBusy(true);
+      const shown = await askLiveApi(scenario.id);
+      setBusy(false);
+      setHistory((h) => [{ seq, t: clock, scenario: scenario.label, mode: "live" as const, result: shown }, ...h].slice(0, 50));
+      setTab("checks");
+      return;
+    }
     const result = evaluate(
       policy,
       { ...scenario.intent, request_id: `ps_req_sim_${String(seq).padStart(4, "0")}`, deadline: now + 120 },
@@ -123,7 +215,7 @@ export function Workbench() {
       },
     );
     setLedger(result.next_state);
-    setHistory((h) => [{ seq, t: clock, scenario: scenario.label, result }, ...h].slice(0, 50));
+    setHistory((h) => [{ seq, t: clock, scenario: scenario.label, mode: "browser" as const, result: fromBrowser(result) }, ...h].slice(0, 50));
     setTab("checks");
   }
 
@@ -134,19 +226,8 @@ export function Workbench() {
     setControls(DEFAULT_CONTROLS);
   }
 
-  const response = latest && {
-    request_id: latest.request_id,
-    decision: latest.decision,
-    reason_code: latest.reason_code,
-    policy_id: latest.policy_id,
-    policy_version: latest.policy_version,
-    authorization_id: latest.authorization_id,
-    transaction_hash: latest.transaction_hash,
-    retryable: latest.retryable,
-    message: latest.message,
-  };
   const policyJson = JSON.stringify(policy, null, 2);
-  const blocked = inputErrors.length > 0;
+  const blocked = busy || (!live && inputErrors.length > 0);
 
   return (
     <div className="panel panel-beam overflow-hidden">
@@ -154,9 +235,20 @@ export function Workbench() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <p className="flex items-center gap-2 font-utility text-[14px] font-semibold text-mist"><SlidersIcon size={16} className="text-aqua" />Workbench</p>
-          <p title="Example data. Nothing is signed or broadcast." className="rounded-full px-2.5 py-0.5 font-utility text-[12px] font-semibold text-review ring-1 ring-inset ring-review/40">Simulated</p>
+          <div role="radiogroup" aria-label="Where the evaluation runs" className="grid grid-cols-2 overflow-hidden rounded-[6px] border border-reef">
+            {([
+              ["browser", "In your browser", "Runs locally on example data. Nothing is signed or broadcast."],
+              ["live", "Live API", "Sends the example to the real Palisec dry-run endpoint on testnet. Nothing is reserved, recorded or sent."],
+            ] as [Mode, string, string][]).map(([m, label, title]) => (
+              <label key={m} title={title} className={`flex cursor-pointer items-center justify-center px-3 py-1 font-utility text-[12.5px] font-semibold has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-aqua ${mode === m ? "bg-aqua text-abyss" : "text-soft hover:bg-raised"}`}>
+                <input type="radio" className="sr-only" name={`${uid}-mode`} checked={mode === m} onChange={() => setMode(m)} />
+                {label}
+              </label>
+            ))}
+          </div>
+          <p className="font-utility text-[12px] text-muted">{live ? "testnet · dry run · response from the Palisec API" : "Runs locally on example data"}</p>
         </div>
-        <div className="flex items-center gap-1 font-mono text-xs">
+        <div className={`flex items-center gap-1 font-mono text-xs ${live ? "invisible" : ""}`} aria-hidden={live}>
           <span className="mr-2 flex items-center gap-1.5 text-muted" aria-live="polite">
             <ClockIcon size={14} aria-label="Simulated clock" role="img" aria-hidden={false} /> <span className="text-fg">T+{clock}s</span>
           </span>
@@ -208,8 +300,9 @@ export function Workbench() {
             </dl>
           </fieldset>
 
-          <fieldset className="border-b border-line p-4">
+          <fieldset disabled={live} className="border-b border-line p-4 disabled:opacity-50">
             <legend className="label float-left mb-3 w-full">Policy</legend>
+            {live && <p className="clear-both mb-3 text-[12.5px] text-muted">Live API uses the demo organization&apos;s fixed policy on testnet. These fields apply in the browser only.</p>}
             <div className="clear-both grid grid-cols-2 gap-3">
               <NumField id={`${uid}-max`} label="Max value / tx" unit="ETH" value={controls.maxValueEth} onChange={(v) => set("maxValueEth", v)} />
               <NumField id={`${uid}-budget`} label="Hourly budget" unit="USD" value={controls.hourlyBudgetUsd} onChange={(v) => set("hourlyBudgetUsd", v)} />
@@ -231,13 +324,14 @@ export function Workbench() {
           </fieldset>
 
           <fieldset className="p-4">
-            <legend className="label float-left mb-3 w-full">Inject a failure</legend>
-            <div className="clear-both space-y-2.5">
-              <Toggle label="Emergency stop" checked={controls.emergencyStop} onChange={(v) => set("emergencyStop", v)} />
-              <Toggle label="Fee estimator down" checked={controls.feeOffline} onChange={(v) => set("feeOffline", v)} />
-              <Toggle label="Price feed down" checked={controls.priceOffline} onChange={(v) => set("priceOffline", v)} />
+            <legend className="label float-left mb-3 w-full">Inject a failure · simulated</legend>
+            <div className={`clear-both space-y-2.5 ${live ? "opacity-50" : ""}`}>
+              <Toggle label="Emergency stop" checked={controls.emergencyStop} disabled={live} onChange={(v) => set("emergencyStop", v)} />
+              <Toggle label="Fee estimator down" checked={controls.feeOffline} disabled={live} onChange={(v) => set("feeOffline", v)} />
+              <Toggle label="Price feed down" checked={controls.priceOffline} disabled={live} onChange={(v) => set("priceOffline", v)} />
             </div>
-            {(inputErrors.length > 0 || schemaErrors.length > 0) && (
+            {live && <p className="mt-2 text-[12.5px] text-muted">Browser only: never sent to the API.</p>}
+            {!live && (inputErrors.length > 0 || schemaErrors.length > 0) && (
               <ul className="mt-3 space-y-1 border-l-2 border-deny pl-3 font-mono text-[11px] text-deny" role="alert">
                 {inputErrors.map((e) => <li key={e}>{e}</li>)}
                 {!blocked && schemaErrors.map((e) => <li key={e.path}>{e.path}: {e.message}</li>)}
@@ -249,7 +343,7 @@ export function Workbench() {
               disabled={blocked}
               className="btn btn-solid btn-primary group mt-4 h-12 w-full justify-between !px-4 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
-              <span className="flex items-center gap-2"><PlayIcon size={15} fill="currentColor" />Evaluate</span>
+              <span className="flex items-center gap-2"><PlayIcon size={15} fill="currentColor" />{busy ? "Asking the API…" : live ? "Evaluate with the live API" : "Evaluate"}</span>
               <span className="font-mono text-xs opacity-70">#{String(history.length + 1).padStart(4, "0")}</span>
             </button>
           </fieldset>
@@ -261,16 +355,31 @@ export function Workbench() {
             {latest ? (
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <DecisionBadge decision={latest.decision} />
+                  {latest.decision ? (
+                    <DecisionBadge decision={latest.decision} />
+                  ) : (
+                    <span className="inline-flex items-center rounded-[4px] px-2.5 py-1 font-utility text-[12px] font-semibold text-silver ring-1 ring-inset ring-line-strong">Unknown</span>
+                  )}
                   {latest.reason_code && <code className="font-mono text-sm text-fg">{latest.reason_code}</code>}
                   {latest.reason_code && <span className="text-xs text-muted">{REASON_CODES[latest.reason_code]}</span>}
+                  {latest.live?.errorCode && <code className="font-mono text-sm text-deny">{latest.live.errorCode}</code>}
                 </div>
-                <p key={latest.request_id} className="mt-3 max-w-[60ch] animate-[fade-up_.4s_ease-out] text-sm leading-relaxed text-soft">{latest.message}</p>
+                <p key={`${latest.request_id}-${latest.live?.apiRequestId ?? ""}`} className="mt-3 max-w-[60ch] animate-[fade-up_.4s_ease-out] text-sm leading-relaxed text-soft">{latest.message}</p>
+                {latest.live && (
+                  <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono text-[11.5px]">
+                    <dt className="text-muted">source</dt>
+                    <dd className="text-soft">{latest.decision ? "testnet · dry run · response from the Palisec API" : "no result from the Palisec API"}</dd>
+                    <dt className="text-muted">request ID</dt>
+                    <dd className="break-all text-soft">{latest.live.apiRequestId ?? "—"}</dd>
+                    <dt className="text-muted">server time</dt>
+                    <dd className="text-soft">{latest.live.serverTime ?? "—"}</dd>
+                  </dl>
+                )}
               </div>
             ) : (
               <p className="flex items-center gap-2.5 text-[14px] text-muted">
                 <ZapIcon size={16} className="text-aqua" />
-                Pick a transaction, then evaluate. Repeat one to trip loop detection.
+                {live ? "Pick a transaction, then ask the live API. Dry runs reserve and record nothing." : "Pick a transaction, then evaluate. Repeat one to trip loop detection."}
               </p>
             )}
           </div>
@@ -280,7 +389,7 @@ export function Workbench() {
               ["checks", "Checks"],
               ["response", "Response"],
               ["policy", "Policy"],
-              ["ledger", `Ledger ${ledger.reservations.length}`],
+              ["ledger", live ? "Ledger" : `Ledger ${ledger.reservations.length}`],
             ] as [Tab, string][]).map(([id, label]) => (
               <button
                 key={id}
@@ -297,10 +406,10 @@ export function Workbench() {
           </div>
 
           <div id={`${uid}-panel`} role="tabpanel" aria-labelledby={`${uid}-tab-${tab}`} className="min-h-[420px] flex-1">
-            {tab === "checks" && <ChecksView checks={latest?.checks ?? null} />}
-            {tab === "response" && (response ? <JsonView json={JSON.stringify(response, null, 2)} label="Copy response JSON" /> : <Empty text="Evaluate a transaction to see the API response." />)}
-            {tab === "policy" && <JsonView json={policyJson} label="Copy policy JSON" />}
-            {tab === "ledger" && <LedgerView ledger={ledger} now={now} />}
+            {tab === "checks" && (latest && !latest.checks ? <Empty text="No checks: the API did not return a decision." /> : <ChecksView checks={latest?.checks ?? null} />)}
+            {tab === "response" && (latest?.response ? <JsonView json={JSON.stringify(latest.response, null, 2)} label="Copy response JSON" /> : <Empty text="Evaluate a transaction to see the API response." />)}
+            {tab === "policy" && (live ? <Empty text="Live API mode evaluates against the demo organization's fixed policy on testnet, held by the server. It cannot be edited from this page." /> : <JsonView json={policyJson} label="Copy policy JSON" />)}
+            {tab === "ledger" && (live ? <Empty text="Dry runs reserve nothing, so there is no ledger. Every live request is evaluated against an empty budget." /> : <LedgerView ledger={ledger} now={now} />)}
           </div>
 
           {history.length > 0 && (
@@ -310,10 +419,10 @@ export function Workbench() {
                 {history.map((h) => (
                   <li key={h.seq} className="grid grid-cols-[3.5rem_4rem_1fr_auto] gap-2 border-b border-line py-1.5 last:border-b-0">
                     <span className="text-dim">#{String(h.seq).padStart(4, "0")}</span>
-                    <span className="text-muted">T+{h.t}s</span>
+                    <span className="text-muted">{h.mode === "live" ? "live" : `T+${h.t}s`}</span>
                     <span className="truncate text-soft">{h.scenario}</span>
-                    <span className={h.result.decision === "ALLOW" ? "text-allow" : h.result.decision === "DENY" ? "text-deny" : "text-review"}>
-                      {h.result.reason_code ?? "ALLOW"}
+                    <span className={h.result.decision === "ALLOW" ? "text-allow" : h.result.decision === "DENY" ? "text-deny" : h.result.decision ? "text-review" : "text-muted"}>
+                      {h.result.decision ? h.result.reason_code ?? "ALLOW" : "Unknown"}
                     </span>
                   </li>
                 ))}
@@ -346,12 +455,12 @@ export function NumField({ id, label, unit, value, onChange }: { id: string; lab
   );
 }
 
-export function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function Toggle({ label, checked, onChange, disabled = false }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-soft">
+    <label className={`flex items-center justify-between gap-3 text-sm text-soft ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}>
       {label}
       <span className="flex items-center">
-        <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
+        <input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
         <span aria-hidden className={`relative h-5 w-9 rounded-full border transition-colors peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-fg ${checked ? "border-deny bg-deny/20" : "border-line-strong"}`}>
           <span className={`absolute top-[3px] h-3 w-3 rounded-full transition-all ${checked ? "left-[19px] bg-deny" : "left-[3px] bg-muted"}`} />
         </span>

@@ -28,7 +28,7 @@ export interface Capability {
 
 export const CAPABILITIES: Capability[] = [
   { id: "schema", name: "Canonical policy schema 1.0", maturity: "local", note: "JSON Schema and TypeScript types; validated in the browser workbench." },
-  { id: "simulator", name: "Deterministic local simulator", maturity: "local", note: "Runs the evaluation order on example data. Never signs or broadcasts." },
+  { id: "simulator", name: "Deterministic local simulator", maturity: "local", note: "Runs the evaluation order on example data. Never signs or broadcasts. The homepage workbench's Live API mode sends the same examples to the real dry-run endpoint on testnet instead, through a server-held evaluate-only key; nothing is reserved or recorded." },
   { id: "engine", name: "Rust policy engine", maturity: "service", note: "Runs as WebAssembly in the API next to the TypeScript reference evaluator. Every decision needs both to agree on every field; any difference, or an engine that cannot run, denies with PS_STATE_001. Parity is tested on shared fixtures and 6,000 random cases on every change." },
   { id: "reservations", name: "Atomic budget reservations", maturity: "service", note: "Postgres ledger serialized per policy: one SQL function re-checks budget, pending slots, replay and loop state before recording." },
   { id: "enclave", name: "TEE-backed signing (AWS Nitro)", maturity: "specified", note: "Policy-bound signing with no arbitrary-signing interface." },
