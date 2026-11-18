@@ -319,6 +319,20 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
     preVerificationGas: hex(withMargin(BigInt(est.preVerificationGas), 20n)),
   };
 
+  // The decision bounded the fee as gas_limit x gas price, but a smart-account operation also pays for
+  // signature verification and bundling. Enforce the policy's gas-cost limit on the real worst case
+  // (all three gas limits at maxFeePerGas) before anything is signed. Fail closed without a limit.
+  const limits = await db()`
+    SELECT pv.document->'limits'->>'max_gas_cost_wei' AS max_gas
+    FROM operations o JOIN policy_versions pv ON pv.policy_id = o.policy_id AND pv.version = o.policy_version
+    WHERE o.id = ${row.id}::uuid`;
+  const maxGas = limits[0]?.max_gas;
+  if (typeof maxGas !== "string" || !/^\d+$/.test(maxGas))
+    throw new HttpError(409, "PS_POLICY_001", "The policy version that allowed this operation has no gas-cost limit. Nothing was signed.");
+  const worstGas = maxCostWei(op);
+  if (worstGas > BigInt(maxGas))
+    throw new HttpError(422, "PS_BUDGET_001", `Executing through the smart account can cost up to ${worstGas} wei in gas, above the policy's max gas cost of ${maxGas} wei. Raise that limit or wait for lower gas prices. Nothing was signed.`);
+
   const stored = await db()`
     UPDATE operations SET user_op = ${JSON.stringify(op)}::text::jsonb
     WHERE id = ${row.id}::uuid AND submitted_at IS NULL AND state IN ('authorized', 'approved') AND expires_at > now()
