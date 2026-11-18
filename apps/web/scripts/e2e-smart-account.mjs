@@ -186,6 +186,47 @@ check("chain: the recipient received exactly the authorized value", (await pub.g
   check("unauthenticated prepare is refused", noKey.status === 401, noKey.status);
 }
 
+// ---- a bundler gas-efficiency refusal is measured, and the next prepare fits ------------------------
+// The test bundler imitates Alchemy: estimate 600,000 verification gas, real use 110,000, refuse under 40%.
+{
+  const BUNDLER = process.env.BUNDLER_URL ?? "http://127.0.0.1:4337";
+  const rpc = (method, params) => fetch(BUNDLER, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) }).then((r) => r.json());
+  await rpc("test_setEfficiencyRule", [{ estimate: 600000, used: 110000 }]);
+  try {
+    const sign = (u) =>
+      agentKey.signTypedData({
+        ...typed,
+        message: {
+          ...typed.message,
+          nonce: BigInt(u.nonce),
+          verificationGasLimit: BigInt(u.verificationGasLimit), callGasLimit: BigInt(u.callGasLimit), preVerificationGas: BigInt(u.preVerificationGas),
+          maxPriorityFeePerGas: BigInt(u.maxPriorityFeePerGas), maxFeePerGas: BigInt(u.maxFeePerGas), validUntil: u.validUntil, callData: u.callData,
+        },
+      });
+    const eop = await call("POST", "/operations", { key: S.key, body: intent({ value_wei: parseEther("0.0005").toString() }) });
+    const eid = eop.body.operation_id;
+    const nonceBefore = await pub.readContract({ address: "0x0000000071727De22E5E9d8BAf0edAc6f37da032", abi: parseAbi(["function getNonce(address,uint192) view returns (uint256)"]), functionName: "getNonce", args: [safe, 0n] });
+    const p1 = await call("POST", `/operations/${eid}/user-operation`, { key: S.key });
+    check("efficiency: without a measurement, PALISEC signs for 60% of the estimate", BigInt(p1.body.user_operation?.verificationGasLimit ?? 0) === 360000n, p1.body.user_operation);
+    const s1 = await call("POST", `/operations/${eid}/submit`, { key: S.key, body: { signature: await sign(p1.body.user_operation) } });
+    check("efficiency: the bundler's refusal is passed on with what to do next", s1.status === 502 && s1.body.error?.code === "PS_CHAIN_001" && /efficiency too low/.test(s1.body.error?.message) && /prepare and sign the operation again/.test(s1.body.error?.message) && s1.body.error?.retryable === true, s1.body);
+    const nonceAfter = await pub.readContract({ address: "0x0000000071727De22E5E9d8BAf0edAc6f37da032", abi: parseAbi(["function getNonce(address,uint192) view returns (uint256)"]), functionName: "getNonce", args: [safe, 0n] });
+    check("efficiency: nothing reached the chain", nonceAfter === nonceBefore, { nonceBefore, nonceAfter });
+    const p2 = await call("POST", `/operations/${eid}/user-operation`, { key: S.key });
+    check("efficiency: the next prepare signs for the measured use / 60% (183,334)", p2.status === 200 && BigInt(p2.body.user_operation?.verificationGasLimit ?? 0) === 183334n, p2.body.user_operation ?? p2.body);
+    const s2 = await call("POST", `/operations/${eid}/submit`, { key: S.key, body: { signature: await sign(p2.body.user_operation) } });
+    check("efficiency: the bundler accepts the re-signed operation", s2.status === 202, s2.body);
+    const ex2 = await call("GET", `/operations/${eid}/execution`, { key: S.key });
+    check("efficiency: executed on chain", ex2.body.status === "executed", ex2.body);
+    const next = await call("POST", "/operations", { key: S.key, body: intent({ value_wei: parseEther("0.0004").toString() }) });
+    const p3 = await call("POST", `/operations/${next.body.operation_id}/user-operation`, { key: S.key });
+    check("efficiency: later operations of this account use the measurement from the start", BigInt(p3.body.user_operation?.verificationGasLimit ?? 0) === 183334n, p3.body.user_operation);
+    await call("POST", `/operations/${next.body.operation_id}/submit`, { key: S.key, body: { signature: await sign(p3.body.user_operation) } });
+  } finally {
+    await rpc("test_setEfficiencyRule", [null]);
+  }
+}
+
 // ---- the SDK does all of it -----------------------------------------------------------------------
 {
   const client = createPalisec({ apiKey: S.key, baseUrl: `${BASE}/api/v1` });

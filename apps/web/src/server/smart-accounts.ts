@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient, getAddress, isAddress, recoverAddress, type Address, type Hex, type PrivateKeyAccount } from "viem";
+import { createPublicClient, getAddress, isAddress, keccak256, recoverAddress, type Address, type Hex, type PrivateKeyAccount } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   ENTRYPOINT_ABI,
@@ -256,8 +256,53 @@ const hex = (n: bigint): Hex => `0x${n.toString(16)}`;
 const withMargin = (n: bigint, pct: bigint) => (n * (100n + pct)) / 100n;
 /** `pct` percent of `n`, rounded up. */
 const scaled = (n: bigint, pct: bigint) => (n * pct + 99n) / 100n;
-/** The share of the bundler's verification-gas estimate PALISEC signs for (see prepareExecution). */
-const VERIFICATION_GAS_PERCENT = 75n;
+/** The share of the bundler's verification-gas estimate PALISEC signs for when nothing better is known. */
+const VERIFICATION_GAS_PERCENT = 60n;
+/** With a measured value: sign for used / 60%, i.e. ~1.67x real use, comfortably above the bundler's 40% floor. */
+const TARGET_EFFICIENCY_PERCENT = 60n;
+
+/**
+ * Alchemy's bundler (Rundler) refuses an operation whose gas limits are too generous for what it really
+ * uses: "Verification gas limit efficiency too low. Required: 0.4, Actual: 0.35" (and the same for the
+ * call gas limit). The refusal tells us real use = Actual x the limit that was sent, so PALISEC records it
+ * and signs for a limit that fits on the next attempt.
+ */
+export function parseEfficiencyRefusal(message: string, op: Pick<SafeUserOp, "verificationGasLimit" | "callGasLimit">) {
+  const m = /(verification|call) gas limit efficiency too low\. Required: ([0-9.]+), Actual: ([0-9.]+)/i.exec(message);
+  if (!m) return null;
+  const actual = Number(m[3]);
+  if (!Number.isFinite(actual) || actual <= 0 || actual >= 1) return null;
+  const kind = m[1]!.toLowerCase() === "call" ? "call" : "verification";
+  const limit = BigInt(kind === "call" ? op.callGasLimit : op.verificationGasLimit);
+  // Rounded up so the next limit errs towards working (ignoring floating-point noise in the last digit).
+  const used = BigInt(Math.ceil(actual * Number(limit) - 1e-6));
+  return { kind, used } as const;
+}
+
+/**
+ * Real gas use the bundler reported for this account in the last 30 days (operation.submit_failed audit
+ * events): verification per account and network; call per account, network and exact call data.
+ */
+async function measuredGas(orgId: string, account: string, chainId: number, callDataHash: Hex) {
+  const rows = await db()`
+    SELECT DISTINCT ON (detail->>'gas_kind') detail->>'gas_kind' AS kind, detail->>'gas_used' AS used
+    FROM audit_events
+    WHERE org_id = ${orgId}::uuid AND type = 'operation.submit_failed' AND created_at > now() - interval '30 days'
+      AND detail->>'account' = ${account.toLowerCase()} AND detail->>'chain_id' = ${String(chainId)}
+      AND (detail->>'gas_kind' = 'verification' OR (detail->>'gas_kind' = 'call' AND detail->>'call_data_hash' = ${callDataHash}))
+    ORDER BY detail->>'gas_kind', created_at DESC`;
+  const pick = (k: string) => {
+    const v = rows.find((r) => r.kind === k)?.used;
+    return typeof v === "string" && /^\d{1,9}$/.test(v) ? BigInt(v) : null;
+  };
+  return { verification: pick("verification"), call: pick("call") };
+}
+
+/** The limit to sign for when real use is known: used / target efficiency, never above the bundler's estimate. */
+const fromMeasured = (used: bigint, estimate: bigint) => {
+  const limit = (used * 100n + TARGET_EFFICIENCY_PERCENT - 1n) / TARGET_EFFICIENCY_PERCENT;
+  return limit < estimate ? limit : estimate;
+};
 
 export interface PreparedExecution {
   operation_id: string;
@@ -315,14 +360,18 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
   const callGas = withMargin(BigInt(est.callGasLimit), 20n);
   if (BigInt(est.callGasLimit) > BigInt(row.gas_limit))
     throw new HttpError(422, "PS_REQUEST_001", `This call needs about ${BigInt(est.callGasLimit)} gas, more than the gas_limit of ${row.gas_limit} that was authorized. Propose it again with a higher gas_limit.`);
+  const callCap = callGas < BigInt(row.gas_limit) ? callGas : BigInt(row.gas_limit);
+  const measured = await measuredGas(row.org_id, sender, chainId, keccak256(callData));
   const op: SafeUserOp = {
     ...draft,
-    callGasLimit: hex(callGas < BigInt(row.gas_limit) ? callGas : BigInt(row.gas_limit)),
+    callGasLimit: hex(measured.call ? fromMeasured(measured.call, callCap) : callCap),
     // Not padded: Alchemy's bundler refuses an operation whose verification uses under 40% of its
-    // verificationGasLimit ("efficiency too low"), and its estimate is already generous. Measured on
-    // mainnet 2026-11-18: real verification used ~40% of the estimate, so 75% of it keeps efficiency
-    // near 53% while leaving ~1.9x headroom over real use.
-    verificationGasLimit: hex(scaled(BigInt(est.verificationGasLimit), VERIFICATION_GAS_PERCENT)),
+    // verificationGasLimit ("efficiency too low"), and its estimate swings: on mainnet 2026-11-18 real
+    // verification was ~39% of one estimate and ~26% of another. So a measured value from an earlier
+    // refusal wins; otherwise 60% of the estimate.
+    verificationGasLimit: hex(
+      measured.verification ? fromMeasured(measured.verification, BigInt(est.verificationGasLimit)) : scaled(BigInt(est.verificationGasLimit), VERIFICATION_GAS_PERCENT),
+    ),
     preVerificationGas: hex(withMargin(BigInt(est.preVerificationGas), 20n)),
   };
 
@@ -416,11 +465,24 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
         VALUES (${row.org_id}::uuid, 'operation.submit_unknown', jsonb_build_object('operation_id', ${row.id}::text, 'safe_op_hash', ${hash}::text, 'chain_id', ${chainId}::int))`;
       throw new HttpError(503, "PS_CHAIN_001", `The bundler did not confirm the submission, so it may still execute. PALISEC will not co-sign this authorization again. Check the smart account on the explorer before proposing a new operation.`, false);
     }
-    // The bundler refused it, so nothing reached the chain: release the claim so it can be retried.
+    // The bundler refused it, so nothing reached the chain: release the claim so it can be retried. A
+    // gas-efficiency refusal carries real gas use; it is recorded so the next prepare signs a limit that fits.
+    const message = (e as Error).message.slice(0, 300);
+    const measured = parseEfficiencyRefusal(message, op);
     await db()`
       WITH r AS (UPDATE operations SET submitted_at = NULL WHERE id = ${row.id}::uuid AND user_op_hash IS NULL RETURNING id, org_id)
       INSERT INTO audit_events (org_id, type, detail)
-      SELECT org_id, 'operation.submit_failed', jsonb_build_object('operation_id', id, 'message', ${(e as Error).message.slice(0, 300)}::text) FROM r`;
+      SELECT org_id, 'operation.submit_failed', jsonb_build_object('operation_id', id, 'message', ${message}::text,
+             'account', ${op.sender.toLowerCase()}::text, 'chain_id', ${String(chainId)}::text,
+             'gas_kind', ${measured?.kind ?? null}::text, 'gas_used', ${measured ? measured.used.toString() : null}::text,
+             'call_data_hash', ${keccak256(op.callData)}::text) FROM r`;
+    if (measured)
+      throw new HttpError(
+        502,
+        "PS_CHAIN_001",
+        `${message} Nothing reached the chain. PALISEC recorded the measured ${measured.kind} gas (${measured.used}); prepare and sign the operation again (POST /v1/operations/{id}/user-operation, then submit) and it will fit.`,
+        true,
+      );
     throw e;
   }
   await db()`UPDATE operations SET user_op_hash = ${userOpHash.toLowerCase()} WHERE id = ${row.id}::uuid`;
