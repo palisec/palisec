@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { rememberWallet } from "@/lib/browser-wallet";
 
 interface Eip1193 {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -11,6 +12,7 @@ interface WalletInfo {
   uuid: string;
   name: string;
   icon: string;
+  rdns?: string;
   provider: Eip1193;
 }
 type Health = "loading" | "ok" | "unconfigured" | "unreachable";
@@ -102,6 +104,11 @@ export function WalletSignIn() {
     setError("");
     try {
       setStep("connecting");
+      // Ask the wallet to show its account picker, so the member chooses which account signs in.
+      // Wallets that do not support it simply skip to the account they already share.
+      await w.provider.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] }).catch((e: { code?: number }) => {
+        if (e?.code === 4001) throw e;
+      });
       const accounts = (await w.provider.request({ method: "eth_requestAccounts" })) as string[];
       const address = accounts?.[0];
       if (!address) throw new Error("The wallet did not share an address.");
@@ -122,6 +129,8 @@ export function WalletSignIn() {
         body: JSON.stringify({ nonce: ch.body.nonce, signature }),
       });
       if (!v.ok) throw new Error(v.body.error?.message ?? "Signature verification failed.");
+      // The console signs and sends with this same extension, never another one that owns window.ethereum.
+      rememberWallet(w);
       setMe({ address: v.body.address });
       setStep("idle");
       router.replace(nextPath());
