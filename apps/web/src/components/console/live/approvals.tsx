@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { network as networkOf, networkLabel, walletChainParams } from "@/lib/networks";
+import { connectAs } from "@/lib/browser-wallet";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Btn, Confirm, Empty, inputCls, KV, Mono, Notice, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
@@ -10,9 +11,6 @@ import { api, can, useConsoleSession, useLive } from "./session";
 
 interface Approval extends LiveOperation {
   typed_data: { domain: object; types: object; primaryType: string; message: Record<string, string> } | null;
-}
-interface Eip1193 {
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
 }
 
 function Countdown({ until }: { until: string | null }) {
@@ -76,12 +74,10 @@ function ApprovalCard({ a, onChange }: { a: Approval; onChange: () => void }) {
   const pending = a.state === "pending_approval";
 
   async function approve() {
-    const eth = (window as unknown as { ethereum?: Eip1193 }).ethereum;
-    if (!eth || !a.typed_data || !me) return run(async () => Promise.reject(new Error("No browser wallet found. Install MetaMask or another wallet to sign.")));
+    if (!a.typed_data || !me) return run(async () => Promise.reject(new Error("Nothing to sign for this approval.")));
     await run(async () => {
-      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-      if (!accounts.some((x) => x.toLowerCase() === me.address.toLowerCase()))
-        throw new Error(`Switch your wallet to the signed-in account ${shortHex(me.address)} first.`);
+      // The wallet the member signed in with, on the signed-in account (refuses a different account).
+      const { eth } = await connectAs(me.address);
       // Wallets sign typed data only on the network its domain names: move to the operation's network.
       const net = networkOf(Number(d.chain_id));
       if (net) {

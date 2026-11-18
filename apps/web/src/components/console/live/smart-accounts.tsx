@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getAddress, isAddress, type Address, type Hex } from "viem";
 import { explorerAddress, network as networkOf, networkLabel, walletChainParams, type NetworkId } from "@/lib/networks";
 import { createSafeCalldata, SAFE_4337 } from "@/lib/safe-op";
+import { connectAs, type Eip1193 } from "@/lib/browser-wallet";
 import { shortHex } from "@/lib/units";
 import { Btn, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
 import { LoadError, Loading, thCls, useAction } from "./common";
@@ -33,16 +34,14 @@ interface Config {
   agents: { agent_id: string; agent_name: string; agent_status: string; account: Report | null }[];
 }
 
-interface Eip1193 {
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
-}
-/** Connects the browser wallet and moves it to the console's network, adding the network if needed. */
-async function wallet(chainId: NetworkId): Promise<{ eth: Eip1193; from: Address }> {
+/**
+ * Connects the wallet the member signed in with, checks it is on the signed-in account, and moves it
+ * to the console's network, adding the network if needed.
+ */
+async function wallet(chainId: NetworkId, me: string | undefined): Promise<{ eth: Eip1193; from: Address }> {
+  if (!me) throw new Error("Sign in first.");
   const params = walletChainParams(chainId);
-  const eth = (window as unknown as { ethereum?: Eip1193 }).ethereum;
-  if (!eth) throw new Error("No browser wallet found. Install MetaMask or another EIP-1193 wallet.");
-  const [from] = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-  if (!from) throw new Error("The wallet returned no account.");
+  const { eth, from } = await connectAs(me);
   try {
     await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: params.chainId }] });
   } catch (e) {
@@ -89,7 +88,7 @@ export function LiveSmartAccounts() {
 
   const predict = () =>
     act.run(async () => {
-      const { eth, from } = await wallet(chain);
+      const { eth, from } = await wallet(chain, me?.address);
       const data = createSafeCalldata(owners(), salt);
       const out = (await eth.request({ method: "eth_call", params: [{ from, to: SAFE_4337.proxyFactory, data }, "latest"] })) as Hex;
       const address = getAddress(`0x${out.slice(26, 66)}`);
@@ -99,7 +98,7 @@ export function LiveSmartAccounts() {
 
   const deploy = () =>
     act.run(async () => {
-      const { eth, from } = await wallet(chain);
+      const { eth, from } = await wallet(chain, me?.address);
       const list = owners();
       const data = createSafeCalldata(list, salt);
       const out = (await eth.request({ method: "eth_call", params: [{ from, to: SAFE_4337.proxyFactory, data }, "latest"] })) as Hex;
