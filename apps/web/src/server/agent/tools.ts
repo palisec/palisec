@@ -117,7 +117,7 @@ export function explainPolicy(doc: Record<string, any>): string[] { // eslint-di
 
 const SDK_DOCS = {
   typescript: {
-    install: "npm install @palisec/sdk viem (or: npm install https://palisec.tech/sdk/palisec-sdk-0.6.1.tgz viem)",
+    install: "npm install @palisec/sdk viem (or: npm install https://palisec.tech/sdk/palisec-sdk-0.6.2.tgz viem)",
     methods: [
       "createPalisec({ apiKey }) -> client",
       "authorize(intent) -> decision record (ALLOW | DENY | REQUIRES_HUMAN_SIGNATURE); retry-safe",
