@@ -18,7 +18,7 @@ import {
 } from "@/lib/safe-op";
 import type { AgentContext } from "./access";
 import { MAINNET, NETWORKS, TESTNET, isNetworkId, networkLabel } from "@/lib/networks";
-import { chainEnabled, chainTransport, defaultChain } from "./config";
+import { alchemyKey, chainEnabled, chainTransport, defaultChain } from "./config";
 import { db, type Row } from "./db";
 import { afterChange } from "./events";
 import { BadRequest, HttpError, logEvent } from "./http";
@@ -57,37 +57,59 @@ export function signerState(chainId: number): "configured" | "not_configured" | 
 }
 
 /**
- * Can the network's bundler take user operations? One cheap call, remembered for five minutes.
- * Reports a category an operator can act on, never the URL, key or raw message.
+ * Can the network's bundler take user operations? Two cheap calls: `eth_chainId` must name this
+ * network and `eth_supportedEntryPoints` must list EntryPoint v0.7. A passing result is remembered for
+ * five minutes, a failing one for one minute, so a fix shows quickly. Reports a category an operator
+ * can act on, never the URL, key or raw message.
  */
-export type BundlerState = "reachable" | "network_not_enabled_in_alchemy" | "invalid_alchemy_key" | "unreachable" | "not_configured";
+export type BundlerState =
+  | "reachable"
+  | "network_not_enabled_in_alchemy"
+  | "invalid_alchemy_key"
+  | "unreachable"
+  | "wrong_chain"
+  | "entrypoint_missing"
+  | "not_configured";
 const bundlerSeen = new Map<number, { at: number; state: BundlerState }>();
+
+async function bundlerCall(url: string, method: string): Promise<{ status: number; result?: unknown; msg: string }> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: [] }),
+    signal: AbortSignal.timeout(6000),
+    cache: "no-store",
+  });
+  const raw = await res.text();
+  let body: { result?: unknown; error?: { message?: string } } | null = null;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    body = null;
+  }
+  return { status: res.status, result: body?.result, msg: `${body?.error?.message ?? ""} ${raw.slice(0, 300)}`.toLowerCase() };
+}
+
 export async function bundlerState(chainId: number): Promise<BundlerState> {
   const url = bundlerUrl(chainId);
   if (!url) return "not_configured";
   const hit = bundlerSeen.get(chainId);
-  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.state;
+  if (hit && Date.now() - hit.at < (hit.state === "reachable" ? 5 * 60_000 : 60_000)) return hit.state;
   let state: BundlerState = "unreachable";
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_supportedEntryPoints", params: [] }),
-      signal: AbortSignal.timeout(6000),
-      cache: "no-store",
-    });
-    const raw = await res.text();
-    let body: { result?: unknown; error?: { message?: string } } | null = null;
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      body = null;
+    const [chain, entry] = await Promise.all([bundlerCall(url, "eth_chainId"), bundlerCall(url, "eth_supportedEntryPoints")]);
+    const refused = [chain, entry].find((r) => r.result === undefined);
+    if (refused) {
+      if (refused.status === 401 || /invalid api key|must be authenticated|unauthorized/.test(refused.msg)) state = "invalid_alchemy_key";
+      else if (refused.status === 403 || /not enabled|not allowed|is not available|enable the network/.test(refused.msg)) state = "network_not_enabled_in_alchemy";
+      else logEvent("warn", "bundler.probe", { chain_id: chainId, status: refused.status, message: refused.msg.replace(/https?:\/\/\S+/g, "[url]").slice(0, 200) });
+    } else if (typeof chain.result !== "string" || Number(chain.result) !== chainId) {
+      state = "wrong_chain";
+    } else if (!Array.isArray(entry.result) || !entry.result.some((e) => String(e).toLowerCase() === SAFE_4337.entryPoint.toLowerCase())) {
+      state = "entrypoint_missing";
+    } else {
+      state = "reachable";
     }
-    const msg = `${body?.error?.message ?? ""} ${raw.slice(0, 300)}`.toLowerCase();
-    if (Array.isArray(body?.result) && body.result.some((e) => String(e).toLowerCase() === SAFE_4337.entryPoint.toLowerCase())) state = "reachable";
-    else if (res.status === 401 || /invalid api key|must be authenticated|unauthorized/.test(msg)) state = "invalid_alchemy_key";
-    else if (res.status === 403 || /not enabled|not allowed|is not available|enable the network/.test(msg)) state = "network_not_enabled_in_alchemy";
-    else logEvent("warn", "bundler.probe", { chain_id: chainId, status: res.status, message: msg.replace(/https?:\/\/\S+/g, "[url]").slice(0, 200) });
   } catch {
     state = "unreachable";
   }
@@ -106,8 +128,9 @@ function signerProblem(chainId: number): string {
 export function bundlerUrl(chainId: number): string | null {
   const testUrl = process.env.PALISEC_TEST_BUNDLER_URL;
   if (testUrl && process.env.VERCEL !== "1") return testUrl;
-  const key = (process.env.ALCHEMY_API_KEY || "").trim();
-  if (!isNetworkId(chainId) || !key || !/^[A-Za-z0-9_-]{8,128}$/.test(key)) return null;
+  if (!isNetworkId(chainId)) return null;
+  const key = alchemyKey(chainId);
+  if (!key) return null;
   return `https://${NETWORKS[chainId].alchemy}.g.alchemy.com/v2/${key}`;
 }
 

@@ -16,9 +16,20 @@ export const mainnetEnabled = () => !["off", "disabled", "false", "0"].includes(
  */
 function rpcsFor(id: NetworkId, override: string | undefined): string[] {
   if (override?.trim()) return [override.trim()];
-  const key = (process.env.ALCHEMY_API_KEY || "").trim();
-  if (/^[A-Za-z0-9_-]{8,128}$/.test(key)) return [`https://${NETWORKS[id].alchemy}.g.alchemy.com/v2/${key}`, NETWORKS[id].publicRpc];
+  const key = alchemyKey(id);
+  if (key) return [`https://${NETWORKS[id].alchemy}.g.alchemy.com/v2/${key}`, NETWORKS[id].publicRpc];
   return [NETWORKS[id].publicRpc];
+}
+
+/**
+ * The Alchemy key for one network: ALCHEMY_MAINNET_API_KEY or ALCHEMY_TESTNET_API_KEY when set, so each
+ * network can have its own credential; otherwise the shared ALCHEMY_API_KEY. The network is always
+ * chosen by the URL built from it, never by the key.
+ */
+export function alchemyKey(id: NetworkId): string | null {
+  const own = id === MAINNET ? process.env.ALCHEMY_MAINNET_API_KEY : process.env.ALCHEMY_TESTNET_API_KEY;
+  const key = ((own ?? "").trim() || (process.env.ALCHEMY_API_KEY || "").trim());
+  return /^[A-Za-z0-9_-]{8,128}$/.test(key) ? key : null;
 }
 
 export const CHAINS: Record<NetworkId, { name: string; rpcs: string[]; enabled: boolean; testnet: boolean }> = {
