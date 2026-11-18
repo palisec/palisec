@@ -9,7 +9,7 @@ import { handle, ok } from "@/server/http";
 import { connection } from "next/server";
 
 const CACHE_MS = 30_000;
-let cached: { at: number; database: "unreachable" | "ok"; schema: string | null } | null = null;
+let cached: { at: number; database: "unreachable" | "ok"; schema: string | null; signed: Record<number, string> } | null = null;
 
 /**
  * Reports what is actually reachable. Never claims a component that is not deployed.
@@ -32,14 +32,30 @@ export const GET = handle(async (req: Request) => {
     if (!cached || Date.now() - cached.at > CACHE_MS) {
       try {
         const rows = await db()`SELECT max(version) AS v FROM schema_migrations`;
-        cached = { at: Date.now(), database: "ok", schema: rows[0]?.v ?? null };
+        // Proof that each co-signer really signs: the time of the last operation PALISEC co-signed that
+        // then succeeded on chain. Only the time is reported; which account or transaction stays private.
+        // A failure here only loses the proof; it never marks the database down.
+        const signed: Record<number, string> = {};
+        try {
+          const last = await db()`
+            SELECT chain_id, max(executed_at) AS at FROM operations
+            WHERE user_op_hash IS NOT NULL AND execution_success = true GROUP BY chain_id`;
+          for (const r of last) if (r.at) signed[Number(r.chain_id)] = new Date(r.at).toISOString();
+        } catch { /* reported as configured, not verified */ }
+        cached = { at: Date.now(), database: "ok", schema: rows[0]?.v ?? null, signed };
       } catch {
-        cached = { at: Date.now(), database: "unreachable", schema: null };
+        cached = { at: Date.now(), database: "unreachable", schema: null, signed: {} };
       }
     }
     database = cached.database;
     schema = cached.schema;
   }
+  const signedAt = (chainId: number) => cached?.signed[chainId] ?? null;
+  // "verified" when a real transaction proved the key signs; otherwise only its presence was checked.
+  const cosigner = (state: ReturnType<typeof signerState>, chainId: number) => {
+    const at = state === "configured" ? signedAt(chainId) : null;
+    return { verified: at !== null, state: at ? "verified_by_transaction" : state, last_success_at: at };
+  };
   // Decisions need both the Rust engine and the reference evaluator; without the engine they fail closed.
   const engine = engineStatus();
   const main = smartAccountsStatus(MAINNET);
@@ -62,14 +78,14 @@ export const GET = handle(async (req: Request) => {
   // Mainnet execution is required only while mainnet is switched on.
   if (main.enabled) {
     checks.push(
-      { id: "mainnet_cosigner", label: "Mainnet co-signer", critical: "execution", configured: mainSigner !== "not_configured", ok: mainSigner === "configured", verified: false, state: mainSigner,
+      { id: "mainnet_cosigner", label: "Mainnet co-signer", critical: "execution", configured: mainSigner !== "not_configured", ok: mainSigner === "configured", ...cosigner(mainSigner, MAINNET),
         reason: cosignerReason(mainSigner, "Mainnet") },
       { id: "mainnet_bundler", label: "Mainnet bundler", critical: "execution", configured: mainnetBundler !== "not_configured", ok: mainnetBundler === "reachable", verified: true, state: mainnetBundler,
         reason: bundlerReason(mainnetBundler, "Mainnet") },
     );
   }
   checks.push(
-    { id: "testnet_cosigner", label: "Testnet co-signer", critical: "none", configured: testSigner !== "not_configured", ok: testSigner === "configured", verified: false, state: testSigner,
+    { id: "testnet_cosigner", label: "Testnet co-signer", critical: "none", configured: testSigner !== "not_configured", ok: testSigner === "configured", ...cosigner(testSigner, TESTNET),
       reason: cosignerReason(testSigner, "Testnet") },
     { id: "testnet_bundler", label: "Testnet bundler", critical: "none", configured: testnetBundler !== "not_configured", ok: testnetBundler === "reachable", verified: true, state: testnetBundler,
       reason: bundlerReason(testnetBundler, "Testnet") },

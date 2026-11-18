@@ -27,6 +27,8 @@ export interface HealthCheck {
   state: string;
   /** One line in plain words when it is not ok. */
   reason: string | null;
+  /** Co-signers only: when PALISEC last co-signed a transaction that succeeded on chain (time only). */
+  last_success_at?: string | null;
 }
 
 export function overallStatus(checks: Pick<HealthCheck, "critical" | "ok">[]): Overall {
