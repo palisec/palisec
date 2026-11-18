@@ -147,6 +147,9 @@ function chainClient(chainId: number) {
   return createPublicClient({ transport: chainTransport(chainId) });
 }
 
+/** Errors from bundlerRpc where the bundler answered with an explicit JSON-RPC error. */
+const REFUSED = new WeakSet<object>();
+
 async function bundlerRpc<T>(chainId: number, method: string, params: unknown[]): Promise<T> {
   const url = bundlerUrl(chainId);
   if (!url) throw new HttpError(503, "PS_CHAIN_001", "Smart-account submission is not configured on this deployment.", true);
@@ -167,7 +170,11 @@ async function bundlerRpc<T>(chainId: number, method: string, params: unknown[])
     // Bundler messages describe the operation (e.g. AA21 not enough funds); they never contain our key.
     const msg = (body?.error?.message || `HTTP ${res.status}`).replace(/https?:\/\/\S+/g, "[url]").slice(0, 300);
     logEvent("warn", "bundler.error", { method, message: msg });
-    throw new HttpError(502, "PS_CHAIN_001", `Bundler refused ${method}: ${msg}`, true);
+    const err = new HttpError(502, "PS_CHAIN_001", `Bundler refused ${method}: ${msg}`, true);
+    // Only a JSON-RPC error answer is a definite refusal; an HTTP failure without one (e.g. a gateway
+    // timeout) leaves the outcome unknown.
+    if (body?.error) REFUSED.add(err);
+    throw err;
   }
   return body.result as T;
 }
@@ -401,7 +408,15 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
   try {
     userOpHash = await bundlerRpc<Hex>(chainId, "eth_sendUserOperation", [toRpcUserOp(op, signature), SAFE_4337.entryPoint]);
   } catch (e) {
-    // Nothing reached the chain: release the claim so the same prepared operation can be retried.
+    if (!REFUSED.has(e as object)) {
+      // No definite answer (timeout, gateway error): the bundler may have accepted the operation, so the
+      // claim stays and PALISEC never co-signs this authorization again (no second execution). Fail closed.
+      await db()`
+        INSERT INTO audit_events (org_id, type, detail)
+        VALUES (${row.org_id}::uuid, 'operation.submit_unknown', jsonb_build_object('operation_id', ${row.id}::text, 'safe_op_hash', ${hash}::text, 'chain_id', ${chainId}::int))`;
+      throw new HttpError(503, "PS_CHAIN_001", `The bundler did not confirm the submission, so it may still execute. PALISEC will not co-sign this authorization again. Check the smart account on the explorer before proposing a new operation.`, false);
+    }
+    // The bundler refused it, so nothing reached the chain: release the claim so it can be retried.
     await db()`
       WITH r AS (UPDATE operations SET submitted_at = NULL WHERE id = ${row.id}::uuid AND user_op_hash IS NULL RETURNING id, org_id)
       INSERT INTO audit_events (org_id, type, detail)

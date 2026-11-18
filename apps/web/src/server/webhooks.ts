@@ -40,7 +40,15 @@ function privateAddress(ip: string): boolean {
     const v = ip.toLowerCase();
     if (v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe80")) return true;
     const mapped = v.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    return mapped ? privateAddress(mapped[1]!) : false;
+    if (mapped) return privateAddress(mapped[1]!);
+    // URL parsing rewrites ::ffff:127.0.0.1 as ::ffff:7f00:1, so the hex form must be decoded too.
+    const hexMapped = v.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (hexMapped) {
+      const hi = parseInt(hexMapped[1]!, 16), lo = parseInt(hexMapped[2]!, 16);
+      return privateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+    }
+    // Other IPv4-embedding forms (IPv4-compatible ::a.b.c.d / ::x:y, NAT64 64:ff9b::/96) are refused outright.
+    return /^::[0-9a-f.:]*$/.test(v) || v.startsWith("64:ff9b:");
   }
   const [a, b] = ip.split(".").map(Number) as [number, number];
   return (

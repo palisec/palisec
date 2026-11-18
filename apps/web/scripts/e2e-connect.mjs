@@ -139,6 +139,9 @@ let hookSecret;
     ["loopback IP", "https://127.0.0.1/hook"],
     ["private range", "https://10.1.2.3/hook"],
     ["cloud metadata", "https://169.254.169.254/latest"],
+    ["IPv4-mapped IPv6 loopback", "https://[::ffff:127.0.0.1]/hook"],
+    ["IPv4-mapped IPv6 metadata", "https://[::ffff:a9fe:a9fe]/latest"],
+    ["decimal loopback", "https://2130706433/hook"],
     ["credentials in URL", "https://user:pass@example.com/hook"],
   ]) {
     const r = await call("POST", "/webhooks", { cookie: A.cookie, body: { url, events: ["operation.allowed"] } });
