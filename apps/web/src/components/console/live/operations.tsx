@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { explorerTx } from "@/lib/networks";
 import { formatUnits, shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Btn, Confirm, Empty, inputCls, KV, Mono, PageTitle, Panel, Segmented, RefreshBtn } from "../kit";
@@ -102,6 +103,33 @@ export function LiveOperations() {
   );
 }
 
+/** On-chain execution through the PALISEC smart account: co-signature, bundler hash and the transaction. */
+function ExecutionRows({ op }: { op: LiveOperation }) {
+  const x = op.details.execution!;
+  const tx = op.transaction_hash ?? null;
+  const link = tx ? explorerTx(op.details.chain_id, tx) : null;
+  const result = x.executed_at ? (x.success ? "succeeded on chain" : "reverted on chain") : x.user_op_hash ? "submitted, waiting for the receipt" : "submission not confirmed";
+  return (
+    <div>
+      <p className="label mb-1">Execution</p>
+      <KV
+        rows={[
+          ["Co-signed by PALISEC", x.user_op_hash ? `yes · ${utc(x.submitted_at)}` : "claimed, bundler did not confirm"],
+          ["Result", result],
+          ["User operation", x.user_op_hash ? <Mono key="u" className="break-all text-[11px]">{x.user_op_hash}</Mono> : "—"],
+          ["Transaction", tx ? (
+            <span key="tx" className="flex flex-col items-end gap-0.5">
+              <Mono className="break-all text-[11px]">{tx}</Mono>
+              {link && <a href={link} target="_blank" rel="noopener noreferrer" className="text-[12px] text-aqua underline-offset-4 hover:underline">View on the explorer</a>}
+            </span>
+          ) : "—"],
+          ["Executed", utc(x.executed_at)],
+        ]}
+      />
+    </div>
+  );
+}
+
 function OperationDetail({ op, onChange }: { op: LiveOperation; onChange: () => void }) {
   const { org } = useConsoleSession();
   const { run, busy, notice } = useAction();
@@ -128,6 +156,7 @@ function OperationDetail({ op, onChange }: { op: LiveOperation; onChange: () => 
           ["Request hash", <Mono key="h" className="break-all text-[11px]">{d.request_hash}</Mono>],
         ]}
       />
+      {d.execution && <ExecutionRows op={op} />}
       <div>
         <p className="label mb-1">Evaluation sequence</p>
         <CheckList checks={op.checks} />
