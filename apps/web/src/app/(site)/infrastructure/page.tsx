@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { MaturityBadge, PageHeader, Section } from "@/components/ui";
 import { CAPABILITIES, capability } from "@/lib/capabilities";
@@ -6,7 +7,7 @@ import { CAPABILITIES, capability } from "@/lib/capabilities";
 export const metadata: Metadata = {
   title: "Infrastructure",
   description: "PALISEC Core: deterministic authorization, policy model, spending controls, human approvals, protected signing, smart-account enforcement, execution lifecycle and audit.",
-  alternates: { canonical: "/infrastructure" },
+  alternates: { canonical: "/infrastructure" }, openGraph: pageOpenGraph("/infrastructure"),
 };
 
 const PRODUCTS = [

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
 
 export const metadata: Metadata = {
   title: "Integrations and keys",
   description: "Register an external agent, create least-privilege API keys, rotate and revoke them, and read the agent's own policy, operations and audit trail.",
-  alternates: { canonical: "/docs/integrations" },
+  alternates: { canonical: "/docs/integrations" }, openGraph: pageOpenGraph("/docs/integrations"),
 };
 
 const CREATE = `POST /api/v1/agents/{agent_id}/credentials        (console session, admin)

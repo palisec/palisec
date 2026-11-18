@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import { Codes, Note, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Attestation",
   description: "TEE measurements and how Palisec verifies enclave attestation. No enclave is deployed yet.",
-  alternates: { canonical: "/attestation" },
+  alternates: { canonical: "/attestation" }, openGraph: pageOpenGraph("/attestation"),
 };
 
 const STEPS = [

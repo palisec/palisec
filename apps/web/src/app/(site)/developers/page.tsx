@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { TerminalIcon } from "@/components/icons";
@@ -7,23 +8,27 @@ import { ButtonLink, PageHeader, Section } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Developers",
   description: "Start building with PALISEC: install the SDK, authenticate, configure the account and policy, evaluate transactions, handle approvals, and connect over MCP or Python.",
-  alternates: { canonical: "/developers" },
+  alternates: { canonical: "/developers" }, openGraph: pageOpenGraph("/developers"),
 };
 
 const STEPS: { n: string; title: string; body: string; href: string }[] = [
   { n: "01", title: "Sign in and create an organization", body: "Sign in with your wallet at /login. Your first sign-in creates an organization with you as owner.", href: "/docs/quickstart#hosted" },
   { n: "02", title: "Configure the account and policy", body: "Create a policy for the smart account your agent acts for, allow the contracts and selectors it needs, set the budget and approval threshold, then activate.", href: "/docs/policies" },
   { n: "03", title: "Register the agent and create a scoped key", body: "Bind the agent to the policy and create an API key with only the scopes it needs. The key is shown once.", href: "/docs/integrations" },
-  { n: "04", title: "Install an SDK", body: "TypeScript or Python, served from palisec.tech; no registry account needed.", href: "/docs/sdk/typescript" },
+  { n: "04", title: "Install an SDK", body: "npm install @palisec/sdk or pip install palisec. Also served from palisec.tech.", href: "/docs/sdk/typescript" },
   { n: "05", title: "Evaluate, then propose", body: "Dry-run with evaluate, then authorize before every transaction. Send only on ALLOW.", href: "/docs/api" },
   { n: "06", title: "Handle approvals", body: "REQUIRES_HUMAN_SIGNATURE holds the operation until an approver signs. Wait for it, or return and poll.", href: "/docs/errors" },
 ];
 
 const INSTALL = `# TypeScript (viem or ethers)
-npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
+npm install @palisec/sdk viem
 
 # Python 3.10+
-pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`;
+pip install palisec
+
+# Alternative, straight from palisec.tech:
+# npm install https://palisec.tech/sdk/palisec-sdk-0.6.0.tgz viem
+# pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`;
 
 const PY = `import os
 from palisec import Palisec, PalisecDeniedError

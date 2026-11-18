@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
@@ -6,7 +7,7 @@ import { Note } from "@/components/ui";
 export const metadata: Metadata = {
   title: "PALISEC Agent",
   description: "How the native PALISEC Agent works: tools, autonomy levels, confirmed actions, model configuration, evidence and the API.",
-  alternates: { canonical: "/docs/agent" },
+  alternates: { canonical: "/docs/agent" }, openGraph: pageOpenGraph("/docs/agent"),
 };
 
 export default function AgentDocs() {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-icons";
@@ -10,7 +11,7 @@ import { CAPABILITIES } from "@/lib/capabilities";
 export const metadata: Metadata = {
   title: "Documentation",
   description: "Guides and reference for the PALISEC policy schema, authorization API, SDKs, MCP server, webhooks, the PALISEC Agent and the security model.",
-  alternates: { canonical: "/docs" },
+  alternates: { canonical: "/docs" }, openGraph: pageOpenGraph("/docs"),
 };
 
 const PATH: { href: string; icon: ReactNode; title: string; time: string }[] = [
@@ -77,7 +78,7 @@ export default function DocsIndex() {
 
         <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
           {TOPICS.map((t) => (
-            <div key={t.title}>
+            <div key={t.title} id={t.title.toLowerCase()} className="scroll-mt-28">
               <p className="label mb-2">{t.title}</p>
               <ul className="border-t border-line">
                 {t.links.map((l) => (
