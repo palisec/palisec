@@ -1,11 +1,12 @@
 name: Publish SDKs
 # Publishes the SDKs to the public registries, only when a version tag is pushed, and only after every
 # CI check passes:
-#   sdk-v0.6.0  ->  @palisec/sdk 0.6.0 on npm      (token: repository secret NPM_TOKEN)
-#   py-v0.4.0   ->  palisec 0.4.0 on PyPI          (PyPI Trusted Publishing, environment "pypi"; no token)
+#   sdk-v0.6.1  ->  @palisec/sdk 0.6.1 on npm      (token: repository secret NPM_TOKEN, company npm account)
+#   py-v0.4.1   ->  palisec 0.4.1 on PyPI          (PyPI Trusted Publishing, environment "pypi";
+#                                                   a PYPI_TOKEN secret is used instead if one is set)
 # The tag must equal the package version. A published version can never be reused, so nothing here
-# runs on branches or pull requests. npm provenance needs a public repository; this one is private,
-# so provenance is not requested.
+# runs on branches or pull requests. No provenance or attestations are published on either registry:
+# they would name the source repository publicly.
 on:
   push:
     tags: ["sdk-v*.*.*", "py-v*.*.*"]
@@ -75,3 +76,5 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/sdk-python/dist
+          password: ${{ secrets.PYPI_TOKEN }}
+          attestations: false

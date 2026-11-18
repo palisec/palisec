@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 # Import from the exact wheel palisec.tech serves (wheels are zip files, importable directly).
-WHEEL = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "sdk" / "palisec-0.4.0-py3-none-any.whl"
+WHEEL = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "sdk" / "palisec-0.4.1-py3-none-any.whl"
 sys.path.insert(0, str(WHEEL))
 
 from palisec import Palisec, PalisecDeniedError, PalisecError  # noqa: E402
@@ -54,7 +54,7 @@ class Recorder:
 
 
 async def main():
-    check("import: the served wheel is what runs", "palisec-0.4.0-py3-none-any.whl" in __import__("palisec").__file__)
+    check("import: the served wheel is what runs", "palisec-0.4.1-py3-none-any.whl" in __import__("palisec").__file__)
     sender = Recorder()
     async with Palisec(KEY, base_url=BASE) as palisec:
         dry = await palisec.evaluate(to=TOKEN, data=transfer(1), gas_limit=90_000)
