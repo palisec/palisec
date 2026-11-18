@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { MAINNET, networkLabel } from "@/lib/networks";
+import type { ReactNode } from "react";
+import { networkLabel } from "@/lib/networks";
 import { shortHex } from "@/lib/units";
 import { Codes } from "../../ui";
 import { Empty, KV, Mono, PageTitle, Panel, Pill } from "../kit";
 import { ago, LoadError, Loading, usd, utc } from "./common";
+import { ExecutionDownNotice, findCheck, useHealth } from "./health";
 import { useConsoleSession, useLive } from "./session";
 
 interface Summary {
@@ -108,7 +110,7 @@ export function LiveDashboard() {
   const agents = useLive<{ agents: AgentRow[] }>("/agents");
   const policies = useLive<{ policies: PolicyRow[] }>("/policies");
   const events = useLive<{ events: AuditEvent[] }>("/audit-events?kind=security&limit=8");
-  const health = useLive<{ components: Record<string, string> }>("/health");
+  const health = useHealth();
   const org = useLive<Org>("/organization");
   const s = summary.data;
   const a = agents.data?.agents ?? [];
@@ -126,13 +128,23 @@ export function LiveDashboard() {
   ];
   const loaded = agents.data && policies.data && org.data;
   const setupDone = steps.every((x) => x.done);
-  const c = health.data?.components;
   const { network } = useConsoleSession();
-  const cosigner = network === MAINNET ? c?.mainnet_signer === "mainnet_cosigner" : c?.signer === "testnet_cosigner";
+  // One row per health check, exactly as GET /api/v1/health reports it.
+  const row = (id: string, label: string): [string, ReactNode] => {
+    const ck = findCheck(health, id);
+    if (!ck) return [label, health === "unreachable" ? <Pill key={id} tone="review">unknown</Pill> : health === null ? "…" : <Pill key={id} tone="muted">not checked</Pill>];
+    return [label, (
+      <span key={id} className="flex flex-col items-end gap-0.5 text-right">
+        <Pill tone={ck.ok ? "allow" : "deny"}>{ck.ok ? (ck.verified ? "operational" : "configured") : "not running"}</Pill>
+        {!ck.ok && ck.reason && <span className="max-w-[34ch] text-[11.5px] text-muted">{ck.reason}</span>}
+      </span>
+    )];
+  };
 
   return (
     <>
       <PageTitle title="Dashboard" description={`${org.data?.name ?? "Your organization"} · decisions from the last 24 hours, UTC.`} />
+      <div className="mb-4 empty:hidden"><ExecutionDownNotice h={health} chainId={network} /></div>
       <LoadError error={summary.error ?? agents.error ?? policies.error} />
 
       {loaded && !setupDone && (
@@ -262,11 +274,13 @@ export function LiveDashboard() {
           <Panel title="Connectivity" bodyClassName="px-4 py-2">
             <KV
               rows={[
-                ["Authorization state", c ? <Pill key="d" tone={c.database === "ok" ? "allow" : "deny"}>{c.database}</Pill> : "…"],
-                ["Policy engine", c ? <Pill key="p" tone={c.policy_engine === "ok" ? "allow" : "deny"}>{c.policy_engine === "ok" ? "rust + reference · agree" : c.policy_engine}</Pill> : "…"],
                 ["Network", <span key="c" className="text-soft">{networkLabel(network)}</span>],
-                ["Co-signer", c ? <Pill key="s" tone={cosigner ? "allow" : "muted"}>{cosigner ? "configured" : "○ not configured"}</Pill> : "…"],
-                ["Bundler", c ? <Pill key="b" tone={c.bundler === "configured" ? "allow" : "muted"}>{c.bundler === "configured" ? "configured" : "○ not configured"}</Pill> : "…"],
+                row("database", "Authorization state"),
+                row("policy_engine", "Policy engine"),
+                row("mainnet_cosigner", "Mainnet co-signer"),
+                row("mainnet_bundler", "Mainnet bundler"),
+                row("testnet_cosigner", "Testnet co-signer"),
+                row("testnet_bundler", "Testnet bundler"),
               ]}
             />
           </Panel>

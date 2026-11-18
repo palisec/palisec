@@ -9,6 +9,7 @@ import { BrandMark } from "../brand-mark";
 import { PointerLight } from "../pointer-light";
 import { SignOutIcon } from "../icons";
 import { IconBtn } from "./kit";
+import { executionState, findCheck, useHealth } from "./live/health";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
 
 /**
@@ -63,10 +64,6 @@ const NAV: { href: string; label: string; group?: string }[] = [
   { href: "/console/settings", label: "Settings", group: "Settings" },
 ];
 
-interface Health {
-  components: Record<string, string>;
-}
-
 export function ConsoleShell({ children }: { children: ReactNode }) {
   return (
     <ConsoleSessionProvider>
@@ -82,17 +79,17 @@ function Shell({ children }: { children: ReactNode }) {
   const ready = session.status === "ready";
   const org = useLive<{ name: string; emergency_stop: boolean }>(ready ? "/organization" : null);
   const summary = useLive<{ pending_approvals: number }>(ready ? "/summary" : null);
-  const health = useLive<Health>(ready ? "/health" : null);
+  const health = useHealth(ready);
   const pending = summary.data?.pending_approvals ?? 0;
-  const c = health.data?.components;
   // Reported only from the real health endpoint; nothing is shown as up before it answers.
+  const db = findCheck(health, "database");
+  const engine = findCheck(health, "policy_engine");
+  const exec = executionState(health, session.network);
+  const unknown = health === "unreachable" ? "Unknown" : "…";
   const HEALTH = [
-    { label: "Database", value: c ? (c.database === "ok" ? "OK" : c.database) : "…", ok: c?.database === "ok" },
-    { label: "Policy engine", value: c ? (c.policy_engine === "ok" ? "Rust + ref" : c.policy_engine) : "…", ok: c?.policy_engine === "ok" },
-    (() => {
-      const on = session.network === 4663 ? c?.mainnet_signer === "mainnet_cosigner" : c?.signer === "testnet_cosigner";
-      return { label: "Co-signer", value: c ? (on ? "Configured" : "Not configured") : "…", ok: on };
-    })(),
+    { label: "Database", value: db ? (db.ok ? "OK" : "Not running") : unknown, ok: db?.ok === true },
+    { label: "Policy engine", value: engine ? (engine.ok ? "Rust + ref" : "Not running") : unknown, ok: engine?.ok === true },
+    { label: "Execution", value: exec.ok === null ? unknown : exec.ok ? "Operational" : "Not running", ok: exec.ok === true },
   ];
   const live = networkOf(session.network)?.testnet === false;
 
@@ -227,7 +224,7 @@ function Shell({ children }: { children: ReactNode }) {
           {ready && (
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
-                <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · " : "● Testnet · "}</span>
+                <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · start with small balances · " : "● Testnet · "}</span>
                 PALISEC records and enforces each authorization decision. Agents with a PALISEC smart account are enforced on chain: PALISEC
                 co-signs only what it allowed. An agent that sends from a plain key is only as safe as its own code.{" "}
                 <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>

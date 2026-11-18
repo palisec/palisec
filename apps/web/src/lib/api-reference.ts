@@ -145,7 +145,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "POST", path: "/auth/verify", auth: "none", summary: "Verify the signed challenge and set the session cookie.", body: { nonce: "string", signature: "0x hex" } },
       { method: "POST", path: "/auth/logout", auth: "session", summary: "Revoke the session." },
       { method: "GET", path: "/me", auth: "session", summary: "Signed-in address and organizations." },
-      { method: "GET", path: "/health", auth: "none", summary: "Component status. ?shallow=1 does not touch the database." },
+      { method: "GET", path: "/health", auth: "none", summary: "Component status and checks[]. 200 when status is ok; 503 when degraded (execution or a non-critical part not working, decisions still work) or down (decisions refused). ?shallow=1 does not touch the database." },
     ],
   },
 ];

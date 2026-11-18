@@ -8,6 +8,7 @@
     "db:migrate": "node scripts/migrate.mjs",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --experimental-strip-types --no-warnings --test test/health-status.test.ts",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
