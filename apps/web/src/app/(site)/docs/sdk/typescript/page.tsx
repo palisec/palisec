@@ -16,7 +16,7 @@ const INSTALL = `npm install @palisec/sdk viem
 # or: yarn add @palisec/sdk viem
 
 # Alternative, straight from palisec.tech:
-# npm install https://palisec.tech/sdk/palisec-sdk-0.6.1.tgz viem`;
+# npm install https://palisec.tech/sdk/palisec-sdk-0.6.2.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
@@ -111,7 +111,7 @@ export default function TypeScriptSdk() {
       title="TypeScript SDK"
       lede="@palisec/sdk asks Palisec before every transaction and sends with your viem wallet only on ALLOW. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="@palisec/sdk 0.6.1 · viem or ethers v6 · Schema 1.0 · mainnet 4663 · testnet 46630"
+      compat="@palisec/sdk 0.6.2 · viem or ethers v6 · Schema 1.0 · mainnet 4663 · testnet 46630"
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can

@@ -14,7 +14,7 @@ const ENTRIES = [
     date: "2026-11-18",
     tag: "SDK republish",
     changes: [
-      "TypeScript SDK 0.6.1 and Python SDK 0.4.1: same code as 0.6.0 and 0.4.0, republished from the Palisec company accounts with package links pointing to palisec.tech. 0.6.0 and 0.4.0 are withdrawn from npm and PyPI; their palisec.tech/sdk files keep working.",
+      "TypeScript SDK 0.6.2 and Python SDK 0.4.1: same code as 0.6.0 and 0.4.0, republished from the Palisec company accounts with package links pointing to palisec.tech. Earlier registry versions are withdrawn from npm and PyPI; their palisec.tech/sdk files keep working.",
     ],
   },
   {
