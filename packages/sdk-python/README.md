@@ -7,7 +7,7 @@ Async, typed, and no third-party dependencies. Python 3.10 or later.
 pip install palisec
 ```
 
-Alternative, straight from palisec.tech: `pip install https://palisec.tech/sdk/palisec-0.4.0-py3-none-any.whl`.
+Alternative, straight from palisec.tech: `pip install https://palisec.tech/sdk/palisec-0.4.1-py3-none-any.whl`.
 
 ```python
 import os
