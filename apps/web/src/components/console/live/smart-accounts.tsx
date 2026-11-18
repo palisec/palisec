@@ -7,6 +7,7 @@ import { createSafeCalldata, SAFE_4337 } from "@/lib/safe-op";
 import { shortHex } from "@/lib/units";
 import { Btn, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
 import { LoadError, Loading, thCls, useAction } from "./common";
+import { ExecutionDownNotice, useHealth } from "./health";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 interface Report {
@@ -65,6 +66,7 @@ export function LiveSmartAccounts() {
   const chain = (networkOf(network)?.chainId ?? 46630) as NetworkId;
   const live = networkOf(network)?.testnet === false;
   const cfg = useLive<Config>(`/smart-accounts?chain_id=${chain}`);
+  const health = useHealth();
   const act = useAction();
   const [agentKey, setAgentKey] = useState("");
   const [recovery, setRecovery] = useState("");
@@ -130,6 +132,7 @@ export function LiveSmartAccounts() {
         title="Smart accounts"
         description="A PALISEC smart account is a Safe that needs two signatures: the agent's key and PALISEC's co-signer, which signs only operations PALISEC allowed. Your recovery owner can move funds with either of them."
       />
+      <div className="mb-4 empty:hidden"><ExecutionDownNotice h={health} chainId={chain} /></div>
       <LoadError error={cfg.error} />
       {!cfg.data ? (
         <Loading what="smart accounts" />
