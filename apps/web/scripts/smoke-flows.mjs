@@ -118,9 +118,20 @@ if (op.state === "pending_approval") {
 }
 if (!["authorized", "approved"].includes(op.state)) throw new PalisecDeniedError(op);
 
-const prepared = await palisec.prepareExecution(op.operationId);
-const signature = await agent.signTypedData(safeOpTypedData(prepared.userOperation, net.chainId));
-let execution = await palisec.submitExecution(op.operationId, signature);
+// A bundler gas-efficiency refusal reaches nothing on chain, and PALISEC records the measured gas: prepare
+// and sign again (the gas limits are part of what the agent signs). At most two more attempts.
+let execution;
+for (let attempt = 1; ; attempt++) {
+  const prepared = await palisec.prepareExecution(op.operationId);
+  const signature = await agent.signTypedData(safeOpTypedData(prepared.userOperation, net.chainId));
+  try {
+    execution = await palisec.submitExecution(op.operationId, signature);
+    break;
+  } catch (e) {
+    if (attempt >= 3 || !/efficiency too low/i.test(e?.message ?? "")) throw e;
+    console.log(`\nBundler refused the gas limits (nothing reached the chain): ${e.message.split(" Nothing reached")[0]}\nPreparing and signing again with the measured gas (attempt ${attempt + 1})…`);
+  }
+}
 const until = Date.now() + 180_000;
 while (execution.status === "submitted" && Date.now() < until) {
   await new Promise((r) => setTimeout(r, 3000));

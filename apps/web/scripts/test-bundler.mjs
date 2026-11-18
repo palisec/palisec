@@ -11,6 +11,7 @@ const [bundler] = await pub.request({ method: "eth_accounts" });
 const wallet = createWalletClient({ account: bundler, transport: transport(RPC) });
 const EVENT = parseAbi(["event UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)"]);
 const receipts = new Map();
+let efficiencyRule = null;
 
 const pack = (op) => ({
   sender: op.sender,
@@ -35,12 +36,22 @@ const methods = {
   async rundler_maxPriorityFeePerGas() {
     return "0x3b9aca00";
   },
+  // Test-only: imitate Alchemy's "verification gas limit efficiency" rule. { estimate, used } makes the
+  // estimate return `estimate` and refuses an operation whose limit puts `used` under 40% of it; null turns it off.
+  async test_setEfficiencyRule([rule]) {
+    efficiencyRule = rule ?? null;
+    return true;
+  },
   async eth_estimateUserOperationGas([op]) {
     if (!op.signature || op.signature.length !== 2 + 2 * (12 + 130)) throw new Error("estimate: unexpected dummy signature length");
-    return { preVerificationGas: "0xc350", verificationGasLimit: "0x30d40", callGasLimit: "0x15f90" };
+    return { preVerificationGas: "0xc350", verificationGasLimit: efficiencyRule ? `0x${efficiencyRule.estimate.toString(16)}` : "0x30d40", callGasLimit: "0x15f90" };
   },
   async eth_sendUserOperation([op, entryPoint]) {
     if (entryPoint.toLowerCase() !== SAFE_4337.entryPoint.toLowerCase()) throw new Error("unsupported entry point");
+    if (efficiencyRule) {
+      const actual = efficiencyRule.used / Number(BigInt(op.verificationGasLimit));
+      if (actual < 0.4) throw new Error(`Verification gas limit efficiency too low. Required: 0.4, Actual: ${actual}`);
+    }
     const packed = pack(op);
     try {
       await pub.simulateContract({ account: bundler, address: SAFE_4337.entryPoint, abi: ENTRYPOINT_ABI, functionName: "handleOps", args: [[packed], bundler] });
