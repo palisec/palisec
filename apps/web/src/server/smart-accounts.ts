@@ -247,6 +247,10 @@ function requireUsable(row: Row) {
 
 const hex = (n: bigint): Hex => `0x${n.toString(16)}`;
 const withMargin = (n: bigint, pct: bigint) => (n * (100n + pct)) / 100n;
+/** `pct` percent of `n`, rounded up. */
+const scaled = (n: bigint, pct: bigint) => (n * pct + 99n) / 100n;
+/** The share of the bundler's verification-gas estimate PALISEC signs for (see prepareExecution). */
+const VERIFICATION_GAS_PERCENT = 75n;
 
 export interface PreparedExecution {
   operation_id: string;
@@ -307,7 +311,11 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
   const op: SafeUserOp = {
     ...draft,
     callGasLimit: hex(callGas < BigInt(row.gas_limit) ? callGas : BigInt(row.gas_limit)),
-    verificationGasLimit: hex(withMargin(BigInt(est.verificationGasLimit), 30n)),
+    // Not padded: Alchemy's bundler refuses an operation whose verification uses under 40% of its
+    // verificationGasLimit ("efficiency too low"), and its estimate is already generous. Measured on
+    // mainnet 2026-11-18: real verification used ~40% of the estimate, so 75% of it keeps efficiency
+    // near 53% while leaving ~1.9x headroom over real use.
+    verificationGasLimit: hex(scaled(BigInt(est.verificationGasLimit), VERIFICATION_GAS_PERCENT)),
     preVerificationGas: hex(withMargin(BigInt(est.preVerificationGas), 20n)),
   };
 
