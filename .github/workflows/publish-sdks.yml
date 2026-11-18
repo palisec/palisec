@@ -2,7 +2,8 @@ name: Publish SDKs
 # Publishes the SDKs to the public registries, only when a version tag is pushed, and only after every
 # CI check passes:
 #   sdk-v0.6.1  ->  @palisec/sdk 0.6.1 on npm      (token: repository secret NPM_TOKEN, company npm account)
-#   py-v0.4.1   ->  palisec 0.4.1 on PyPI          (token: secret PYPI_TOKEN, company PyPI account)
+#   py-v0.4.1   ->  palisec 0.4.1 on PyPI          (PyPI Trusted Publishing, environment "pypi";
+#                                                   a PYPI_TOKEN secret is used instead if one is set)
 # The tag must equal the package version. A published version can never be reused, so nothing here
 # runs on branches or pull requests. No provenance or attestations are published on either registry:
 # they would name the source repository publicly.
@@ -51,6 +52,7 @@ jobs:
     environment: pypi
     permissions:
       contents: read
+      id-token: write
     defaults:
       run:
         working-directory: packages/sdk-python
