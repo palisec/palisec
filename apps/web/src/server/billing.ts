@@ -158,8 +158,9 @@ export async function refreshPro(orgId: string, force = false): Promise<void> {
     WHERE m.org_id = ${orgId}::uuid AND m.role = 'owner'
       -- A holding counts only for the organization the wallet created itself, at its own first sign-in
       -- (the append-only 'org.created' event names it as the actor). Being added as an owner elsewhere
-      -- never counts, and a wallet creates at most one organization, so one holding unlocks one.
-      AND EXISTS (SELECT 1 FROM audit_events e WHERE e.org_id = m.org_id AND e.type = 'org.created' AND e.actor_user_id = u.id)`;
+      -- never counts. Only the first organization the wallet ever created counts (a wallet removed from all
+      -- organizations gets a new one at its next sign-in), so one holding unlocks exactly one organization.
+      AND m.org_id = (SELECT e.org_id FROM audit_events e WHERE e.type = 'org.created' AND e.actor_user_id = u.id ORDER BY e.seq LIMIT 1)`;
   const s = billingSettings();
   try {
     const c = mainnetClient();
