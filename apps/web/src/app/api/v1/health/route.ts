@@ -5,6 +5,7 @@ import { CHAINS, defaultChain, isDatabaseConfigured } from "@/server/config";
 import { MAINNET, TESTNET } from "@/lib/networks";
 import { bundlerReason, cosignerReason, httpStatusFor, overallStatus, type HealthCheck } from "@/lib/health-status";
 import { db } from "@/server/db";
+import { applyDue } from "@/server/pending";
 import { handle, ok } from "@/server/http";
 import { connection } from "next/server";
 
@@ -32,6 +33,9 @@ export const GET = handle(async (req: Request) => {
     if (!cached || Date.now() - cached.at > CACHE_MS) {
       try {
         const rows = await db()`SELECT max(version) AS v FROM schema_migrations`;
+        // Phase 6: the hourly uptime check also applies any loosening whose delay has run out, so it
+        // takes effect (and is announced) even when no agent or member is active.
+        await applyDue(null);
         // Proof that each co-signer really signs: the time of the last operation PALISEC co-signed that
         // then succeeded on chain. Only the UTC day is public: an exact time could be matched to a block and
         // reveal which account uses PALISEC.

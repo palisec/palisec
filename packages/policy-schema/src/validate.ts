@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION, type Policy } from "./types";
+import { SCHEMA_VERSIONS, type Policy } from "./types";
 
 export interface ValidationError {
   path: string;
@@ -16,7 +16,7 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
- * Validates a policy document against schema 1.0. Unknown fields are rejected so a
+ * Validates a policy document against schema 1.0 or 1.1. Unknown fields are rejected so a
  * typo can never silently disable a rule. Returns an empty array when valid.
  */
 export function validatePolicy(doc: unknown): ValidationError[] {
@@ -54,10 +54,10 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   const $ = "$";
   fields(doc, $, [
     "schema_version", "policy_id", "version", "account", "status",
-    "limits", "cooldowns", "contracts", "human_approval", "failure_mode",
+    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety",
   ]);
 
-  if (doc.schema_version !== SCHEMA_VERSION) err("$.schema_version", `must be "${SCHEMA_VERSION}"`);
+  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0" or "1.1"');
   if (typeof doc.policy_id !== "string" || !POLICY_ID.test(doc.policy_id))
     err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
   int(doc, "version", $, 1, 2 ** 31 - 1);
@@ -125,6 +125,26 @@ export function validatePolicy(doc: unknown): ValidationError[] {
     fields(human, "$.human_approval", ["usd_threshold_micros", "require_for_unknown_methods"]);
     uint(human, "usd_threshold_micros", "$.human_approval");
     bool(human, "require_for_unknown_methods", "$.human_approval");
+  }
+
+  if (doc.asset_safety !== undefined) {
+    if (doc.schema_version !== "1.1") err("$.asset_safety", 'requires schema_version "1.1"');
+    const safety = obj(doc, "asset_safety", $);
+    if (safety) {
+      const p = "$.asset_safety";
+      fields(safety, p, [
+        "enabled", "max_transfer_tax_bps", "max_slippage_bps", "require_sell_simulation",
+        "block_unlimited_approvals", "on_simulation_unavailable", "max_simulation_age_seconds",
+      ]);
+      bool(safety, "enabled", p);
+      int(safety, "max_transfer_tax_bps", p, 0, 10000);
+      int(safety, "max_slippage_bps", p, 0, 10000);
+      bool(safety, "require_sell_simulation", p);
+      bool(safety, "block_unlimited_approvals", p);
+      if (safety.on_simulation_unavailable !== "deny" && safety.on_simulation_unavailable !== "review")
+        err(`${p}.on_simulation_unavailable`, 'must be "deny" or "review"');
+      int(safety, "max_simulation_age_seconds", p, 1, 300);
+    }
   }
 
   return errors;

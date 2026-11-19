@@ -10,7 +10,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { evaluate, validatePolicy, type Environment, type Intent, type LedgerState, type Policy } from "@palisec/policy-schema";
+import { EXAMPLE_POLICY, evaluate, validatePolicy, type Environment, type Intent, type LedgerState, type Policy } from "@palisec/policy-schema";
 import { describe, expect, it } from "vitest";
 import { engineStatus, evaluateDual, evaluateRust, sameJson, SOURCE_HASH, validateRust } from "../src/index";
 import { evalCase, validateCase, type EvalCase } from "./cases";
@@ -46,7 +46,7 @@ function fixtureLines(): string[] {
   const lines: string[] = [];
   const quota: Record<string, number> = { ALLOW: 30, REQUIRES_HUMAN_SIGNATURE: 25, throws: 8 };
   const taken: Record<string, number> = {};
-  for (let seed = 1; seed <= 20_000 && lines.length < 160; seed++) {
+  for (let seed = 1; seed <= 20_000 && lines.length < 220; seed++) {
     const c = evalCase(seed);
     if (typeof c.intent.data === "string" && c.intent.data.length > 300) continue;
     const expected = reference(c) as { decision: string; reason_code: string | null } | null;
@@ -110,7 +110,7 @@ describe("policy engine", () => {
     // The generator must reach every outcome, or the comparison proves little.
     expect(decisions.ALLOW).toBeGreaterThan(FUZZ / 100);
     expect(decisions.REQUIRES_HUMAN_SIGNATURE).toBeGreaterThan(FUZZ / 100);
-    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001"])
+    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001"])
       expect(codes.has(code), code).toBe(true);
   }, 600_000);
 
@@ -121,6 +121,36 @@ describe("policy engine", () => {
     c.intent.data = "0xa9059cbb" + "00".repeat(65_532);
     expect(sameJson(rust(c), reference(c))).toBeNull();
   }, 60_000);
+});
+
+describe("loosening delay (Phase 6): the version that decides is an input", () => {
+  // The server passes the active version while a looser one is pending, and the new one after
+  // effective_at. Both engines must reach the same decision for each, and the two must differ.
+  const strict = JSON.parse(JSON.stringify(EXAMPLE_POLICY)) as Policy;
+  const target = "0x2222222222222222222222222222222222222222" as const;
+  Object.assign(strict, { status: "active", version: 4, account: { chain_id: 46630, address: "0x1111111111111111111111111111111111111111" } });
+  strict.contracts = { default: "deny", allowlist: [{ address: target, selectors: [], require_verified_code: false }], denylist: [] };
+  strict.limits = { ...strict.limits, max_transaction_value_wei: "1000", max_gas_cost_wei: "999999999999", hourly_budget_usd_micros: "999999999999", max_pending_operations: 5, max_price_age_seconds: 600 };
+  strict.cooldowns = { identical_calldata_seconds: 0, identical_intent_seconds: 0 };
+  strict.human_approval = { usd_threshold_micros: "999999999999", require_for_unknown_methods: false };
+  const loose = { ...JSON.parse(JSON.stringify(strict)), version: 5, limits: { ...strict.limits, max_transaction_value_wei: "1000000" } } as Policy;
+  const intent = { request_id: "pending-1", agent_id: "agent-a", chain_id: 46630, from: "0x1111111111111111111111111111111111111111", to: target, value_wei: "5000", data: "0x", deadline: 1_800_000_300 } as Intent;
+  const state = { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} } as LedgerState;
+  const env = { now: 1_800_000_000, fee_estimate_wei: "100", eth_usd: { price_micros: "3000000000", observed_at: 1_800_000_000 }, verified_code: {}, emergency_stop: false, paused_agents: [] } as Environment;
+
+  it("before effective_at the active (stricter) version denies, on both engines", () => {
+    const ref = evaluate(strict, intent, state, env);
+    expect(ref.decision).toBe("DENY");
+    expect(ref.policy_version).toBe(4);
+    expect(sameJson(evaluateRust(strict, intent, state, env), ref)).toBeNull();
+  });
+
+  it("after effective_at the new version allows, on both engines", () => {
+    const ref = evaluate(loose, intent, state, env);
+    expect(ref.decision, ref.message).toBe("ALLOW");
+    expect(ref.policy_version).toBe(5);
+    expect(sameJson(evaluateRust(loose, intent, state, env), ref)).toBeNull();
+  });
 });
 
 describe("dual evaluation", () => {

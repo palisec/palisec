@@ -382,6 +382,14 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
         Ok(Pass("No repeat within the cooldown windows.".into()))
     })?;
 
+    r.run("asset", "Asset safety (simulated balance changes, sell leg, tax, approvals)", || {
+        Ok(match crate::asset::check(policy, intent, env, now, selector.as_deref())? {
+            crate::asset::Asset::Pass(d) => Pass(d),
+            crate::asset::Asset::Fail(c, d) => Fail(c, d),
+            crate::asset::Asset::Review(c, d) => Review(c, d),
+        })
+    })?;
+
     r.run("human", "Human approval threshold", || {
         let t = big(&pstr(&["human_approval", "usd_threshold_micros"])?);
         if usd >= t {

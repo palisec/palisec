@@ -8,6 +8,7 @@ import type {
   Policy,
   Reservation,
 } from "./types";
+import { NATIVE_TOKEN } from "./types";
 import { validatePolicy } from "./validate";
 
 /**
@@ -221,6 +222,8 @@ export function evaluate(
     return { status: "pass", detail: "No repeat within the cooldown windows." };
   });
 
+  run("asset", "Asset safety (simulated balance changes, sell leg, tax, approvals)", () => assetCheck(policy!, intent, env, selector));
+
   run("human", "Human approval threshold", () => {
     const t = BigInt(policy!.human_approval.usd_threshold_micros);
     if (usd >= t) return { status: "review", code: "PS_HUMAN_001", detail: `${formatUsd(usd)} meets the ${formatUsd(t)} approval threshold.` };
@@ -288,6 +291,141 @@ export function evaluate(
       intent_seen: { ...state.intent_seen, [intentKey]: env.now },
     },
   };
+}
+
+// ---------------------------------------------------------------- asset safety (schema 1.1)
+
+const UNLIMITED = 2n ** 128n;
+
+/** Basis points as a percentage with two decimals: 2000 -> "20.00%". */
+export function formatBps(bps: number): string {
+  return `${Math.floor(bps / 100)}.${String(bps % 100).padStart(2, "0")}%`;
+}
+
+const bad = (why: string): never => {
+  throw new Error(`asset simulation input: ${why}`);
+};
+const str = (v: unknown, what: string): string => (typeof v === "string" ? v : bad(`${what} must be a string`));
+const amountOf = (v: unknown, what: string): bigint => {
+  const s = str(v, what);
+  return UINT.test(s) ? BigInt(s) : bad(`${what} must be a decimal integer`);
+};
+const intOf = (v: unknown, what: string): number =>
+  typeof v === "number" && Number.isInteger(v) ? v : bad(`${what} must be an integer`);
+const listOf = (v: unknown, what: string): unknown[] => (Array.isArray(v) ? v : bad(`${what} must be an array`));
+const recordOf = (v: unknown, what: string): Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : bad(`${what} must be an object`);
+const boolOf = (v: unknown, what: string): boolean => (typeof v === "boolean" ? v : bad(`${what} must be a boolean`));
+
+/** token (lowercase) -> amount, summed, in first-seen order. */
+function amounts(v: unknown, what: string): Map<string, bigint> {
+  const m = new Map<string, bigint>();
+  for (const x of listOf(v, what)) {
+    const o = recordOf(x, what);
+    const t = str(o.token, `${what}.token`).toLowerCase();
+    m.set(t, (m.get(t) ?? 0n) + amountOf(o.amount, `${what}.amount`));
+  }
+  return m;
+}
+
+type Outcome = { status: "pass" | "fail" | "review"; detail: string; code?: ReasonCode };
+
+/**
+ * Asset safety. The simulation is an input (made before evaluation against current chain state);
+ * this function only applies the policy's rules to it, so the result is deterministic.
+ * Order: availability and freshness, revert, approvals, sell leg (honeypot), tax, declared intent.
+ */
+function assetCheck(policy: Policy, intent: Intent, env: Environment, selector: string | null): Outcome {
+  const rules = policy.asset_safety;
+  if (!rules || !rules.enabled) return { status: "pass", detail: "Asset safety is off for this policy." };
+  if (!selector) return { status: "pass", detail: "Native transfer: no contract call to simulate." };
+
+  const unavailable = (why: string): Outcome =>
+    rules.on_simulation_unavailable === "review"
+      ? { status: "review", code: "PS_SIM_001", detail: `${why} The policy holds this for a human instead of allowing it.` }
+      : { status: "fail", code: "PS_SIM_001", detail: `${why} Without a simulation the request fails closed.` };
+
+  const raw = env.asset_simulation;
+  if (raw === undefined || raw === null) return unavailable("Simulation unavailable.");
+  const sim = recordOf(raw, "asset_simulation");
+  const block = intOf(sim.block_number, "block_number");
+  const age = env.now - intOf(sim.observed_at, "observed_at");
+  if (age > rules.max_simulation_age_seconds)
+    return unavailable(`Simulation is ${age}s old; maximum is ${rules.max_simulation_age_seconds}s.`);
+  if (boolOf(sim.reverted, "reverted"))
+    return { status: "fail", code: "PS_SIM_001", detail: `The transaction reverts in simulation at block ${block}.` };
+
+  const declared = intent.asset_intent === undefined ? null : recordOf(intent.asset_intent, "asset_intent");
+  const spend = amounts(declared ? declared.spend : [], "asset_intent.spend");
+  const receive = amounts(declared ? declared.receive : [], "asset_intent.receive");
+  const outflows = amounts(sim.outflows, "outflows");
+  const inflows = amounts(sim.inflows, "inflows");
+  const approvals = listOf(sim.approvals, "approvals").map((x) => {
+    const o = recordOf(x, "approvals");
+    return {
+      token: str(o.token, "approvals.token").toLowerCase(),
+      spender: str(o.spender, "approvals.spender").toLowerCase(),
+      amount: amountOf(o.amount, "approvals.amount"),
+    };
+  });
+  const sellReverted = sim.sell === null ? null : boolOf(recordOf(sim.sell, "sell").reverted, "sell.reverted");
+  const tax = sim.tax_bps === null ? null : intOf(sim.tax_bps, "tax_bps");
+  const loss = sim.round_trip_loss_bps === null ? null : intOf(sim.round_trip_loss_bps, "round_trip_loss_bps");
+
+  if (rules.block_unlimited_approvals) {
+    const deny = policy.contracts.denylist.map((a) => a.toLowerCase());
+    const trusted = (a: string) => !deny.includes(a) && policy.contracts.allowlist.some((e) => e.address.toLowerCase() === a);
+    for (const ap of approvals) {
+      if (ap.amount === 0n || trusted(ap.spender)) continue;
+      const allowed = spend.get(ap.token);
+      // An exact declared amount is fine; an unlimited one never is, declared or not.
+      if (allowed !== undefined && ap.amount === allowed && ap.amount < UNLIMITED) continue;
+      const what = ap.amount >= UNLIMITED ? "an unlimited amount" : ap.amount.toString();
+      const of = allowed === undefined ? "" : ` of ${allowed}`;
+      return {
+        status: "fail",
+        code: "PS_APPROVAL_001",
+        detail: `Approves ${what} of ${ap.token} to ${ap.spender}, which is not an allowlisted contract, and the amount is not the declared spend${of}.`,
+      };
+    }
+  }
+
+  const received = [...inflows.keys()].filter((t) => t !== NATIVE_TOKEN);
+  if (received.length > 0 && rules.require_sell_simulation) {
+    if (sellReverted === null) return unavailable(`No sell leg could be simulated for ${received[0]}.`);
+    if (sellReverted)
+      return { status: "fail", code: "PS_ASSET_001", detail: `Selling ${received[0]} back reverts in simulation at block ${block}: likely a honeypot.` };
+  }
+  if (tax !== null && tax > rules.max_transfer_tax_bps)
+    return { status: "fail", code: "PS_ASSET_002", detail: `Transfer tax ${formatBps(tax)} exceeds the policy maximum of ${formatBps(rules.max_transfer_tax_bps)}.` };
+
+  for (const [token, out] of outflows) {
+    const allowed = spend.get(token);
+    if (allowed === undefined)
+      return { status: "fail", code: "PS_ASSET_003", detail: `${out} of ${token} leaves the account, but the request declares no spend of it.` };
+    if (out > allowed)
+      return { status: "fail", code: "PS_ASSET_003", detail: `${out} of ${token} leaves the account, more than the declared ${allowed}.` };
+  }
+  for (const [token, quoted] of receive) {
+    const got = inflows.get(token) ?? 0n;
+    const min = (quoted * BigInt(10000 - rules.max_slippage_bps)) / 10000n;
+    if (got < min)
+      return {
+        status: "fail",
+        code: "PS_ASSET_003",
+        detail: `Receives ${got} of ${token}, below the quoted ${quoted} less ${formatBps(rules.max_slippage_bps)} slippage.`,
+      };
+  }
+
+  const parts = [
+    `Simulated at block ${block} (${age}s old)`,
+    `tax ${tax === null ? "n/a" : formatBps(tax)}`,
+    `round-trip loss ${loss === null ? "n/a" : formatBps(loss)}`,
+    `approvals ${approvals.length}`,
+    `${outflows.size} token(s) out, ${inflows.size} in`,
+  ];
+  if (received.length > 0) parts.push(sellReverted === false ? "sell leg ok" : "sell leg not required");
+  return { status: "pass", detail: parts.join("; ") + "." };
 }
 
 export function formatUsd(micros: bigint): string {
