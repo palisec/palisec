@@ -333,7 +333,7 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   if (!current.draft) throw conflict("There is no draft to activate");
   if (body.draft_hash !== current.draft_hash) throw conflict("The draft changed since you reviewed it. Reload and review it again.");
   if (current.draft_errors.length) throw new HttpError(422, "PS_POLICY_001", `Draft is invalid: ${current.draft_errors[0]!.path} ${current.draft_errors[0]!.message}`);
-  const [{ next, bound }] = await db()`
+  const [{ next }] = await db()`
     SELECT coalesce((SELECT max(version) FROM policy_versions WHERE policy_id = ${id}::uuid), 0) + 1 AS next,
       -- Agents bound to it, or waiting to be moved onto it: both depend on what it allows.
       ((SELECT count(*) FROM agents WHERE policy_id = ${id}::uuid AND status <> 'revoked') +
@@ -343,14 +343,13 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   const hash = await sha256Hex(canonicalJson(document));
   const before = (current.active_document as Policy | null) ?? null;
   const cls = classifyPolicyChange(before, document, { disabled: current.status === "disabled" });
-  const delay = cls.loosening && bound > 0;
   const summary = summarizeChanges(cls.changes);
   let r: Record<string, unknown>;
   try {
     [{ r }] = await db()`
       SELECT ps_activate_policy(${id}::uuid, ${ctx.orgId}::uuid, ${ctx.user.userId}::uuid, ${current.active_version}::int,
         ${JSON.stringify(current.draft)}::text::jsonb, ${Number(next)}::int, ${JSON.stringify(document)}::text::jsonb, ${hash},
-        ${delay}, ${JSON.stringify(cls.changes)}::text::jsonb, ${summary}) AS r`;
+        ${cls.loosening}, ${JSON.stringify(cls.changes)}::text::jsonb, ${summary}) AS r`;
   } catch (e) {
     // Two activations racing for the same version number: one wins, the other is told to reload.
     if ((e as { code?: string }).code === "23505") throw conflict("The policy changed while activating. Reload and try again.");
