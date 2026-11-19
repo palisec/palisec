@@ -50,6 +50,22 @@ const flowName = (args[args.indexOf("--flow") + 1] ?? "").toUpperCase();
 const flow = args.includes("--flow") ? FLOWS[flowName] : undefined;
 if (!flow) throw new Error("Choose a flow: --flow A|B|C|D|E|S (F = A with the emergency stop on, then off; S = tiny swap).");
 const send = args.includes("--send");
+// Phase 6.5: every recorded demo run ends with a checkpoint on Upoch, so the demo agent's last checkpoint
+// never goes stale. Uses the checkpoint key file (UPOCH_KEY_FILE, or ~/palisec-pg/upoch-executor.json when
+// present); without one it says so and skips. Runs after the flow, whatever its outcome.
+if (send) {
+  const { existsSync } = await import("node:fs");
+  const { spawnSync } = await import("node:child_process");
+  const { homedir } = await import("node:os");
+  const { fileURLToPath } = await import("node:url");
+  const keyFile = process.env.UPOCH_KEY_FILE || `${homedir()}/palisec-pg/upoch-executor.json`;
+  const script = fileURLToPath(new URL("./upoch-checkpoint.mjs", import.meta.url));
+  process.on("exit", () => {
+    if (!existsSync(keyFile) || !existsSync(script)) return console.log("\nUpoch checkpoint skipped: no checkpoint key file on this computer.");
+    console.log("\nUpoch checkpoint for this run:");
+    spawnSync(process.execPath, [script, "--send"], { stdio: "inherit", env: { ...process.env, UPOCH_KEY_FILE: keyFile } });
+  });
+}
 
 // One reader for every question. While a hidden answer is typed, nothing is echoed to the screen.
 const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: Boolean(process.stdin.isTTY) });

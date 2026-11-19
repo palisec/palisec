@@ -30,6 +30,16 @@ const ABI = parseAbi([
 ]);
 
 const send = process.argv.includes("--send");
+// --new-workflow: register a fresh workflow even if one is stored (Upoch workflow names are set at
+// registration and cannot be changed afterwards).
+const fresh = process.argv.includes("--new-workflow");
+// The name and description Upoch's Agent Hub shows (inline data: URI; Upoch does not fetch URLs).
+const METADATA = {
+  name: "Palisec demo agent",
+  agentType: "Palisec smart account (Safe, co-signed by Palisec)",
+  description: `Palisec's mainnet demo agent. Its account ${"0x375BdF5DA6b7440889e50f13C894A3C4AC988329"} is enforced by Palisec (see palisec.tech/docs/detect); each demo run commits a checkpoint here.`,
+};
+const METADATA_URI = `data:application/json;base64,${Buffer.from(JSON.stringify(METADATA)).toString("base64")}`;
 const file = process.env.UPOCH_KEY_FILE;
 if (!file) throw new Error("Set UPOCH_KEY_FILE to the checkpoint key file.");
 const store = JSON.parse(readFileSync(file, "utf8"));
@@ -50,15 +60,17 @@ console.log(`Checkpoint key ${key.address}  balance ${formatEther(balance)} ETH 
 
 // Recovery policy like other Upoch workflows: one guardian approval plus the owner, a 1-day timelock.
 const POLICY = [1, true, 0, 86400, 86400, 86400];
-let workflowId = store.workflow_id ? BigInt(store.workflow_id) : null;
+let workflowId = store.workflow_id && !fresh ? BigInt(store.workflow_id) : null;
 if (workflowId === null) {
-  const args = [[executor.address], [GUARDIAN], POLICY, "https://palisec.tech/docs/detect#example"];
+  const args = [[executor.address], [GUARDIAN], POLICY, METADATA_URI];
   const sim = await pub.simulateContract({ account: key, address: LEDGER, abi: ABI, functionName: "registerWorkflow", args });
   console.log(`Register workflow: simulated OK, would be workflow ${sim.result}`);
   if (!send) process.exit(0);
-  const fund = await wallet.sendTransaction({ to: executor.address, value: 100_000_000_000_000n });
-  await pub.waitForTransactionReceipt({ hash: fund });
-  console.log(`Gas for the executor ${executor.address}: ${EXPLORER}/tx/${fund}`);
+  if ((await pub.getBalance({ address: executor.address })) < 20_000_000_000_000n) {
+    const fund = await wallet.sendTransaction({ to: executor.address, value: 100_000_000_000_000n });
+    await pub.waitForTransactionReceipt({ hash: fund });
+    console.log(`Gas for the executor ${executor.address}: ${EXPLORER}/tx/${fund}`);
+  }
   const hash = await wallet.writeContract(sim.request);
   const r = await pub.waitForTransactionReceipt({ hash });
   if (r.status !== "success") throw new Error("registerWorkflow failed");
