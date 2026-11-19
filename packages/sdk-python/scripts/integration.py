@@ -88,7 +88,7 @@ async def main():
         me = await palisec.who_am_i()
         check("who_am_i: the key identifies its agent and scopes", me["account"].lower() == AGENT.lower() and "mcp" in me["scopes"], me)
         pol = await palisec.get_policy()
-        check("get_policy: the exact active version", pol["version"] == 1 and pol["document"]["schema_version"] == "1.0", pol.get("version"))
+        check("get_policy: the exact active version", pol["version"] == 1 and pol["document"]["schema_version"] == "1.1", pol.get("version"))
         trail = await palisec.list_audit_events(limit=10)
         check("list_audit_events: the agent's own events", any(e["type"].startswith("operation.") for e in trail["events"]), len(trail["events"]))
         prop = await palisec.transactions.propose(to=TOKEN, data=transfer(9), gas_limit=90_000)
