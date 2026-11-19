@@ -1,5 +1,5 @@
 import "server-only";
-import { LIMITS } from "@/lib/billing-config";
+import { BILLING, LIMITS } from "@/lib/billing-config";
 import { db } from "./db";
 import { HttpError, rateLimited, sameOrigin } from "./http";
 import { currentUser, type Role, type SessionUser } from "./session";
@@ -103,7 +103,7 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
       WHERE id IN (SELECT id FROM c) AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')
     )
     SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop,
-      coalesce(b.pro AND b.pro_checked_at > now() - interval '1 day', false) AS pro
+      coalesce(b.pro AND b.pro_checked_at > now() - make_interval(secs => ${2 * BILLING.proCheckSeconds}::int), false) AS pro
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id LEFT JOIN billing_accounts b ON b.org_id = a.org_id`;
   const r = rows[0];
   if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");

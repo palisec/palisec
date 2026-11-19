@@ -154,7 +154,13 @@ export async function refreshPro(orgId: string, force = false): Promise<void> {
     RETURNING extract(epoch FROM pro_checked_at)::bigint AS checked`;
   if (!force && row.checked && Date.now() / 1000 - Number(row.checked) < intEnv("BILLING_PRO_CHECK_SECONDS", BILLING.proCheckSeconds)) return;
   const owners = await db()`
-    SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ${orgId}::uuid AND m.role = 'owner'`;
+    SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id
+    WHERE m.org_id = ${orgId}::uuid AND m.role = 'owner'
+      -- Only wallets that proved control by signing in count (an owner can add any address as a member).
+      AND u.last_login IS NOT NULL
+      -- One holding unlocks one organization: the earliest one the wallet owns.
+      AND m.org_id = (SELECT m2.org_id FROM memberships m2 JOIN organizations o ON o.id = m2.org_id
+                      WHERE m2.user_id = u.id AND m2.role = 'owner' ORDER BY o.created_at, o.id LIMIT 1)`;
   const s = billingSettings();
   try {
     const c = mainnetClient();
@@ -162,13 +168,16 @@ export async function refreshPro(orgId: string, force = false): Promise<void> {
     const best = balances.reduce((m, b) => (b > m ? b : m), 0n);
     await db()`UPDATE billing_accounts SET pro = ${best >= s.proHolding}, pro_balance = ${best.toString()}::numeric, pro_checked_at = now() WHERE org_id = ${orgId}::uuid`;
   } catch (e) {
+    // Leave pro_checked_at as it was: the cached answer expires on its own (see planLimits).
     logEvent("warn", "billing.pro_check_failed", { error: e instanceof Error ? e.message.slice(0, 120) : "error" });
   }
 }
 
 /** The organization's limits: Pro only with a check from the last day. */
 export async function planLimits(orgId: string): Promise<{ pro: boolean; limits: PlanLimits }> {
-  const [r] = await db()`SELECT pro AND pro_checked_at > now() - interval '1 day' AS pro FROM billing_accounts WHERE org_id = ${orgId}::uuid`;
+  // Pro only on a recent check (two check intervals); a failed read never extends it.
+  const fresh = 2 * intEnv("BILLING_PRO_CHECK_SECONDS", BILLING.proCheckSeconds);
+  const [r] = await db()`SELECT pro AND pro_checked_at > now() - make_interval(secs => ${fresh}::int) AS pro FROM billing_accounts WHERE org_id = ${orgId}::uuid`;
   const pro = Boolean(r?.pro);
   return { pro, limits: pro ? LIMITS.pro : LIMITS.normal };
 }
