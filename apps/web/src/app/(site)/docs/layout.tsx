@@ -27,6 +27,7 @@ const DOCS_NAV = [
       { href: "/docs/sdk/python", label: "Python" },
       { href: "/docs/mcp", label: "MCP server" },
       { href: "/docs/webhooks", label: "Webhooks" },
+      { href: "/docs/token", label: "Token" },
       { href: "/docs/integrations", label: "Integrations and keys" },
     ],
   },

@@ -16,6 +16,7 @@ import {
 } from "@palisec/policy-schema";
 import { getAddress, isAddress } from "viem";
 import type { AgentContext } from "./access";
+import { meterDecision, unmeterDecision, type Meter } from "./billing";
 import { ethUsd, gasPriceWei, hasDeployedCode } from "./chain-env";
 import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
@@ -252,8 +253,27 @@ export async function createOperation(
   agent: AgentContext,
   input: IntentInput,
   idempotencyKey: string | null,
-): Promise<{ status: number; body: DecisionResponse; replayed: boolean }> {
+): Promise<{ status: number; body: DecisionResponse; replayed: boolean; meter: Meter | null }> {
   const p = await prepare(agent, input);
+  // Phase 5: one mainnet decision is metered before it is recorded (402 PS_CREDIT_001 when nothing is
+  // left); the unit is given back below if no decision is recorded. The evaluation itself is unchanged.
+  const meter = await meterDecision(agent, input.request_id);
+  try {
+    const res = await recordOperation(agent, input, idempotencyKey, p);
+    if (res.replayed) await unmeterDecision(agent, meter, input.request_id);
+    return { ...res, meter: res.replayed ? null : meter };
+  } catch (e) {
+    await unmeterDecision(agent, meter, input.request_id).catch(() => {});
+    throw e;
+  }
+}
+
+async function recordOperation(
+  agent: AgentContext,
+  input: IntentInput,
+  idempotencyKey: string | null,
+  p: Prepared,
+): Promise<{ status: number; body: DecisionResponse; replayed: boolean }> {
   const r = p.result;
   const limits = p.policy?.limits;
   const cooldowns = p.policy?.cooldowns;

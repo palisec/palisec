@@ -1,4 +1,5 @@
 import "server-only";
+import { LIMITS } from "@/lib/billing-config";
 import { db } from "./db";
 import { HttpError, rateLimited, sameOrigin } from "./http";
 import { currentUser, type Role, type SessionUser } from "./session";
@@ -91,7 +92,8 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
   const header = req.headers.get("authorization") ?? "";
   const key = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
   if (!API_KEY_PATTERN.test(key)) throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
-  if (rateLimited(req, `key:${key.slice(0, 20)}`, 120)) throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
+  // The highest plan's limit first (before any database read), then the organization's own plan below.
+  if (rateLimited(req, `key:${key.slice(0, 20)}`, LIMITS.pro.apiRequestsPerMinute)) throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
   const rows = await db()`
     WITH c AS (
       SELECT c.id, c.agent_id, c.scopes FROM api_credentials c
@@ -100,10 +102,13 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
       UPDATE api_credentials SET last_used_at = now()
       WHERE id IN (SELECT id FROM c) AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')
     )
-    SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop
-    FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id`;
+    SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop,
+      coalesce(b.pro AND b.pro_checked_at > now() - interval '1 day', false) AS pro
+    FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id LEFT JOIN billing_accounts b ON b.org_id = a.org_id`;
   const r = rows[0];
   if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
+  if (!r.pro && rateLimited(req, `keyplan:${key.slice(0, 20)}`, LIMITS.normal.apiRequestsPerMinute))
+    throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
   const scopes = (r.scopes ?? []) as Scope[];
   if (scope !== null && !scopes.includes(scope)) throw new HttpError(403, "PS_AUTH_001", `This API key does not have the ${scope} scope`);
   return {

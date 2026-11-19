@@ -1,6 +1,7 @@
 import "server-only";
 import { SCHEMA_VERSION, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
+import { planLimitError, planLimits } from "./billing";
 import { chainEnabled, enabledChainIds } from "./config";
 import { MAINNET } from "@/lib/networks";
 import { db, type Row } from "./db";
@@ -210,6 +211,10 @@ export async function createPolicy(ctx: MemberContext, body: Record<string, unkn
     doc = starterPolicy(key, chainId(body.chain_id), parseAddress(body.account));
   }
   if (!/^[a-z0-9_]{3,64}$/.test(key)) throw new BadRequest("policy_key (the document's policy_id) must be 3-64 chars of a-z, 0-9, _");
+  // Plan limit (Phase 5): counted on creation only; existing policies are never removed.
+  const plan = await planLimits(ctx.orgId);
+  const [{ n: policyCount }] = await db()`SELECT count(*)::int AS n FROM policies WHERE org_id = ${ctx.orgId}::uuid AND disabled_at IS NULL`;
+  if (policyCount >= plan.limits.policies) throw planLimitError("active policies", plan.limits.policies);
   const a = audit("policy.created", { policy_key: key, name });
   const rows = await db()`
     WITH p AS (
@@ -348,6 +353,9 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
   const policyId = optionalPolicyId(body.policy_id);
   const framework = optionalText(body.framework, "framework", 40);
   const description = optionalText(body.description, "description", 280);
+  const plan = await planLimits(ctx.orgId);
+  const [{ n: agentCount }] = await db()`SELECT count(*)::int AS n FROM agents WHERE org_id = ${ctx.orgId}::uuid AND status <> 'revoked'`;
+  if (agentCount >= plan.limits.agents) throw planLimitError("agents", plan.limits.agents);
   await checkPolicyBinding(ctx, policyId, chain, account);
   const a = audit("agent.created", { name, chain_id: chain, account, policy_id: policyId, framework });
   const [row] = await db()`
@@ -498,6 +506,8 @@ export async function listAudit(ctx: MemberContext, params: URLSearchParams) {
   for (const t of [from, to]) if (t !== null && Number.isNaN(Date.parse(t))) throw new BadRequest("from and to must be ISO timestamps");
   // Security events: denials, holds, pauses, revocations, stops and approval decisions.
   const security = params.get("kind") === "security";
+  // Audit history shown per plan (Phase 5): 90 days, or a year with Pro. Nothing is deleted.
+  const { limits } = await planLimits(ctx.orgId);
   const rows = await db()`
     SELECT e.seq, e.event_id, e.type, e.detail, e.created_at, e.schema_version, u.address AS actor_address,
       e.actor_agent_id, a.name AS actor_agent_name
@@ -508,6 +518,7 @@ export async function listAudit(ctx: MemberContext, params: URLSearchParams) {
       AND (${agentId}::uuid IS NULL OR e.actor_agent_id = ${agentId}::uuid)
       AND (${from}::timestamptz IS NULL OR e.created_at >= ${from}::timestamptz)
       AND (${to}::timestamptz IS NULL OR e.created_at < ${to}::timestamptz)
+      AND e.created_at > now() - make_interval(days => ${limits.auditDays}::int)
       AND (NOT ${security}::boolean OR e.type IN ('operation.denied', 'operation.pending_approval', 'operation.approved', 'operation.rejected',
         'agent.paused', 'agent.revoked', 'credential.revoked', 'policy.disabled', 'policy.activated', 'org.emergency_stop.activated', 'org.emergency_stop.lifted'))
     ORDER BY e.seq DESC LIMIT ${limit}::int`;
