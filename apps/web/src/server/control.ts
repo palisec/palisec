@@ -1,7 +1,7 @@
 import "server-only";
 import { SCHEMA_VERSION, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
-import { planLimitError, planLimits } from "./billing";
+import { planLimitError, planLimits, refreshPro } from "./billing";
 import { chainEnabled, enabledChainIds } from "./config";
 import { MAINNET } from "@/lib/networks";
 import { db, type Row } from "./db";
@@ -212,6 +212,7 @@ export async function createPolicy(ctx: MemberContext, body: Record<string, unkn
   }
   if (!/^[a-z0-9_]{3,64}$/.test(key)) throw new BadRequest("policy_key (the document's policy_id) must be 3-64 chars of a-z, 0-9, _");
   // Plan limit (Phase 5): counted on creation only; existing policies are never removed.
+  await refreshPro(ctx.orgId).catch(() => {});
   const plan = await planLimits(ctx.orgId);
   const [{ n: policyCount }] = await db()`SELECT count(*)::int AS n FROM policies WHERE org_id = ${ctx.orgId}::uuid AND disabled_at IS NULL`;
   if (policyCount >= plan.limits.policies) throw planLimitError("active policies", plan.limits.policies);
@@ -353,6 +354,7 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
   const policyId = optionalPolicyId(body.policy_id);
   const framework = optionalText(body.framework, "framework", 40);
   const description = optionalText(body.description, "description", 280);
+  await refreshPro(ctx.orgId).catch(() => {});
   const plan = await planLimits(ctx.orgId);
   const [{ n: agentCount }] = await db()`SELECT count(*)::int AS n FROM agents WHERE org_id = ${ctx.orgId}::uuid AND status <> 'revoked'`;
   if (agentCount >= plan.limits.agents) throw planLimitError("agents", plan.limits.agents);
