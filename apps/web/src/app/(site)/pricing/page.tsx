@@ -12,9 +12,9 @@ const PLANS = [
   {
     name: "Developer",
     price: "Free",
-    body: "The hosted authorization API and live console on Robinhood Chain mainnet and testnet, plus a policy workbench that evaluates examples in your browser.",
-    items: ["Authorization API and console, mainnet and testnet", "Smart accounts enforced on chain", "Agents, policies, approvals and audit"],
-    note: "Decisions are enforced for every agent that calls the API; smart accounts are enforced on chain.",
+    body: "The hosted authorization API and live console on Robinhood Chain mainnet and testnet. 1,000 mainnet decisions per organization per month are included; after that, prepaid credits at $5 per 1,000 decisions, paid in USDG or ETH. Testnet and dry runs are always free.",
+    items: ["1,000 mainnet decisions a month included", "Credits: $5 per 1,000 decisions (USDG or ETH)", "Pro limits when an owner wallet holds 5,000,000 $PALISEC", "Smart accounts enforced on chain"],
+    note: "With no allowance or credits left, mainnet requests are refused (402 PS_CREDIT_001), never allowed unchecked. See Docs → Token.",
     available: true,
   },
   {

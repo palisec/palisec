@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { countAgentRequest } from "../billing";
 import { ROLES, type MemberContext, type Permission } from "../access";
 import { createPolicy, saveDraft, setAgentStatus, setEmergencyStop } from "../control";
 import { db, type Row } from "../db";
@@ -226,6 +227,7 @@ export async function startRun(ctx: MemberContext, body: Record<string, unknown>
   if (!cfg.enabled) throw new HttpError(403, "PS_AUTH_001", "The PALISEC Agent is disabled for this organization");
   if (!provider().configured) throw new HttpError(503, "PS_STATE_001", "The PALISEC Agent model is not configured on this deployment. Direct tools still work.", false);
   const text = message(body.message);
+  await countAgentRequest(ctx.orgId);
   const id = await createRunRow(ctx, text.split("\n")[0]!, [{ role: "user", content: text }], "ready");
   return advance(ctx, id);
 }
@@ -236,6 +238,7 @@ export async function addMessage(ctx: MemberContext, id: string, body: Record<st
   const r = await loadRun(ctx, id);
   if (r.user_id !== ctx.user.userId) throw new HttpError(403, "PS_AUTH_001", "Only the member who started this run can continue it");
   if (r.status === "cancelled") throw new HttpError(409, "PS_REQUEST_001", "This run was cancelled");
+  await countAgentRequest(ctx.orgId);
   const rows = await db()`
     UPDATE agent_runs SET messages = messages || ${JSON.stringify([{ role: "user", content: text }])}::text::jsonb, status = 'ready', updated_at = now()
     WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid AND status IN ('ready', 'completed', 'failed') RETURNING id`;
