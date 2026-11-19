@@ -101,9 +101,16 @@ export async function readUpoch(chainId: number, account: string, workflowId: st
 }
 
 /** The engines' input: the status fields only. */
-/** Wallet addresses of the organization's members (people, never agent keys). */
+/**
+ * Wallet addresses trusted to link an Upoch workflow: owners and admins (people, never agent keys) who
+ * have been members for at least the organization's loosening delay, or since it was created. A member
+ * added just now cannot link a workflow at once, so adding one is no way around the delay.
+ */
 export async function memberAddresses(orgId: string): Promise<string[]> {
-  const rows = await db()`SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ${orgId}::uuid`;
+  const rows = await db()`
+    SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id JOIN organizations o ON o.id = m.org_id
+    WHERE m.org_id = ${orgId}::uuid AND m.role IN ('owner', 'admin')
+      AND (m.created_at <= now() - make_interval(secs => o.loosening_delay_seconds) OR m.created_at <= o.created_at + interval '1 minute')`;
   return rows.map((r) => String(r.address));
 }
 
