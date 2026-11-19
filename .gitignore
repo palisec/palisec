@@ -26,3 +26,6 @@ apps/web/public/sdk/*.tgz
 __pycache__/
 *.pyc
 services/policy-engine/target/
+
+# Foundry library (installed by CI: forge install foundry-rs/forge-std --no-git)
+contracts/lib/
