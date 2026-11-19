@@ -20,6 +20,7 @@ interface UpochStatus {
   linked: boolean | null;
   active: boolean | null;
   upoch_score: number | null;
+  upoch_grade?: string | null;
   upoch_url: string | null;
   read_at: string;
 }
@@ -53,15 +54,15 @@ export function UpochPanel({ agentId, canEdit }: { agentId: string; canEdit: boo
           ["Last checkpoint (UTC)", known && s.last_checkpoint_at ? `${utc(s.last_checkpoint_at)} · ${age(s.last_checkpoint_age_seconds ?? 0)} ago` : known ? "None yet" : UNKNOWN],
           ["Checkpoints", known && s.checkpoint_count !== null ? String(s.checkpoint_count) : UNKNOWN],
           ["Guardians", known && s.guardians !== null ? String(s.guardians) : UNKNOWN],
-          ["Linked to this account", known && s.linked !== null ? (s.linked ? "Yes (workflow owner or guardian is an account owner)" : "No") : UNKNOWN],
-          ["Upoch Score", s?.upoch_score !== null && s?.upoch_score !== undefined ? String(s.upoch_score) : UNKNOWN],
+          ["Linked to this account", known && s.linked !== null ? (s.linked ? "Yes (its owner or a guardian is an owner of this account and an established owner or admin here)" : "No") : UNKNOWN],
+          ["Upoch Score", s?.upoch_score !== null && s?.upoch_score !== undefined ? `${s.upoch_score}${s.upoch_grade ? ` (${s.upoch_grade})` : ""}` : UNKNOWN],
           ["Workflow", s?.workflow_id && s.upoch_url ? <a key="u" href={s.upoch_url} target="_blank" rel="noreferrer" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua"><Mono>#{s.workflow_id}</Mono> on Upoch ↗</a> : "—"],
         ]}
       />
       <p className="text-[12px] text-dim">Read from Upoch&apos;s contract on Robinhood Chain{s ? ` at ${utc(s.read_at)}` : ""}. Read-only: PALISEC never signs for Upoch.</p>
       {canEdit && (
         <div className="flex flex-wrap items-end gap-2">
-          <Field id={`upoch-${agentId}`} label="Upoch workflow ID" hint="Its owner or a guardian must be an owner of this account.">
+          <Field id={`upoch-${agentId}`} label="Upoch workflow ID" hint="Its owner or a guardian must be an owner of this account and an owner or admin of this organization.">
             <input id={`upoch-${agentId}`} className={inputCls} inputMode="numeric" value={draft} onChange={(e) => setDraft(e.target.value.trim())} placeholder="e.g. 12" />
           </Field>
           <Btn

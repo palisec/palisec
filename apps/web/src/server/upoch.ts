@@ -100,6 +100,22 @@ export async function readUpoch(chainId: number, account: string, workflowId: st
   }
 }
 
+/**
+ * The Upoch Score from Upoch's public badge (its label reads "Upoch Score: 61 B"). Null when Upoch has
+ * no score for the workflow or cannot be reached: shown as Unknown, never guessed. Mainnet only.
+ */
+export async function upochScore(chainId: number, workflowId: string | null): Promise<{ score: number; grade: string | null } | null> {
+  if (!workflowId || chainId !== MAINNET) return null;
+  try {
+    const res = await fetch(`${UPOCH_SITE}/api/badge/${workflowId}`, { signal: AbortSignal.timeout(3000), cache: "no-store" });
+    if (!res.ok) return null;
+    const m = /aria-label="Upoch Score: (\d{1,3})(?:\s+([A-F][+-]?))?"/.exec(await res.text());
+    return m ? { score: Number(m[1]), grade: m[2] ?? null } : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The engines' input: the status fields only. */
 /**
  * Wallet addresses trusted to link an Upoch workflow: owners and admins (people, never agent keys) who
