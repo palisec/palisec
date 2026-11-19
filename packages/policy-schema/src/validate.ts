@@ -54,10 +54,10 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   const $ = "$";
   fields(doc, $, [
     "schema_version", "policy_id", "version", "account", "status",
-    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety",
+    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery",
   ]);
 
-  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0" or "1.1"');
+  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1" or "1.2"');
   if (typeof doc.policy_id !== "string" || !POLICY_ID.test(doc.policy_id))
     err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
   int(doc, "version", $, 1, 2 ** 31 - 1);
@@ -128,7 +128,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.asset_safety !== undefined) {
-    if (doc.schema_version !== "1.1") err("$.asset_safety", 'requires schema_version "1.1"');
+    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2") err("$.asset_safety", 'requires schema_version "1.1" or later');
     const safety = obj(doc, "asset_safety", $);
     if (safety) {
       const p = "$.asset_safety";
@@ -144,6 +144,19 @@ export function validatePolicy(doc: unknown): ValidationError[] {
       if (safety.on_simulation_unavailable !== "deny" && safety.on_simulation_unavailable !== "review")
         err(`${p}.on_simulation_unavailable`, 'must be "deny" or "review"');
       int(safety, "max_simulation_age_seconds", p, 1, 300);
+    }
+  }
+
+  if (doc.upoch_recovery !== undefined) {
+    if (doc.schema_version !== "1.2") err("$.upoch_recovery", 'requires schema_version "1.2"');
+    const up = obj(doc, "upoch_recovery", $);
+    if (up) {
+      const p = "$.upoch_recovery";
+      fields(up, p, ["require_upoch_recoverable", "max_checkpoint_age_seconds", "require_guardian", "on_unavailable"]);
+      bool(up, "require_upoch_recoverable", p);
+      int(up, "max_checkpoint_age_seconds", p, 60, 31536000);
+      bool(up, "require_guardian", p);
+      if (up.on_unavailable !== "deny" && up.on_unavailable !== "review") err(`${p}.on_unavailable`, 'must be "deny" or "review"');
     }
   }
 

@@ -24,6 +24,9 @@ REASON_CODES: dict[str, str] = {
     "PS_ASSET_002": "Transfer tax above the policy maximum",
     "PS_ASSET_003": "Simulated balance changes do not match the declared intent",
     "PS_APPROVAL_001": "Unlimited or oversized approval to a non-allowlisted spender",
+    "PS_RECOVERY_001": "Agent is not recoverable on Upoch",
+    "PS_RECOVERY_002": "Upoch checkpoint is too old",
+    "PS_RECOVERY_003": "Upoch data unavailable",
 }
 
 #: Whether a client may retry the same request after the condition clears.
@@ -49,4 +52,7 @@ RETRYABLE: dict[str, bool] = {
     "PS_ASSET_002": False,
     "PS_ASSET_003": False,
     "PS_APPROVAL_001": False,
+    "PS_RECOVERY_001": False,
+    "PS_RECOVERY_002": False,
+    "PS_RECOVERY_003": True,
 }

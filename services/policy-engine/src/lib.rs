@@ -13,6 +13,7 @@
 
 pub mod asset;
 pub mod evaluate;
+pub mod recovery;
 pub mod js;
 pub mod validate;
 

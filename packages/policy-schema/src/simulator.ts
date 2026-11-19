@@ -224,6 +224,8 @@ export function evaluate(
 
   run("asset", "Asset safety (simulated balance changes, sell leg, tax, approvals)", () => assetCheck(policy!, intent, env, selector));
 
+  run("recovery", "Recoverable on Upoch (checkpoint, guardian)", () => recoveryCheck(policy!, env));
+
   run("human", "Human approval threshold", () => {
     const t = BigInt(policy!.human_approval.usd_threshold_micros);
     if (usd >= t) return { status: "review", code: "PS_HUMAN_001", detail: `${formatUsd(usd)} meets the ${formatUsd(t)} approval threshold.` };
@@ -426,6 +428,46 @@ function assetCheck(policy: Policy, intent: Intent, env: Environment, selector: 
   ];
   if (received.length > 0) parts.push(sellReverted === false ? "sell leg ok" : "sell leg not required");
   return { status: "pass", detail: parts.join("; ") + "." };
+}
+
+// ---------------------------------------------------------------- Upoch recovery (schema 1.2)
+
+const UPOCH_READ_MAX_AGE = 60;
+
+/**
+ * The agent must be recoverable on Upoch. The workflow is read from the Upoch ledger before evaluation
+ * (an input, like the simulation); this applies the policy's rules to it. Order: availability,
+ * workflow set, linked, active, has a checkpoint, guardian, checkpoint age.
+ */
+function recoveryCheck(policy: Policy, env: Environment): Outcome {
+  const rules = policy.upoch_recovery;
+  if (!rules || !rules.require_upoch_recoverable) return { status: "pass", detail: "Upoch recovery is not required by this policy." };
+  const unavailable = (why: string): Outcome =>
+    rules.on_unavailable === "review"
+      ? { status: "review", code: "PS_RECOVERY_003", detail: `${why} The policy holds this for a human instead of allowing it.` }
+      : { status: "fail", code: "PS_RECOVERY_003", detail: `${why} Without Upoch data the request fails closed.` };
+  const raw = env.upoch;
+  if (raw === undefined || raw === null) return unavailable("Upoch data unavailable.");
+  const u = recordOf(raw, "upoch");
+  const wf = str(u.workflow_id, "workflow_id");
+  const observed = intOf(u.observed_at, "observed_at");
+  const linked = boolOf(u.linked, "linked");
+  const active = boolOf(u.active, "active");
+  const count = intOf(u.checkpoint_count, "checkpoint_count");
+  const last = u.last_checkpoint_at === null ? null : intOf(u.last_checkpoint_at, "last_checkpoint_at");
+  const guardians = intOf(u.guardians, "guardians");
+  const readAge = env.now - observed;
+  if (readAge > UPOCH_READ_MAX_AGE) return unavailable(`Upoch data is ${readAge}s old; maximum is ${UPOCH_READ_MAX_AGE}s.`);
+  if (wf === "") return { status: "fail", code: "PS_RECOVERY_001", detail: "No Upoch workflow is set for this agent." };
+  if (!linked)
+    return { status: "fail", code: "PS_RECOVERY_001", detail: `Upoch workflow ${wf} is not linked to this account: neither its owner nor a guardian is an owner of the account.` };
+  if (!active) return { status: "fail", code: "PS_RECOVERY_001", detail: `Upoch workflow ${wf} is paused.` };
+  if (count === 0 || last === null) return { status: "fail", code: "PS_RECOVERY_001", detail: `Upoch workflow ${wf} has no checkpoint.` };
+  if (rules.require_guardian && guardians === 0) return { status: "fail", code: "PS_RECOVERY_001", detail: `Upoch workflow ${wf} has no guardian.` };
+  const age = env.now - last;
+  if (age > rules.max_checkpoint_age_seconds)
+    return { status: "fail", code: "PS_RECOVERY_002", detail: `The last Upoch checkpoint is ${age}s old; maximum is ${rules.max_checkpoint_age_seconds}s.` };
+  return { status: "pass", detail: `Upoch workflow ${wf}: ${count} checkpoint(s), last ${age}s ago, ${guardians} guardian(s).` };
 }
 
 export function formatUsd(micros: bigint): string {

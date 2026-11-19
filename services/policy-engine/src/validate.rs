@@ -4,7 +4,7 @@
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSIONS: [&str; 2] = ["1.0", "1.1"];
+pub const SCHEMA_VERSIONS: [&str; 3] = ["1.0", "1.1", "1.2"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
 const I31: i64 = 2_147_483_647;
@@ -71,11 +71,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery"],
     );
 
     if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
-        v.err("$.schema_version", "must be \"1.0\" or \"1.1\"");
+        v.err("$.schema_version", "must be \"1.0\", \"1.1\" or \"1.2\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -166,8 +166,8 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("asset_safety") {
-        if doc.get("schema_version") != Some(&Value::String("1.1".into())) {
-            v.err("$.asset_safety", "requires schema_version \"1.1\"");
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2") {
+            v.err("$.asset_safety", "requires schema_version \"1.1\" or later");
         }
         if let Some(safety) = v.obj(doc, "asset_safety", "$") {
             let p = "$.asset_safety";
@@ -193,6 +193,22 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
                 v.err(format!("{p}.on_simulation_unavailable"), "must be \"deny\" or \"review\"");
             }
             v.int(safety, "max_simulation_age_seconds", p, 1, 300);
+        }
+    }
+
+    if doc.contains_key("upoch_recovery") {
+        if doc.get("schema_version") != Some(&Value::String("1.2".into())) {
+            v.err("$.upoch_recovery", "requires schema_version \"1.2\"");
+        }
+        if let Some(up) = v.obj(doc, "upoch_recovery", "$") {
+            let p = "$.upoch_recovery";
+            v.fields(up, p, &["require_upoch_recoverable", "max_checkpoint_age_seconds", "require_guardian", "on_unavailable"]);
+            v.bool(up, "require_upoch_recoverable", p);
+            v.int(up, "max_checkpoint_age_seconds", p, 60, 31536000);
+            v.bool(up, "require_guardian", p);
+            if !matches!(up.get("on_unavailable"), Some(Value::String(s)) if s == "deny" || s == "review") {
+                v.err(format!("{p}.on_unavailable"), "must be \"deny\" or \"review\"");
+            }
         }
     }
 

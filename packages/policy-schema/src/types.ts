@@ -7,7 +7,7 @@ export type Hex = `0x${string}`;
 
 /** The version new policies are written in. 1.0 documents stay valid; 1.1 adds `asset_safety`. */
 export const SCHEMA_VERSION = "1.1" as const;
-export const SCHEMA_VERSIONS = ["1.0", "1.1"] as const;
+export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2"] as const;
 export type SchemaVersion = (typeof SCHEMA_VERSIONS)[number];
 
 /** Native ETH in balance changes and declared intent (the common 0xEeee… convention), lowercase. */
@@ -31,6 +31,29 @@ export interface AssetSafety {
   on_simulation_unavailable: "deny" | "review";
   /** A simulation older than this counts as unavailable. */
   max_simulation_age_seconds: number;
+}
+
+/** Schema 1.2 (Phase 6.5): the agent must be recoverable on Upoch, read from chain before evaluation. */
+export interface UpochRecovery {
+  require_upoch_recoverable: boolean;
+  /** The newest checkpoint may be at most this old. */
+  max_checkpoint_age_seconds: number;
+  require_guardian: boolean;
+  /** Upoch data cannot be read: deny (default) or hold for a human. Never allow. */
+  on_unavailable: "deny" | "review";
+}
+
+/** The agent's Upoch workflow as read from the Upoch ledger contract; workflow_id "" when none is set. */
+export interface UpochStatus {
+  workflow_id: string;
+  /** Unix seconds of the read. */
+  observed_at: number;
+  /** The workflow's owner or a guardian is an owner of the agent's account. */
+  linked: boolean;
+  active: boolean;
+  checkpoint_count: number;
+  last_checkpoint_at: number | null;
+  guardians: number;
 }
 
 export interface AssetAmount {
@@ -100,8 +123,10 @@ export interface Policy {
     require_for_unknown_methods: boolean;
   };
   failure_mode: "closed";
-  /** Schema 1.1 only. Absent means off. */
+  /** Schema 1.1 and later. Absent means off. */
   asset_safety?: AssetSafety;
+  /** Schema 1.2. Absent means off. */
+  upoch_recovery?: UpochRecovery;
 }
 
 /** A proposed action from an agent. Typed intent, never free text. */
@@ -131,6 +156,8 @@ export interface Environment {
   paused_agents: string[];
   /** Simulation of this exact operation; absent or null means unavailable (fails closed). */
   asset_simulation?: AssetSimulation | null;
+  /** Phase 6.5: the agent's Upoch workflow; absent or null means unavailable (fails closed when required). */
+  upoch?: UpochStatus | null;
 }
 
 export type ReservationState = "reserved" | "pending_approval" | "released" | "finalized";
