@@ -156,11 +156,10 @@ export async function refreshPro(orgId: string, force = false): Promise<void> {
   const owners = await db()`
     SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id
     WHERE m.org_id = ${orgId}::uuid AND m.role = 'owner'
-      -- Only wallets that proved control by signing in count (an owner can add any address as a member).
-      AND u.last_login IS NOT NULL
-      -- One holding unlocks one organization: the earliest one the wallet owns.
-      AND m.org_id = (SELECT m2.org_id FROM memberships m2 JOIN organizations o ON o.id = m2.org_id
-                      WHERE m2.user_id = u.id AND m2.role = 'owner' ORDER BY o.created_at, o.id LIMIT 1)`;
+      -- A holding counts only for the organization the wallet created itself, at its own first sign-in
+      -- (the append-only 'org.created' event names it as the actor). Being added as an owner elsewhere
+      -- never counts, and a wallet creates at most one organization, so one holding unlocks one.
+      AND EXISTS (SELECT 1 FROM audit_events e WHERE e.org_id = m.org_id AND e.type = 'org.created' AND e.actor_user_id = u.id)`;
   const s = billingSettings();
   try {
     const c = mainnetClient();
