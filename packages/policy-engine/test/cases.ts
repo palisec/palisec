@@ -52,6 +52,30 @@ function assetSafety(r: Rng): Record<string, unknown> {
   };
 }
 
+/** Schema 1.2 Upoch recovery rules. */
+function upochRecovery(r: Rng): Record<string, unknown> {
+  return {
+    require_upoch_recoverable: chance(r, 0.85),
+    max_checkpoint_age_seconds: pick(r, [60, 3600, 604800, 31536000]),
+    require_guardian: chance(r, 0.5),
+    on_unavailable: pick(r, ["deny", "deny", "review"]),
+  };
+}
+
+/** An Upoch workflow read, mostly well-formed and recoverable. */
+function upochStatus(r: Rng, now: number): Record<string, unknown> {
+  const count = pick(r, [0, 1, 5, 22]);
+  return {
+    workflow_id: pick(r, ["", "9", "12", "12"]),
+    observed_at: now - pick(r, [0, 0, 1, 30, 61, -1]),
+    linked: chance(r, 0.85),
+    active: chance(r, 0.9),
+    checkpoint_count: count,
+    last_checkpoint_at: count === 0 && chance(r, 0.7) ? null : now - pick(r, [0, 59, 3601, 86400, 700000, 40000000]),
+    guardians: pick(r, [0, 1, 1, 2]),
+  };
+}
+
 const amountList = (r: Rng, n: number) =>
   Array.from({ length: n }, () => ({
     token: pick(r, TOKENS),
@@ -144,8 +168,12 @@ function policyFor(r: Rng): unknown {
   p.contracts.denylist = POOL.filter(() => chance(r, 0.15));
   p.human_approval = { usd_threshold_micros: uintish(r), require_for_unknown_methods: chance(r, 0.5) };
   if (chance(r, 0.5)) {
-    p.schema_version = chance(r, 0.97) ? "1.1" : "1.0";
+    p.schema_version = chance(r, 0.97) ? pick(r, ["1.1", "1.2"]) : "1.0";
     p.asset_safety = assetSafety(r);
+  }
+  if (chance(r, 0.35)) {
+    p.schema_version = chance(r, 0.96) ? "1.2" : "1.1";
+    p.upoch_recovery = upochRecovery(r);
   }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
@@ -182,6 +210,8 @@ export function evalCase(seed: number): EvalCase {
   };
   const sim = chance(r, 0.15) ? null : assetSimulation(r, now);
   if (sim !== null || chance(r, 0.5)) env.asset_simulation = sim;
+  const up = chance(r, 0.12) ? null : upochStatus(r, now);
+  if (up !== null || chance(r, 0.5)) env.upoch = up;
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {
@@ -215,6 +245,7 @@ export function evalCase(seed: number): EvalCase {
         paused_agents: [],
       });
       (env.verified_code as Record<string, boolean>)[target] = chance(r, 0.9);
+      if (p.upoch_recovery && up && chance(r, 0.6)) Object.assign(up, { workflow_id: "12", linked: true, active: true, checkpoint_count: 3, last_checkpoint_at: now - 10, observed_at: now });
       if (p.asset_safety && sim && chance(r, 0.7)) {
         coherentAsset(r, intent, sim);
         if (!sel && chance(r, 0.6)) {
@@ -298,6 +329,7 @@ export function mutatePolicy(r: Rng, doc: unknown, times: number): unknown {
 export function validateCase(seed: number): unknown {
   const r = rng(seed ^ 0x5bd1e995);
   if (chance(r, 0.03)) return pick(r, [null, 5, "policy", [], [EXAMPLE_POLICY]]);
+  if (chance(r, 0.25)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.2", upoch_recovery: upochRecovery(r) }, int(r, 0, 5));
   if (chance(r, 0.5)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.1", asset_safety: assetSafety(r) }, int(r, 0, 5));
   return mutatePolicy(r, EXAMPLE_POLICY, int(r, 0, 5));
 }

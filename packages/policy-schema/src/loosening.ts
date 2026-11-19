@@ -44,6 +44,7 @@ const NUMERIC: Record<string, { looserWhen: "higher" | "lower"; label: string }>
   "$.asset_safety.max_transfer_tax_bps": { looserWhen: "higher", label: "maximum transfer tax" },
   "$.asset_safety.max_slippage_bps": { looserWhen: "higher", label: "maximum slippage" },
   "$.asset_safety.max_simulation_age_seconds": { looserWhen: "higher", label: "accepted simulation age" },
+  "$.upoch_recovery.max_checkpoint_age_seconds": { looserWhen: "higher", label: "accepted Upoch checkpoint age" },
 };
 
 /** Booleans: the value that is stricter. */
@@ -52,6 +53,8 @@ const STRICT_BOOL: Record<string, { strict: boolean; label: string }> = {
   "$.asset_safety.enabled": { strict: true, label: "asset safety" },
   "$.asset_safety.require_sell_simulation": { strict: true, label: "sell simulation" },
   "$.asset_safety.block_unlimited_approvals": { strict: true, label: "unlimited approval block" },
+  "$.upoch_recovery.require_upoch_recoverable": { strict: true, label: "must be recoverable on Upoch" },
+  "$.upoch_recovery.require_guardian": { strict: true, label: "Upoch guardian required" },
 };
 
 function numeric(path: string, from: unknown, to: unknown): PolicyChange {
@@ -135,6 +138,16 @@ function walk(path: string, a: unknown, b: unknown, out: PolicyChange[]) {
   if (STRICT_BOOL[path] && typeof a === "boolean" && typeof b === "boolean") {
     const r = STRICT_BOOL[path]!;
     return void out.push({ path, kind: b === r.strict ? "tightening" : "loosening", from: a, to: b, note: `${r.label}: ${String(a)} to ${String(b)}` });
+  }
+  if (path === "$.upoch_recovery.on_unavailable")
+    return void out.push({ path, kind: b === "deny" ? "tightening" : "loosening", from: a, to: b, note: `no Upoch data: ${String(a)} to ${String(b)}` });
+  if (path === "$.upoch_recovery") {
+    if (a === undefined && b && typeof b === "object")
+      return void out.push({ path, kind: "tightening", from: null, to: b, note: "Upoch recovery rule added" });
+    if (b === undefined && a && typeof a === "object") {
+      const s = a as Record<string, unknown>;
+      return void out.push({ path, kind: s.require_upoch_recoverable === true ? "loosening" : "tightening", from: a, to: null, note: "Upoch recovery rule removed" });
+    }
   }
   if (path === "$.asset_safety.on_simulation_unavailable")
     return void out.push({ path, kind: b === "deny" ? "tightening" : "loosening", from: a, to: b, note: `no simulation: ${String(a)} to ${String(b)}` });

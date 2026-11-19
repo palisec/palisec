@@ -80,6 +80,21 @@ describe("loosening classifier", () => {
       expect(r.loosening, JSON.stringify(r.changes)).toBe(false);
     });
 
+  it("Upoch recovery: turning it off, a longer checkpoint age or review on no data loosen; adding it tightens", () => {
+    const up = edit((p) => {
+      p.schema_version = "1.2";
+      p.upoch_recovery = { require_upoch_recoverable: true, max_checkpoint_age_seconds: 604800, require_guardian: true, on_unavailable: "deny" };
+    });
+    expect(classifyPolicyChange(base(), up).loosening).toBe(false);
+    const w = (f: (p: Policy) => void) => { const p = JSON.parse(JSON.stringify(up)) as Policy; f(p); return classifyPolicyChange(up, p).loosening; };
+    expect(w((p) => (p.upoch_recovery!.require_upoch_recoverable = false))).toBe(true);
+    expect(w((p) => (p.upoch_recovery!.max_checkpoint_age_seconds = 2_000_000))).toBe(true);
+    expect(w((p) => (p.upoch_recovery!.require_guardian = false))).toBe(true);
+    expect(w((p) => (p.upoch_recovery!.on_unavailable = "review"))).toBe(true);
+    expect(w((p) => delete p.upoch_recovery)).toBe(true);
+    expect(w((p) => (p.upoch_recovery!.max_checkpoint_age_seconds = 3600))).toBe(false);
+  });
+
   it("adding asset safety to a 1.0 policy tightens", () => {
     const old = clone(EXAMPLE_POLICY);
     const r = classifyPolicyChange(old, base());

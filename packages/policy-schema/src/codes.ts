@@ -26,6 +26,10 @@ export const REASON_CODES = {
   PS_ASSET_002: "Transfer tax above the policy maximum",
   PS_ASSET_003: "Simulated balance changes do not match the declared intent",
   PS_APPROVAL_001: "Unlimited or oversized approval to a non-allowlisted spender",
+  // Phase 6.5, Upoch recovery (schema 1.2).
+  PS_RECOVERY_001: "Agent is not recoverable on Upoch",
+  PS_RECOVERY_002: "Upoch checkpoint is too old",
+  PS_RECOVERY_003: "Upoch data unavailable",
 } as const;
 
 export type ReasonCode = keyof typeof REASON_CODES;
@@ -53,4 +57,7 @@ export const RETRYABLE: Record<ReasonCode, boolean> = {
   PS_ASSET_002: false,
   PS_ASSET_003: false,
   PS_APPROVAL_001: false,
+  PS_RECOVERY_001: false,
+  PS_RECOVERY_002: false,
+  PS_RECOVERY_003: true,
 };

@@ -46,7 +46,7 @@ function fixtureLines(): string[] {
   const lines: string[] = [];
   const quota: Record<string, number> = { ALLOW: 30, REQUIRES_HUMAN_SIGNATURE: 25, throws: 8 };
   const taken: Record<string, number> = {};
-  for (let seed = 1; seed <= 20_000 && lines.length < 220; seed++) {
+  for (let seed = 1; seed <= 20_000 && lines.length < 260; seed++) {
     const c = evalCase(seed);
     if (typeof c.intent.data === "string" && c.intent.data.length > 300) continue;
     const expected = reference(c) as { decision: string; reason_code: string | null } | null;
@@ -77,7 +77,7 @@ describe("policy engine", () => {
     const stored = readFileSync(FIXTURES, "utf8").replace(/\r\n/g, "\n").trimEnd().split("\n");
     expect(stored.length).toBe(lines.length);
     for (let i = 0; i < lines.length; i++) expect(sameJson(JSON.parse(stored[i]!), JSON.parse(lines[i]!)), `fixture line ${i + 1}`).toBeNull();
-  });
+  }, 120_000);
 
   it("WebAssembly matches every fixture", () => {
     const stored = readFileSync(FIXTURES, "utf8").trimEnd().split(/\r?\n/).map((l) => JSON.parse(l));
@@ -110,7 +110,7 @@ describe("policy engine", () => {
     // The generator must reach every outcome, or the comparison proves little.
     expect(decisions.ALLOW).toBeGreaterThan(FUZZ / 100);
     expect(decisions.REQUIRES_HUMAN_SIGNATURE).toBeGreaterThan(FUZZ / 100);
-    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001"])
+    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001", "PS_RECOVERY_001", "PS_RECOVERY_002", "PS_RECOVERY_003"])
       expect(codes.has(code), code).toBe(true);
   }, 600_000);
 
