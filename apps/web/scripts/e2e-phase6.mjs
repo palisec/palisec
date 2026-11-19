@@ -171,25 +171,38 @@ async function delayPart() {
 
 // ================================================================ Part 2: asset safety on a mainnet fork
 async function assetsPart() {
-  const RPC = process.env.RPC_URL ?? "http://127.0.0.1:8545";
-  const CHAIN = 4663;
+  // TESTNET_KEY_FILE: run on real testnet (46630) with that funded test-only key as deployer and agent account.
+  const keyFile = process.env.TESTNET_KEY_FILE;
+  const RPC = process.env.RPC_URL ?? (keyFile ? "https://rpc.testnet.chain.robinhood.com" : "http://127.0.0.1:8545");
+  const CHAIN = keyFile ? 46630 : 4663;
+  const txs = [];
   const art = (f, n) => JSON.parse(readFileSync(new URL(`../../../contracts/out/${f}/${n}.json`, import.meta.url), "utf8"));
   // anvil's well-known development accounts (public test keys, fork only).
-  const deployer = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
-  const agentAcct = privateKeyToAccount("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
+  const deployer = keyFile ? privateKeyToAccount(JSON.parse(readFileSync(keyFile, "utf8")).key) : privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+  // The agent's account must not be the tokens' deployer: the test tokens exempt their owner from the honeypot block and the tax.
+  const agentAcct = keyFile ? privateKeyToAccount(generatePrivateKey()) : privateKeyToAccount("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
   const chain = { id: CHAIN, name: "fork", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [RPC] } } };
   const pub = createPublicClient({ chain, transport: http(RPC) });
   const w = (account) => createWalletClient({ account, chain, transport: http(RPC) });
-  await pub.request({ method: "anvil_setBalance", params: [agentAcct.address, "0x56BC75E2D63100000"] });
+  if (!keyFile) await pub.request({ method: "anvil_setBalance", params: [agentAcct.address, "0x56BC75E2D63100000"] });
+  else {
+    // Gas for the agent account's one setup transaction (its standing router approval).
+    const hash = await w(deployer).sendTransaction({ to: agentAcct.address, value: 200_000_000_000_000n });
+    await pub.waitForTransactionReceipt({ hash });
+    txs.push(`fund agent account ${agentAcct.address} ${hash}`);
+  }
   const deploy = async (f, n, args) => {
     const a = art(f, n);
     const hash = await w(deployer).deployContract({ abi: a.abi, bytecode: a.bytecode.object, args });
-    return (await pub.waitForTransactionReceipt({ hash })).contractAddress;
+    const addr = (await pub.waitForTransactionReceipt({ hash })).contractAddress;
+    txs.push(`${n} ${addr} deploy ${hash}`);
+    return addr;
   };
   const send = async (account, address, abi, functionName, args) => {
     const hash = await w(account).writeContract({ address, abi, functionName, args });
     const r = await pub.waitForTransactionReceipt({ hash });
     if (r.status !== "success") throw new Error(`${functionName} failed`);
+    txs.push(`${functionName} ${hash}`);
   };
   const K = "AssetTestKit.sol";
   const kitAbi = art(K, "KitToken").abi;
@@ -209,7 +222,9 @@ async function assetsPart() {
   }
   await send(deployer, USD, kitAbi, "transfer", [agentAcct.address, 10_000n * E18]);
   await send(agentAcct, USD, kitAbi, "approve", [ROUTER, maxUint256]); // standing approval, set up before the test
-  check("test kit deployed on the mainnet fork (USD, normal, honeypot, 20% tax, pairs, router)", true);
+  check(`test kit deployed on ${keyFile ? "testnet" : "the mainnet fork"} (USD, normal, honeypot, 20% tax, pairs, router)`, true);
+  if (keyFile) console.log(txs.map((t) => `      ${t}`).join(String.fromCharCode(10)));
+  const nonceBefore = await pub.getTransactionCount({ address: agentAcct.address });
 
   const owner = privateKeyToAccount(generatePrivateKey());
   const cookie = await signIn(owner, CHAIN);
@@ -225,8 +240,9 @@ async function assetsPart() {
   const key = (await call("POST", `/agents/${agent.body.id}/credentials`, { cookie, body: {} })).body.secret;
   const routerAbi = parseAbi(["function swapExactTokensForTokens(uint256,uint256,address[],address,uint256) returns (uint256[])"]);
   const swap = (token, amountIn) => encodeFunctionData({ abi: routerAbi, functionName: "swapExactTokensForTokens", args: [amountIn, 0n, [USD, token], agentAcct.address, BigInt(now() + 600)] });
-  const ev = (body, base = BASE) =>
-    call("POST", "/authorizations/evaluate", { key, base, body: { request_id: `a-${crypto.randomUUID()}`, chain_id: CHAIN, value_wei: "0", gas_limit: 300000, deadline: now() + 120, ...body } });
+  // On testnet the denials go through POST /v1/operations (recorded decisions), then the account's nonce is checked.
+  const ev = (body, base = BASE, path = keyFile ? "/operations" : "/authorizations/evaluate") =>
+    call("POST", path, { key, base, body: { request_id: `a-${crypto.randomUUID()}`, chain_id: CHAIN, value_wei: "0", gas_limit: 300000, deadline: now() + 120, ...body } });
   const asset = (r) => r.body.checks?.find((c) => c.id === "asset");
   const lc = (a) => a.toLowerCase();
 
@@ -252,6 +268,10 @@ async function assetsPart() {
   r = await ev({ to: lc(USD), data: encodeFunctionData({ abi: erc20Abi, functionName: "approve", args: [ROUTER, maxUint256] }) });
   check("unlimited approval to an allowlisted spender (the router) is allowed", r.body.decision === "ALLOW", [r.body.reason_code, r.body.message]);
 
+  if (keyFile) {
+    const nonceAfter = await pub.getTransactionCount({ address: agentAcct.address });
+    check(`nothing reached the chain from the agent's account (nonce ${nonceBefore} before and ${nonceAfter} after)`, nonceAfter === nonceBefore);
+  }
   // Latency on the fork (the live-RPC numbers are measured separately).
   const times = [];
   for (let i = 0; i < 10; i++) times.push((await ev({ to: ROUTER, data: swap(NORMAL, E18), asset_intent: { spend: [{ token: USD, amount: E18.toString() }] } })).ms);
