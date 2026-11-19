@@ -10,6 +10,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.1.0",
+    date: "2026-11-19",
+    tag: "Credits and $PALISEC",
+    changes: [
+      "Mainnet decisions: 1,000 per organization per month are included; after that each decision uses a prepaid credit ($5 per 1,000). Testnet and dry runs stay free and unmetered. With no allowance or credits left, mainnet requests are refused with 402 PS_CREDIT_001 before evaluation, never allowed unchecked. Metered responses carry X-Palisec-Usage, with a warning header at 80% and 95%.",
+      "Console Billing: usage this month, credits, buying credit packs with USDG or ETH from your wallet, Pro status, limits and purchase history with transaction links.",
+      "PalisecCredits contract on Robinhood Chain (0xd5f516d43450293ac9a77bb53e40e2d8be2f5c3a, source verified on Blockscout): USDG goes straight to the treasury, ETH is priced with Chainlink ETH/USD and any overpayment refunded; the contract never holds funds. Paying in $PALISEC (20% off, burned in the same transaction) is built and switched off until the token has a time-weighted pool price.",
+      "Pro by holding: an owner wallet with 5,000,000 $PALISEC unlocks higher limits (agents, policies, audit history, API rate, PALISEC Agent requests). Nothing is locked or sent.",
+      "New Token page with a burn counter read from the chain, pricing update, and Terms section 5 describing what the token does in the product (effective 2026-11-19).",
+    ],
+  },
+  {
     version: "1.0.3",
     date: "2026-11-18",
     tag: "Live API demo",

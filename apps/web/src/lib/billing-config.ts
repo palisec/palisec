@@ -24,7 +24,7 @@ export const BILLING = {
   proHoldingTokens: 5_000_000n * 10n ** 18n,
   proCheckSeconds: 600,
   /** Credit packs offered in the console. */
-  packs: [1_000, 5_000, 20_000],
+  packs: [100, 1_000, 5_000, 20_000],
 } as const;
 
 export interface PlanLimits {
