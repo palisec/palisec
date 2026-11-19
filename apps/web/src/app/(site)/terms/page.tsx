@@ -67,13 +67,41 @@ export default function TermsPage() {
           </ul>
           <p>You accept these risks when you use the Service with real funds.</p>
 
-          <h2 id="token">5. The PALISEC token</h2>
+          <h2 id="token">5. The $PALISEC token</h2>
           <p>
-            A token named PALISEC (contract <code>0x1b4d04c8a67bf98bdf791ef928482bcb225d71ab</code> on Robinhood Chain) is shown on this website for
-            reference. It is not part of the Service and is not needed to use it. Holding it gives no ownership in Palisec, no claim on its revenue
-            or assets, and no right to the Service. Nothing on this website is an offer to sell or a solicitation to buy any token, or investment,
-            financial, legal or tax advice. Token prices can fall to zero. Only the address above is ours; we never ask you to send funds, and we
-            never message you a different address.
+            5.1 <strong>What it is.</strong> $PALISEC is an ERC-20 token on Robinhood Chain (contract <code>0x1b4d04c8a67bf98bdf791ef928482bcb225d71ab</code>). It was
+            launched on a third-party launchpad. Palisec does not control its supply, price or trading.
+          </p>
+          <p>5.2 <strong>What it does in the Service.</strong></p>
+          <p>
+            (a) <strong>Pro limits by holding.</strong> If a wallet that owns an organization holds at least the amount shown on the{" "}
+            <Link href="/docs/token">Token page</Link>, that organization gets the higher Pro limits described there. Palisec only reads the wallet&apos;s balance;
+            nothing is locked, transferred or held by Palisec. Limits return to standard when the balance is below the amount.
+          </p>
+          <p>
+            (b) <strong>Paying for decision credits</strong> (when this option is enabled on the Token page). Credits can be bought with $PALISEC at the discount
+            shown. Tokens used to buy credits are burned (permanently destroyed) in the same transaction and are not received by Palisec.
+          </p>
+          <p>
+            (c) Credits can also be bought with USDG or ETH. Credits are a prepaid right to use the Service, are not refundable except where required by law,
+            cannot be transferred and have no value outside the Service.
+          </p>
+          <p>
+            5.3 <strong>What it is not.</strong> Holding or using $PALISEC gives no ownership, share, dividend, revenue, profit, yield, interest, vote or other right
+            in Palisec or its business, and no right to any payment. Palisec does not buy back tokens and makes no promise about the token&apos;s price, liquidity or
+            future use. Core security features of the Service never require the token.
+          </p>
+          <p>
+            5.4 <strong>Risks.</strong> Token prices can move sharply or fall to zero, liquidity may be very limited, and blockchain transactions are final. You are
+            responsible for your wallet, keys and taxes, and for following the laws that apply to you.
+          </p>
+          <p>
+            5.5 <strong>Changes.</strong> Palisec may change or end the token features in this section (for example the discount, the Pro amount or the option to pay
+            in $PALISEC) by updating the Token page; changes do not affect credits already bought.
+          </p>
+          <p>
+            5.6 Only the token address above and the credits contract shown in the console are ours. We never message you a different address or ask you to send
+            funds anywhere else.
           </p>
 
           <h2 id="acceptable-use">6. Acceptable use</h2>
@@ -100,8 +128,9 @@ export default function TermsPage() {
 
           <h2 id="fees">8. Fees</h2>
           <p>
-            The Service is currently free. Network gas fees are paid by your smart accounts and wallets, not by us. If we introduce paid plans, we
-            will publish the prices and give you notice before any charge applies; paid use will require you to accept the plan terms at that time.
+            Each organization gets a monthly allowance of free mainnet decisions; testnet and dry runs are free. Beyond the allowance, mainnet decisions use
+            prepaid credits at the price shown on the <Link href="/pricing">pricing page</Link> (see section 5.2). Network gas fees are paid by your smart
+            accounts and wallets, not by us. We will publish any price change before it applies; credits already bought keep their value.
           </p>
 
           <h2 id="availability">9. Availability and changes</h2>
