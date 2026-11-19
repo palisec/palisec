@@ -46,7 +46,7 @@ const TOOLS: [string, string, string][] = [
   ["palisec_withdraw_approval_request", "operations:write", "Withdraw the agent's own pending approval."],
   ["palisec_explain_authorization", "operations:read", "The deciding check, reason code and what to do next."],
   ["palisec_get_audit_events", "audit:read", "Audit events the agent caused."],
-  ["palisec_validate_policy", "policy:read", "Validate a document against schema 1.0. Saves nothing."],
+  ["palisec_validate_policy", "policy:read", "Validate a document against schema 1.0 or 1.1. Saves nothing."],
   ["palisec_simulate_policy", "policy:read", "Evaluate a draft against one transaction with live inputs. Saves nothing."],
 ];
 
