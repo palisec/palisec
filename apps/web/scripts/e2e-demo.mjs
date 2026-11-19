@@ -55,7 +55,8 @@ async function call(method, path, { cookie, key, body, origin = ORIGIN, headers 
 }
 
 if (process.argv[2] === "setup") {
-  const owner = privateKeyToAccount(generatePrivateKey());
+  const ownerKey = generatePrivateKey();
+  const owner = privateKeyToAccount(ownerKey);
   const account = privateKeyToAccount(generatePrivateKey()).address;
   const c = await call("POST", "/api/v1/auth/challenges", { body: { address: owner.address, chain_id: TESTNET } });
   const v = await call("POST", "/api/v1/auth/verify", { body: { nonce: c.body.nonce, signature: await owner.signMessage({ message: c.body.message }) } });
@@ -79,11 +80,24 @@ if (process.argv[2] === "setup") {
   const demoKey = r.body.secret;
   const credentialId = r.body.id;
   r = await call("POST", `/api/v1/agents/${agentId}/credentials`, { cookie, body: { label: "full" } });
-  console.log(JSON.stringify({ cookie, policyId, agentId, credentialId, demoKey, fullKey: r.body.secret }));
+  // ownerKey: the throwaway test wallet (local state file only), so the test step can sign in again
+  // after the session expires instead of reading the console with a dead cookie.
+  console.log(JSON.stringify({ cookie, ownerKey, policyId, agentId, credentialId, demoKey, fullKey: r.body.secret }));
   process.exit(0);
 }
 
 const S = JSON.parse(readFileSync(process.env.STATE_FILE, "utf8"));
+// Sessions expire: sign in again with the setup's test wallet when the state file has it.
+if (S.ownerKey) {
+  const owner = privateKeyToAccount(S.ownerKey);
+  const c = await call("POST", "/api/v1/auth/challenges", { body: { address: owner.address, chain_id: TESTNET } });
+  const v = await call("POST", "/api/v1/auth/verify", { body: { nonce: c.body.nonce, signature: await owner.signMessage({ message: c.body.message }) } });
+  S.cookie = (v.headers.get("set-cookie") ?? "").split(";")[0];
+}
+if ((await call("GET", "/api/v1/me", { cookie: S.cookie })).status !== 200) {
+  console.error("The state file's session has expired and it has no ownerKey: run the setup step again.");
+  process.exit(2);
+}
 let passed = 0;
 let failed = 0;
 const results = [];
@@ -198,7 +212,8 @@ check("no operation recorded by any Live run", n(before) >= 1 && n(after) === n(
 const summaryAfter = await summary();
 check(
   "no budget reserved and no decision counted by Live runs (dashboard summary unchanged)",
-  summaryAfter.reserved_last_hour_usd_micros === summaryBefore.reserved_last_hour_usd_micros && summaryAfter.allowed === summaryBefore.allowed && summaryAfter.denied === summaryBefore.denied && summaryAfter.reviewed === summaryBefore.reviewed,
+  typeof summaryBefore?.allowed === "number" &&
+    summaryAfter.reserved_last_hour_usd_micros === summaryBefore.reserved_last_hour_usd_micros && summaryAfter.allowed === summaryBefore.allowed && summaryAfter.denied === summaryBefore.denied && summaryAfter.reviewed === summaryBefore.reviewed,
   { summaryBefore, summaryAfter },
 );
 

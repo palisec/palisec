@@ -222,7 +222,7 @@ export default function PoliciesPage() {
           against it as a draft, compare the decisions with the active version, then activate it explicitly.</li>
       </ul>
       <p>
-        Schema 1.0 is the first version, so no migrations exist yet. Each future schema version will list its changes and a conversion
+        Schema 1.1 adds the optional asset_safety section and needs no migration: 1.0 documents stay valid and keep asset safety off. Each future schema version will list its changes and a conversion
         table in the <Link href="/changelog">changelog</Link>.
       </p>
 

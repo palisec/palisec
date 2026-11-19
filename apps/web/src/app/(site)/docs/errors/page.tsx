@@ -85,6 +85,7 @@ export default function ErrorsPage() {
           <tr><td className="font-mono text-[12px] text-fg">PS_CHAIN_001</td><td>The chain RPC or the bundler is unavailable, or the bundler refused the operation (its message is included).</td><td className="font-mono text-[11px] text-muted">after condition clears</td></tr>
           <tr><td className="font-mono text-[12px] text-fg">PS_REPLAY_001</td><td>A request ID reused, or an operation already submitted.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
           <tr><td className="font-mono text-[12px] text-fg">PS_RATE_001</td><td>Too many requests from one address in a minute.</td><td className="font-mono text-[11px] text-muted">after a minute</td></tr>
+          <tr><td className="font-mono text-[12px] text-fg">PS_CREDIT_001</td><td>HTTP 402. Mainnet only: the organization has used its monthly allowance and has no credits left. Nothing is evaluated or authorized; buy credits in the console (Billing). Testnet and dry runs are never metered.</td><td className="font-mono text-[11px] text-muted">after buying credits</td></tr>
         </tbody>
       </table>
 
