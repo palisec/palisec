@@ -60,6 +60,9 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       # Local receiver for the webhook tests; ignored on Vercel.
       PALISEC_TEST_WEBHOOK_ORIGIN: http://127.0.0.1:4555
+      # Phase 6: loosening delays of 3 s on the test server (never honoured in production).
+      PALISEC_TEST_DEFAULT_DELAY_SECONDS: "3"
+      PALISEC_TEST_MIN_DELAY_SECONDS: "2"
       # The agent suite's scripted model server (no real model or key in CI).
       PALISEC_AGENT_API_KEY: test
       PALISEC_AGENT_BASE_URL: http://127.0.0.1:4556/v1
@@ -123,6 +126,9 @@ jobs:
       PALISEC_EXTRA_HOSTS: localhost:3000
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       PALISEC_TEST_BUNDLER_URL: http://127.0.0.1:4337
+      # Phase 6: loosening delays of 3 s on the test server (never honoured in production).
+      PALISEC_TEST_DEFAULT_DELAY_SECONDS: "3"
+      PALISEC_TEST_MIN_DELAY_SECONDS: "2"
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

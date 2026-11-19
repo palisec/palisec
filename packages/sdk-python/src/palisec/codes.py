@@ -20,6 +20,10 @@ REASON_CODES: dict[str, str] = {
     "PS_STATE_001": "Authoritative state unavailable",
     "PS_CHAIN_001": "Chain or bundler unavailable",
     "PS_REQUEST_001": "Request failed schema validation",
+    "PS_ASSET_001": "Sell simulation failed: likely honeypot",
+    "PS_ASSET_002": "Transfer tax above the policy maximum",
+    "PS_ASSET_003": "Simulated balance changes do not match the declared intent",
+    "PS_APPROVAL_001": "Unlimited or oversized approval to a non-allowlisted spender",
 }
 
 #: Whether a client may retry the same request after the condition clears.
@@ -41,4 +45,8 @@ RETRYABLE: dict[str, bool] = {
     "PS_STATE_001": True,
     "PS_CHAIN_001": True,
     "PS_REQUEST_001": False,
+    "PS_ASSET_001": False,
+    "PS_ASSET_002": False,
+    "PS_ASSET_003": False,
+    "PS_APPROVAL_001": False,
 }
