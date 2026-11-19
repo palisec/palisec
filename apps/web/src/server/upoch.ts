@@ -1,0 +1,102 @@
+import "server-only";
+import type { UpochStatus } from "@palisec/policy-schema";
+import { createPublicClient, getAddress, parseAbi, type Address } from "viem";
+import { CHAINS, chainTransport, type ChainId } from "./config";
+import { logEvent } from "./http";
+import { MAINNET, TESTNET } from "@/lib/networks";
+
+/*
+ * Phase 6.5: read-only Upoch integration. The agent's Upoch workflow is read from Upoch's public ledger
+ * contract (addresses from @upoch/sdk's published deployments) before evaluation and passed to both
+ * engines as `env.upoch`. Nothing here signs or writes; Upoch never touches PALISEC's signing. Any failed
+ * read returns null, which the engines treat as unavailable (deny or human review, never allow).
+ */
+
+export const UPOCH_LEDGER: Record<number, Address> = {
+  [MAINNET]: "0x6179d9123c3c1f9e82f948101a4350cb55aa8c27",
+  [TESTNET]: "0x8b929fc22731ac3285fe98b190423bddd1487361",
+};
+export const UPOCH_SITE = "https://upoch.tech";
+
+const LEDGER_ABI = parseAbi([
+  "function workflowCount() view returns (uint256)",
+  "function getWorkflow(uint256) view returns ((address owner,address pendingOwner,uint8 status,(uint8 guardianThreshold,bool ownerApprovalRequired,uint32 ownerFallbackDelay,uint32 timelock,uint32 approvalWindow,uint32 executionWindow) policy,uint64 checkpointCount,uint64 headSequence,bytes32 headHash,uint256 storedActiveProposalId,string metadataURI))",
+  "function getGuardians(uint256) view returns (address[])",
+  "function getCheckpoint(uint256,uint64) view returns ((bytes32 checkpointHash,bytes32 parentHash,uint64 parentSequence,bytes32 stateHash,bytes32 traceHash,bytes32 dataURIHash,address submitter,uint64 timestamp))",
+]);
+const SAFE_ABI = parseAbi(["function getOwners() view returns (address[])"]);
+
+export interface UpochDetail extends UpochStatus {
+  chain_id: number;
+  owner: string | null;
+  guardian_addresses: string[];
+  head_sequence: number | null;
+  url: string | null;
+}
+
+function client(chainId: number) {
+  const chain = CHAINS[chainId as ChainId];
+  if (!chain?.enabled || !UPOCH_LEDGER[chainId]) return null;
+  return createPublicClient({ transport: chainTransport(chainId as ChainId, 4000) });
+}
+
+/** Parses a stored workflow ID ("" when none). */
+export function parseWorkflowId(v: unknown): string | null {
+  if (v === undefined || v === null || v === "") return null;
+  const s = String(v).trim();
+  if (!/^[1-9][0-9]{0,18}$/.test(s)) throw new Error("upoch_workflow_id must be a positive whole number");
+  return s;
+}
+
+/**
+ * The agent's workflow as the engines need it. `linked`: the workflow's owner or one of its guardians is
+ * an owner of the agent's account (a Safe), so an agent cannot point at someone else's workflow.
+ */
+export async function readUpoch(chainId: number, account: string, workflowId: string | null): Promise<UpochDetail | null> {
+  const now = Math.floor(Date.now() / 1000);
+  const empty: UpochDetail = {
+    chain_id: chainId, workflow_id: "", observed_at: now, linked: false, active: false, checkpoint_count: 0,
+    last_checkpoint_at: null, guardians: 0, owner: null, guardian_addresses: [], head_sequence: null, url: null,
+  };
+  if (!workflowId) return empty;
+  const c = client(chainId);
+  if (!c) return null;
+  const ledger = UPOCH_LEDGER[chainId]!;
+  try {
+    const id = BigInt(workflowId);
+    const count = await c.readContract({ address: ledger, abi: LEDGER_ABI, functionName: "workflowCount" });
+    if (id > count) return { ...empty, workflow_id: workflowId, url: `${UPOCH_SITE}/app/agents/${workflowId}` };
+    const [w, guardians, owners] = await Promise.all([
+      c.readContract({ address: ledger, abi: LEDGER_ABI, functionName: "getWorkflow", args: [id] }),
+      c.readContract({ address: ledger, abi: LEDGER_ABI, functionName: "getGuardians", args: [id] }),
+      c.readContract({ address: getAddress(account), abi: SAFE_ABI, functionName: "getOwners" }).catch(() => [] as readonly Address[]),
+    ]);
+    const checkpoints = Number(w.checkpointCount);
+    const head = checkpoints > 0 ? await c.readContract({ address: ledger, abi: LEDGER_ABI, functionName: "getCheckpoint", args: [id, w.headSequence] }) : null;
+    const accountOwners = owners.map((o) => getAddress(o));
+    const linked = [w.owner, ...guardians].some((a) => accountOwners.includes(getAddress(a)));
+    return {
+      chain_id: chainId,
+      workflow_id: workflowId,
+      observed_at: Math.floor(Date.now() / 1000),
+      linked,
+      active: w.status === 0,
+      checkpoint_count: checkpoints,
+      last_checkpoint_at: head ? Number(head.timestamp) : null,
+      guardians: guardians.length,
+      owner: getAddress(w.owner),
+      guardian_addresses: guardians.map((g) => getAddress(g)),
+      head_sequence: checkpoints > 0 ? Number(w.headSequence) : null,
+      url: `${UPOCH_SITE}/app/agents/${workflowId}`,
+    };
+  } catch (e) {
+    logEvent("warn", "upoch.unavailable", { chain_id: chainId, message: e instanceof Error ? e.message.slice(0, 200) : String(e) });
+    return null;
+  }
+}
+
+/** The engines' input: the status fields only. */
+export const toEngineInput = (d: UpochDetail | null): UpochStatus | null =>
+  d === null
+    ? null
+    : { workflow_id: d.workflow_id, observed_at: d.observed_at, linked: d.linked, active: d.active, checkpoint_count: d.checkpoint_count, last_checkpoint_at: d.last_checkpoint_at, guardians: d.guardians };

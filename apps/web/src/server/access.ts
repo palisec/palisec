@@ -82,6 +82,8 @@ export interface AgentContext {
   account: `0x${string}`;
   policyId: string | null;
   emergencyStop: boolean;
+  /** Phase 6.5: the agent's Upoch workflow, if set. */
+  upochWorkflowId: string | null;
 }
 
 /** API keys: ps_live_ (mainnet agents) or ps_test_ (testnet), then 48 hex characters (192 random bits). */
@@ -105,7 +107,7 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
       UPDATE api_credentials SET last_used_at = now()
       WHERE id IN (SELECT id FROM c) AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')
     )
-    SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop,
+    SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, a.upoch_workflow_id, o.emergency_stop,
       coalesce(b.pro AND b.pro_checked_at > now() - make_interval(secs => ${2 * BILLING.proCheckSeconds}::int), false) AS pro,
       EXISTS (SELECT 1 FROM pending_changes pc WHERE pc.org_id = a.org_id AND pc.state = 'pending' AND pc.effective_at <= now()) AS due
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id LEFT JOIN billing_accounts b ON b.org_id = a.org_id`;
@@ -132,5 +134,6 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
     account: r.account,
     policyId: r.policy_id,
     emergencyStop: r.emergency_stop,
+    upochWorkflowId: r.upoch_workflow_id ?? null,
   };
 }

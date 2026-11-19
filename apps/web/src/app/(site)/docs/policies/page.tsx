@@ -189,6 +189,21 @@ export default function PoliciesPage() {
         the tax, the round-trip loss (when the pool quotes it) and the approvals.
       </p>
 
+      <h2 id="upoch-recovery">Recoverable on Upoch (schema 1.2)</h2>
+      <p>
+        An optional rule that an agent must be recoverable on <a href="https://upoch.tech">Upoch</a>, which keeps verifiable
+        checkpoints of an agent&apos;s state on Robinhood Chain. Off by default; add the <code>upoch_recovery</code> section (and{" "}
+        <code>schema_version</code> &quot;1.2&quot;) and set the agent&apos;s Upoch workflow on its page. Before each decision
+        PALISEC reads the workflow from Upoch&apos;s contract (read-only) and both engines apply:
+      </p>
+      <ul>
+        <li><code>require_upoch_recoverable</code>: the workflow must be set, active, linked to the account (its owner or a guardian is an owner of the account) and have a checkpoint, or the request is <code>PS_RECOVERY_001</code>.</li>
+        <li><code>max_checkpoint_age_seconds</code> (60 to 31,536,000; e.g. 604800 for 7 days): an older newest checkpoint is <code>PS_RECOVERY_002</code>.</li>
+        <li><code>require_guardian</code>: the workflow must have at least one guardian, or <code>PS_RECOVERY_001</code>.</li>
+        <li><code>on_unavailable</code> (<code>deny</code> or <code>review</code>): Upoch cannot be read, so <code>PS_RECOVERY_003</code> denies or holds for a person, never allows.</li>
+      </ul>
+      <p>Turning the rule off, allowing older checkpoints or switching to review are loosening changes, so they wait out the delay below.</p>
+
       <h2 id="loosening-delay">Loosening delay</h2>
       <p>
         A change that makes the rules weaker waits before it takes effect; a change that makes them stronger applies at once.

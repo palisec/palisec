@@ -9,6 +9,7 @@ import { BadRequest, HttpError } from "./http";
 import type { Role } from "./session";
 import { parseAddress } from "./siwe";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
+import { parseWorkflowId } from "./upoch";
 import { announcePending, classifyRebind, listPending, orgDelays, parseDelaySetting, requestPending } from "./pending";
 
 
@@ -510,6 +511,15 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
   const policyId = body.policy_id === undefined ? agent.policy_id : optionalPolicyId(body.policy_id);
   const framework = body.framework === undefined ? agent.framework : optionalText(body.framework, "framework", 40);
   const description = body.description === undefined ? agent.description : optionalText(body.description, "description", 280);
+  // Phase 6.5: the agent's Upoch workflow (read-only; linked to the account by its owner or guardians).
+  let upochWorkflowId: string | null = agent.upoch_workflow_id ?? null;
+  if (body.upoch_workflow_id !== undefined) {
+    try {
+      upochWorkflowId = parseWorkflowId(body.upoch_workflow_id);
+    } catch (e) {
+      throw new BadRequest((e as Error).message);
+    }
+  }
   await checkPolicyBinding(ctx, policyId, agent.chain_id, agent.account);
   // Phase 6: moving the agent to a looser policy waits out the delay; everything else applies now.
   let boundPolicy = policyId;
@@ -523,10 +533,10 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
       pendingRebind = await requestPending(ctx, "agent_rebind", { agentId: id, setting: { policy_id: policyId }, diff: cls.changes, delaySeconds: delays.loosening });
     }
   }
-  const a = audit("agent.updated", { agent_id: id, name, policy_id: boundPolicy, framework, ...(pendingRebind ? { pending_policy_id: policyId } : {}) });
+  const a = audit("agent.updated", { agent_id: id, name, policy_id: boundPolicy, framework, upoch_workflow_id: upochWorkflowId, ...(pendingRebind ? { pending_policy_id: policyId } : {}) });
   await db()`
     WITH ag AS (
-      UPDATE agents SET name = ${name}, policy_id = ${boundPolicy}::uuid, framework = ${framework}, description = ${description} WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid RETURNING id, org_id
+      UPDATE agents SET name = ${name}, policy_id = ${boundPolicy}::uuid, framework = ${framework}, description = ${description}, upoch_workflow_id = ${upochWorkflowId} WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid RETURNING id, org_id
     ), c AS (
       -- An applied (tightening) move supersedes a pending one, which could otherwise overtake it later.
       UPDATE pending_changes SET state = 'cancelled', resolved_at = now(), resolved_by = ${ctx.user.userId}::uuid, resolution = 'superseded'

@@ -18,6 +18,7 @@ const DOCS_NAV = [
       { href: "/docs/policies", label: "Policy schema" },
       { href: "/docs/errors", label: "Errors and operations" },
       { href: "/docs/account-abstraction", label: "Account abstraction" },
+      { href: "/docs/detect", label: "Detect a Palisec agent" },
     ],
   },
   {

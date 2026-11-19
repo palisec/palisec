@@ -10,6 +10,16 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.3.0",
+    date: "2026-11-20",
+    tag: "Upoch integration",
+    changes: [
+      "Detect a Palisec agent: a public page with the co-signer addresses, the exact on-chain rule (a Safe with three owners including the Palisec co-signer, threshold 2, only the 4337 module, no guard) and a reference function, so Upoch and anyone else can show an \"Enforced by Palisec\" badge from chain data alone.",
+      "Policy schema 1.2: an optional rule that the agent must be recoverable on Upoch (workflow set, active, linked to the account, a checkpoint no older than the policy allows, optionally a guardian), read from Upoch's contract before each decision and applied by both engines. New reason codes PS_RECOVERY_001 (not recoverable), PS_RECOVERY_002 (checkpoint too old) and PS_RECOVERY_003 (Upoch unavailable: deny or review, never allow). Off by default; turning it off waits out the loosening delay.",
+      "Agent pages show Upoch status (recoverable, last checkpoint in UTC, checkpoints, guardians, link to the agent on Upoch), read live; anything unreadable shows Unknown.",
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-11-19",
     tag: "Loosening delay and asset safety",

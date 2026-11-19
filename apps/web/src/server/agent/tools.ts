@@ -87,10 +87,10 @@ async function operation(ctx: ToolContext, id: string) {
 /** An agent as a dry-run principal: same checks as its API key, without any credential. */
 async function agentContext(orgId: string, agentId: string): Promise<AgentContext> {
   const [r] = await db()`
-    SELECT a.id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop
+    SELECT a.id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, a.upoch_workflow_id, o.emergency_stop
     FROM agents a JOIN organizations o ON o.id = a.org_id WHERE a.id = ${agentId}::uuid AND a.org_id = ${orgId}::uuid`;
   if (!r) throw new HttpError(404, "PS_REQUEST_001", "No such agent in this organization");
-  return { credentialId: "", scopes: [], agentId: r.id, orgId: r.org_id, agentName: r.name, agentStatus: r.status, chainId: Number(r.chain_id), account: r.account, policyId: r.policy_id, emergencyStop: r.emergency_stop };
+  return { credentialId: "", scopes: [], agentId: r.id, orgId: r.org_id, agentName: r.name, agentStatus: r.status, chainId: Number(r.chain_id), account: r.account, policyId: r.policy_id, emergencyStop: r.emergency_stop, upochWorkflowId: r.upoch_workflow_id ?? null };
 }
 
 /** Plain-language reading of a canonical policy, derived from the document itself. */
