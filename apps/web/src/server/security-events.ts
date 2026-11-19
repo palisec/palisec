@@ -142,7 +142,10 @@ async function candidates(orgId: string): Promise<Candidate[]> {
       fingerprint: `loosening:${p.id}`,
       evidence: {
         pending_change_id: p.id, kind: p.kind, policy_id: p.policy_id, policy_version: p.policy_version, agent_id: p.agent_id,
-        summary: p.summary, diff: p.diff, requested_by: p.requested_by, requested_at: p.requested_at, effective_at: p.effective_at,
+        // The full diff is in the audit log and GET /v1/pending-changes; the finding stays compact.
+        summary: p.summary, changes: Array.isArray(p.diff) ? p.diff.length : 0,
+        loosening: Array.isArray(p.diff) ? p.diff.filter((d: { kind?: string }) => d.kind === "loosening").length : 0,
+        requested_by: p.requested_by, requested_at: p.requested_at, effective_at: p.effective_at,
       },
     });
   }

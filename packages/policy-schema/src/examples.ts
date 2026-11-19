@@ -1,4 +1,4 @@
-import type { Environment, Intent, Policy } from "./types";
+import { NATIVE_TOKEN, type AssetSafety, type AssetSimulation, type Environment, type Intent, type Policy } from "./types";
 
 /**
  * Illustrative data for the local simulator and documentation.
@@ -85,6 +85,34 @@ export interface Scenario {
   label: string;
   summary: string;
   intent: Omit<Intent, "request_id" | "deadline">;
+  /** Phase 6: the example's simulated result (the browser has no chain); observed_at is set at evaluation. */
+  simulation?: Omit<AssetSimulation, "observed_at">;
+}
+
+/** Schema 1.1 asset-safety defaults, as new policies get them. */
+export const EXAMPLE_ASSET_SAFETY: AssetSafety = {
+  enabled: true,
+  max_transfer_tax_bps: 500,
+  max_slippage_bps: 300,
+  require_sell_simulation: true,
+  block_unlimited_approvals: true,
+  on_simulation_unavailable: "deny",
+  max_simulation_age_seconds: 10,
+};
+
+/** The browser stand-in for a simulation: the ETH value leaves the account and nothing else moves. */
+export function exampleSimulation(s: Scenario, now: number): AssetSimulation {
+  const base = s.simulation ?? {
+    block_number: 118_000_000,
+    reverted: false,
+    outflows: s.intent.value_wei === "0" ? [] : [{ token: NATIVE_TOKEN, amount: s.intent.value_wei }],
+    inflows: [],
+    approvals: [],
+    sell: null,
+    tax_bps: null,
+    round_trip_loss_bps: null,
+  };
+  return { ...base, observed_at: now };
 }
 
 export const SCENARIOS: Scenario[] = [
@@ -123,6 +151,22 @@ export const SCENARIOS: Scenario[] = [
     label: "Unlisted contract",
     summary: "A call to a contract that is not on the allowlist.",
     intent: { agent_id: "agent_rebalancer_01", chain_id: 4663, from: EXAMPLE_ACCOUNT, to: EXAMPLE_UNKNOWN, value_wei: "10000000000000000", data: "0x" },
+  },
+  {
+    id: "tax-token",
+    label: "Buy a token with a 20% sell tax",
+    summary: "Router buy of a token whose sell leg loses 20% in simulation.",
+    intent: { agent_id: "agent_rebalancer_01", chain_id: 4663, from: EXAMPLE_ACCOUNT, to: EXAMPLE_ROUTER, value_wei: "20000000000000000", data: swapData(64_000_000n, 63_000_000n) },
+    simulation: {
+      block_number: 118_000_000,
+      reverted: false,
+      outflows: [{ token: NATIVE_TOKEN, amount: "20000000000000000" }],
+      inflows: [{ token: "0x7777777777777777777777777777777777777777", amount: "64000000000000000000" }],
+      approvals: [],
+      sell: { reverted: false },
+      tax_bps: 2000,
+      round_trip_loss_bps: 2160,
+    },
   },
   {
     id: "denied-target",

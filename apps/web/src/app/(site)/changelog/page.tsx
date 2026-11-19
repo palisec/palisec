@@ -10,6 +10,16 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.2.0",
+    date: "2026-11-19",
+    tag: "Loosening delay and asset safety",
+    changes: [
+      "Loosening delay: a change that weakens the rules (a looser policy version, resuming an agent, moving an agent to a looser policy, a second agent on a protected account, lifting the emergency stop, a shorter delay) waits 60 minutes by default (15 for a stop lift) while the current rules keep deciding. Tightening and engaging the stop are instant. Any owner, admin or operator can cancel at once. Alerts: the policy.loosening_pending, policy.loosening_applied and policy.loosening_cancelled webhooks, a security event, and a countdown banner in the console. New endpoints: GET /v1/pending-changes, POST /v1/pending-changes/{id}/cancel, GET /v1/policies/{id}/pending, POST /v1/policies/{id}/pending/cancel, POST /v1/organization/delays. Activation responses gain state and effective_at.",
+      "Asset safety (policy schema 1.1): before allowing a contract call, PALISEC simulates it on current chain state (eth_simulateV1), including a sell leg for any token received, and denies honeypots (PS_ASSET_001), transfer taxes above the policy maximum (PS_ASSET_002), balance changes that do not match the declared asset_intent (PS_ASSET_003) and unlimited or undeclared approvals to contracts off the allowlist (PS_APPROVAL_001). No simulation means deny or human review (PS_SIM_001), never allow. On by default for new policies; existing policies are unchanged until an owner turns it on. Implemented in both the Rust engine and the reference evaluator, with parity fixtures and 6,000 seeded cases.",
+      "The simulation adds about 0.3 seconds to a decision (measured on mainnet: p50 298 ms, p95 344 ms for a token transfer).",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "2026-11-19",
     tag: "Credits and $PALISEC",

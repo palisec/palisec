@@ -81,20 +81,42 @@ interface RpcBlock {
 /** Simulation can be switched off (PALISEC_SIMULATION=off): asset-safety policies then deny or hold. */
 export const simulationEnabled = () => process.env.PALISEC_SIMULATION !== "off";
 
+/**
+ * eth_simulateV1 on the chain's RPCs in order (a configured provider first, then the public endpoint).
+ * A rate limit or server error moves to the next RPC; the last one gets one short retry. All attempts
+ * share one deadline, so a slow chain makes the decision fail closed instead of hanging.
+ */
 async function simulateV1(chainId: number, blocks: unknown[]): Promise<RpcBlock[]> {
-  const url = CHAINS[chainId as ChainId]?.rpcs[0];
-  if (!url) throw new Error("no RPC for chain");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_simulateV1", params: [{ blockStateCalls: blocks, traceTransfers: true, validation: false }, "latest"] }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`RPC HTTP ${res.status}`);
-  const body = (await res.json()) as { result?: RpcBlock[]; error?: { message?: string } };
-  if (!Array.isArray(body.result)) throw new Error(`eth_simulateV1: ${body.error?.message ?? "no result"}`);
-  return body.result;
+  const urls = CHAINS[chainId as ChainId]?.rpcs ?? [];
+  if (urls.length === 0) throw new Error("no RPC for chain");
+  const deadline = Date.now() + TIMEOUT_MS;
+  const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_simulateV1", params: [{ blockStateCalls: blocks, traceTransfers: true, validation: false }, "latest"] });
+  const attempts = [...urls, urls[urls.length - 1]!];
+  let last = "no attempt";
+  for (let i = 0; i < attempts.length; i++) {
+    const left = deadline - Date.now();
+    if (left < 150) break;
+    if (i === attempts.length - 1) await new Promise((r) => setTimeout(r, Math.min(250, left / 3)));
+    try {
+      const res = await fetch(attempts[i]!, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+        signal: AbortSignal.timeout(Math.max(100, deadline - Date.now())),
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        last = `RPC HTTP ${res.status}`;
+        continue;
+      }
+      const json = (await res.json()) as { result?: RpcBlock[]; error?: { message?: string } };
+      if (Array.isArray(json.result)) return json.result;
+      last = `eth_simulateV1: ${json.error?.message ?? "no result"}`;
+    } catch (e) {
+      last = e instanceof Error ? e.message : String(e);
+    }
+  }
+  throw new Error(last);
 }
 
 /** Net per-token movement of the account, approvals it granted, and where received tokens came from. */
@@ -142,7 +164,9 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
   const started = Date.now();
   if (!simulationEnabled()) return { sim: null, ms: 0, error: "simulation switched off" };
   const account = input.account.toLowerCase();
-  const main = { from: input.account, to: input.to, value: hex(input.valueWei), data: input.data, gas: hex(input.gasLimit) };
+  // No gas cap: execution through the smart account is gas-estimated by the bundler, not by the agent's
+  // gas_limit (which only bounds the fee check), so the simulation measures what the call itself does.
+  const main = { from: input.account, to: input.to, value: hex(input.valueWei), data: input.data };
   try {
     const first = await simulateV1(input.chainId, [{ calls: [main] }]);
     const block = first[0]!;
@@ -197,9 +221,11 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
         tax = blocked ? null : clampBps(worst);
       }
     }
+    // eth_simulateV1 runs on the latest block's state in a virtual next block (stamped ~12 s ahead), so
+    // report the state's block and the moment the simulation answered.
     const sim: AssetSimulation = {
-      block_number: Number(BigInt(at.number)),
-      observed_at: Number(BigInt(at.timestamp)),
+      block_number: Number(BigInt(at.number)) - 1,
+      observed_at: Math.floor(Date.now() / 1000),
       reverted,
       outflows: a.outflows,
       inflows: a.inflows,

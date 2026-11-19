@@ -177,6 +177,10 @@ const run = async (cookie, message, steps) => {
   const ev = audit.body.events?.find((e) => e.type === "agent.action_confirmed");
   check("the confirmation is audited with run and tool-call correlation", ev && ev.detail.agent_run_id === r.body.id && ev.detail.tool_call_id, ev);
   await call("POST", "/organization/emergency-stop", { cookie: A.cookie, body: { active: false, confirm: true } });
+  // Phase 6: the lift waits out the organization's lift delay (3 s on the test server).
+  await new Promise((res) => setTimeout(res, 3500));
+  const lifted = await call("GET", "/organization", { cookie: A.cookie });
+  check("the lift applies after the lift delay (Phase 6)", lifted.body.emergency_stop === false, lifted.body);
 }
 
 // ---- Scenarios E and F: draft, simulate, submit, activate ----------------------------------------

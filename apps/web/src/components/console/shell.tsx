@@ -11,6 +11,7 @@ import { SignOutIcon } from "../icons";
 import { IconBtn } from "./kit";
 import { executionState, findCheck, useHealth } from "./live/health";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
+import { PendingBanner } from "./live/pending-banner";
 
 /**
  * The network the console works on. Mainnet moves real funds, so it is drawn in the caution colour;
@@ -230,6 +231,7 @@ function Shell({ children }: { children: ReactNode }) {
                 co-signs only what it allowed. An agent that sends from a plain key is only as safe as its own code.{" "}
                 <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
               </p>
+              <PendingBanner />
               {children}
             </>
           )}

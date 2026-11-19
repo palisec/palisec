@@ -335,7 +335,10 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   if (current.draft_errors.length) throw new HttpError(422, "PS_POLICY_001", `Draft is invalid: ${current.draft_errors[0]!.path} ${current.draft_errors[0]!.message}`);
   const [{ next, bound }] = await db()`
     SELECT coalesce((SELECT max(version) FROM policy_versions WHERE policy_id = ${id}::uuid), 0) + 1 AS next,
-      (SELECT count(*) FROM agents WHERE policy_id = ${id}::uuid AND status <> 'revoked')::int AS bound`;
+      -- Agents bound to it, or waiting to be moved onto it: both depend on what it allows.
+      ((SELECT count(*) FROM agents WHERE policy_id = ${id}::uuid AND status <> 'revoked') +
+       (SELECT count(*) FROM pending_changes WHERE org_id = ${ctx.orgId}::uuid AND state = 'pending' AND kind = 'agent_rebind'
+          AND setting->>'policy_id' = ${id}::text))::int AS bound`;
   const document = { ...(current.draft as object), version: Number(next), status: "active" } as Policy;
   const hash = await sha256Hex(canonicalJson(document));
   const before = (current.active_document as Policy | null) ?? null;

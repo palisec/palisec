@@ -25,6 +25,13 @@ export function delayMinSeconds(): number {
   return DELAY_MIN_SECONDS;
 }
 
+/** Delays a new organization starts with: 60 minutes and 15 minutes, or a test server's override. */
+export function initialDelays(): { loosening: number; lift: number } {
+  const t = Number(process.env.PALISEC_TEST_DEFAULT_DELAY_SECONDS);
+  if (process.env.VERCEL_ENV !== "production" && Number.isInteger(t) && t >= 1 && t < 900) return { loosening: t, lift: t };
+  return { loosening: 3600, lift: 900 };
+}
+
 export type PendingKind = "policy_activation" | "agent_rebind" | "agent_resume" | "emergency_lift" | "delay_change";
 
 /** Applies whatever is due for one organization (or all) and announces each application. */
