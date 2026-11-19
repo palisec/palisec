@@ -30,6 +30,7 @@ const LABEL: Record<string, string> = {
   agent_resume: "Agent resume",
   emergency_lift: "Emergency stop lift",
   delay_change: "Shorter delay",
+  agent_upoch: "Agent's Upoch workflow change",
 };
 
 function left(ms: number) {

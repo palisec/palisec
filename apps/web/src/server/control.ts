@@ -521,6 +521,24 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
     }
   }
   await checkPolicyBinding(ctx, policyId, agent.chain_id, agent.account);
+  // Phase 6.5: if the agent's policy requires Upoch recovery, a different workflow could make it pass
+  // where it failed, so the change waits out the loosening delay. Otherwise it applies now.
+  let pendingUpoch: Awaited<ReturnType<typeof requestPending>> | null = null;
+  if (upochWorkflowId !== (agent.upoch_workflow_id ?? null)) {
+    const [pol] = agent.policy_id
+      ? await db()`SELECT pv.document->'upoch_recovery'->>'require_upoch_recoverable' AS req FROM policies p JOIN policy_versions pv ON pv.policy_id = p.id AND pv.version = p.active_version WHERE p.id = ${agent.policy_id}::uuid`
+      : [];
+    if (pol?.req === "true") {
+      const delays = await orgDelays(ctx.orgId);
+      pendingUpoch = await requestPending(ctx, "agent_upoch", {
+        agentId: id,
+        setting: { upoch_workflow_id: upochWorkflowId ?? "" },
+        diff: [{ path: "$.upoch_workflow_id", kind: "loosening", from: agent.upoch_workflow_id ?? null, to: upochWorkflowId, note: "agent's Upoch workflow changed while its policy requires Upoch recovery" }],
+        delaySeconds: delays.loosening,
+      });
+      upochWorkflowId = agent.upoch_workflow_id ?? null;
+    }
+  }
   // Phase 6: moving the agent to a looser policy waits out the delay; everything else applies now.
   let boundPolicy = policyId;
   let pendingRebind: Awaited<ReturnType<typeof requestPending>> | null = null;
@@ -550,6 +568,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
     INSERT INTO audit_events (org_id, actor_user_id, actor_agent_id, type, detail)
     SELECT org_id, ${ctx.user.userId}::uuid, id, ${a.type}, ${a.detail}::text::jsonb FROM ag`;
   const out = await getAgent(ctx, id);
+  if (pendingUpoch) return { ...out, pending_change: { kind: "agent_upoch", ...pendingUpoch } };
   return pendingRebind ? { ...out, pending_change: { kind: "agent_rebind", policy_id: policyId, ...pendingRebind } } : out;
 }
 
