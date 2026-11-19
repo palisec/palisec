@@ -102,6 +102,14 @@ describe("loosening classifier", () => {
     expect(classifyPolicyChange(base(), edit((p) => { p.version = 99; p.status = "draft"; })).changes).toEqual([]);
   });
 
+  it("a repeated allowlist address is loosening (the engines use the first entry)", () => {
+    const after = edit((p) => {
+      const first = p.contracts.allowlist[0]!;
+      p.contracts.allowlist.unshift({ address: first.address.toUpperCase().replace("0X", "0x") as `0x${string}`, selectors: ["0xdeadbeef"], require_verified_code: false });
+    });
+    expect(classifyPolicyChange(base(), after).loosening).toBe(true);
+  });
+
   it("address case does not count as a change", () => {
     expect(classifyPolicyChange(base(), edit((p) => (p.contracts.allowlist[0]!.address = p.contracts.allowlist[0]!.address.toUpperCase().replace("0X", "0x") as `0x${string}`))).changes).toEqual([]);
   });

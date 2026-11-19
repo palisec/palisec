@@ -89,6 +89,24 @@ export default function SecurityPage() {
           ))}
         </ol>
       </Section>
+      <Section label="Slower to loosen, faster to stop">
+        <div className="max-w-[72ch] space-y-4 text-[15px] leading-relaxed text-muted">
+          <p>
+            If an owner&apos;s session or wallet is taken over, the first move is usually to loosen the rules: raise a budget,
+            allowlist an address, lift the emergency stop. In PALISEC every change that weakens the rules waits out a delay (60
+            minutes by default, 15 minutes for lifting the stop) while the current rules keep deciding, and it raises an alert,
+            a webhook and a countdown in the console. Any owner, admin or operator can cancel it at once. Tightening and engaging
+            the stop are always instant.
+          </p>
+          <p>
+            Before co-signing a token buy, swap, transfer or approval, PALISEC also simulates it on current chain state and
+            refuses honeypots, high transfer taxes, unlimited approvals to unknown contracts and balance changes that do not
+            match what the agent declared. If the simulation is unavailable the request is denied, or held for a person, never
+            allowed.
+          </p>
+        </div>
+      </Section>
+
       <Section label="TEE guarantees">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
           <div>

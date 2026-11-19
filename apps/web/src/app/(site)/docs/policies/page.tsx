@@ -165,6 +165,49 @@ export default function PoliciesPage() {
         used for this decision.
       </Note>
 
+      <h2 id="asset-safety">Asset safety (schema 1.1)</h2>
+      <p>
+        Before PALISEC allows (and co-signs) a contract call, it simulates the exact operation from the account on current
+        Robinhood Chain state. The simulation records every token and ETH balance change, every approval, and whether the
+        call reverts. When the account receives a token, a second step sends it back to the pool it came from, which is the
+        first leg of any sell: a token that blocks that transfer is a likely honeypot, and a shortfall is a transfer tax. The
+        result goes to both policy engines as an input, like the price and the fee, and the rules below decide.
+      </p>
+      <ul>
+        <li><code>max_transfer_tax_bps</code> (default 500, 5%): a higher buy or sell tax is <code>PS_ASSET_002</code>.</li>
+        <li><code>require_sell_simulation</code> (default on): a received token whose sell leg reverts is <code>PS_ASSET_001</code>.</li>
+        <li><code>max_slippage_bps</code> (default 300): receiving less than the declared quote minus this is <code>PS_ASSET_003</code>.</li>
+        <li><code>block_unlimited_approvals</code> (default on): an approval to a contract that is not on the allowlist must be for the exact declared amount, and never unlimited, or it is <code>PS_APPROVAL_001</code>.</li>
+        <li><code>on_simulation_unavailable</code> (default <code>deny</code>, or <code>review</code>): with no simulation, or one older than <code>max_simulation_age_seconds</code> (default 10), the request is denied or held for a person, never allowed (<code>PS_SIM_001</code>).</li>
+      </ul>
+      <p>
+        Agents declare what an operation spends and receives with the optional <code>asset_intent</code> field (a list of
+        token and amount pairs under <code>spend</code> and <code>receive</code>, with <code>0xEeee…EEeE</code> for ETH). The
+        ETH value sent and the amount of a plain ERC-20 <code>transfer</code> count as declared. Tokens leaving the account
+        beyond what was declared are <code>PS_ASSET_003</code>. New policies have asset safety on; policies created before it
+        keep it off until an owner adds the section. Each decision&apos;s <code>asset</code> check shows the simulated block,
+        the tax, the round-trip loss (when the pool quotes it) and the approvals.
+      </p>
+
+      <h2 id="loosening-delay">Loosening delay</h2>
+      <p>
+        A change that makes the rules weaker waits before it takes effect; a change that makes them stronger applies at once.
+        Loosening includes a higher limit, budget or approval threshold, a new allowlisted contract or function, a removed deny
+        rule, a shorter cooldown, unknown methods moving from deny to review, weaker asset-safety settings, and anything that
+        cannot be classified safely. If a new version loosens anything, the whole version waits as{" "}
+        <code>pending_activation</code> until <code>effective_at</code>, and the current version keeps deciding every request
+        until then. The same applies to resuming a paused agent, moving an agent to a looser policy, adding a second agent on an
+        account that is already protected, lifting the emergency stop, and shortening a delay.
+      </p>
+      <p>
+        The delay is 60 minutes by default (15 minutes to 72 hours, set by an owner); lifting the emergency stop waits 15
+        minutes by default. Engaging the stop is always instant and cancels a pending lift. Any owner, admin or operator can
+        cancel a pending change at once, from the banner in the console or through the API. When a change enters the delay,
+        PALISEC sends the <code>policy.loosening_pending</code> webhook with the diff and <code>effective_at</code>, raises a
+        security event, and shows a countdown in the console; it also sends <code>policy.loosening_applied</code> and{" "}
+        <code>policy.loosening_cancelled</code>. Every step is in the audit log with who did it and the exact diff.
+      </p>
+
       <h2 id="migration">Version migration</h2>
       <p>
         <code>schema_version</code> names the document format; <code>version</code> numbers each activated policy. They move

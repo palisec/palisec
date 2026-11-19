@@ -74,8 +74,11 @@ check("create policy draft", r.status === 201 && r.body.status === "draft", r.bo
 const policyId = r.body.id;
 check("duplicate policy key is refused", (await call("POST", "/policies", { cookie: o.cookie, body: { name: "x", policy_key: "treasury_bot", chain_id: CHAIN, account: ACCOUNT } })).status === 409);
 
+check("new policies start in schema 1.1 with asset safety on (Phase 6)", r.body.draft?.schema_version === "1.1" && r.body.draft?.asset_safety?.enabled === true, r.body.draft);
+// This suite covers the Phase 1–5 rules; asset safety (and its simulation) has its own suite, e2e-phase6.mjs.
 const draft = {
   ...r.body.draft,
+  asset_safety: { ...r.body.draft.asset_safety, enabled: false },
   limits: { ...r.body.draft.limits, max_transaction_value_wei: "1000000000000000", hourly_budget_usd_micros: "500000", max_pending_operations: 10, max_price_age_seconds: 120 },
   cooldowns: { identical_calldata_seconds: 60, identical_intent_seconds: 0 },
   contracts: { default: "deny", allowlist: [{ address: TOKEN, selectors: ["0xa9059cbb"], require_verified_code: false }], denylist: [] },
@@ -189,6 +192,10 @@ const saved = await call("PUT", `/policies/${p2.body.id}`, { cookie: o.cookie, b
 await call("POST", `/policies/${p2.body.id}/activate`, { cookie: o.cookie, body: { confirm: true, draft_hash: saved.body.draft_hash } });
 const a2 = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Racer", chain_id: CHAIN, account: ACCOUNT, policy_id: p2.body.id } });
 const k2 = (await call("POST", `/agents/${a2.body.id}/credentials`, { cookie: o.cookie, body: {} })).body.secret;
+// Phase 6: a second agent on an account that is already protected starts paused for the loosening delay.
+check("a second agent on a protected account starts paused, pending the delay", a2.body.status === "paused", a2.body);
+await new Promise((res) => setTimeout(res, 3500));
+await call("GET", "/agents", { cookie: o.cookie });
 const racers = await Promise.all(Array.from({ length: 30 }, () => call("POST", "/operations", { key: k2, body: intent({ value_wei: "100000000000000" }) })));
 const allowed = racers.filter((x) => x.body.decision === "ALLOW").length;
 const budgetDenied = racers.filter((x) => x.body.reason_code === "PS_BUDGET_001").length;
@@ -201,7 +208,11 @@ check("pause agent", r.status === 200 && r.body.status === "paused", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent() });
 check("paused agent is PS_PAUSED_001", r.body.reason_code === "PS_PAUSED_001", r.body);
 r = await call("POST", `/agents/${agentId}/resume`, { cookie: o.cookie, body: { confirm: true } });
-check("resume agent", r.status === 200 && r.body.status === "active", r.body);
+// Phase 6: resuming is a loosening, so it waits out the organization's delay (3 s on this test server).
+check("resume agent waits out the loosening delay", r.status === 200 && r.body.status === "paused" && r.body.pending_change?.kind === "agent_resume", r.body);
+await new Promise((res) => setTimeout(res, 3500));
+r = await call("GET", `/agents/${agentId}`, { cookie: o.cookie });
+check("resume agent (applied after the delay)", r.status === 200 && r.body.status === "active", r.body);
 
 r = await call("POST", "/organization/emergency-stop", { cookie: o.cookie, body: { active: true, confirm: true } });
 check("emergency stop on", r.status === 200 && r.body.emergency_stop === true, r.body);
@@ -217,7 +228,10 @@ check("viewer can read agents", (await call("GET", "/agents", { cookie: v.cookie
 check("viewer cannot create agents", (await call("POST", "/agents", { cookie: v.cookie, headers: { "x-ps-org": viewerOrg }, body: { name: "x", chain_id: CHAIN, account: ACCOUNT } })).status === 403);
 check("viewer cannot lift the emergency stop", (await call("POST", "/organization/emergency-stop", { cookie: v.cookie, headers: { "x-ps-org": viewerOrg }, body: { active: false, confirm: true } })).status === 403);
 r = await call("POST", "/organization/emergency-stop", { cookie: o.cookie, body: { active: false, confirm: true } });
-check("owner lifts the emergency stop", r.status === 200 && r.body.emergency_stop === false, r.body);
+check("owner's lift waits out the lift delay", r.status === 200 && r.body.emergency_stop === true && r.body.pending_changes?.some((p) => p.kind === "emergency_lift"), r.body);
+await new Promise((res) => setTimeout(res, 3500));
+r = await call("GET", "/organization", { cookie: o.cookie });
+check("owner lifts the emergency stop (applied after the delay)", r.status === 200 && r.body.emergency_stop === false, r.body);
 
 const x = await signIn(outsider);
 check("another organization cannot see this agent", (await call("GET", `/agents/${agentId}`, { cookie: x.cookie })).status === 404);

@@ -68,9 +68,17 @@ type Entry = { address: string; selectors: string[]; require_verified_code: bool
 
 function allowlist(before: unknown, after: unknown, out: PolicyChange[]) {
   const path = "$.contracts.allowlist";
+  // The engines use the first entry for an address, so the first one is what counts here too.
+  let duplicates = false;
   const index = (list: unknown) => {
     const m = new Map<string, Entry>();
-    if (Array.isArray(list)) for (const e of list as Entry[]) if (e && typeof e.address === "string") m.set(e.address.toLowerCase(), e);
+    if (Array.isArray(list))
+      for (const e of list as Entry[])
+        if (e && typeof e.address === "string") {
+          const k = e.address.toLowerCase();
+          if (m.has(k)) duplicates = true;
+          else m.set(k, e);
+        }
     return m;
   };
   if (!Array.isArray(before) || !Array.isArray(after)) {
@@ -103,6 +111,8 @@ function allowlist(before: unknown, after: unknown, out: PolicyChange[]) {
         out.push({ path: `${path}[${addr}].${k}`, kind: "loosening", from: (old as never)[k], to: (e as never)[k], note: "unrecognised allowlist field changed" });
   }
   for (const [addr, e] of a) if (!b.has(addr)) out.push({ path: `${path}[${addr}]`, kind: "tightening", from: e, to: null, note: `contract ${addr} removed from the allowlist` });
+  // Repeated addresses make the effective entry depend on order: never classify that as harmless.
+  if (duplicates) out.push({ path, kind: "loosening", from: null, to: null, note: "an address appears more than once in the allowlist" });
 }
 
 function denylist(before: unknown, after: unknown, out: PolicyChange[]) {

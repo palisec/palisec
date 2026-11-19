@@ -4,7 +4,10 @@ import { useId, useMemo, useState } from "react";
 import {
   EMPTY_STATE,
   EXAMPLE_ENV,
+  EXAMPLE_ASSET_SAFETY,
   EXAMPLE_POLICY,
+  exampleSimulation,
+  NATIVE_TOKEN,
   REASON_CODES,
   SCENARIOS,
   SIM_EPOCH,
@@ -69,6 +72,9 @@ function buildPolicy(c: Controls): { policy: Policy; inputErrors: string[] } {
   if (Number.isNaN(cooldown)) inputErrors.push("Cooldown must be whole seconds.");
   const policy: Policy = {
     ...EXAMPLE_POLICY,
+    // Phase 6: the example policy as a new policy gets it, with asset safety on.
+    schema_version: "1.1",
+    asset_safety: EXAMPLE_ASSET_SAFETY,
     limits: {
       ...EXAMPLE_POLICY.limits,
       max_transaction_value_wei: (wei ?? 0n).toString(),
@@ -202,9 +208,15 @@ export function Workbench() {
       setTab("checks");
       return;
     }
+    const value = scenario.intent.value_wei;
     const result = evaluate(
       policy,
-      { ...scenario.intent, request_id: `ps_req_sim_${String(seq).padStart(4, "0")}`, deadline: now + 120 },
+      {
+        ...scenario.intent,
+        request_id: `ps_req_sim_${String(seq).padStart(4, "0")}`,
+        deadline: now + 120,
+        asset_intent: { spend: value === "0" ? [] : [{ token: NATIVE_TOKEN, amount: value }], receive: [] },
+      },
       ledger,
       {
         ...EXAMPLE_ENV,
@@ -212,6 +224,7 @@ export function Workbench() {
         fee_estimate_wei: controls.feeOffline ? null : EXAMPLE_ENV.fee_estimate_wei,
         eth_usd: controls.priceOffline ? null : { price_micros: EXAMPLE_ENV.eth_usd!.price_micros, observed_at: now },
         emergency_stop: controls.emergencyStop,
+        asset_simulation: exampleSimulation(scenario, now),
       },
     );
     setLedger(result.next_state);

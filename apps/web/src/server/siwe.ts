@@ -1,6 +1,7 @@
 import "server-only";
 import { createPublicClient, getAddress, isAddress, isHex, verifyMessage, type Hex } from "viem";
 import { createSiweMessage } from "viem/siwe";
+import { initialDelays } from "./pending";
 import { CHALLENGE_TTL_SECONDS, chainTransport, enabledChainIds } from "./config";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 import { db } from "./db";
@@ -93,14 +94,15 @@ export async function verifyChallenge(body: Record<string, unknown>, host: strin
 
   // One statement, so it is atomic on every driver: the user, a first-time organization and the audit trail.
   const orgName = `Organization ${address.slice(0, 6)}…${address.slice(-4)}`;
+  const delays = initialDelays();
   const [user] = await sql`
     WITH u AS (
       INSERT INTO users (address, last_login) VALUES (${address}, now())
       ON CONFLICT ((lower(address))) DO UPDATE SET last_login = now()
       RETURNING id, (xmax = 0) AS created
     ), new_org AS (
-      INSERT INTO organizations (name)
-      SELECT ${orgName}::text WHERE NOT EXISTS (SELECT 1 FROM memberships m JOIN u ON m.user_id = u.id)
+      INSERT INTO organizations (name, loosening_delay_seconds, stop_lift_delay_seconds)
+      SELECT ${orgName}::text, ${delays.loosening}::int, ${delays.lift}::int WHERE NOT EXISTS (SELECT 1 FROM memberships m JOIN u ON m.user_id = u.id)
       RETURNING id
     ), member AS (
       INSERT INTO memberships (org_id, user_id, role)
