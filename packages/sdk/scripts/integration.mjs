@@ -55,8 +55,14 @@ const approveCall = encodeFunctionData({ abi: erc20Abi, functionName: "approve",
 const dry = await palisec.evaluate({ to: token, data: transfer(1n), gasLimit: 90_000 });
 check("evaluate: dry run allows and records nothing", dry.decision === "ALLOW" && dry.dryRun && dry.operationId === null, dry);
 
+// A true retry sends the same body: pin the clock so both calls compute the same deadline (the first can
+// take over a second with asset simulation, and a different deadline is, correctly, a different request).
+const realNow = Date.now;
+const pinned = realNow();
+Date.now = () => pinned;
 const r1 = await palisec.authorize({ to: token, data: transfer(2n), gasLimit: 90_000, requestId: "sdk-idem-1" });
 const r2 = await palisec.authorize({ to: token, data: transfer(2n), gasLimit: 90_000, requestId: "sdk-idem-1" });
+Date.now = realNow;
 check("authorize: ALLOW with an authorization and expiry", r1.decision === "ALLOW" && r1.authorizationId && r1.expiresAt instanceof Date, r1);
 check("authorize: retrying the same request returns the same operation", r1.operationId === r2.operationId, [r1.operationId, r2.operationId]);
 

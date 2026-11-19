@@ -60,8 +60,16 @@ async def main():
         dry = await palisec.evaluate(to=TOKEN, data=transfer(1), gas_limit=90_000)
         check("evaluate: dry run allows and records nothing", dry.decision == "ALLOW" and dry.dry_run and dry.operation_id is None, dry)
 
-        r1 = await palisec.authorize(to=TOKEN, data=transfer(2), gas_limit=90_000, request_id="py-idem-1")
-        r2 = await palisec.authorize(to=TOKEN, data=transfer(2), gas_limit=90_000, request_id="py-idem-1")
+        # A true retry sends the same body: pin the clock so both calls compute the same deadline.
+        import palisec.client as _pc
+        _real_time = _pc.time.time
+        _pinned = _real_time()
+        _pc.time.time = lambda: _pinned
+        try:
+            r1 = await palisec.authorize(to=TOKEN, data=transfer(2), gas_limit=90_000, request_id="py-idem-1")
+            r2 = await palisec.authorize(to=TOKEN, data=transfer(2), gas_limit=90_000, request_id="py-idem-1")
+        finally:
+            _pc.time.time = _real_time
         check("authorize: ALLOW with an authorization and expiry", r1.allowed and r1.expires_at is not None, r1)
         check("authorize: retrying the same request returns the same operation", r1.operation_id == r2.operation_id, (r1.operation_id, r2.operation_id))
 
