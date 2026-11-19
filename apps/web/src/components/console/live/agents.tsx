@@ -8,6 +8,7 @@ import { CopyButton } from "../../copy-button";
 import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Panel, Pill } from "../kit";
 import { ago, DecisionPill, LoadError, Loading, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
+import { UpochPanel } from "./upoch-panel";
 
 interface AgentRow {
   id: string;
@@ -256,6 +257,8 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
           </Field>
         </Panel>
       )}
+
+      <UpochPanel agentId={id} canEdit={a.status !== "revoked" && can.manage(org?.role)} />
 
       <Panel title={`API keys · ${a.credentials.filter((c) => !c.revoked_at).length} active`} bodyClassName="p-4 space-y-3">
         {secret && (

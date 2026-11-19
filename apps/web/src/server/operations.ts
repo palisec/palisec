@@ -19,6 +19,7 @@ import { getAddress, isAddress } from "viem";
 import type { AgentContext } from "./access";
 import { meterDecision, unmeterDecision, type Meter } from "./billing";
 import { declaredIntent, parseAssetIntent, simulateOperation } from "./asset-sim";
+import { readUpoch, toEngineInput } from "./upoch";
 import { ethUsd, gasPriceWei, hasDeployedCode } from "./chain-env";
 import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
@@ -97,16 +98,18 @@ async function liveEnvironment(
   emergencyStop: boolean,
   pausedAgents: string[],
   simulateFrom: `0x${string}` | null = null,
+  upoch: { account: string; workflowId: string | null } | null = null,
 ) {
   const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
   const simulate = simulateFrom !== null && chainEnabled && input.data !== "0x";
-  const [gasPrice, price, code, sim] = await Promise.all([
+  const [gasPrice, price, code, sim, up] = await Promise.all([
     chainEnabled ? gasPriceWei(input.chain_id) : null,
     ethUsd(),
     chainEnabled ? hasDeployedCode(input.chain_id, input.to) : null,
     simulate
       ? simulateOperation({ chainId: input.chain_id, account: simulateFrom, to: input.to, valueWei: BigInt(input.value_wei), data: input.data, gasLimit: input.gas_limit })
       : null,
+    upoch && chainEnabled ? readUpoch(input.chain_id, upoch.account, upoch.workflowId) : null,
   ]);
   if (sim) logEvent("info", "asset_sim.done", { chain_id: input.chain_id, ms: sim.ms, available: sim.sim !== null });
   const feeWei = gasPrice === null ? null : gasPrice * BigInt(input.gas_limit);
@@ -118,6 +121,8 @@ async function liveEnvironment(
     emergency_stop: emergencyStop,
     paused_agents: pausedAgents,
     ...(simulate ? { asset_simulation: sim?.sim ?? null } : {}),
+    // Phase 6.5: only read (and passed) when the policy requires Upoch recovery.
+    ...(upoch ? { upoch: toEngineInput(up ?? null) } : {}),
   };
   return { env, feeWei, simulationMs: sim?.ms ?? null };
 }
@@ -218,6 +223,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
   const { env, feeWei } = await liveEnvironment(
     input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], assetSafetyOn(policy) ? agent.account : null,
+    policy?.upoch_recovery?.require_upoch_recoverable === true ? { account: agent.account, workflowId: agent.upochWorkflowId } : null,
   );
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
