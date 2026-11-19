@@ -191,6 +191,7 @@ await rpc("anvil_impersonateAccount", [PAL_HOLDER]);
 await rpc("anvil_setBalance", [PAL_HOLDER, "0x56BC75E2D63100000"]);
 await send(PAL_HOLDER, PALISEC, ERC20, "transfer", [buyer, parseUnits("2000000", 18)]);
 await send(buyer, PALISEC, ERC20, "approve", [S.credits, 2n ** 256n - 1n]);
+const burns0 = await (await fetch(`${BASE}/api/v1/token/burns`)).json();
 const supply0 = await pub.readContract({ address: PALISEC, abi: ERC20, functionName: "totalSupply" });
 const palTx = await send(buyer, S.credits, C, "buyWithPalisec", [ACC, 1000n, 2n ** 256n - 1n]);
 const burned = supply0 - (await pub.readContract({ address: PALISEC, abi: ERC20, functionName: "totalSupply" }));
@@ -200,7 +201,7 @@ await mine(3);
 b = await billing();
 check("T2: credited once with the 20% discount ($4 of tokens for 1,000 credits)", b.credits === 1006 && b.history?.some((h) => h.asset === "PALISEC" && h.usd_micros === "4000000" && h.burned === burned.toString()), b.history?.[0]);
 const burns = await (await fetch(`${BASE}/api/v1/token/burns`)).json();
-check("T9: burn counter equals the chain (total = sum of burns, one row with its tx)", burns.total_burned === burned.toString() && burns.purchases === 1 && burns.rows?.[0]?.tx_hash === palTx.transactionHash, burns);
+check("T9: burn counter equals the chain (grew by exactly this burn, newest row is this tx)", BigInt(burns.total_burned) - BigInt(burns0.total_burned ?? "0") === burned && burns.purchases === (burns0.purchases ?? 0) + 1 && burns.rows?.[0]?.tx_hash === palTx.transactionHash, { before: burns0.total_burned, after: burns.total_burned, burned });
 
 // ---------------------------------------------------------------- T5 caps refused by the contract
 let capRefused = false;
@@ -238,7 +239,7 @@ b = await billing();
 check("T8: below 5,000,000 → back to normal limits, nothing deleted", b.pro?.active === false && b.limits?.agents === 10, b.pro);
 r = await call("POST", "/agents", { cookie, body: { name: "after downgrade", chain_id: 4663, account: ACCOUNT } });
 const agents = await call("GET", "/agents", { cookie });
-check("T8: after the downgrade new agents are refused, existing ones stay", r.status === 403 && agents.body.agents?.length >= 12, { status: r.status, agents: agents.body.agents?.length });
+check("T8: after the downgrade new agents are refused, existing ones stay", r.status === 403 && agents.body.agents?.length === 11, { status: r.status, agents: agents.body.agents?.length });
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

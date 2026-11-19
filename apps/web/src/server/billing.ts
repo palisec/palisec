@@ -176,7 +176,7 @@ export async function refreshPro(orgId: string, force = false): Promise<void> {
 /** The organization's limits: Pro only with a check from the last day. */
 export async function planLimits(orgId: string): Promise<{ pro: boolean; limits: PlanLimits }> {
   // Pro only on a recent check (two check intervals); a failed read never extends it.
-  const fresh = 2 * intEnv("BILLING_PRO_CHECK_SECONDS", BILLING.proCheckSeconds);
+  const fresh = Math.max(2 * intEnv("BILLING_PRO_CHECK_SECONDS", BILLING.proCheckSeconds), 60);
   const [r] = await db()`SELECT pro AND pro_checked_at > now() - make_interval(secs => ${fresh}::int) AS pro FROM billing_accounts WHERE org_id = ${orgId}::uuid`;
   const pro = Boolean(r?.pro);
   return { pro, limits: pro ? LIMITS.pro : LIMITS.normal };
