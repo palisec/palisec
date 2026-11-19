@@ -26,6 +26,10 @@ export const EVENT_TYPES = [
   "security.finding",
   "operation.submitted",
   "operation.executed",
+  // Phase 6: a weakening change is waiting (with its diff and effective_at), took effect, or was cancelled.
+  "policy.loosening_pending",
+  "policy.loosening_applied",
+  "policy.loosening_cancelled",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 

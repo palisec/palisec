@@ -2,6 +2,7 @@ import "server-only";
 import { BILLING, LIMITS } from "@/lib/billing-config";
 import { db } from "./db";
 import { HttpError, rateLimited, sameOrigin } from "./http";
+import { applyDue } from "./pending";
 import { currentUser, type Role, type SessionUser } from "./session";
 import { sha256Hex } from "./tokens";
 
@@ -55,6 +56,8 @@ export async function requireMember(req: Request, permission: Permission): Promi
   if (!membership) throw new HttpError(403, "PS_AUTH_001", "You are not a member of this organization");
   if (!(ROLES[permission] as readonly Role[]).includes(membership.role))
     throw new HttpError(403, "PS_AUTH_001", `The ${membership.role} role cannot perform this action`);
+  // Phase 6: changes whose delay has run out take effect before anything is read or changed.
+  await applyDue(membership.orgId);
   return { user, orgId: membership.orgId, role: membership.role };
 }
 
@@ -94,7 +97,7 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
   if (!API_KEY_PATTERN.test(key)) throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
   // The highest plan's limit first (before any database read), then the organization's own plan below.
   if (rateLimited(req, `key:${key.slice(0, 20)}`, LIMITS.pro.apiRequestsPerMinute)) throw new HttpError(429, "PS_RATE_001", "Too many requests for this API key", true);
-  const rows = await db()`
+  const lookup = async () => db()`
     WITH c AS (
       SELECT c.id, c.agent_id, c.scopes FROM api_credentials c
       WHERE c.secret_hash = decode(${await sha256Hex(key)}, 'hex') AND c.revoked_at IS NULL
@@ -103,8 +106,15 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
       WHERE id IN (SELECT id FROM c) AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')
     )
     SELECT c.id AS credential_id, c.scopes, a.id AS agent_id, a.org_id, a.name, a.status, a.chain_id, a.account, a.policy_id, o.emergency_stop,
-      coalesce(b.pro AND b.pro_checked_at > now() - make_interval(secs => ${2 * BILLING.proCheckSeconds}::int), false) AS pro
+      coalesce(b.pro AND b.pro_checked_at > now() - make_interval(secs => ${2 * BILLING.proCheckSeconds}::int), false) AS pro,
+      EXISTS (SELECT 1 FROM pending_changes pc WHERE pc.org_id = a.org_id AND pc.state = 'pending' AND pc.effective_at <= now()) AS due
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id LEFT JOIN billing_accounts b ON b.org_id = a.org_id`;
+  let rows = await lookup();
+  // Phase 6: a change whose delay ran out applies before this request is decided, then state is re-read.
+  if (rows[0]?.due) {
+    await applyDue(rows[0].org_id);
+    rows = await lookup();
+  }
   const r = rows[0];
   if (!r || r.status === "revoked") throw new HttpError(401, "PS_AUTH_001", "API key is missing, unknown or revoked");
   if (!r.pro && rateLimited(req, `keyplan:${key.slice(0, 20)}`, LIMITS.normal.apiRequestsPerMinute))

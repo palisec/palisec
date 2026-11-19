@@ -21,6 +21,11 @@ export const REASON_CODES = {
   PS_CHAIN_001: "Chain or bundler unavailable",
   // Extension to the §5.7 table: request schema failures need their own code.
   PS_REQUEST_001: "Request failed schema validation",
+  // Phase 6, asset safety (schema 1.1). PS_SIM_001 above covers an unavailable, stale or reverting simulation.
+  PS_ASSET_001: "Sell simulation failed: likely honeypot",
+  PS_ASSET_002: "Transfer tax above the policy maximum",
+  PS_ASSET_003: "Simulated balance changes do not match the declared intent",
+  PS_APPROVAL_001: "Unlimited or oversized approval to a non-allowlisted spender",
 } as const;
 
 export type ReasonCode = keyof typeof REASON_CODES;
@@ -44,4 +49,8 @@ export const RETRYABLE: Record<ReasonCode, boolean> = {
   PS_STATE_001: true,
   PS_CHAIN_001: true,
   PS_REQUEST_001: false,
+  PS_ASSET_001: false,
+  PS_ASSET_002: false,
+  PS_ASSET_003: false,
+  PS_APPROVAL_001: false,
 };

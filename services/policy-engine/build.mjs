@@ -11,6 +11,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sourceHash } from "./source-hash.mjs";
 
@@ -22,7 +23,9 @@ if (process.argv.includes("--hash")) {
 }
 
 execFileSync("cargo", ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"], { cwd: here, stdio: "inherit" });
-const wasm = readFileSync(new URL("./target/wasm32-unknown-unknown/release/palisec_policy_engine.wasm", import.meta.url));
+// CARGO_TARGET_DIR is honoured (a target path without spaces helps the Windows GNU linker).
+const targetDir = process.env.CARGO_TARGET_DIR ?? join(here, "target");
+const wasm = readFileSync(join(targetDir, "wasm32-unknown-unknown", "release", "palisec_policy_engine.wasm"));
 const version = /^version = "([^"]+)"/m.exec(readFileSync(new URL("./Cargo.toml", import.meta.url), "utf8"))[1];
 const out = new URL("../../packages/policy-engine/src/wasm.ts", import.meta.url);
 writeFileSync(

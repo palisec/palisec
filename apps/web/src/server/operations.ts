@@ -7,6 +7,7 @@ import {
   selectorOf,
   type CheckResult,
   type Decision,
+  type AssetIntent,
   type Environment,
   type Intent,
   type LedgerState,
@@ -17,6 +18,7 @@ import {
 import { getAddress, isAddress } from "viem";
 import type { AgentContext } from "./access";
 import { meterDecision, unmeterDecision, type Meter } from "./billing";
+import { declaredIntent, parseAssetIntent, simulateOperation } from "./asset-sim";
 import { ethUsd, gasPriceWei, hasDeployedCode } from "./chain-env";
 import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
@@ -38,13 +40,16 @@ export interface IntentInput {
   data: `0x${string}`;
   gas_limit: number;
   deadline: number;
+  /** Phase 6, optional: what the operation spends (at most) and receives (quoted), per token. */
+  asset_intent?: AssetIntent;
 }
 
 /** Validates an agent's request body. The sender is never taken from the body: it is the agent's account. */
 export function parseIntent(body: Record<string, unknown>): IntentInput {
-  const allowed = ["request_id", "chain_id", "to", "value_wei", "data", "gas_limit", "deadline"];
+  const allowed = ["request_id", "chain_id", "to", "value_wei", "data", "gas_limit", "deadline", "asset_intent"];
   for (const k of Object.keys(body)) if (!allowed.includes(k)) throw new BadRequest(`Unknown field: ${k}`);
   const { request_id, chain_id, to, value_wei, data, gas_limit, deadline } = body;
+  const assetIntent = parseAssetIntent(body.asset_intent);
   if (typeof request_id !== "string" || !/^[A-Za-z0-9_.:-]{1,128}$/.test(request_id))
     throw new BadRequest("request_id must be 1-128 characters of A-Z a-z 0-9 _ . : -");
   if (typeof chain_id !== "number" || !Number.isInteger(chain_id)) throw new BadRequest("chain_id must be an integer");
@@ -57,7 +62,10 @@ export function parseIntent(body: Record<string, unknown>): IntentInput {
     throw new BadRequest("gas_limit must be an integer between 21000 and 30000000");
   if (typeof deadline !== "number" || !Number.isInteger(deadline)) throw new BadRequest("deadline must be unix seconds");
   if (deadline > Math.floor(Date.now() / 1000) + MAX_DEADLINE_SECONDS) throw new BadRequest(`deadline must be within ${MAX_DEADLINE_SECONDS} seconds`);
-  return { request_id, chain_id, to: getAddress(to), value_wei, data: d.toLowerCase() as `0x${string}`, gas_limit, deadline };
+  return {
+    request_id, chain_id, to: getAddress(to), value_wei, data: d.toLowerCase() as `0x${string}`, gas_limit, deadline,
+    ...(assetIntent ? { asset_intent: assetIntent } : {}),
+  };
 }
 
 interface Prepared {
@@ -79,14 +87,28 @@ const reportEngine = (d: Disagreement) => logEvent("error", "policy_engine.fail_
 const LIVE_DETAIL =
   "Performed at execution, not at decision: when the agent executes through a PALISEC smart account (POST /v1/operations/{id}/user-operation, then /submit), PALISEC co-signs this exact payload and the Safe validates both signatures on chain. An agent that sends from a plain key is not enforced on chain.";
 
-/** Fee bound, price and code check for one request. Each lookup may be null, and the evaluator fails closed. */
-async function liveEnvironment(input: Pick<IntentInput, "chain_id" | "to" | "gas_limit">, now: number, emergencyStop: boolean, pausedAgents: string[]) {
+/**
+ * Fee bound, price and code check for one request, and (Phase 6) the asset simulation when the policy
+ * asks for it. Each lookup may be null, and the evaluator fails closed.
+ */
+async function liveEnvironment(
+  input: Pick<IntentInput, "chain_id" | "to" | "gas_limit" | "value_wei" | "data">,
+  now: number,
+  emergencyStop: boolean,
+  pausedAgents: string[],
+  simulateFrom: `0x${string}` | null = null,
+) {
   const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
-  const [gasPrice, price, code] = await Promise.all([
+  const simulate = simulateFrom !== null && chainEnabled && input.data !== "0x";
+  const [gasPrice, price, code, sim] = await Promise.all([
     chainEnabled ? gasPriceWei(input.chain_id) : null,
     ethUsd(),
     chainEnabled ? hasDeployedCode(input.chain_id, input.to) : null,
+    simulate
+      ? simulateOperation({ chainId: input.chain_id, account: simulateFrom, to: input.to, valueWei: BigInt(input.value_wei), data: input.data, gasLimit: input.gas_limit })
+      : null,
   ]);
+  if (sim) logEvent("info", "asset_sim.done", { chain_id: input.chain_id, ms: sim.ms, available: sim.sim !== null });
   const feeWei = gasPrice === null ? null : gasPrice * BigInt(input.gas_limit);
   const env: Environment = {
     now,
@@ -95,9 +117,13 @@ async function liveEnvironment(input: Pick<IntentInput, "chain_id" | "to" | "gas
     verified_code: code ? { [input.to.toLowerCase()]: true } : {},
     emergency_stop: emergencyStop,
     paused_agents: pausedAgents,
+    ...(simulate ? { asset_simulation: sim?.sim ?? null } : {}),
   };
-  return { env, feeWei };
+  return { env, feeWei, simulationMs: sim?.ms ?? null };
 }
+
+/** Asset safety applies to this policy: the request's declared intent goes to the engines and the operation is simulated. */
+const assetSafetyOn = (p: Policy | null) => p?.asset_safety?.enabled === true;
 
 /** Disabled chains deny, and live-only checks say plainly that this deployment does not perform them. */
 function finish(r: ReturnType<typeof evaluate>, chainId: number) {
@@ -125,9 +151,12 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   if (!account?.address || typeof account.chain_id !== "number") throw new BadRequest("The draft needs an account before it can be tested");
   const now = Math.floor(Date.now() / 1000);
   const input = parseIntent({ request_id: "draft_test", chain_id: account.chain_id, deadline: now + 60, gas_limit: 100000, data: "0x", value_wei: "0", ...body });
-  const intent: Intent = { ...input, agent_id: "draft_test", from: getAddress(account.address) };
   const policy = { ...doc, version: 1, status: "active" } as unknown as Policy;
-  const { env } = await liveEnvironment(input, now, false, []);
+  const { asset_intent: declared, gas_limit: _g, ...base } = input;
+  void _g;
+  const intent: Intent = { ...base, agent_id: "draft_test", from: getAddress(account.address) };
+  if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(declared ?? null, input.to, input.value_wei, input.data);
+  const { env } = await liveEnvironment(input, now, false, [], assetSafetyOn(policy) ? intent.from : null);
   const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
@@ -186,7 +215,10 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
     intent_seen: snap.intent_at != null ? { [intentFp]: Number(snap.intent_at) } : {},
   };
 
-  const { env, feeWei } = await liveEnvironment(input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId]);
+  if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
+  const { env, feeWei } = await liveEnvironment(
+    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], assetSafetyOn(policy) ? agent.account : null,
+  );
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {

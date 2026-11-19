@@ -3,10 +3,14 @@ import { setEmergencyStop } from "@/server/control";
 import { afterChange } from "@/server/events";
 import { handle, ok, readJson } from "@/server/http";
 
-/** Operators can stop; only owners can lift the stop (checked in setEmergencyStop). */
+/**
+ * Operators can stop (instant); only owners can lift the stop (checked in setEmergencyStop), and a lift
+ * waits out the organization's lift delay (Phase 6). The stop event is sent when the state changes.
+ */
 export const POST = handle(async (req) => {
   const m = await requireMember(req, "operate");
-  const org = await setEmergencyStop(m, await readJson(req));
-  afterChange(m.orgId, "organization.emergency_stop", { active: Boolean((org as { emergency_stop?: boolean }).emergency_stop) }, true);
+  const body = await readJson(req);
+  const org = (await setEmergencyStop(m, body)) as { emergency_stop?: boolean };
+  if (body.active === true) afterChange(m.orgId, "organization.emergency_stop", { active: true }, true);
   return ok(org);
 });

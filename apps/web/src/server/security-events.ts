@@ -19,6 +19,7 @@ export const CATEGORIES = [
   "unusual_proposal", "repeated_denial", "spending_threshold", "unfamiliar_recipient", "unapproved_contract",
   "unexpected_selector", "failed_approval", "replay_attempt", "invalid_signature", "signing_failure",
   "attestation_mismatch", "integration_credential_failure", "emergency_stop", "account_pause",
+  "policy_loosening_pending",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 type Severity = "info" | "warning" | "critical";
@@ -116,6 +117,35 @@ async function candidates(orgId: string): Promise<Candidate[]> {
         ? { category: "account_pause", severity: "info", title: `${e.name ?? "An agent"} was paused`, fingerprint: `pause:${e.event_id}`, evidence: { audit_event_id: e.event_id, agent_id: e.actor_agent_id, at: e.created_at } }
         : { category: "emergency_stop", severity: "critical", title: "Emergency stop engaged", fingerprint: `stop:${e.event_id}`, evidence: { audit_event_id: e.event_id, at: e.created_at } },
     );
+
+  // Phase 6: every weakening change that is waiting out its delay, until it applies or is cancelled.
+  const pending = await db()`
+    SELECT pc.id, pc.kind, pc.policy_id, pc.policy_version, pc.agent_id, pc.summary, pc.diff, pc.effective_at, pc.requested_at,
+      p.policy_key, a.name AS agent_name, u.address AS requested_by
+    FROM pending_changes pc LEFT JOIN policies p ON p.id = pc.policy_id LEFT JOIN agents a ON a.id = pc.agent_id
+    LEFT JOIN users u ON u.id = pc.requested_by
+    WHERE pc.org_id = ${orgId}::uuid AND pc.state = 'pending' ORDER BY pc.effective_at LIMIT 20`;
+  const what: Record<string, string> = {
+    policy_activation: "Policy loosening",
+    agent_rebind: "Agent moved to a looser policy",
+    agent_resume: "Agent resume",
+    emergency_lift: "Emergency stop lift",
+    delay_change: "Shorter loosening delay",
+  };
+  for (const p of pending) {
+    const target = p.policy_key ? ` ${p.policy_key} v${p.policy_version}` : p.agent_name ? ` (${p.agent_name})` : "";
+    const at = new Date(p.effective_at).toISOString().slice(0, 16).replace("T", " ");
+    out.push({
+      category: "policy_loosening_pending",
+      severity: p.kind === "emergency_lift" || p.kind === "delay_change" ? "critical" : "warning",
+      title: `${what[p.kind] ?? "Loosening"}${target} pending until ${at} UTC`.slice(0, 160),
+      fingerprint: `loosening:${p.id}`,
+      evidence: {
+        pending_change_id: p.id, kind: p.kind, policy_id: p.policy_id, policy_version: p.policy_version, agent_id: p.agent_id,
+        summary: p.summary, diff: p.diff, requested_by: p.requested_by, requested_at: p.requested_at, effective_at: p.effective_at,
+      },
+    });
+  }
   return out;
 }
 

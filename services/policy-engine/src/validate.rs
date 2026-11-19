@@ -1,10 +1,10 @@
-//! Policy schema 1.0 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
+//! Policy schema 1.0 and 1.1 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
 //! same paths, same messages, same order. Unknown fields are rejected so a typo cannot disable a rule.
 
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSION: &str = "1.0";
+pub const SCHEMA_VERSIONS: [&str; 2] = ["1.0", "1.1"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
 const I31: i64 = 2_147_483_647;
@@ -71,11 +71,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety"],
     );
 
-    if doc.get("schema_version") != Some(&Value::String(SCHEMA_VERSION.into())) {
-        v.err("$.schema_version", format!("must be \"{SCHEMA_VERSION}\""));
+    if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
+        v.err("$.schema_version", "must be \"1.0\" or \"1.1\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -163,6 +163,37 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
         v.fields(human, "$.human_approval", &["usd_threshold_micros", "require_for_unknown_methods"]);
         v.uint(human, "usd_threshold_micros", "$.human_approval");
         v.bool(human, "require_for_unknown_methods", "$.human_approval");
+    }
+
+    if doc.contains_key("asset_safety") {
+        if doc.get("schema_version") != Some(&Value::String("1.1".into())) {
+            v.err("$.asset_safety", "requires schema_version \"1.1\"");
+        }
+        if let Some(safety) = v.obj(doc, "asset_safety", "$") {
+            let p = "$.asset_safety";
+            v.fields(
+                safety,
+                p,
+                &[
+                    "enabled",
+                    "max_transfer_tax_bps",
+                    "max_slippage_bps",
+                    "require_sell_simulation",
+                    "block_unlimited_approvals",
+                    "on_simulation_unavailable",
+                    "max_simulation_age_seconds",
+                ],
+            );
+            v.bool(safety, "enabled", p);
+            v.int(safety, "max_transfer_tax_bps", p, 0, 10000);
+            v.int(safety, "max_slippage_bps", p, 0, 10000);
+            v.bool(safety, "require_sell_simulation", p);
+            v.bool(safety, "block_unlimited_approvals", p);
+            if !matches!(safety.get("on_simulation_unavailable"), Some(Value::String(s)) if s == "deny" || s == "review") {
+                v.err(format!("{p}.on_simulation_unavailable"), "must be \"deny\" or \"review\"");
+            }
+            v.int(safety, "max_simulation_age_seconds", p, 1, 300);
+        }
     }
 
     v.errors

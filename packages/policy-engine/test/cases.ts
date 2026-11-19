@@ -36,6 +36,59 @@ const SELECTORS = ["0xa9059cbb", "0x095ea7b3", "0x38ed1739", "0xA9059CBB", "0xde
 const AGENTS = ["agent-a", "agent-b", "ägent-ü-😀", "agent with spaces"];
 const REQUESTS = ["req-1", "req-2", "req-3", "req-😀", "r"];
 const NOW = 1_800_000_000;
+const NATIVE = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const TOKENS = [NATIVE, "0x7777777777777777777777777777777777777777", "0x8888888888888888888888888888888888888888", "0xAbCdEf0123456789aBcDeF0123456789AbCdEf01"];
+
+/** Schema 1.1 asset-safety rules, mostly valid and enabled. */
+function assetSafety(r: Rng): Record<string, unknown> {
+  return {
+    enabled: chance(r, 0.85),
+    max_transfer_tax_bps: pick(r, [0, 100, 500, 500, 2000, 10000]),
+    max_slippage_bps: pick(r, [0, 50, 300, 300, 10000]),
+    require_sell_simulation: chance(r, 0.8),
+    block_unlimited_approvals: chance(r, 0.8),
+    on_simulation_unavailable: pick(r, ["deny", "deny", "review"]),
+    max_simulation_age_seconds: pick(r, [1, 10, 10, 60, 300]),
+  };
+}
+
+const amountList = (r: Rng, n: number) =>
+  Array.from({ length: n }, () => ({
+    token: pick(r, TOKENS),
+    amount: pick(r, ["0", "1", "1000", digits(r, int(r, 1, 20)), "340282366920938463463374607431768211456"]),
+  }));
+
+function assetIntent(r: Rng): Record<string, unknown> {
+  return { spend: amountList(r, int(r, 0, 2)), receive: amountList(r, int(r, 0, 2)) };
+}
+
+/** A well-formed simulation result; the generator never produces malformed shapes (the server cannot). */
+function assetSimulation(r: Rng, now: number): Record<string, unknown> {
+  return {
+    block_number: int(r, 1, 10_000_000),
+    observed_at: now - pick(r, [0, 0, 1, 3, 9, 11, 61, 400, -2]),
+    reverted: chance(r, 0.1),
+    outflows: amountList(r, int(r, 0, 2)),
+    inflows: amountList(r, int(r, 0, 2)),
+    approvals: Array.from({ length: pick(r, [0, 0, 0, 1, 2]) }, () => ({
+      token: pick(r, TOKENS.slice(1)),
+      spender: pick(r, [...POOL, "0x9999999999999999999999999999999999999999"]),
+      amount: pick(r, ["0", "1000", digits(r, int(r, 1, 30)), "115792089237316195423570985008687907853269984665640564039457584007913129639935"]),
+    })),
+    sell: chance(r, 0.2) ? null : { reverted: chance(r, 0.2) },
+    tax_bps: chance(r, 0.3) ? null : pick(r, [0, 30, 500, 501, 2000, 9999]),
+    round_trip_loss_bps: chance(r, 0.4) ? null : int(r, 0, 10000),
+  };
+}
+
+/** Make the declared intent match the simulation, so the later asset rules are reached. */
+function coherentAsset(r: Rng, intent: Record<string, unknown>, sim: Record<string, unknown>) {
+  const spend = (sim.outflows as { token: string; amount: string }[]).map((o) => ({ ...o }));
+  const receive = (sim.inflows as { token: string; amount: string }[]).map((o) => ({ ...o }));
+  intent.asset_intent = { spend: chance(r, 0.9) ? spend : [], receive: chance(r, 0.8) ? receive : [] };
+  if (chance(r, 0.7)) sim.approvals = [];
+  if (chance(r, 0.6)) sim.reverted = false;
+}
 
 const uintish = (r: Rng) =>
   pick(r, [
@@ -90,6 +143,10 @@ function policyFor(r: Rng): unknown {
   }));
   p.contracts.denylist = POOL.filter(() => chance(r, 0.15));
   p.human_approval = { usd_threshold_micros: uintish(r), require_for_unknown_methods: chance(r, 0.5) };
+  if (chance(r, 0.5)) {
+    p.schema_version = chance(r, 0.97) ? "1.1" : "1.0";
+    p.asset_safety = assetSafety(r);
+  }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
 }
@@ -112,6 +169,7 @@ export function evalCase(seed: number): EvalCase {
     data,
     deadline: now + int(r, -30, 400),
   };
+  if (chance(r, 0.4)) intent.asset_intent = assetIntent(r);
   const verified: Record<string, boolean> = {};
   for (const a of POOL) if (chance(r, 0.6)) verified[a.toLowerCase()] = chance(r, 0.85);
   const env: Record<string, unknown> = {
@@ -122,6 +180,8 @@ export function evalCase(seed: number): EvalCase {
     emergency_stop: chance(r, 0.04),
     paused_agents: chance(r, 0.05) ? [agent] : chance(r, 0.1) ? ["someone-else"] : [],
   };
+  const sim = chance(r, 0.15) ? null : assetSimulation(r, now);
+  if (sim !== null || chance(r, 0.5)) env.asset_simulation = sim;
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {
@@ -155,6 +215,13 @@ export function evalCase(seed: number): EvalCase {
         paused_agents: [],
       });
       (env.verified_code as Record<string, boolean>)[target] = chance(r, 0.9);
+      if (p.asset_safety && sim && chance(r, 0.7)) {
+        coherentAsset(r, intent, sim);
+        if (!sel && chance(r, 0.6)) {
+          intent.data = "0xa9059cbb" + "00".repeat(int(r, 0, 8));
+          p.contracts.allowlist[p.contracts.allowlist.length - 1].selectors = ["0xa9059cbb"];
+        }
+      }
     }
   }
   const calldataKey = fingerprint(`${(intent.to as string).toLowerCase()}|${(intent.data as string).toLowerCase()}`);
@@ -231,5 +298,6 @@ export function mutatePolicy(r: Rng, doc: unknown, times: number): unknown {
 export function validateCase(seed: number): unknown {
   const r = rng(seed ^ 0x5bd1e995);
   if (chance(r, 0.03)) return pick(r, [null, 5, "policy", [], [EXAMPLE_POLICY]]);
+  if (chance(r, 0.5)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.1", asset_safety: assetSafety(r) }, int(r, 0, 5));
   return mutatePolicy(r, EXAMPLE_POLICY, int(r, 0, 5));
 }
