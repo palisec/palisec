@@ -50,7 +50,7 @@ export function LivePolicies() {
     <>
       <PageTitle
         title="Policies"
-        description="Edit a draft, validate it against schema 1.0, review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with PS_POLICY_001."
+        description="Edit a draft, validate it against the policy schema (1.0 or 1.1), review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with PS_POLICY_001."
       />
       <LoadError error={list.error} />
       <div className="space-y-4">

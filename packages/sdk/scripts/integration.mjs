@@ -89,7 +89,7 @@ check("waitForApproval: resolves once approved, with an authorization", done.sta
 const me = await palisec.whoAmI();
 check("whoAmI: the key identifies its agent and scopes", me.account.toLowerCase() === agentWallet.address.toLowerCase() && me.scopes.includes("mcp"), me);
 const bound = await palisec.policy.get();
-check("policy.get: the exact active version", bound.version === 1 && bound.document.schema_version === "1.0", bound.version);
+check("policy.get: the exact active version", bound.version === 1 && bound.document.schema_version === "1.1", bound.version);
 const trail = await palisec.audit.list({ limit: 10 });
 check("audit.list: the agent's own audit events", trail.events.some((e) => e.type.startsWith("operation.")), trail.events.length);
 const prop = await palisec.transactions.propose({ to: token, data: transfer(9n), gasLimit: 90_000 });
