@@ -10,7 +10,7 @@
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
-const WORKFLOW = process.env.WORKFLOW ?? "10";
+const WORKFLOW = process.env.WORKFLOW ?? "11";
 const OTHER_WORKFLOW = "9"; // someone else's workflow: exists, not linked to our account
 const SAFE = "0x375BdF5DA6b7440889e50f13C894A3C4AC988329";
 const GUARDIAN = "0x989EfcD8Ad76E695CFD5ba915b1b12118471c430";
