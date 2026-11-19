@@ -32,7 +32,7 @@ export function initialDelays(): { loosening: number; lift: number } {
   return { loosening: 3600, lift: 900 };
 }
 
-export type PendingKind = "policy_activation" | "agent_rebind" | "agent_resume" | "emergency_lift" | "delay_change";
+export type PendingKind = "policy_activation" | "agent_rebind" | "agent_resume" | "emergency_lift" | "delay_change" | "agent_upoch";
 
 /** Applies whatever is due for one organization (or all) and announces each application. */
 export async function applyDue(orgId: string | null): Promise<Row[]> {

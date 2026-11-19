@@ -1,7 +1,7 @@
 import { idParam, requireMember } from "@/server/access";
 import { getAgent } from "@/server/control";
 import { handle, ok } from "@/server/http";
-import { readUpoch } from "@/server/upoch";
+import { memberAddresses, readUpoch } from "@/server/upoch";
 
 /**
  * Phase 6.5: the agent's Upoch status, read live from Upoch's public contract (read-only). `available:
@@ -11,7 +11,7 @@ export const GET = handle<RouteContext<"/api/v1/agents/[id]/upoch">>(async (req,
   const m = await requireMember(req, "read");
   const agent = (await getAgent(m, await idParam(ctx))) as Record<string, unknown>;
   const workflowId = (agent.upoch_workflow_id as string | null) ?? null;
-  const d = await readUpoch(Number(agent.chain_id), String(agent.account), workflowId);
+  const d = await readUpoch(Number(agent.chain_id), String(agent.account), workflowId, await memberAddresses(m.orgId));
   const now = Math.floor(Date.now() / 1000);
   return ok({
     agent_id: agent.id,

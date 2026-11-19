@@ -2,6 +2,7 @@ import "server-only";
 import type { UpochStatus } from "@palisec/policy-schema";
 import { createPublicClient, getAddress, parseAbi, type Address } from "viem";
 import { CHAINS, chainTransport, type ChainId } from "./config";
+import { db } from "./db";
 import { logEvent } from "./http";
 import { MAINNET, TESTNET } from "@/lib/networks";
 
@@ -50,9 +51,10 @@ export function parseWorkflowId(v: unknown): string | null {
 
 /**
  * The agent's workflow as the engines need it. `linked`: the workflow's owner or one of its guardians is
- * an owner of the agent's account (a Safe), so an agent cannot point at someone else's workflow.
+ * an owner of the agent's account (a Safe) AND a member of the organization. The agent's own key is a Safe
+ * owner too but never a member, so a compromised agent key cannot link a workflow it registered itself.
  */
-export async function readUpoch(chainId: number, account: string, workflowId: string | null): Promise<UpochDetail | null> {
+export async function readUpoch(chainId: number, account: string, workflowId: string | null, members: string[]): Promise<UpochDetail | null> {
   const now = Math.floor(Date.now() / 1000);
   const empty: UpochDetail = {
     chain_id: chainId, workflow_id: "", observed_at: now, linked: false, active: false, checkpoint_count: 0,
@@ -74,7 +76,8 @@ export async function readUpoch(chainId: number, account: string, workflowId: st
     const checkpoints = Number(w.checkpointCount);
     const head = checkpoints > 0 ? await c.readContract({ address: ledger, abi: LEDGER_ABI, functionName: "getCheckpoint", args: [id, w.headSequence] }) : null;
     const accountOwners = owners.map((o) => getAddress(o));
-    const linked = [w.owner, ...guardians].some((a) => accountOwners.includes(getAddress(a)));
+    const trusted = members.map((m) => getAddress(m)).filter((m) => accountOwners.includes(m));
+    const linked = [w.owner, ...guardians].some((a) => trusted.includes(getAddress(a)));
     return {
       chain_id: chainId,
       workflow_id: workflowId,
@@ -90,12 +93,20 @@ export async function readUpoch(chainId: number, account: string, workflowId: st
       url: `${UPOCH_SITE}/app/agents/${workflowId}`,
     };
   } catch (e) {
-    logEvent("warn", "upoch.unavailable", { chain_id: chainId, message: e instanceof Error ? e.message.slice(0, 200) : String(e) });
+    // No URLs in logs: an RPC URL can carry a provider key.
+    const message = (e instanceof Error ? ((e as { shortMessage?: string }).shortMessage ?? e.message) : String(e)).replace(/https?:\/\/\S+/g, "[rpc]").slice(0, 200);
+    logEvent("warn", "upoch.unavailable", { chain_id: chainId, message });
     return null;
   }
 }
 
 /** The engines' input: the status fields only. */
+/** Wallet addresses of the organization's members (people, never agent keys). */
+export async function memberAddresses(orgId: string): Promise<string[]> {
+  const rows = await db()`SELECT u.address FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ${orgId}::uuid`;
+  return rows.map((r) => String(r.address));
+}
+
 export const toEngineInput = (d: UpochDetail | null): UpochStatus | null =>
   d === null
     ? null
