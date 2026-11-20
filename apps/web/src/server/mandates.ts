@@ -242,15 +242,18 @@ export async function createProposal(slug: string, body: Record<string, unknown>
   const [row] = await db()`
     WITH n AS (SELECT coalesce(max(number), 0) + 1 AS number FROM mandate_proposals WHERE mandate_id = ${m.id}::uuid),
     p AS (
-      INSERT INTO mandate_proposals (mandate_id, number, title, change, proposer, proposer_signature, snapshot_block, snapshot_total_supply, holders, closes_at)
-      SELECT ${m.id}::uuid, n.number, ${title}, ${JSON.stringify(change)}::text::jsonb, ${body.proposer.toLowerCase()}, ${body.signature}, ${snapshotBlock.toString()}::bigint,
+      INSERT INTO mandate_proposals (mandate_id, number, title, change, proposer, proposer_signature, nonce, snapshot_block, snapshot_total_supply, holders, closes_at)
+      SELECT ${m.id}::uuid, n.number, ${title}, ${JSON.stringify(change)}::text::jsonb, ${body.proposer.toLowerCase()}, ${body.signature}, ${body.nonce}, ${snapshotBlock.toString()}::bigint,
         ${snap.total}::numeric, ${JSON.stringify(snap.holders)}::text::jsonb, now() + make_interval(secs => ${Number(m.voting_period_seconds)}) FROM n
+      ON CONFLICT DO NOTHING
       RETURNING id, number, closes_at
     ), e AS (
       INSERT INTO audit_events (org_id, actor_user_id, type, detail)
       SELECT ${m.org_id}::uuid, NULL, 'mandate.proposed', jsonb_build_object('mandate', ${slug}::text, 'proposal_id', p.id, 'number', p.number, 'change', ${JSON.stringify(change)}::text::jsonb, 'proposer', ${body.proposer.toLowerCase()}::text, 'snapshot_block', ${snapshotBlock.toString()}::text, 'voting_closes_at', p.closes_at) FROM p
     )
     SELECT id, number, closes_at FROM p`;
+  // A signed proposal is single-use: the same proposer and nonce cannot open a second one.
+  if (!row) throw new HttpError(409, "PS_REPLAY_001", "This signed proposal (proposer and nonce) was already used");
   afterChange(m.org_id, "mandate.proposal_created", { mandate: slug, proposal_id: row.id, number: row.number, title, change, snapshot_block: snapshotBlock.toString(), closes_at: row.closes_at });
   return { proposal_id: row.id, number: row.number, snapshot_block: snapshotBlock.toString(), closes_at: new Date(row.closes_at).toISOString(), holders_at_snapshot: Object.keys(snap.holders).length };
 }
@@ -302,7 +305,8 @@ export async function submitVote(slug: string, pid: string, body: Record<string,
 export async function closeDue(orgId: string | null): Promise<void> {
   const due = await db()`
     SELECT p.id FROM mandate_proposals p JOIN mandates m ON m.id = p.mandate_id
-    WHERE p.state = 'open' AND p.closes_at <= now() AND (${orgId}::uuid IS NULL OR m.org_id = ${orgId}::uuid) ORDER BY p.closes_at LIMIT 10`;
+    WHERE p.state = 'open' AND p.closes_at <= now() AND (p.claimed_at IS NULL OR p.claimed_at < now() - interval '5 minutes')
+      AND (${orgId}::uuid IS NULL OR m.org_id = ${orgId}::uuid) ORDER BY p.closes_at LIMIT 10`;
   for (const d of due) {
     try {
       await closeOne(d.id);
@@ -313,6 +317,13 @@ export async function closeDue(orgId: string | null): Promise<void> {
 }
 
 async function closeOne(pid: string) {
+  // Claim first (one statement): only the caller that wins the claim counts and applies the result.
+  // A claim left by a crash is retried after 5 minutes; until then nothing changes (fail closed).
+  const [won] = await db()`
+    UPDATE mandate_proposals SET claimed_at = now()
+    WHERE id = ${pid}::uuid AND state = 'open' AND closes_at <= now() AND (claimed_at IS NULL OR claimed_at < now() - interval '5 minutes')
+    RETURNING id`;
+  if (!won) return;
   const [p] = await db()`
     SELECT p.*, m.slug, m.org_id, m.policy_id, m.envelope, m.quorum, m.pass_bps FROM mandate_proposals p JOIN mandates m ON m.id = p.mandate_id
     WHERE p.id = ${pid}::uuid AND p.state = 'open' AND p.closes_at <= now()`;

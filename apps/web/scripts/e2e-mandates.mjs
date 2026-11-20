@@ -89,6 +89,7 @@ let r = await call("POST", "/mandates", { cookie, body: { slug, name: "E2E demo 
 check("owner creates a mandate with an envelope", r.status === 201 && r.body.slug === slug, r.body);
 const mid = r.body.id;
 
+let lastProposalBody = null;
 async function propose(change, title, proposer = voters[0]) {
   const nonce = `n${Date.now()}${Math.floor(Math.random() * 1e6)}`;
   const signature = await proposer.signTypedData({
@@ -97,7 +98,8 @@ async function propose(change, title, proposer = voters[0]) {
     primaryType: "Proposal",
     message: { mandate: slug, title, change: canonical(change), nonce },
   });
-  return call("POST", `/public/mandates/${slug}/proposals`, { body: { title, change, nonce, proposer: proposer.address, signature } });
+  lastProposalBody = { title, change, nonce, proposer: proposer.address, signature };
+  return call("POST", `/public/mandates/${slug}/proposals`, { body: lastProposalBody });
 }
 const vote = async (acct, pid, snap, choice, override = {}) =>
   call("POST", `/public/mandates/${slug}/proposals/${pid}/votes`, { body: { voter: acct.address, choice, signature: await acct.signTypedData(td(4663, slug, pid, choice, snap)), ...override } });
@@ -121,6 +123,10 @@ check("before the vote, 0.0002 ETH is beyond the policy (DENY)", (await dry("200
 r = await propose({ kind: "set_max_transaction_value", wei: "300000000000000" }, "Raise per-transaction limit to 0.0003 ETH");
 check("a holder opens a proposal (signed, snapshot fixed)", r.status === 201 && r.body.snapshot_block, r.body);
 const p1 = r.body;
+r = await call("POST", `/public/mandates/${slug}/proposals`, { body: lastProposalBody });
+check("a signed proposal cannot be submitted twice (replay)", r.status === 409, r.body);
+r = await propose({ kind: "remove_deny", address: RECIPIENT }, "Remove a deny rule");
+check("a vote can never remove the owner's deny rules", r.status === 422, r.body);
 await give(voters[3].address, 5000n * E18); // bought after the snapshot
 await give(voters[2].address, 5000n * E18); // voter 3 buys more after the snapshot
 r = await vote(voters[3], p1.proposal_id, p1.snapshot_block, "for");
