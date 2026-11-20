@@ -6,3 +6,4 @@ export { safeOpTypedData, SAFE_OP_TYPES, type Execution, type ExecutionState, ty
 export { PalisecApprovalError, PalisecConfigError, PalisecDeniedError, PalisecError, PalisecTimeoutError } from "./errors";
 export * from "./types";
 export { REASON_CODES, RETRYABLE, type ReasonCode } from "./schema";
+export { signMandateVote, verifyVoteFile, voteTypedData, proposalTypedData, tally, VOTE_CHOICES, type MandateSigner, type VoteFileCheck, type MandateChange, type MandateEnvelope, type Tally, type VoteChoice } from "./mandates";

@@ -30,6 +30,11 @@ export const EVENT_TYPES = [
   "policy.loosening_pending",
   "policy.loosening_applied",
   "policy.loosening_cancelled",
+  // Phase 7: holder mandates.
+  "mandate.proposal_created",
+  "mandate.vote_closed",
+  "mandate.applied",
+  "mandate.cancelled",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 

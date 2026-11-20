@@ -54,6 +54,7 @@ const NAV: { href: string; label: string; group?: string }[] = [
   { href: "/console/agents", label: "Agents", group: "Security" },
   { href: "/console/smart-accounts", label: "Smart accounts" },
   { href: "/console/policies", label: "Policies" },
+  { href: "/console/mandates", label: "Mandates" },
   { href: "/console/operations", label: "Operations" },
   { href: "/console/approvals", label: "Approvals" },
   { href: "/console/audit", label: "Audit" },

@@ -62,7 +62,9 @@ console.log(`Checkpoint key ${key.address}  balance ${formatEther(balance)} ETH 
 const POLICY = [1, true, 0, 86400, 86400, 86400];
 let workflowId = store.workflow_id && !fresh ? BigInt(store.workflow_id) : null;
 if (workflowId === null) {
-  const args = [[executor.address], [GUARDIAN], POLICY, METADATA_URI];
+  // The demo Safe is listed as an executor too: that is the on-chain link from the workflow to the Palisec
+  // smart account that Upoch's "Enforced by Palisec" mark reads. Checkpoints are still posted by the executor key.
+  const args = [[executor.address, SAFE], [GUARDIAN], POLICY, METADATA_URI];
   const sim = await pub.simulateContract({ account: key, address: LEDGER, abi: ABI, functionName: "registerWorkflow", args });
   console.log(`Register workflow: simulated OK, would be workflow ${sim.result}`);
   if (!send) process.exit(0);
