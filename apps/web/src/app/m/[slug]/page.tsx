@@ -9,7 +9,7 @@ import { publicMandate } from "@/server/mandates";
 import { MandateLive, type PublicMandate } from "./mandate-live";
 
 export const metadata: Metadata = {
-  title: "Palisec",
+  title: "Preview",
   robots: { index: false, follow: false },
 };
 
