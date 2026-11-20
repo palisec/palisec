@@ -32,6 +32,7 @@ describe("mandate envelope", () => {
     expect(outsideEnvelope({ kind: "allow_contract", address: "0x9999999999999999999999999999999999999999", selectors: [] }, env)).toMatch(/not in/);
     expect(outsideEnvelope({ kind: "allow_contract", address: ROUTER, selectors: ["0xdeadbeef"] }, env)).toMatch(/function/);
     expect(compileProposal(base, { kind: "set_hourly_budget", usd_micros: "9000000" }, env).ok).toBe(false);
+    expect(outsideEnvelope({ kind: "remove_deny", address: ROUTER }, env)).toMatch(/not allowed/);
   });
   it("at exactly the envelope limits it is inside", () => {
     expect(outsideEnvelope({ kind: "set_hourly_budget", usd_micros: "2000000" }, env)).toBeNull();

@@ -98,6 +98,9 @@ export function outsideEnvelope(change: MandateChange, env: MandateEnvelope): st
       const ok = new Set(e.selectors.map(lc));
       return change.selectors.every((s) => ok.has(lc(s))) ? null : "function not in the envelope's allowed list";
     }
+    case "remove_deny":
+      // The owner's deny rules are part of the hard limits: holders can add deny rules, never remove one.
+      return "removing a deny rule is not allowed by a vote";
     default:
       return null; // removing an allowance or adding a deny rule only tightens
   }
