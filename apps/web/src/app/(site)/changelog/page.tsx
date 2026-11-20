@@ -10,6 +10,16 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.4.0",
+    date: "2026-11-21",
+    tag: "Holder mandates",
+    changes: [
+      "Holder mandates: $PALISEC holders vote on an agent's limits (per-transaction value, hourly budget, human-approval threshold, allowlisted contracts, deny rules) inside an envelope the owner sets. A passed proposal becomes an ordinary policy version, so both engines and the co-signer enforce it as before. Votes never sign, approve or send anything; removing a deny rule is never allowed by a vote.",
+      "Proposals and votes are gasless EIP-712 signatures. Weight is each holder's balance at the snapshot block, rebuilt from $PALISEC Transfer logs and cross-checked against balanceOf and totalSupply; if the check fails, no proposal opens (PS_STATE_001). A tightening applies at once; a loosening waits out the loosening delay with a countdown and can be cancelled with a public reason.",
+      "Each mandate has a public page (/m/{slug}) with the envelope, the active limits, live counts, pending changes and the agent's latest decisions, and each proposal a vote file anyone can recount from a public RPC. New endpoints under /v1/mandates and /v1/public/mandates; webhooks mandate.proposal_created, mandate.vote_closed, mandate.applied and mandate.cancelled. Guide: /docs/mandates; demo: /m/palisec-demo.",
+    ],
+  },
+  {
     version: "1.3.0",
     date: "2026-11-20",
     tag: "Upoch integration",
