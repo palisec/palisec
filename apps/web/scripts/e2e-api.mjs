@@ -146,8 +146,9 @@ const pendingOp = r.body.operation_id;
 r = await call("POST", "/operations", { key: KEY, body: intent({ data: approveData(rand()) }) });
 const toReject = r.body.operation_id;
 
-// Budget: $0.50 per hour. The first ALLOW used about $0.23; this asks for about $0.46 more.
-r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "200000000000000" }) });
+// Budget: $0.50 per hour. 0.0009 ETH (under the 0.001 ETH per-transaction limit) is over the budget at any ETH price above ~$560,
+// so the test does not depend on today's price.
+r = await call("POST", "/operations", { key: KEY, body: intent({ value_wei: "900000000000000" }) });
 check("hourly budget exhaustion is PS_BUDGET_001", r.body.reason_code === "PS_BUDGET_001", r.body);
 
 // ---------------------------------------------------------------- approvals
