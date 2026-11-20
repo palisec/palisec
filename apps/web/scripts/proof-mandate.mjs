@@ -45,7 +45,10 @@ const chain = { id: 4663, name: "Robinhood Chain", nativeCurrency: { name: "ETH"
 const pub = createPublicClient({ chain, transport: http(RPC) });
 const utc = () => new Date().toISOString();
 
+let previewCookie = null;
 async function call(method, path, { cookie, key, body } = {}) {
+  // Mandate pages are preview-only until go-live: their API needs a signed-in session.
+  if (!cookie && !key && path.startsWith("/public/")) cookie = previewCookie ??= await signIn();
   const h = { origin: BASE };
   if (body !== undefined) h["content-type"] = "application/json";
   if (cookie) h.cookie = cookie;
@@ -163,7 +166,7 @@ if (stage === "setup") {
   for (const p of b.proposals) console.log(`  #${p.number} ${p.state} applied=${p.applied} pending=${JSON.stringify(p.pending)} for=${p.tally.for} quorum=${p.tally.quorum_reached} closes=${p.closes_at}`);
   for (const d of b.decisions.slice(0, 5)) console.log(`  decision ${d.id} ${d.decision} ${d.reason_code ?? ""} ${d.transaction_hash ?? ""}`);
 } else if (stage === "send") {
-  const palisec = createPalisec({ apiKey: state.api_key, chainId: 4663, baseUrl: BASE });
+  const palisec = createPalisec({ apiKey: state.api_key, chainId: 4663, baseUrl: `${BASE}/api/v1` });
   const { operation, execution } = await palisec.executeWithSmartAccount(agentKey, { to: COMPANY, value: BigInt(arg), data: "0x", gasLimit: 150000 });
   let ex = execution;
   const until = Date.now() + 180_000;

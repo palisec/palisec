@@ -41,7 +41,8 @@ const usd = (micros: string) => `$${(Number(BigInt(micros)) / 1e6).toLocaleStrin
 const tok = (v: string) => (Number(BigInt(v) / 10n ** 14n) / 1e4).toLocaleString("en-US", { maximumFractionDigits: 4 });
 const utc = (iso: string) => `${iso.replace("T", " ").slice(0, 19)} UTC`;
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-function left(ms: number) {
+function left(ms: number | null) {
+  if (ms === null) return "…";
   if (ms <= 0) return "now";
   const s = Math.ceil(ms / 1000);
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
@@ -81,8 +82,10 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 
 export function MandateLive({ slug, initial }: { slug: string; initial: PublicMandate }) {
   const [d, setD] = useState(initial);
-  const [now, setNow] = useState(() => Date.now());
+  // The clock starts after hydration: server and browser render the same markup first (no React #418).
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    const start = setTimeout(() => setNow(Date.now()), 0);
     const poll = setInterval(() => {
       fetch(`/api/v1/public/mandates/${slug}`, { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
@@ -93,6 +96,7 @@ export function MandateLive({ slug, initial }: { slug: string; initial: PublicMa
     return () => {
       clearInterval(poll);
       clearInterval(tick);
+      clearTimeout(start);
     };
   }, [slug]);
 
@@ -110,7 +114,7 @@ export function MandateLive({ slug, initial }: { slug: string; initial: PublicMa
       {pending?.pending && (
         <p className="rounded-[6px] border border-review/50 bg-review/[0.06] px-4 py-3 text-[13.5px] text-mist">
           <span className="text-review">● Pending: </span>proposal #{pending.number} ({describe(pending.change)}) passed and loosens the limits, so it waits.
-          It applies in <span className="font-mono text-review">{left(new Date(pending.pending.effective_at).getTime() - now)}</span> ({utc(pending.pending.effective_at)}) unless the
+          It applies in <span className="font-mono text-review">{left(now === null ? null : new Date(pending.pending.effective_at).getTime() - now)}</span> ({utc(pending.pending.effective_at)}) unless the
           owner or an operator cancels it; a cancel and its reason appear here.
         </p>
       )}
@@ -156,7 +160,7 @@ export function MandateLive({ slug, initial }: { slug: string; initial: PublicMa
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="text-mist">#{p.number} · {p.title}</p>
                   <span className={`font-utility text-[12.5px] ${p.state === "passed" ? "text-allow" : p.state === "open" ? "text-review" : "text-deny"}`}>
-                    {open ? `voting · ${left(new Date(p.closes_at).getTime() - now)} left` : p.state}
+                    {open ? `voting · ${left(now === null ? null : new Date(p.closes_at).getTime() - now)} left` : p.state}
                     {p.applied ? ` · ${p.pending?.state === "cancelled" ? "cancelled" : p.pending?.state === "applied" ? "applied after the delay" : p.applied === "pending" ? "pending" : "applied at once"}` : ""}
                   </span>
                 </div>
