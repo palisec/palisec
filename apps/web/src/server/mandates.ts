@@ -230,12 +230,18 @@ export async function createProposal(slug: string, body: Record<string, unknown>
   const c = client(Number(m.chain_id));
   // Fixed now, before any vote can be cast: the latest block, whose state is read and cross-checked at once.
   const snapshotBlock = await c.getBlockNumber();
+  // Public RPC nodes behind a load balancer can lag the newest block by a moment, so the same snapshot block is
+  // read and cross-checked up to 4 times, 2 s apart. Any mismatch on the last try still opens nothing (fail closed).
   let snap;
-  try {
-    snap = await snapshotHolders(Number(m.chain_id), m.token as Address, BigInt(m.token_start_block), snapshotBlock);
-  } catch (e) {
-    logEvent("warn", "mandate.snapshot_failed", { slug, message: (e as Error).message.slice(0, 200) });
-    throw new HttpError(503, "PS_STATE_001", "The token snapshot could not be read and verified; no proposal was opened.", true);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      snap = await snapshotHolders(Number(m.chain_id), m.token as Address, BigInt(m.token_start_block), snapshotBlock);
+      break;
+    } catch (e) {
+      logEvent("warn", "mandate.snapshot_failed", { slug, attempt, message: (e as Error).message.slice(0, 200) });
+      if (attempt >= 4) throw new HttpError(503, "PS_STATE_001", "The token snapshot could not be read and verified; no proposal was opened.", true);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
   }
   const power = BigInt(snap.holders[body.proposer.toLowerCase()] ?? "0");
   if (power < BigInt(m.proposer_min)) throw new HttpError(403, "PS_AUTH_001", `The proposer holds ${power} base units at the snapshot block; the minimum is ${m.proposer_min}.`);
