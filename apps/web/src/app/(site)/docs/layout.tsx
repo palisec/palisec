@@ -29,6 +29,7 @@ const DOCS_NAV = [
       { href: "/docs/mcp", label: "MCP server" },
       { href: "/docs/webhooks", label: "Webhooks" },
       { href: "/docs/token", label: "Token" },
+      { href: "/docs/mandates", label: "Holder mandates" },
       { href: "/docs/integrations", label: "Integrations and keys" },
     ],
   },

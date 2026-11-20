@@ -9,8 +9,8 @@ import { publicMandate } from "@/server/mandates";
 import { MandateLive, type PublicMandate } from "./mandate-live";
 
 export const metadata: Metadata = {
-  title: "Preview",
-  robots: { index: false, follow: false },
+  title: "Holder mandate",
+  description: "Token holders vote on an agent's limits inside an owner-set envelope; Palisec enforces the result. Live counts, vote files and decisions.",
 };
 
 /** Phase 7: a mandate's public page. Signed out, real data only (database and chain); refreshes itself. */
@@ -27,7 +27,7 @@ async function MandateBody({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let data: PublicMandate;
   try {
-    // Preview-only until go-live is approved: signed-in sessions only; everyone else gets "not found".
+    // Public unless MANDATES_PUBLIC=0 (then signed-in sessions only; everyone else gets "not found").
     await requireMandatePreview(new Request("https://palisec.tech/m", { headers: await headers() }));
     data = (await publicMandate(slug)) as unknown as PublicMandate;
   } catch {
