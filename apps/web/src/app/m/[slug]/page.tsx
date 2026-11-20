@@ -9,15 +9,14 @@ import { publicMandate } from "@/server/mandates";
 import { MandateLive, type PublicMandate } from "./mandate-live";
 
 export const metadata: Metadata = {
-  title: "Holder mandate",
-  description: "A holder mandate on Palisec: limits set by token holders' votes and enforced by Palisec's co-signer.",
+  title: "Palisec",
   robots: { index: false, follow: false },
 };
 
 /** Phase 7: a mandate's public page. Signed out, real data only (database and chain); refreshes itself. */
 export default function MandatePage({ params }: { params: Promise<{ slug: string }> }) {
   return (
-    <Suspense fallback={<PageHeader title="Holder mandate" lede="Loading the mandate from Palisec's records…" />}>
+    <Suspense fallback={null}>
       <MandateBody params={params} />
     </Suspense>
   );
