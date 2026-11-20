@@ -31,6 +31,7 @@ const LABEL: Record<string, string> = {
   emergency_lift: "Emergency stop lift",
   delay_change: "Shorter delay",
   agent_upoch: "Agent's Upoch workflow change",
+  mandate_envelope: "Mandate envelope loosening",
 };
 
 function left(ms: number) {
