@@ -1,6 +1,6 @@
 name: Deploy
-# Builds palisec.tech here and hands the build to the Vercel project (Vercel's Hobby plan cannot build
-# private organization repositories itself). Off until the VERCEL_TOKEN secret and the VERCEL_ORG_ID /
+# Deploys palisec.tech from this repository through the Vercel CLI (Vercel's Hobby plan cannot connect
+# to private organization repositories itself). Off until the VERCEL_TOKEN secret and the VERCEL_ORG_ID /
 # VERCEL_PROJECT_ID variables are set. Migrations run in the build, as they did on Vercel.
 on:
   push:
@@ -24,21 +24,16 @@ jobs:
       VERCEL_CLI: vercel@65.12.1
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
-      - name: Pull the production settings and environment
-        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
-      - name: Build (same command as on Vercel)
-        run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
-      - name: Deploy the build to production
-        # Without git metadata: on the Hobby plan Vercel blocks a deployment whose commit author is not the
-        # account owner, and the commits here are by the company account. The token owner deploys the build.
+      # Source upload and a build on Vercel, as with the Git connection: only changed files are uploaded
+      # (a prebuilt upload sends every build file each time and hits the Hobby daily upload limit).
+      # Without git metadata: Hobby blocks deployments whose commit author is not the account owner.
+      - name: Deploy to production
         run: |
           rm -rf .git
-          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          url=$(npx --yes "$VERCEL_CLI" deploy --prod --yes --token="$VERCEL_TOKEN")
           echo "Deployed: $url"
       - name: The site answers
         run: |
