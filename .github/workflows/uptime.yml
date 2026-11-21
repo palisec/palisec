@@ -22,3 +22,7 @@ jobs:
             echo "Attempt $attempt: HTTP ${code:-none}"; sleep 20
           done
           echo "::error::$URL did not answer 200 after 3 attempts"; exit 1
+      - name: Publish policy commitments (Phase 8 registry sync; sends nothing when the chain already matches)
+        if: vars.PEAA_SYNC_ENABLED == 'true'
+        run: |
+          curl -s --max-time 120 -X POST -H 'origin: https://palisec.tech' https://palisec.tech/api/v1/public/peaa/sync | head -c 2000; echo

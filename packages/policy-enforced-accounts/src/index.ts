@@ -1,6 +1,6 @@
 export { canonicalize, policyHash } from "./jcs";
 export { REASONS, PALISEC_REASON_MAP, encodeReason, decodeReason, type ReasonCode } from "./reasons";
-export { INTERFACE_ID, REGISTRY_ABI } from "./abi";
+export { INTERFACE_ID, REGISTRY_ABI, REGISTRY_ADDRESSES, REGISTRY_INIT_CODE_HASH, REGISTRY_SALT } from "./abi";
 export {
   DECISIONS,
   INTENT_TYPEHASH,
@@ -15,7 +15,4 @@ export {
   type Intent,
   type ReceiptJson,
 } from "./receipt";
-export { fetchPolicy, readAccount, supportsStandard, verifyReceipt, type AccountStatus, type Commitment, type ReceiptCheck } from "./read";
-
-/** Reference registry on Robinhood Chain mainnet (4663). Filled in at deployment. */
-export const REGISTRY_ADDRESSES: Record<number, `0x${string}`> = {};
+export { fetchPolicy, readAccount, supportsStandard, verifyReceipt, type AccountStatus, type Commitment, type ReceiptCheck, type VerifyOptions } from "./read";
