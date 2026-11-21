@@ -204,13 +204,19 @@ async function syncOne(t: Target, registry: Address, publisher: ReturnType<typeo
   }
   const send = async (kind: string, functionName: string, args: readonly unknown[], record: { hash?: string; version?: number; effectiveAt?: Date; document?: unknown }) => {
     const tx = await wallet.writeContract({ chain, address: registry, abi: REGISTRY_ABI, functionName, args } as never);
-    const receipt = await pub.waitForTransactionReceipt({ hash: tx, timeout: 60_000 });
-    if (receipt.status !== "success") throw new Error(`${functionName} reverted (${tx})`);
+    // Recorded as soon as it is sent, so an error while waiting can never make a later sync send it again.
     await db()`
       INSERT INTO peaa_commitments (agent_id, chain_id, account, kind, policy_hash, version, effective_at, document, tx_hash)
       VALUES (${t.agentId}::uuid, ${t.chainId}, ${t.account.toLowerCase()}, ${kind}, ${record.hash ?? null}, ${record.version ?? null},
         ${record.effectiveAt ?? null}, ${record.document === undefined ? null : JSON.stringify(record.document)}::text::jsonb, ${tx})`;
     res.sent.push({ kind, tx });
+    let receipt: Awaited<ReturnType<typeof pub.waitForTransactionReceipt>> | null = null;
+    for (let attempt = 0; attempt < 3 && !receipt; attempt++)
+      receipt = await pub.waitForTransactionReceipt({ hash: tx, timeout: 30_000, pollingInterval: 1_000 }).catch(() => null);
+    if (receipt && receipt.status !== "success") {
+      await db()`DELETE FROM peaa_commitments WHERE tx_hash = ${tx}`;
+      throw new Error(`${functionName} reverted (${tx})`);
+    }
   };
   const uri = (h: string) => (t.publishPolicy ? policyURI(h) : "");
 
