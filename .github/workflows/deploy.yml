@@ -1,0 +1,42 @@
+name: Deploy
+# Builds palisec.tech here and hands the build to the Vercel project (Vercel's Hobby plan cannot build
+# private organization repositories itself). Off until the VERCEL_TOKEN secret and the VERCEL_ORG_ID /
+# VERCEL_PROJECT_ID variables are set. Migrations run in the build, as they did on Vercel.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: vars.VERCEL_PROJECT_ID != '' && vars.VERCEL_ORG_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_CLI: vercel@65.12.1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Pull the production settings and environment
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - name: Build (same command as on Vercel)
+        run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
+      - name: Deploy the build to production
+        run: |
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "Deployed: $url"
+      - name: The site answers
+        run: |
+          for i in 1 2 3 4 5 6; do code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://palisec.tech/login); [ "$code" = 200 ] && { echo OK; exit 0; }; sleep 10; done
+          echo "::error::palisec.tech/login did not answer 200"; exit 1
