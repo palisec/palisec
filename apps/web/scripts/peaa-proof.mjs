@@ -5,7 +5,7 @@
  *   declare    agent: the Safe calls registry.declare(co-signer, publisher, receipt signer) through Palisec (co-signed)
  *   sync       publish the account's commitments now (POST /v1/public/peaa/sync)
  *   loosen     owner: raise the hourly budget by $0.25 inside the envelope (a pending loosening → PolicyPending)
- *   receipt    agent: a recorded request above the limit (DENY, nothing sent); saves its signed receipt to docs/phase8/receipt-demo.json
+ *   receipt    agent: a recorded request above the limit (DENY, nothing sent); saves its signed receipt to receipt-demo.json in the current folder
  *   status     what the chain says (library only)
  *
  *   node apps/web/scripts/peaa-proof.mjs <stage>
@@ -102,7 +102,7 @@ if (stage === "allow") {
     body: { request_id: `peaa-receipt-${Date.now()}`, chain_id: 4663, to: COMPANY, value_wei: "20000000000000", data: "0x", gas_limit: 150000, deadline: Math.floor(Date.now() / 1000) + 300 },
   });
   if (!r.body.receipt) throw new Error(`no receipt: ${r.status} ${JSON.stringify(r.body).slice(0, 300)}`);
-  writeFileSync(new URL("../../../docs/phase8/receipt-demo.json", import.meta.url), JSON.stringify(r.body.receipt, null, 2) + "\n");
+  writeFileSync("receipt-demo.json", JSON.stringify(r.body.receipt, null, 2) + "\n");
   console.log(`${utc()}  decision ${r.body.operation_id} ${r.body.decision} ${r.body.reason_code ?? ""}: receipt saved (decision ${r.body.receipt.decision}, reason ${r.body.receipt.reasonCode}, policy ${r.body.receipt.policyHash.slice(0, 10)}…)`);
 } else if (stage === "status") {
   console.log(JSON.stringify(await readAccount(pub, SAFE, REGISTRY), (_, v) => (typeof v === "bigint" ? v.toString() : v), 2));
