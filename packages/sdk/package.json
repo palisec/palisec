@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@palisec/policy-schema": "workspace:*",
-    "tsup": "^8.5.0",
+    "tsup": "^9.0.0",
     "typescript": "^5",
     "viem": "2.57.19",
     "vitest": "^5"
