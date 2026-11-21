@@ -8,7 +8,7 @@ solc_version = "0.8.28"
 evm_version = "cancun"
 optimizer = true
 optimizer_runs = 200
-fs_permissions = [{ access = "read", path = "./" }]
+fs_permissions = [{ access = "read", path = "./" }, { access = "read", path = "../packages/policy-enforced-accounts/vectors" }]
 
 [fuzz]
 runs = 1000
