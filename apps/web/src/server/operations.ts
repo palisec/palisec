@@ -266,13 +266,10 @@ export interface DecisionResponse {
 export async function dryRun(agent: AgentContext, input: IntentInput): Promise<DecisionResponse> {
   const p = await prepare(agent, input);
   const r = p.result;
-  const receipt = await signReceipt({
-    chainId: input.chain_id, account: agent.account, target: input.to, valueWei: input.value_wei, data: input.data,
-    decision: r.decision, reasonCode: r.reason_code, policy: p.policy, policyVersion: r.policy_version,
-    issuedAt: new Date(), expiresAt: null, decisionId: `dry_run:${agent.agentId}:${input.request_id}`,
-  });
+  // No receipt for a dry run: a receipt is evidence of a recorded decision, and a signed preview
+  // could be mistaken for one.
   return {
-    receipt,
+    receipt: null,
     request_id: input.request_id,
     operation_id: null,
     decision: r.decision,
