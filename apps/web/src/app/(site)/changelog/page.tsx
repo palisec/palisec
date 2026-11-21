@@ -10,6 +10,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.5.0",
+    date: "2026-11-21",
+    tag: "Standard: Policy-Enforced Agent Accounts",
+    changes: [
+      "A draft ERC, Policy-Enforced Agent Accounts: anyone can check from the chain alone whether an agent's account is protected by an external policy signer, which policy is active (its hash, version, time and document), whether a loosening is pending and when it takes effect, why something was refused (a standard list of reason codes), and whether a signed decision receipt is genuine. Guide: /docs/standard.",
+      "Reference registry on Robinhood Chain mainnet, source verified: 0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92 (ERC-165 0xcc16d336, no owner, not upgradeable, holds no funds). Accounts opt in themselves with declare(); only their declared publisher can post their commitments.",
+      "Palisec publishes every activation, pending loosening, cancellation, emergency stop and mandate link of opted-in mainnet accounts to the registry, and their committed policy documents at /api/v1/public/policies/{hash}. The demo mandate account 0x9aEC…170c is the first.",
+      "Recorded decisions for opted-in accounts gain an additive receipt field: an EIP-712 receipt signed by the account's declared receipt key, bound to the exact intent, the policy hash and an expiry. Dry runs carry no receipt. Nothing about how decisions are made or signed changed.",
+      "Client library policy-enforced-accounts 0.1.0 on npm (CC0): reads any compliant account, fetches and checks its policy, and verifies receipts with no API key. Test vectors are checked in TypeScript and Solidity, and an independent read script is at /standard/independent-read.mjs.",
+    ],
+  },
+  {
     version: "1.4.0",
     date: "2026-11-21",
     tag: "Holder mandates",
