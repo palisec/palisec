@@ -71,7 +71,10 @@ export async function readAccount(client: PublicClient, account: Address, regist
 }
 
 const MAX_POLICY_BYTES = 1_000_000;
-const PRIVATE_HOST = /^(localhost|.*\.local|.*\.internal|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|\[?fe80:)/i;
+// Best-effort literal-host filter (names and IP literals). It does not resolve DNS: a server that fetches
+// untrusted policyURIs should also enforce its own egress rules.
+const PRIVATE_HOST =
+  /^(localhost|.*\.localhost|.*\.local|.*\.internal|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|0\.|\[?::1?\]?$|\[?::ffff:|\[?f[cd][0-9a-f]{2}:|\[?fe[89ab][0-9a-f]:)/i;
 
 /**
  * Fetches a policy document and checks it hashes to the committed policyHash. HTTPS only, no local or
@@ -85,9 +88,28 @@ export async function fetchPolicy(c: Commitment, fetcher: typeof fetch = fetch):
   const res = await fetcher(url, { headers: { accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`policyURI answered HTTP ${res.status}`);
   if (Number(res.headers.get("content-length") ?? 0) > MAX_POLICY_BYTES) throw new Error("policy document too large");
-  const text = await res.text();
-  if (text.length > MAX_POLICY_BYTES) throw new Error("policy document too large");
-  const document = JSON.parse(text);
+  // Count bytes as they arrive and stop at the limit, whatever content-length said.
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("policyURI returned no body");
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_POLICY_BYTES) {
+      await reader.cancel();
+      throw new Error("policy document too large");
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) {
+    bytes.set(c, at);
+    at += c.byteLength;
+  }
+  const document = JSON.parse(new TextDecoder().decode(bytes));
   const hash = policyHash(document);
   return { document, matches: hash.toLowerCase() === c.policyHash.toLowerCase(), hash };
 }

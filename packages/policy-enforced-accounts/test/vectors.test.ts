@@ -82,3 +82,16 @@ describe("fetchPolicy guards", () => {
     expect((await fetchPolicy(c("https://example.com/p"), bad)).matches).toBe(false);
   });
 });
+
+describe("fetchPolicy limits", () => {
+  it("stops reading past 1 MB even without content-length", async () => {
+    const big = (async () => new Response(new ReadableStream({ pull(c) { c.enqueue(new Uint8Array(256 * 1024).fill(32)); } }), { status: 200 })) as unknown as typeof fetch;
+    await expect(fetchPolicy({ policyHash: V.policies[4].policyHash, version: 3n, effectiveAt: 0n, policyURI: "https://example.com/p", schemaURI: "" }, big)).rejects.toThrow("too large");
+  });
+  it("refuses CGNAT and IPv4-mapped IPv6 literals", async () => {
+    const never = (() => { throw new Error("must not fetch"); }) as unknown as typeof fetch;
+    const c = (u: string) => ({ policyHash: V.policies[4].policyHash, version: 3n, effectiveAt: 0n, policyURI: u, schemaURI: "" });
+    await expect(fetchPolicy(c("https://100.64.0.1/p"), never)).rejects.toThrow("private");
+    await expect(fetchPolicy(c("https://[::ffff:7f00:1]/p"), never)).rejects.toThrow("private");
+  });
+});

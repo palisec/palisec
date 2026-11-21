@@ -110,7 +110,7 @@ export default function StandardPage() {
 
       <h2 id="receipts">Decision receipts</h2>
       <p>
-        Every Palisec decision for an opted-in account returns a <code>receipt</code> field: an EIP-712 signature by the account&apos;s
+        Every recorded Palisec decision for an opted-in account returns a <code>receipt</code> field (dry runs do not): an EIP-712 signature by the account&apos;s
         declared receipt signer, bound to the exact intent, the policy hash and an expiry. Verify it against the registry, not against
         Palisec.
       </p>
