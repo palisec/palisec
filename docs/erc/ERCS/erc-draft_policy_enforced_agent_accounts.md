@@ -166,11 +166,11 @@ No backward compatibility issues found. The interface is new and read-only for c
 
 ## Test Cases
 
-`../assets/erc-policy-enforced-agent-accounts/vectors.json` contains policy documents with their canonical JSON and `policyHash`, intents with their `intentHash`, and receipts with their EIP-712 digest and signature from a published test-only key. The vectors are checked by an independent TypeScript implementation and by Solidity (`PolicyVectors.t.sol`), and include the RFC 8785 section 3.2.2 example.
+`../assets/eip-draft_policy_enforced_agent_accounts/vectors.json` contains policy documents with their canonical JSON and `policyHash`, intents with their `intentHash`, and receipts with their EIP-712 digest and signature from a published test-only key. The vectors are checked by an independent TypeScript implementation and by Solidity (`PolicyVectors.t.sol`), and include the RFC 8785 section 3.2.2 example.
 
 ## Reference Implementation
 
-In `../assets/erc-policy-enforced-agent-accounts/`:
+In `../assets/eip-draft_policy_enforced_agent_accounts/`:
 
 - `IPolicyEnforcedAccount.sol`: the interface;
 - `PolicyEnforcedRegistry.sol`: the registry, with no owner and no upgrade path, deployed on Robinhood Chain mainnet (chain 4663) at `0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92` with verified source;

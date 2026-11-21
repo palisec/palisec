@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Copies the reference implementation into the ERC's assets folder (run from the repository root).
 set -e
-A=docs/erc/assets/erc-policy-enforced-agent-accounts
+A=docs/erc/assets/eip-draft_policy_enforced_agent_accounts
 rm -rf "$A" && mkdir -p "$A/client/src"
 cp contracts/src/peaa/IPolicyEnforcedAccount.sol contracts/src/peaa/PolicyEnforcedRegistry.sol contracts/src/peaa/PolicyDecisionReceipt.sol "$A/"
 cp contracts/test/PolicyEnforcedRegistry.t.sol contracts/test/PolicyVectors.t.sol "$A/"
