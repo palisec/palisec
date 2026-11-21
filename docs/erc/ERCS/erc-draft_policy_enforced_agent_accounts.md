@@ -3,7 +3,7 @@ eip: TBD
 title: Policy-Enforced Agent Accounts
 description: Discover an account's external policy signer, its committed policy, standard reason codes and signed decision receipts.
 author: Palisec (@palisec-dev)
-discussions-to: TBD
+discussions-to: https://ethereum-magicians.org/t/draft-erc-policy-enforced-agent-accounts/30467
 status: Draft
 type: Standards Track
 category: ERC
