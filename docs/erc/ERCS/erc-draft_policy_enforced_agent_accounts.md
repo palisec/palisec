@@ -145,7 +145,7 @@ A verifier:
 
 - MUST use a registry (or account) address it trusts, and MUST reject a receipt whose `verifyingContract` differs;
 - MUST check `issuedAt <= expiresAt` and that the receipt has not expired, except when auditing a past decision;
-- MUST check that the signer is the account's `receiptSigner`, by `ecrecover` for an EOA or ERC-1271 `isValidSignature` for a contract;
+- MUST check that the signer is the account's `receiptSigner`, by `ecrecover` for an EOA or [ERC-1271](./eip-1271.md) `isValidSignature` for a contract;
 - SHOULD reject a receipt from a signer that has since been rotated out, unless auditing a past decision, in which case it MUST use `signersAt(account, issuedAt)`;
 - MUST check `intentHash` against the transaction it is judging, when there is one.
 
