@@ -33,7 +33,10 @@ jobs:
       - name: Build (same command as on Vercel)
         run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
       - name: Deploy the build to production
+        # Without git metadata: on the Hobby plan Vercel blocks a deployment whose commit author is not the
+        # account owner, and the commits here are by the company account. The token owner deploys the build.
         run: |
+          rm -rf .git
           url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN")
           echo "Deployed: $url"
       - name: The site answers
