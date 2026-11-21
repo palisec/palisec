@@ -2,6 +2,7 @@ name: Publish SDKs
 # Publishes the SDKs to the public registries, only when a version tag is pushed, and only after every
 # CI check passes:
 #   sdk-v0.6.2  ->  @palisec/sdk 0.6.2 on npm      (token: repository secret NPM_TOKEN, company npm account)
+#   peaa-v0.1.0 ->  policy-enforced-accounts 0.1.0 on npm (draft ERC client library; same NPM_TOKEN)
 #   py-v0.4.1   ->  palisec 0.4.1 on PyPI          (PyPI Trusted Publishing, environment "pypi";
 #                                                   a PYPI_TOKEN secret is used instead if one is set)
 # The tag must equal the package version. A published version can never be reused, so nothing here
@@ -9,7 +10,7 @@ name: Publish SDKs
 # they would name the source repository publicly.
 on:
   push:
-    tags: ["sdk-v*.*.*", "py-v*.*.*"]
+    tags: ["sdk-v*.*.*", "py-v*.*.*", "peaa-v*.*.*"]
 permissions:
   contents: read
 jobs:
@@ -40,6 +41,34 @@ jobs:
       - name: Publish @palisec/sdk
         working-directory: packages/sdk
         # pnpm rewrites workspace: references in package.json; npm would publish them unchanged.
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  npm-peaa:
+    if: startsWith(github.ref_name, 'peaa-v')
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - name: Tag matches the package version
+        run: |
+          tag="${GITHUB_REF_NAME#peaa-v}"
+          version=$(node -p "require('./packages/policy-enforced-accounts/package.json').version")
+          if [ "$tag" != "$version" ]; then echo "Tag $GITHUB_REF_NAME does not match policy-enforced-accounts $version"; exit 1; fi
+      - run: pnpm --filter policy-enforced-accounts build
+      - run: pnpm --filter policy-enforced-accounts test
+      - name: Publish policy-enforced-accounts
+        working-directory: packages/policy-enforced-accounts
+        # pnpm applies publishConfig (built dist exports) at publish time.
         run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
