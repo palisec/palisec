@@ -8,4 +8,5 @@ cp contracts/test/PolicyEnforcedRegistry.t.sol contracts/test/PolicyVectors.t.so
 cp packages/policy-enforced-accounts/vectors/vectors.json "$A/"
 cp packages/policy-enforced-accounts/src/*.ts "$A/client/src/"
 cp packages/policy-enforced-accounts/examples/independent-read.mjs "$A/client/"
+cp docs/erc/assets-README.md "$A/README.md"
 echo "assets synced to $A"
