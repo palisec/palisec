@@ -10,6 +10,7 @@ import type { Role } from "./session";
 import { parseAddress } from "./siwe";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { parseWorkflowId } from "./upoch";
+import { queueSync } from "./peaa";
 import { announcePending, classifyRebind, listPending, orgDelays, parseDelaySetting, requestPending } from "./pending";
 
 
@@ -369,6 +370,7 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
       diff: cls.changes,
       effective_at: effectiveAt,
     });
+  if (r.outcome !== "pending") queueSync(ctx.orgId); // Phase 8: an activation that applies now is published at once
   const after = await getPolicy(ctx, id);
   return {
     ...after,

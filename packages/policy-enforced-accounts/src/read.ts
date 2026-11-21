@@ -1,5 +1,5 @@
 import { getAddress, hashTypedData, isAddressEqual, parseAbi, type Address, type Hex, type PublicClient } from "viem";
-import { INTERFACE_ID, REGISTRY_ABI } from "./abi";
+import { INTERFACE_ID, REGISTRY_ABI, REGISTRY_ADDRESSES } from "./abi";
 import { policyHash } from "./jcs";
 import { intentHash, recoverReceiptSigner, typedReceipt, type Intent, type ReceiptJson } from "./receipt";
 
@@ -70,12 +70,24 @@ export async function readAccount(client: PublicClient, account: Address, regist
   };
 }
 
-/** Fetches a policy document and checks it hashes to the committed policyHash. */
+const MAX_POLICY_BYTES = 1_000_000;
+const PRIVATE_HOST = /^(localhost|.*\.local|.*\.internal|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|\[?fe80:)/i;
+
+/**
+ * Fetches a policy document and checks it hashes to the committed policyHash. HTTPS only, no local or
+ * private hosts, 10 s timeout, 1 MB limit: a policyURI is chosen by the account's publisher, not by you.
+ */
 export async function fetchPolicy(c: Commitment, fetcher: typeof fetch = fetch): Promise<{ document: unknown; matches: boolean; hash: Hex }> {
   if (!c.policyURI) throw new Error("This commitment has no policyURI (hash only)");
-  const res = await fetcher(c.policyURI, { headers: { accept: "application/json" } });
+  const url = new URL(c.policyURI);
+  if (url.protocol !== "https:") throw new Error("policyURI must be https");
+  if (PRIVATE_HOST.test(url.hostname)) throw new Error("policyURI points to a local or private host");
+  const res = await fetcher(url, { headers: { accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`policyURI answered HTTP ${res.status}`);
-  const document = await res.json();
+  if (Number(res.headers.get("content-length") ?? 0) > MAX_POLICY_BYTES) throw new Error("policy document too large");
+  const text = await res.text();
+  if (text.length > MAX_POLICY_BYTES) throw new Error("policy document too large");
+  const document = JSON.parse(text);
   const hash = policyHash(document);
   return { document, matches: hash.toLowerCase() === c.policyHash.toLowerCase(), hash };
 }
@@ -89,23 +101,50 @@ export interface ReceiptCheck {
 
 const ERC1271 = parseAbi(["function isValidSignature(bytes32 hash, bytes signature) view returns (bytes4)"]);
 
+export interface VerifyOptions {
+  /** The registry you trust. Defaults to the known registry for the client's chain. */
+  registry?: Address;
+  /** If given, the receipt must be bound to exactly this intent. */
+  intent?: Intent;
+  /** Unix seconds; defaults to the latest block's timestamp. */
+  now?: bigint;
+  /** Accept a receipt signed by a key the account has since rotated out (audits of old receipts). Default false. */
+  allowRotatedSigner?: boolean;
+  /** Largest accepted expiresAt - issuedAt, in seconds. Default 86,400. */
+  maxLifetimeSeconds?: bigint;
+}
+
 /**
- * Verifies a decision receipt against the chain: the signer must be the account's receiptSigner as
- * declared at issuedAt (EOA recovery, or ERC-1271 for a contract signer). If `intent` is given, the
- * receipt must be bound to it.
+ * Verifies a decision receipt against the chain: the receipt must name the trusted registry, be within
+ * its validity window, and be signed by the account's receipt signer (the current one, unless
+ * allowRotatedSigner is set, then the one declared at issuedAt). EOA recovery, or ERC-1271 for a contract.
  */
-export async function verifyReceipt(client: PublicClient, receipt: ReceiptJson, opts: { intent?: Intent; now?: bigint } = {}): Promise<ReceiptCheck> {
+export async function verifyReceipt(client: PublicClient, receipt: ReceiptJson, opts: VerifyOptions = {}): Promise<ReceiptCheck> {
   const problems: string[] = [];
   const chainId = BigInt(await client.getChainId());
   if (BigInt(receipt.chainId) !== chainId) problems.push(`receipt is for chain ${receipt.chainId}, the client is on ${chainId}`);
-  const at = (await client.readContract({
-    address: getAddress(receipt.registry),
-    abi: REGISTRY_ABI,
-    functionName: "signersAt",
-    args: [getAddress(receipt.account), BigInt(receipt.issuedAt)],
-  })) as { receiptSigner: Address; policySigner: Address };
-  const expectedSigner = at.receiptSigner;
-  if (expectedSigner === ZERO) problems.push("the account had no declared receipt signer at issuedAt");
+  const trusted = opts.registry ?? REGISTRY_ADDRESSES[Number(chainId)];
+  if (!trusted) throw new Error(`no trusted registry for chain ${chainId}: pass opts.registry`);
+  if (!isAddressEqual(getAddress(receipt.registry), getAddress(trusted)))
+    return { valid: false, signer: null, expectedSigner: ZERO, problems: [...problems, `receipt names registry ${receipt.registry}, not the trusted ${trusted}`] };
+  const now = opts.now ?? (await client.getBlock()).timestamp;
+  const issuedAt = BigInt(receipt.issuedAt);
+  const expiresAt = BigInt(receipt.expiresAt);
+  if (issuedAt > now + 300n) problems.push("receipt is issued in the future");
+  if (expiresAt < issuedAt) problems.push("receipt expires before it was issued");
+  if (expiresAt - issuedAt > (opts.maxLifetimeSeconds ?? 86_400n)) problems.push("receipt lifetime is too long");
+  if (expiresAt < now) problems.push("receipt has expired");
+  const read = (fn: "signersAt" | "policySigner", args: readonly unknown[]) =>
+    client.readContract({ address: getAddress(trusted), abi: REGISTRY_ABI, functionName: fn, args } as never) as Promise<{ receiptSigner: Address }>;
+  let atIssue: { receiptSigner: Address }, current: { receiptSigner: Address };
+  try {
+    [atIssue, current] = await Promise.all([read("signersAt", [getAddress(receipt.account), issuedAt]), read("policySigner", [getAddress(receipt.account)])]);
+  } catch {
+    return { valid: false, signer: null, expectedSigner: ZERO, problems: [...problems, `could not read the registry ${trusted}`] };
+  }
+  const expectedSigner = opts.allowRotatedSigner ? atIssue.receiptSigner : current.receiptSigner;
+  if (expectedSigner === ZERO) problems.push("the account has no declared receipt signer");
+  if (!opts.allowRotatedSigner && !isAddressEqual(atIssue.receiptSigner, current.receiptSigner)) problems.push("the receipt signer has been rotated since issuedAt");
   let signer: Address | null = null;
   try {
     signer = await recoverReceiptSigner(receipt);
@@ -122,8 +161,7 @@ export async function verifyReceipt(client: PublicClient, receipt: ReceiptJson, 
       /* invalid */
     }
   }
-  if (!sigOk) problems.push(`signature is not from the declared receipt signer ${expectedSigner}`);
+  if (!sigOk) problems.push(`signature is not from the receipt signer ${expectedSigner}`);
   if (opts.intent && intentHash(opts.intent).toLowerCase() !== receipt.intentHash.toLowerCase()) problems.push("receipt is not bound to this intent");
-  if (opts.now !== undefined && BigInt(receipt.expiresAt) < opts.now) problems.push("receipt has expired");
   return { valid: problems.length === 0, signer, expectedSigner, problems };
 }

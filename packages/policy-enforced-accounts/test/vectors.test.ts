@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { hashTypedData } from "viem";
 import { describe, expect, it } from "vitest";
-import { canonicalize, decodeReason, encodeReason, intentHash, PALISEC_REASON_MAP, policyHash, REASONS, recoverReceiptSigner, typedReceipt, type ReceiptJson } from "../src";
+import { canonicalize, decodeReason, fetchPolicy, encodeReason, intentHash, PALISEC_REASON_MAP, policyHash, REASONS, recoverReceiptSigner, typedReceipt, type ReceiptJson } from "../src";
 
 const V = JSON.parse(readFileSync(new URL("../vectors/vectors.json", import.meta.url), "utf8"));
 
@@ -60,5 +60,25 @@ describe("reason codes", () => {
   it("maps every Palisec code to a standard code", () => {
     for (const v of Object.values(PALISEC_REASON_MAP)) expect(REASONS).toHaveProperty(v);
     expect(Object.keys(PALISEC_REASON_MAP)).toHaveLength(24);
+  });
+});
+
+describe("fetchPolicy guards", () => {
+  const c = (policyURI: string) => ({ policyHash: V.policies[4].policyHash, version: 3n, effectiveAt: 0n, policyURI, schemaURI: "" });
+  const never = (() => {
+    throw new Error("must not fetch");
+  }) as unknown as typeof fetch;
+  it("refuses non-https and private hosts without fetching", async () => {
+    await expect(fetchPolicy(c("http://example.com/p"), never)).rejects.toThrow("https");
+    await expect(fetchPolicy(c("https://localhost/p"), never)).rejects.toThrow("private");
+    await expect(fetchPolicy(c("https://10.0.0.1/p"), never)).rejects.toThrow("private");
+    await expect(fetchPolicy(c("https://[::1]/p"), never)).rejects.toThrow("private");
+  });
+  it("checks the document against the committed hash", async () => {
+    const doc = V.policies[4].document;
+    const ok = (async () => new Response(JSON.stringify(doc), { status: 200 })) as unknown as typeof fetch;
+    expect((await fetchPolicy(c("https://example.com/p"), ok)).matches).toBe(true);
+    const bad = (async () => new Response(JSON.stringify({ ...doc, version: 4 }), { status: 200 })) as unknown as typeof fetch;
+    expect((await fetchPolicy(c("https://example.com/p"), bad)).matches).toBe(false);
   });
 });

@@ -25,6 +25,8 @@ import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
 import { BadRequest, HttpError, logEvent } from "./http";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
+import { signReceipt } from "./peaa";
+import type { ReceiptJson } from "policy-enforced-accounts";
 
 /** How long an ALLOW can be used, and how long a request may wait for a human approver. */
 export const AUTHORIZATION_TTL_SECONDS = 300;
@@ -256,13 +258,21 @@ export interface DecisionResponse {
   message: string;
   checks: CheckResult[];
   dry_run: boolean;
+  /** Phase 8: EIP-712 decision receipt (draft ERC Policy-Enforced Agent Accounts), for opted-in accounts. */
+  receipt?: ReceiptJson | null;
 }
 
 /** POST /v1/authorizations/evaluate: what would happen now. Consumes nothing and reserves nothing. */
 export async function dryRun(agent: AgentContext, input: IntentInput): Promise<DecisionResponse> {
   const p = await prepare(agent, input);
   const r = p.result;
+  const receipt = await signReceipt({
+    chainId: input.chain_id, account: agent.account, target: input.to, valueWei: input.value_wei, data: input.data,
+    decision: r.decision, reasonCode: r.reason_code, policy: p.policy, policyVersion: r.policy_version,
+    issuedAt: new Date(), expiresAt: null, decisionId: `dry_run:${agent.agentId}:${input.request_id}`,
+  });
   return {
+    receipt,
     request_id: input.request_id,
     operation_id: null,
     decision: r.decision,
@@ -299,6 +309,13 @@ export async function createOperation(
   try {
     const res = await recordOperation(agent, input, idempotencyKey, p);
     if (res.replayed) await unmeterDecision(agent, meter, input.request_id);
+    if (res.body.operation_id)
+      res.body.receipt = await signReceipt({
+        chainId: input.chain_id, account: agent.account, target: input.to, valueWei: input.value_wei, data: input.data,
+        decision: res.body.decision, reasonCode: res.body.reason_code, policy: p.policy, policyVersion: res.body.policy_version,
+        issuedAt: new Date((res.body as { created_at?: string }).created_at ?? Date.now()), expiresAt: res.body.expires_at ? new Date(res.body.expires_at) : null,
+        decisionId: res.body.operation_id,
+      });
     return { ...res, meter: res.replayed ? null : meter };
   } catch (e) {
     await unmeterDecision(agent, meter, input.request_id).catch(() => {});
