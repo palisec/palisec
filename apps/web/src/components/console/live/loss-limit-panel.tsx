@@ -22,6 +22,7 @@ interface LossStatus {
   paused_at?: string | null;
   window_started_at?: string | null;
   value_unavailable?: boolean;
+  value_unavailable_reason?: string | null;
   reset_pending?: { pending_change_id: string; effective_at: string } | null;
 }
 
@@ -68,7 +69,7 @@ export function LossLimitPanel({ agentId, canReset }: { agentId: string; canRese
           {`Paused for risk (${code}) since ${s.paused_at ? utc(s.paused_at) : "the last check"}. ${l.on_breach === "review" ? "Every trade that adds risk waits for a human." : "Trades that add risk are denied."} Swaps into the policy's stablecoins and transfers to the exit addresses are still allowed. Only the owner can reset.`}
         </Notice>
       ) : s.value_unavailable ? (
-        <Notice tone="review">The account&apos;s value could not be measured reliably at the last check (a price is stale, paused or depegged). Trades that add risk fail closed with PS_LOSS_003 until it can.</Notice>
+        <Notice tone="review">The account&apos;s value could not be measured reliably at the last check (a price is stale, paused or depegged). Trades that add risk fail closed with PS_LOSS_003 until it can.{s.value_unavailable_reason ? ` Reason: ${s.value_unavailable_reason}` : ""}</Notice>
       ) : null}
       <Meter fraction={fraction} label="Loss against the limit" danger={fraction >= 0.8 || !!code} />
       <KV

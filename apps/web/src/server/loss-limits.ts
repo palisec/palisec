@@ -299,6 +299,8 @@ export async function lossStatus(orgId: string, agentId: string) {
     paused_at: r.paused_at ? new Date(r.paused_at).toISOString() : null,
     window_started_at: r.window_started_at ? new Date(r.window_started_at).toISOString() : null,
     value_unavailable: r.last_error ? true : false,
+    // Already reduced by safeReason (first line, no URLs) when stored; shown to the organization's members only.
+    value_unavailable_reason: (r.last_error as string | null) ?? null,
     reset_pending: r.reset_pending ? { pending_change_id: r.reset_pending.id as string, effective_at: new Date(r.reset_pending.effective_at).toISOString() } : null,
   };
 }
