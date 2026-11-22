@@ -1,6 +1,6 @@
 import "server-only";
 import { lossBreach, NATIVE_TOKEN, type LossSnapshot, type Policy } from "@palisec/policy-schema";
-import { createPublicClient, getAddress, parseAbi, parseAbiItem, toEventSelector, type Address } from "viem";
+import { BaseError, createPublicClient, getAddress, InvalidParamsRpcError, parseAbi, parseAbiItem, toEventSelector, type Address } from "viem";
 import { externalFlows, flowsUsd, peakNow, usdOf, type Movement } from "@/lib/loss-flows";
 import { CHAINS, chainTransport, type ChainId } from "./config";
 import { db, type Row } from "./db";
@@ -117,6 +117,22 @@ export async function latch(t: LossTarget, code: "PS_LOSS_001" | "PS_LOSS_002", 
   return true;
 }
 
+/**
+ * Retries a log read that an RPC rejected as invalid. The fallback RPC can be a few seconds behind the one
+ * that reported the latest block, and refuses a range that ends past its own head until it catches up.
+ */
+async function behindHeadRetry<T>(read: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await read();
+    } catch (e) {
+      const invalid = e instanceof BaseError && e.walk((x) => x instanceof InvalidParamsRpcError) !== null;
+      if (!invalid || attempt >= 5) throw e;
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
+}
+
 /** Balance movements of the account's priced assets in (from, to], and the transactions the Safe executed. */
 async function scanMoves(chainId: ChainId, account: Address, from: bigint, to: bigint, exits: Set<string>) {
   const c = createPublicClient({ transport: chainTransport(chainId, 10_000) });
@@ -128,9 +144,9 @@ async function scanMoves(chainId: ChainId, account: Address, from: bigint, to: b
     if (++chunks > MAX_CHUNKS) throw new Error("account history since the last snapshot is too long to scan");
     const end = start + CHUNK_BLOCKS - 1n < to ? start + CHUNK_BLOCKS - 1n : to;
     const [own, out, inn] = await Promise.all([
-      c.getLogs({ address: account, fromBlock: start, toBlock: end }),
-      tokens.length ? c.getLogs({ address: tokens, event: TRANSFER, args: { from: account }, fromBlock: start, toBlock: end }) : [],
-      tokens.length ? c.getLogs({ address: tokens, event: TRANSFER, args: { to: account }, fromBlock: start, toBlock: end }) : [],
+      behindHeadRetry(() => c.getLogs({ address: account, fromBlock: start, toBlock: end })),
+      tokens.length ? behindHeadRetry(() => c.getLogs({ address: tokens, event: TRANSFER, args: { from: account }, fromBlock: start, toBlock: end })) : [],
+      tokens.length ? behindHeadRetry(() => c.getLogs({ address: tokens, event: TRANSFER, args: { to: account }, fromBlock: start, toBlock: end })) : [],
     ]);
     for (const l of own) {
       const topic = l.topics[0];
