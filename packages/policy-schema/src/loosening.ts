@@ -45,6 +45,22 @@ const NUMERIC: Record<string, { looserWhen: "higher" | "lower"; label: string }>
   "$.asset_safety.max_slippage_bps": { looserWhen: "higher", label: "maximum slippage" },
   "$.asset_safety.max_simulation_age_seconds": { looserWhen: "higher", label: "accepted simulation age" },
   "$.upoch_recovery.max_checkpoint_age_seconds": { looserWhen: "higher", label: "accepted Upoch checkpoint age" },
+  // A longer window can only raise the peak, so it is stricter.
+  "$.loss_limit.window_seconds": { looserWhen: "lower", label: "loss limit window" },
+  "$.loss_limit.max_exit_slippage_bps": { looserWhen: "higher", label: "exit slippage allowed while paused" },
+  "$.loss_limit.max_closed_market_price_age_seconds": { looserWhen: "higher", label: "accepted stock-token price age while markets are closed" },
+};
+
+/** Loss limits where 0 means "not used", the loosest value of all. */
+const ZERO_IS_OFF: Record<string, string> = {
+  "$.loss_limit.max_drawdown_bps": "maximum drawdown",
+  "$.loss_limit.max_loss_usd_micros": "maximum USD loss",
+};
+
+/** Address lists where adding an address allows more. */
+const ADDRESS_SETS: Record<string, string> = {
+  "$.loss_limit.stablecoins": "stablecoin a paused account may swap into",
+  "$.loss_limit.exit_addresses": "exit address (withdrawals allowed while paused)",
 };
 
 /** Booleans: the value that is stricter. */
@@ -55,6 +71,7 @@ const STRICT_BOOL: Record<string, { strict: boolean; label: string }> = {
   "$.asset_safety.block_unlimited_approvals": { strict: true, label: "unlimited approval block" },
   "$.upoch_recovery.require_upoch_recoverable": { strict: true, label: "must be recoverable on Upoch" },
   "$.upoch_recovery.require_guardian": { strict: true, label: "Upoch guardian required" },
+  "$.loss_limit.enabled": { strict: true, label: "loss limit" },
 };
 
 function numeric(path: string, from: unknown, to: unknown): PolicyChange {
@@ -135,6 +152,39 @@ function walk(path: string, a: unknown, b: unknown, out: PolicyChange[]) {
   if (path === "$.contracts.allowlist") return allowlist(a, b, out);
   if (path === "$.contracts.denylist") return denylist(a, b, out);
   if (NUMERIC[path]) return void out.push(numeric(path, a, b));
+  if (ZERO_IS_OFF[path]) {
+    const label = ZERO_IS_OFF[path]!;
+    const x = big(a) ?? (num(a) !== null ? BigInt(Math.trunc(num(a)!)) : null);
+    const y = big(b) ?? (num(b) !== null ? BigInt(Math.trunc(num(b)!)) : null);
+    if (x === null || y === null) return void out.push({ path, kind: "loosening", from: a, to: b, note: `${label} changed in a way that cannot be compared` });
+    const looser = y === 0n || (x !== 0n && y > x);
+    return void out.push({ path, kind: looser ? "loosening" : "tightening", from: a, to: b, note: y === 0n ? `${label} no longer used` : x === 0n ? `${label} set` : `${label} ${y > x ? "raised" : "lowered"}` });
+  }
+  if (ADDRESS_SETS[path]) {
+    const label = ADDRESS_SETS[path]!;
+    if (!Array.isArray(a) || !Array.isArray(b)) return void out.push({ path, kind: "loosening", from: a ?? null, to: b ?? null, note: `${label} list replaced` });
+    const x = new Set(a.map(lower));
+    const y = new Set(b.map(lower));
+    for (const v of y) if (!x.has(v)) out.push({ path, kind: "loosening", from: null, to: v, note: `${label} added: ${String(v)}` });
+    for (const v of x) if (!y.has(v)) out.push({ path, kind: "tightening", from: v, to: null, note: `${label} removed: ${String(v)}` });
+    return;
+  }
+  if (path === "$.loss_limit.reset_epoch")
+    return void out.push({ path, kind: "loosening", from: a, to: b, note: "loss limit reset (the pause clears and the window starts again)" });
+  if (path === "$.loss_limit.on_breach")
+    return void out.push({ path, kind: b === "pause_risk" ? "tightening" : "loosening", from: a, to: b, note: `loss limit breach: ${String(a)} to ${String(b)}` });
+  if (path === "$.loss_limit.on_valuation_unavailable")
+    return void out.push({ path, kind: b === "deny" ? "tightening" : "loosening", from: a, to: b, note: `no account value: ${String(a)} to ${String(b)}` });
+  if (path === "$.loss_limit") {
+    if (a === undefined && b && typeof b === "object") {
+      const s = b as Record<string, unknown>;
+      return void out.push({ path, kind: "tightening", from: null, to: b, note: `loss limit added (${s.enabled === true ? "on" : "off"})` });
+    }
+    if (b === undefined && a && typeof a === "object") {
+      const s = a as Record<string, unknown>;
+      return void out.push({ path, kind: s.enabled === true ? "loosening" : "tightening", from: a, to: null, note: "loss limit removed" });
+    }
+  }
   if (STRICT_BOOL[path] && typeof a === "boolean" && typeof b === "boolean") {
     const r = STRICT_BOOL[path]!;
     return void out.push({ path, kind: b === r.strict ? "tightening" : "loosening", from: a, to: b, note: `${r.label}: ${String(a)} to ${String(b)}` });

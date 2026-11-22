@@ -1,12 +1,13 @@
-//! Policy schema 1.0 and 1.1 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
+//! Policy schema 1.0 to 1.3 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
 //! same paths, same messages, same order. Unknown fields are rejected so a typo cannot disable a rule.
 
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSIONS: [&str; 3] = ["1.0", "1.1", "1.2"];
+pub const SCHEMA_VERSIONS: [&str; 4] = ["1.0", "1.1", "1.2", "1.3"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
+const MAX_LOSS_ADDRESSES: usize = 16;
 const I31: i64 = 2_147_483_647;
 
 pub struct Validator {
@@ -71,11 +72,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit"],
     );
 
     if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
-        v.err("$.schema_version", "must be \"1.0\", \"1.1\" or \"1.2\"");
+        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\" or \"1.3\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -166,7 +167,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("asset_safety") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3") {
             v.err("$.asset_safety", "requires schema_version \"1.1\" or later");
         }
         if let Some(safety) = v.obj(doc, "asset_safety", "$") {
@@ -197,8 +198,8 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("upoch_recovery") {
-        if doc.get("schema_version") != Some(&Value::String("1.2".into())) {
-            v.err("$.upoch_recovery", "requires schema_version \"1.2\"");
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3") {
+            v.err("$.upoch_recovery", "requires schema_version \"1.2\" or later");
         }
         if let Some(up) = v.obj(doc, "upoch_recovery", "$") {
             let p = "$.upoch_recovery";
@@ -209,6 +210,63 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
             if !matches!(up.get("on_unavailable"), Some(Value::String(s)) if s == "deny" || s == "review") {
                 v.err(format!("{p}.on_unavailable"), "must be \"deny\" or \"review\"");
             }
+        }
+    }
+
+    if doc.contains_key("loss_limit") {
+        if doc.get("schema_version") != Some(&Value::String("1.3".into())) {
+            v.err("$.loss_limit", "requires schema_version \"1.3\"");
+        }
+        if let Some(loss) = v.obj(doc, "loss_limit", "$") {
+            let p = "$.loss_limit";
+            v.fields(
+                loss,
+                p,
+                &[
+                    "enabled",
+                    "max_drawdown_bps",
+                    "max_loss_usd_micros",
+                    "window_seconds",
+                    "on_breach",
+                    "on_valuation_unavailable",
+                    "stablecoins",
+                    "exit_addresses",
+                    "max_exit_slippage_bps",
+                    "max_closed_market_price_age_seconds",
+                    "reset_epoch",
+                ],
+            );
+            v.bool(loss, "enabled", p);
+            v.int(loss, "max_drawdown_bps", p, 0, 10000);
+            v.uint(loss, "max_loss_usd_micros", p);
+            let zero_bps = matches!(loss.get("max_drawdown_bps"), Some(Value::Number(n)) if n.as_f64() == Some(0.0));
+            let zero_usd = matches!(loss.get("max_loss_usd_micros"), Some(Value::String(s)) if s == "0");
+            if zero_bps && zero_usd {
+                v.err(p, "needs max_drawdown_bps or max_loss_usd_micros above zero");
+            }
+            v.int(loss, "window_seconds", p, 3600, 604800);
+            if !matches!(loss.get("on_breach"), Some(Value::String(s)) if s == "pause_risk" || s == "review") {
+                v.err(format!("{p}.on_breach"), "must be \"pause_risk\" or \"review\"");
+            }
+            if !matches!(loss.get("on_valuation_unavailable"), Some(Value::String(s)) if s == "deny" || s == "review") {
+                v.err(format!("{p}.on_valuation_unavailable"), "must be \"deny\" or \"review\"");
+            }
+            for key in ["stablecoins", "exit_addresses"] {
+                match loss.get(key) {
+                    Some(Value::Array(list)) => {
+                        if list.len() > MAX_LOSS_ADDRESSES {
+                            v.err(format!("{p}.{key}"), format!("at most {MAX_LOSS_ADDRESSES} entries"));
+                        }
+                        for (i, a) in list.iter().enumerate() {
+                            v.address(Some(a), format!("{p}.{key}[{i}]"));
+                        }
+                    }
+                    _ => v.err(format!("{p}.{key}"), "required array"),
+                }
+            }
+            v.int(loss, "max_exit_slippage_bps", p, 0, 10000);
+            v.int(loss, "max_closed_market_price_age_seconds", p, 0, 604800);
+            v.int(loss, "reset_epoch", p, 0, I31);
         }
     }
 

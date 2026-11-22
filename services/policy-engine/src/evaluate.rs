@@ -12,7 +12,7 @@ const RESERVATION_TTL_SECONDS: i64 = 300;
 const MAX_CALLDATA_BYTES: usize = 65536;
 
 pub fn retryable(code: &str) -> bool {
-    matches!(code, "PS_BUDGET_001" | "PS_RATE_001" | "PS_ATTEST_001" | "PS_FEE_001" | "PS_PAUSED_001" | "PS_STATE_001" | "PS_CHAIN_001" | "PS_RECOVERY_003")
+    matches!(code, "PS_BUDGET_001" | "PS_RATE_001" | "PS_ATTEST_001" | "PS_FEE_001" | "PS_PAUSED_001" | "PS_STATE_001" | "PS_CHAIN_001" | "PS_RECOVERY_003" | "PS_LOSS_003")
 }
 
 const LIVE_CHECKS: [(&str, &str); 5] = [
@@ -392,6 +392,14 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
 
     r.run("recovery", "Recoverable on Upoch (checkpoint, guardian)", || {
         Ok(match crate::recovery::check(policy, env, now)? {
+            crate::asset::Asset::Pass(d) => Pass(d),
+            crate::asset::Asset::Fail(c, d) => Fail(c, d),
+            crate::asset::Asset::Review(c, d) => Review(c, d),
+        })
+    })?;
+
+    r.run("loss", "Loss limit (account value against the window's peak)", || {
+        Ok(match crate::loss::check(policy, intent, env, now, selector.as_deref(), &value)? {
             crate::asset::Asset::Pass(d) => Pass(d),
             crate::asset::Asset::Fail(c, d) => Fail(c, d),
             crate::asset::Asset::Review(c, d) => Review(c, d),

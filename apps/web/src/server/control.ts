@@ -1,4 +1,5 @@
 import "server-only";
+import { lossLimitsAllowed } from "./loss-limits";
 import { classifyPolicyChange, SCHEMA_VERSION, summarizeChanges, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
 import { planLimitError, planLimits, refreshPro } from "./billing";
@@ -342,6 +343,8 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
        (SELECT count(*) FROM pending_changes WHERE org_id = ${ctx.orgId}::uuid AND state = 'pending' AND kind = 'agent_rebind'
           AND setting->>'policy_id' = ${id}::text))::int AS bound`;
   const document = { ...(current.draft as object), version: Number(next), status: "active" } as Policy;
+  if (document.loss_limit?.enabled === true && !lossLimitsAllowed(ctx.orgId))
+    throw new HttpError(403, "PS_POLICY_001", "Loss limits are in preview and not yet available to this organization.");
   const hash = await sha256Hex(canonicalJson(document));
   const before = (current.active_document as Policy | null) ?? null;
   const cls = classifyPolicyChange(before, document, { disabled: current.status === "disabled" });

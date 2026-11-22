@@ -1,6 +1,7 @@
 name: Uptime
 # Hourly check that the site answers. Off until the repository variable UPTIME_ENABLED is "true".
-# It loads /login, a static page, so it never wakes the database. A failed run emails the owner.
+# It loads /login, a static page, so the check itself never wakes the database (the optional registry sync
+# and loss-limit steps below do, once an hour). A failed run emails the owner.
 on:
   schedule:
     - cron: "17 * * * *"
@@ -26,3 +27,8 @@ jobs:
         if: vars.PEAA_SYNC_ENABLED == 'true'
         run: |
           curl -s --max-time 120 -X POST -H 'origin: https://palisec.tech' https://palisec.tech/api/v1/public/peaa/sync | head -c 2000; echo
+      - name: Measure accounts with a loss limit (Phase 9; prints counts only, because this log is public)
+        if: vars.LOSS_SNAPSHOT_ENABLED == 'true'
+        run: |
+          body=$(curl -s --max-time 120 -X POST -H 'origin: https://palisec.tech' https://palisec.tech/api/v1/public/loss/snapshot) || true
+          printf '%s' "$body" | grep -oE '"(accounts|measured|unavailable|paused)":[0-9]+' | tr '\n' ' '; echo

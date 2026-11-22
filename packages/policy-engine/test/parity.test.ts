@@ -110,7 +110,7 @@ describe("policy engine", () => {
     // The generator must reach every outcome, or the comparison proves little.
     expect(decisions.ALLOW).toBeGreaterThan(FUZZ / 100);
     expect(decisions.REQUIRES_HUMAN_SIGNATURE).toBeGreaterThan(FUZZ / 100);
-    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001", "PS_RECOVERY_001", "PS_RECOVERY_002", "PS_RECOVERY_003"])
+    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001", "PS_RECOVERY_001", "PS_RECOVERY_002", "PS_RECOVERY_003", "PS_LOSS_001", "PS_LOSS_002", "PS_LOSS_003"])
       expect(codes.has(code), code).toBe(true);
   }, 600_000);
 

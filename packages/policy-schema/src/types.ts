@@ -7,7 +7,7 @@ export type Hex = `0x${string}`;
 
 /** The version new policies are written in. 1.0 documents stay valid; 1.1 adds `asset_safety`. */
 export const SCHEMA_VERSION = "1.1" as const;
-export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2"] as const;
+export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3"] as const;
 export type SchemaVersion = (typeof SCHEMA_VERSIONS)[number];
 
 /** Native ETH in balance changes and declared intent (the common 0xEeee… convention), lowercase. */
@@ -41,6 +41,51 @@ export interface UpochRecovery {
   require_guardian: boolean;
   /** Upoch data cannot be read: deny (default) or hold for a human. Never allow. */
   on_unavailable: "deny" | "review";
+}
+
+/**
+ * Schema 1.3 (Phase 9): a loss limit outside the agent. The account's value is measured before each
+ * decision (an input, like the simulation); breaching the limit pauses everything that adds risk
+ * until the owner resets it (a new version with `reset_epoch` + 1, which is a loosening).
+ */
+export interface LossLimit {
+  enabled: boolean;
+  /** Largest drawdown from the window's peak, basis points (500 = 5%). 0 = not used. */
+  max_drawdown_bps: number;
+  /** Largest loss from the window's peak, USD micros. "0" = not used. At least one limit is set. */
+  max_loss_usd_micros: UintString;
+  /** Rolling window, seconds (1 h to 7 d). */
+  window_seconds: number;
+  /** Breach: deny everything that adds risk, or hold it for a human. */
+  on_breach: "pause_risk" | "review";
+  /** No reliable account value: deny (default) or hold for a human. Never allow. */
+  on_valuation_unavailable: "deny" | "review";
+  /** What a risk-reducing swap may swap into. */
+  stablecoins: Address[];
+  /** Owner and recovery wallets: transfers here are withdrawals, not losses, and stay allowed. */
+  exit_addresses: Address[];
+  /** A risk-reducing swap while paused may lose at most this much of the value it sells. */
+  max_exit_slippage_bps: number;
+  /** Stock-token prices while markets are closed may be at most this old (read by the valuation). */
+  max_closed_market_price_age_seconds: number;
+  /** Raised by the owner to reset a breach; the window starts again when it activates. */
+  reset_epoch: number;
+}
+
+/** The account's value before this decision, from Chainlink prices and Palisec's own snapshots. */
+export interface LossSnapshot {
+  /** Unix seconds of the read. */
+  observed_at: number;
+  /** Account value now, USD micros; null when an asset it holds cannot be priced. */
+  value_usd_micros: UintString | null;
+  /** Peak of the flow-adjusted value in the window, at today's deposits and withdrawals (>= value). */
+  baseline_usd_micros: UintString | null;
+  /** The account is paused by an earlier breach (latched until the owner resets), with its code. */
+  paused: "PS_LOSS_001" | "PS_LOSS_002" | null;
+  /** USD micros per whole token. A token not listed here and not unavailable has no price ($0). */
+  prices: { token: Address; price_micros: UintString; decimals: number }[];
+  /** Tokens the policy allows whose price is unavailable (stale, paused, depegged). */
+  unavailable: Address[];
 }
 
 /** The agent's Upoch workflow as read from the Upoch ledger contract; workflow_id "" when none is set. */
@@ -127,6 +172,8 @@ export interface Policy {
   asset_safety?: AssetSafety;
   /** Schema 1.2. Absent means off. */
   upoch_recovery?: UpochRecovery;
+  /** Schema 1.3. Absent means off. */
+  loss_limit?: LossLimit;
 }
 
 /** A proposed action from an agent. Typed intent, never free text. */
@@ -158,6 +205,8 @@ export interface Environment {
   asset_simulation?: AssetSimulation | null;
   /** Phase 6.5: the agent's Upoch workflow; absent or null means unavailable (fails closed when required). */
   upoch?: UpochStatus | null;
+  /** Phase 9: the account's value; absent or null means unavailable (fails closed when a loss limit is on). */
+  loss_snapshot?: LossSnapshot | null;
 }
 
 export type ReservationState = "reserved" | "pending_approval" | "released" | "finalized";
