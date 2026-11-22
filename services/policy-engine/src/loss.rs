@@ -127,6 +127,9 @@ pub fn check(policy: &Value, intent: &Value, env: &Value, now: i64, selector: Op
             let out = amounts(sim.get("outflows"), "outflows")?;
             let inn = amounts(sim.get("inflows"), "inflows")?;
             pure = inn.is_empty() && out.iter().all(|(t, _)| *t == to);
+        } else {
+            // Without a simulation, only a transfer of one of the policy's stablecoins is taken at its word.
+            pure = stables.contains(&to);
         }
         if pure {
             return Ok(Pass(format!("Token transfer to exit address {recipient}: a withdrawal, not a loss.")));
@@ -208,10 +211,8 @@ pub fn check(policy: &Value, intent: &Value, env: &Value, now: i64, selector: Op
         }
     }
 
-    if out.is_empty() && inn.is_empty() {
-        let Some(code) = paused else {
-            return Ok(Pass("No value moves in this operation.".into()));
-        };
+    // While paused, every approval must be bounded and to an allowlisted contract (no later drain).
+    let safe_approvals = {
         let contracts = &policy["contracts"];
         let deny: Vec<String> = contracts["denylist"].as_array().ok_or("denylist must be an array")?.iter().filter_map(Value::as_str).map(lower).collect();
         let allow: Vec<String> = contracts["allowlist"]
@@ -222,19 +223,29 @@ pub fn check(policy: &Value, intent: &Value, env: &Value, now: i64, selector: Op
             .map(lower)
             .collect();
         let unlimited = BigUint::from(1u32) << 128u32;
-        if approvals.iter().all(|(s, a)| *a < unlimited && !deny.contains(s) && allow.contains(s)) {
+        approvals.iter().all(|(s, a)| *a < unlimited && !deny.contains(s) && allow.contains(s))
+    };
+    let approval_breach = |code: &'static str| {
+        breach(code, format!("The loss limit was reached ({code}) and this operation grants an approval that is not bounded or not to an allowlisted contract."))
+    };
+
+    if out.is_empty() && inn.is_empty() {
+        let Some(code) = paused else {
+            return Ok(Pass("No value moves in this operation.".into()));
+        };
+        if safe_approvals {
             return Ok(Pass("No value moves (bounded approvals to allowlisted contracts only): allowed while paused.".into()));
         }
-        return Ok(breach(
-            code,
-            format!("The loss limit was reached ({code}) and this operation grants an approval that is not bounded or not to an allowlisted contract."),
-        ));
+        return Ok(approval_breach(code));
     }
 
     if let Some(code) = paused {
         let reducing = !inn.is_empty() && inn.iter().all(|(t, _)| stables.contains(t));
         if !reducing {
             return Ok(breach(code, format!("The loss limit was reached ({code}) and this operation adds risk.")));
+        }
+        if !safe_approvals {
+            return Ok(approval_breach(code));
         }
         let (Some(sold), Some(got)) = (worth(&out, &prices, &missing, true), worth(&inn, &prices, &missing, false)) else {
             return Ok(unavailable("A price needed to check this exit swap is unavailable.".into()));

@@ -1,14 +1,17 @@
 -- Phase 9: loss limits the agent can't override. Palisec records the account's value itself (the
 -- public RPC keeps no history), with deposits and withdrawals taken out, and latches a breach until the
 -- owner resets it (a new policy version with loss_limit.reset_epoch + 1, which is a delayed loosening).
--- State belongs to one policy and account: another organization's policy on the same address can never
--- pause, reset or move the window of yours. Additive: nothing existing changes.
+-- State belongs to one organization and account: another organization's policy on the same address can
+-- never pause, reset or move the window of yours, and moving an agent to another policy keeps the pause
+-- (only the same policy's own reset clears it). Additive: nothing existing changes.
 
 CREATE TABLE loss_limit_state (
-  policy_id          uuid NOT NULL REFERENCES policies (id) ON DELETE CASCADE,
+  org_id             uuid NOT NULL REFERENCES organizations (id) ON DELETE CASCADE,
   chain_id           integer NOT NULL,
   account            text NOT NULL CHECK (account ~ '^0x[0-9a-f]{40}$'),
-  -- The policy's reset_epoch these rows belong to; a new epoch clears the pause and restarts the window.
+  -- The policy that last measured the account, and its reset_epoch. A new epoch of the same policy (the
+  -- owner's reset) clears the pause and restarts the window; a different policy does not.
+  policy_id          uuid REFERENCES policies (id) ON DELETE SET NULL,
   epoch              integer NOT NULL,
   -- Peaks count only from here: the epoch's start, or a restart after a gap longer than the window.
   window_started_at  timestamptz NOT NULL DEFAULT now(),
@@ -16,12 +19,12 @@ CREATE TABLE loss_limit_state (
   paused_at          timestamptz,
   last_error         text,
   updated_at         timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (policy_id, chain_id, account)
+  PRIMARY KEY (org_id, chain_id, account)
 );
 
 CREATE TABLE loss_snapshots (
   id                bigserial PRIMARY KEY,
-  policy_id         uuid NOT NULL REFERENCES policies (id) ON DELETE CASCADE,
+  org_id            uuid NOT NULL REFERENCES organizations (id) ON DELETE CASCADE,
   chain_id          integer NOT NULL,
   account           text NOT NULL CHECK (account ~ '^0x[0-9a-f]{40}$'),
   epoch             integer NOT NULL,
@@ -33,4 +36,4 @@ CREATE TABLE loss_snapshots (
   balances          jsonb NOT NULL,
   prices            jsonb NOT NULL
 );
-CREATE INDEX loss_snapshots_account ON loss_snapshots (policy_id, chain_id, account, taken_at DESC);
+CREATE INDEX loss_snapshots_account ON loss_snapshots (org_id, chain_id, account, taken_at DESC);

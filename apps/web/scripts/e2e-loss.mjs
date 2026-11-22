@@ -120,6 +120,20 @@ check("status: paused with PS_LOSS_002", st.body.paused === "PS_LOSS_002" && st.
 await sleep(1500);
 check("webhook loss_limit.triggered delivered once", events.filter((e) => e.type === "loss_limit.triggered").length === 1, events.map((e) => e.type));
 
+// Moving the paused agent onto a fresh copy of its policy must not clear the pause.
+{
+  const copy = await call("POST", "/policies", { cookie, body: { name: "copy", policy_key: `loss_copy_${Date.now()}`, chain_id: 4663, account: SAFE } });
+  const sc = await call("PUT", `/policies/${copy.body.id}`, { cookie, body: { document: { ...base, policy_id: copy.body.policy_key } } });
+  await call("POST", `/policies/${copy.body.id}/activate`, { cookie, body: { confirm: true, draft_hash: sc.body.draft_hash } });
+  const moved = await call("PATCH", `/agents/${ag.body.id}`, { cookie, body: { policy_id: copy.body.id } });
+  r = await dry(TARGET, "10000000000");
+  check("moving the paused agent to a fresh copy of its policy keeps it paused", r.body.reason_code === "PS_LOSS_002", { moved: moved.body.state ?? moved.status, r: r.body });
+  await call("PATCH", `/agents/${ag.body.id}`, { cookie, body: { policy_id: p.body.id } });
+  await sleep(4500); // a rebind may be a loosening (3 s test delay)
+  r = await dry(TARGET, "10000000000");
+  check("...and back on the original policy it is still paused", r.body.reason_code === "PS_LOSS_002", r.body);
+}
+
 // 4) Only the owner resets; the reset is a delayed loosening, cancellable, and then trading resumes.
 r = await call("POST", `/agents/${ag.body.id}/loss-limit/reset`, { cookie, body: { confirm: true } });
 check("reset requested: pending with an effective time (loosening delay)", r.body.state === "pending_activation" && r.body.effective_at, r.body);

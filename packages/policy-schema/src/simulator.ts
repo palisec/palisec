@@ -543,6 +543,9 @@ function lossCheck(policy: Policy, intent: Intent, env: Environment, selector: s
       const out = amounts(sim.outflows, "outflows");
       const inn = amounts(sim.inflows, "inflows");
       pure = inn.size === 0 && [...out.keys()].every((t) => t === to);
+    } else {
+      // Without a simulation, only a transfer of one of the policy's stablecoins is taken at its word.
+      pure = stables.includes(to);
     }
     if (pure) return { status: "pass", detail: `Token transfer to exit address ${recipient}: a withdrawal, not a loss.` };
   }
@@ -601,18 +604,23 @@ function lossCheck(policy: Policy, intent: Intent, env: Environment, selector: s
 
   if (paused === null && valueNow !== null && peak !== null) paused = lossBreach(rules, peak, valueNow);
 
+  // While paused, every approval must be bounded and to an allowlisted contract (no later drain).
+  const deny = policy.contracts.denylist.map((a) => a.toLowerCase());
+  const trusted = (a: string) => !deny.includes(a) && policy.contracts.allowlist.some((e) => e.address.toLowerCase() === a);
+  const safeApprovals = approvals.every((a) => a.amount < UNLIMITED && trusted(a.spender));
+  const approvalBreach = (code: ReasonCode) =>
+    breach(code, `The loss limit was reached (${code}) and this operation grants an approval that is not bounded or not to an allowlisted contract.`);
+
   if (out.size === 0 && inn.size === 0) {
     if (paused === null) return { status: "pass", detail: "No value moves in this operation." };
-    const deny = policy.contracts.denylist.map((a) => a.toLowerCase());
-    const trusted = (a: string) => !deny.includes(a) && policy.contracts.allowlist.some((e) => e.address.toLowerCase() === a);
-    if (approvals.every((a) => a.amount < UNLIMITED && trusted(a.spender)))
-      return { status: "pass", detail: "No value moves (bounded approvals to allowlisted contracts only): allowed while paused." };
-    return breach(paused, `The loss limit was reached (${paused}) and this operation grants an approval that is not bounded or not to an allowlisted contract.`);
+    if (safeApprovals) return { status: "pass", detail: "No value moves (bounded approvals to allowlisted contracts only): allowed while paused." };
+    return approvalBreach(paused);
   }
 
   if (paused !== null) {
     const reducing = inn.size > 0 && [...inn.keys()].every((t) => stables.includes(t));
     if (!reducing) return breach(paused, `The loss limit was reached (${paused}) and this operation adds risk.`);
+    if (!safeApprovals) return approvalBreach(paused);
     const sold = worth(out, true);
     const got = worth(inn, false);
     if (sold === null || got === null) return unavailable("A price needed to check this exit swap is unavailable.");

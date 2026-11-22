@@ -35,7 +35,7 @@ const EXECUTED = new Set([
 
 export interface LossTarget {
   orgId: string;
-  /** The policy row (uuid): loss state is per policy and account. */
+  /** The policy row (uuid) measuring the account. State is per organization and account. */
   policyUuid: string;
   chainId: number;
   account: Address;
@@ -71,36 +71,42 @@ interface State {
 }
 
 /**
- * The account's latch state for the policy's reset epoch. A new epoch (the owner's reset, applied after the
- * loosening delay) clears the pause and restarts the window; that is announced as loss_limit.reset.
+ * The account's latch state in this organization. A new reset_epoch of the same policy (the owner's reset,
+ * applied after the loosening delay) clears the pause and restarts the window; that is announced as
+ * loss_limit.reset. Another policy (the agent moved, or a copy of the policy) takes over the state as it
+ * is: a pause and the window's peak carry over, so moving an agent never clears a breach.
  */
 async function syncEpoch(t: LossTarget): Promise<State> {
   const epoch = t.policy.loss_limit!.reset_epoch;
   const account = lower(t.account);
   const [row] = await db()`
-    WITH prev AS (SELECT epoch, paused_code FROM loss_limit_state WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${t.chainId} AND account = ${account})
-    INSERT INTO loss_limit_state AS s (policy_id, chain_id, account, epoch) VALUES (${t.policyUuid}::uuid, ${t.chainId}, ${account}, ${epoch})
-    ON CONFLICT (policy_id, chain_id, account) DO UPDATE SET epoch = EXCLUDED.epoch, window_started_at = now(), paused_code = NULL, paused_at = NULL, updated_at = now()
-      WHERE s.epoch <> EXCLUDED.epoch
+    WITH prev AS (SELECT policy_id, epoch FROM loss_limit_state WHERE org_id = ${t.orgId}::uuid AND chain_id = ${t.chainId} AND account = ${account})
+    INSERT INTO loss_limit_state AS s (org_id, chain_id, account, policy_id, epoch) VALUES (${t.orgId}::uuid, ${t.chainId}, ${account}, ${t.policyUuid}::uuid, ${epoch})
+    ON CONFLICT (org_id, chain_id, account) DO UPDATE SET
+      policy_id = EXCLUDED.policy_id, epoch = EXCLUDED.epoch, updated_at = now(),
+      window_started_at = CASE WHEN s.policy_id = EXCLUDED.policy_id THEN now() ELSE s.window_started_at END,
+      paused_code = CASE WHEN s.policy_id = EXCLUDED.policy_id THEN NULL ELSE s.paused_code END,
+      paused_at = CASE WHEN s.policy_id = EXCLUDED.policy_id THEN NULL ELSE s.paused_at END
+      WHERE s.policy_id IS DISTINCT FROM EXCLUDED.policy_id OR s.epoch <> EXCLUDED.epoch
     RETURNING s.epoch, extract(epoch FROM s.window_started_at)::bigint AS started, s.paused_code,
-      (SELECT epoch FROM prev) AS prev_epoch, (SELECT paused_code FROM prev) AS prev_paused`;
+      (SELECT epoch FROM prev) AS prev_epoch, ((SELECT policy_id FROM prev) = ${t.policyUuid}::uuid) AS same_policy`;
   if (row) {
-    if (row.prev_epoch !== null && row.prev_epoch !== undefined)
-      afterChange(t.orgId, "loss_limit.reset", { chain_id: t.chainId, account, reset_epoch: epoch, was_paused: row.prev_paused ?? null });
+    if (row.same_policy === true)
+      afterChange(t.orgId, "loss_limit.reset", { chain_id: t.chainId, account, policy_id: t.policy.policy_id, reset_epoch: epoch });
     return { epoch: Number(row.epoch), windowStartedAt: Number(row.started), pausedCode: row.paused_code ?? null };
   }
   const [s] = await db()`
     SELECT epoch, extract(epoch FROM window_started_at)::bigint AS started, paused_code
-    FROM loss_limit_state WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${t.chainId} AND account = ${account}`;
+    FROM loss_limit_state WHERE org_id = ${t.orgId}::uuid AND chain_id = ${t.chainId} AND account = ${account}`;
   return { epoch: Number(s!.epoch), windowStartedAt: Number(s!.started), pausedCode: s!.paused_code ?? null };
 }
 
-/** Sets the pause once per epoch and announces it. Returns true when this call set it. */
+/** Sets the pause (once, until the owner resets) and announces it. Returns true when this call set it. */
 export async function latch(t: LossTarget, code: "PS_LOSS_001" | "PS_LOSS_002", detail: Record<string, unknown>): Promise<boolean> {
   const account = lower(t.account);
   const rows = await db()`
     UPDATE loss_limit_state SET paused_code = ${code}, paused_at = now(), updated_at = now()
-    WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${t.chainId} AND account = ${account} AND epoch = ${t.policy.loss_limit!.reset_epoch} AND paused_code IS NULL
+    WHERE org_id = ${t.orgId}::uuid AND chain_id = ${t.chainId} AND account = ${account} AND paused_code IS NULL
     RETURNING account`;
   if (!rows.length) return false;
   const l = t.policy.loss_limit!;
@@ -114,7 +120,7 @@ export async function latch(t: LossTarget, code: "PS_LOSS_001" | "PS_LOSS_002", 
 /** Balance movements of the account's priced assets in (from, to], and the transactions the Safe executed. */
 async function scanMoves(chainId: ChainId, account: Address, from: bigint, to: bigint, exits: Set<string>) {
   const c = createPublicClient({ transport: chainTransport(chainId, 10_000) });
-  const tokens = ASSETS[chainId].filter((a) => a.token !== NATIVE_TOKEN).map((a) => getAddress(a.token));
+  const tokens = ASSETS[chainId].filter((a) => a.contract !== NATIVE_TOKEN).map((a) => getAddress(a.contract));
   const moves: Movement[] = [];
   const executed = new Set<string>();
   let chunks = 0;
@@ -162,7 +168,7 @@ export async function takeSnapshot(t: LossTarget, now: number, opts: { record?: 
   const unavailable = (reason: string, prices: LossSnapshot["prices"] = [], missing: string[] = []): LossSnapshot => {
     const why = safeReason(reason);
     logEvent("warn", "loss_limit.value_unavailable", { chain_id: chainId, account, why });
-    if (record) db()`UPDATE loss_limit_state SET last_error = ${why.slice(0, 300)}, updated_at = now() WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${chainId} AND account = ${account}`.catch(() => {});
+    if (record) db()`UPDATE loss_limit_state SET last_error = ${why.slice(0, 300)}, updated_at = now() WHERE org_id = ${t.orgId}::uuid AND chain_id = ${chainId} AND account = ${account}`.catch(() => {});
     return { observed_at: now, value_usd_micros: null, baseline_usd_micros: null, paused: state?.pausedCode ?? null, prices, unavailable: missing as `0x${string}`[] };
   };
   try {
@@ -171,15 +177,15 @@ export async function takeSnapshot(t: LossTarget, now: number, opts: { record?: 
     const c = createPublicClient({ transport: chainTransport(chainId, 8000) });
     const [block, prices] = await Promise.all([c.getBlock({ blockTag: "latest" }), pricesFor(chainId, rules.max_closed_market_price_age_seconds)]);
     const assets = ASSETS[chainId];
-    const tokens = assets.filter((a) => a.token !== NATIVE_TOKEN);
+    const tokens = assets.filter((a) => a.contract !== NATIVE_TOKEN);
     const [native, ...erc20] = await Promise.all([
       c.getBalance({ address: t.account, blockNumber: block.number }),
       ...(tokens.length
-        ? [c.multicall({ multicallAddress: MULTICALL3, blockNumber: block.number, allowFailure: false, contracts: tokens.map((a) => ({ address: getAddress(a.token), abi: ERC20, functionName: "balanceOf" as const, args: [t.account] as const })) })]
+        ? [c.multicall({ multicallAddress: MULTICALL3, blockNumber: block.number, allowFailure: false, contracts: tokens.map((a) => ({ address: getAddress(a.contract), abi: ERC20, functionName: "balanceOf" as const, args: [t.account] as const })) })]
         : []),
     ]);
     const balances = new Map<string, bigint>([[NATIVE_TOKEN, native as bigint]]);
-    tokens.forEach((a, i) => balances.set(a.token, ((erc20[0] as bigint[] | undefined) ?? [])[i] ?? 0n));
+    tokens.forEach((a, i) => balances.set(a.contract, ((erc20[0] as bigint[] | undefined) ?? [])[i] ?? 0n));
 
     const ok = new Map<string, { price: bigint; decimals: number }>();
     const missing: string[] = [];
@@ -204,12 +210,12 @@ export async function takeSnapshot(t: LossTarget, now: number, opts: { record?: 
     const [prev] = await db()`
       SELECT block::text AS block, flows_usd_micros::text AS flows, extract(epoch FROM taken_at)::bigint AS at
       FROM loss_snapshots
-      WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${chainId} AND account = ${account} AND epoch = ${state.epoch} AND taken_at >= to_timestamp(${state.windowStartedAt})
+      WHERE org_id = ${t.orgId}::uuid AND chain_id = ${chainId} AND account = ${account} AND taken_at >= to_timestamp(${state.windowStartedAt})
       ORDER BY block DESC, id DESC LIMIT 1`;
     let flows = 0n;
     if (prev && Number(prev.at) < now - rules.window_seconds) {
       // The last snapshot is older than the window, so no peak inside the window depends on it: start again.
-      await db()`UPDATE loss_limit_state SET window_started_at = now(), updated_at = now() WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${chainId} AND account = ${account}`;
+      await db()`UPDATE loss_limit_state SET window_started_at = now(), updated_at = now() WHERE org_id = ${t.orgId}::uuid AND chain_id = ${chainId} AND account = ${account}`;
       state.windowStartedAt = now;
     } else if (prev) {
       const from = BigInt(prev.block) + 1n;
@@ -217,22 +223,22 @@ export async function takeSnapshot(t: LossTarget, now: number, opts: { record?: 
       if (from <= block.number) {
         const exits = new Set(rules.exit_addresses.map(lower));
         const { moves, executed } = await scanMoves(chainId, t.account, from, block.number, exits);
-        const delta = flowsUsd(externalFlows(moves, executed, exits), ok, new Set(assets.map((a) => a.token)));
+        const delta = flowsUsd(externalFlows(moves, executed, exits), ok, new Set(assets.map((a) => a.contract)));
         if (delta === null) return unavailable(`no reliable price for a deposited or withdrawn asset: ${reasons.join("; ")}`, enginePrices, missing);
         flows += delta;
       }
     }
 
     await db()`
-      INSERT INTO loss_snapshots (policy_id, chain_id, account, epoch, block, value_usd_micros, flows_usd_micros, balances, prices)
-      VALUES (${t.policyUuid}::uuid, ${chainId}, ${account}, ${state.epoch}, ${block.number.toString()}::bigint, ${value.toString()}::numeric, ${flows.toString()}::numeric,
+      INSERT INTO loss_snapshots (org_id, chain_id, account, epoch, block, value_usd_micros, flows_usd_micros, balances, prices)
+      VALUES (${t.orgId}::uuid, ${chainId}, ${account}, ${state.epoch}, ${block.number.toString()}::bigint, ${value.toString()}::numeric, ${flows.toString()}::numeric,
         ${JSON.stringify(Object.fromEntries([...balances].map(([k, v]) => [k, v.toString()])))}::text::jsonb, ${JSON.stringify(enginePrices)}::text::jsonb)`;
     const window = await db()`
       SELECT value_usd_micros::text AS value, flows_usd_micros::text AS flows FROM loss_snapshots
-      WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${chainId} AND account = ${account} AND epoch = ${state.epoch}
+      WHERE org_id = ${t.orgId}::uuid AND chain_id = ${chainId} AND account = ${account}
         AND taken_at >= greatest(now() - make_interval(secs => ${rules.window_seconds}::int), to_timestamp(${state.windowStartedAt}))`;
     const peak = peakNow(window.map((r: Row) => ({ value: BigInt(r.value), flows: BigInt(r.flows) })), { value, flows });
-    db()`UPDATE loss_limit_state SET last_error = NULL WHERE policy_id = ${t.policyUuid}::uuid AND chain_id = ${chainId} AND account = ${account} AND last_error IS NOT NULL`.catch(() => {});
+    db()`UPDATE loss_limit_state SET last_error = NULL WHERE org_id = ${t.orgId}::uuid AND chain_id = ${chainId} AND account = ${account} AND last_error IS NOT NULL`.catch(() => {});
 
     let paused = state.pausedCode;
     const breach = paused ? null : lossBreach(rules, peak, value);
@@ -247,12 +253,12 @@ export async function takeSnapshot(t: LossTarget, now: number, opts: { record?: 
 export async function lossStatus(orgId: string, agentId: string) {
   const [r] = await db()`
     SELECT a.chain_id, a.account, a.policy_id, pv.document,
-      s.epoch, s.paused_code, s.paused_at, s.window_started_at, s.last_error,
+      s.epoch, s.policy_id AS state_policy, s.paused_code, s.paused_at, s.window_started_at, s.last_error,
       (SELECT json_build_object('value', ls.value_usd_micros::text, 'flows', ls.flows_usd_micros::text, 'at', ls.taken_at, 'block', ls.block::text)
-        FROM loss_snapshots ls WHERE ls.policy_id = a.policy_id AND ls.chain_id = a.chain_id AND ls.account = lower(a.account) AND ls.epoch = s.epoch
+        FROM loss_snapshots ls WHERE ls.org_id = a.org_id AND ls.chain_id = a.chain_id AND ls.account = lower(a.account) AND ls.taken_at >= s.window_started_at
         ORDER BY ls.taken_at DESC, ls.id DESC LIMIT 1) AS last,
       (SELECT coalesce(json_agg(json_build_object('value', ls.value_usd_micros::text, 'flows', ls.flows_usd_micros::text)), '[]'::json)
-        FROM loss_snapshots ls WHERE ls.policy_id = a.policy_id AND ls.chain_id = a.chain_id AND ls.account = lower(a.account) AND ls.epoch = s.epoch
+        FROM loss_snapshots ls WHERE ls.org_id = a.org_id AND ls.chain_id = a.chain_id AND ls.account = lower(a.account)
           AND ls.taken_at >= greatest(now() - make_interval(secs => coalesce((pv.document->'loss_limit'->>'window_seconds')::int, 86400)), s.window_started_at)) AS window,
       (SELECT json_build_object('id', pc.id, 'effective_at', pc.effective_at) FROM pending_changes pc
         WHERE pc.org_id = a.org_id AND pc.policy_id = a.policy_id AND pc.state = 'pending'
@@ -261,7 +267,7 @@ export async function lossStatus(orgId: string, agentId: string) {
     FROM agents a
     LEFT JOIN policies p ON p.id = a.policy_id AND p.disabled_at IS NULL
     LEFT JOIN policy_versions pv ON pv.policy_id = p.id AND pv.version = p.active_version
-    LEFT JOIN loss_limit_state s ON s.policy_id = a.policy_id AND s.chain_id = a.chain_id AND s.account = lower(a.account)
+    LEFT JOIN loss_limit_state s ON s.org_id = a.org_id AND s.chain_id = a.chain_id AND s.account = lower(a.account)
     WHERE a.id = ${agentId}::uuid AND a.org_id = ${orgId}::uuid`;
   if (!r) return null;
   const policy = r.document as Policy | null;
@@ -288,8 +294,8 @@ export async function lossStatus(orgId: string, agentId: string) {
     loss_usd_micros: loss?.toString() ?? null,
     drawdown_bps: drawdown,
     measured_at: last ? new Date(last.at).toISOString() : null,
-    // A reset that has applied but not been seen by a snapshot yet already counts: the next decision clears it.
-    paused: r.epoch !== null && Number(r.epoch) === rules.reset_epoch ? (r.paused_code ?? null) : null,
+    // A reset of this policy that has applied but not been seen by a snapshot yet already counts: the next decision clears it.
+    paused: r.state_policy === r.policy_id && r.epoch !== null && Number(r.epoch) !== rules.reset_epoch ? null : (r.paused_code ?? null),
     paused_at: r.paused_at ? new Date(r.paused_at).toISOString() : null,
     window_started_at: r.window_started_at ? new Date(r.window_started_at).toISOString() : null,
     value_unavailable: r.last_error ? true : false,
@@ -306,11 +312,11 @@ export async function runLossKeeper(): Promise<{ accounts: number; measured: num
   const { applyDue } = await import("./pending");
   await applyDue(null).catch(() => {});
   const rows = await db()`
-    SELECT DISTINCT ON (a.policy_id, a.chain_id, lower(a.account)) a.org_id, a.policy_id, a.chain_id, a.account, pv.document
+    SELECT DISTINCT ON (a.org_id, a.chain_id, lower(a.account)) a.org_id, a.policy_id, a.chain_id, a.account, pv.document
     FROM agents a JOIN policies p ON p.id = a.policy_id AND p.disabled_at IS NULL
     JOIN policy_versions pv ON pv.policy_id = p.id AND pv.version = p.active_version
     WHERE a.status <> 'revoked' AND (pv.document->'loss_limit'->>'enabled') = 'true'
-    ORDER BY a.policy_id, a.chain_id, lower(a.account), a.created_at DESC`;
+    ORDER BY a.org_id, a.chain_id, lower(a.account), a.created_at DESC`;
   const now = Math.floor(Date.now() / 1000);
   let measured = 0, unavailable = 0, paused = 0;
   for (const r of rows) {

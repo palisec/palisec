@@ -188,6 +188,23 @@ describe("loss limit: evaluation", () => {
     expect(bad.reason_code).toBe("PS_LOSS_002");
   });
 
+  it("while paused, an exit swap that also grants an unlimited approval is not allowed", () => {
+    const paused = snapshot({ paused: "PS_LOSS_002" });
+    const s = sim([[NATIVE_TOKEN, ETH / 10n]], [[USDG, 299_000_000n]], [{ token: USDG, spender: STRANGER, amount: (2n ** 200n).toString() }]);
+    const r = decide(policy(), intent(ROUTER, swap), env(paused, s));
+    expect(r.reason_code).toBe("PS_LOSS_002");
+    expect(r.message).toContain("grants an approval");
+  });
+
+  it("without a simulation, only a stablecoin transfer to an exit address is taken at its word", () => {
+    const p = policy();
+    p.contracts.allowlist.push({ address: STOCK, selectors: ["0xa9059cbb"], require_verified_code: false });
+    const stable = decide(p, intent(USDG, transferTo(EXIT, 5_000_000n)), env(snapshot({ paused: "PS_LOSS_002" }), null));
+    expect(stable.decision).toBe("ALLOW");
+    const other = decide(p, intent(STOCK, transferTo(EXIT, 5n)), env(snapshot({ paused: "PS_LOSS_002" }), null));
+    expect(other.reason_code).toBe("PS_LOSS_003");
+  });
+
   it("missing or stale value: PS_LOSS_003, deny or review, never allow", () => {
     const trade = sim([[USDG, 1_000_000n]], [[NATIVE_TOKEN, 330_000_000_000_000n]]);
     for (const e of [env(null, trade), env(undefined, trade), env(snapshot({ observed_at: NOW - 61 }), trade), env(snapshot({ value_usd_micros: null, baseline_usd_micros: null }), trade), env(snapshot({ unavailable: [USDG] }), trade), env(snapshot(), null)]) {
