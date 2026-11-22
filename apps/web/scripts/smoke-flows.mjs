@@ -18,7 +18,7 @@
  *   PALISEC_API_KEY, PALISEC_AGENT_KEY (secrets), SMOKE_ACCOUNT, SMOKE_RECIPIENT.
  */
 import { createInterface } from "node:readline";
-import { createPalisec, PalisecDeniedError, safeOpTypedData } from "@palisec/sdk";
+import { createPalisec, PalisecDeniedError, safeOpTypedData } from "../../../packages/sdk/dist/index.js";
 import { createPublicClient, encodeFunctionData, formatEther, http, isAddress, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 

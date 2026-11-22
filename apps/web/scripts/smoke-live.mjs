@@ -16,7 +16,7 @@
  * Amount: SMOKE_VALUE_WEI (default 1000000000000 wei = 0.000001 ETH).
  */
 import { createInterface } from "node:readline";
-import { createPalisec } from "@palisec/sdk";
+import { createPalisec } from "../../../packages/sdk/dist/index.js";
 import { createPublicClient, formatEther, http, isAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
