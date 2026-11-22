@@ -212,7 +212,7 @@ if (stage === "keys") {
   const q = await quote(USDG, WETH, amount);
   const nonce = () => pub.readContract({ address: ENTRY_POINT, abi: parseAbi(["function getNonce(address,uint192) view returns (uint256)"]), functionName: "getNonce", args: [state.safe, 0n] });
   const before = await nonce();
-  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `loss-try-${Date.now()}`, chain_id: 4663, to: ROUTER, value_wei: "0", data: swapData(USDG, WETH, amount, (q * 97n) / 100n), gas_limit: 300000, deadline: Math.floor(Date.now() / 1000) + 300 } });
+  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `loss-try-${Date.now()}`, chain_id: 4663, to: ROUTER, value_wei: "0", data: swapData(USDG, WETH, amount, (q * 97n) / 100n), asset_intent: { spend: [{ token: USDG, amount: amount.toString() }], receive: [{ token: WETH, amount: q.toString() }] }, gas_limit: 300000, deadline: Math.floor(Date.now() / 1000) + 300 } });
   const after = await nonce();
   if (r.body.receipt) writeFileSync("receipt-loss.json", JSON.stringify(r.body.receipt, null, 2));
   Object.assign(state, { denied: { operation_id: r.body.operation_id, reason_code: r.body.reason_code } });
