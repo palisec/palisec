@@ -30,6 +30,10 @@ export const REASON_CODES = {
   PS_RECOVERY_001: "Agent is not recoverable on Upoch",
   PS_RECOVERY_002: "Upoch checkpoint is too old",
   PS_RECOVERY_003: "Upoch data unavailable",
+  // Phase 9, loss limit (schema 1.3).
+  PS_LOSS_001: "Loss limit reached: drawdown percentage",
+  PS_LOSS_002: "Loss limit reached: USD loss",
+  PS_LOSS_003: "Account value unavailable",
 } as const;
 
 export type ReasonCode = keyof typeof REASON_CODES;
@@ -60,4 +64,7 @@ export const RETRYABLE: Record<ReasonCode, boolean> = {
   PS_RECOVERY_001: false,
   PS_RECOVERY_002: false,
   PS_RECOVERY_003: true,
+  PS_LOSS_001: false,
+  PS_LOSS_002: false,
+  PS_LOSS_003: true,
 };

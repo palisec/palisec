@@ -11,12 +11,13 @@ const SELECTOR = /^0x[0-9a-fA-F]{8}$/;
 const POLICY_ID = /^[a-z0-9_]{3,64}$/;
 const MAX_ALLOWLIST = 256;
 const MAX_SELECTORS = 64;
+const MAX_LOSS_ADDRESSES = 16;
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
- * Validates a policy document against schema 1.0 or 1.1. Unknown fields are rejected so a
+ * Validates a policy document against schema 1.0 to 1.3. Unknown fields are rejected so a
  * typo can never silently disable a rule. Returns an empty array when valid.
  */
 export function validatePolicy(doc: unknown): ValidationError[] {
@@ -54,10 +55,10 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   const $ = "$";
   fields(doc, $, [
     "schema_version", "policy_id", "version", "account", "status",
-    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery",
+    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit",
   ]);
 
-  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1" or "1.2"');
+  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1", "1.2" or "1.3"');
   if (typeof doc.policy_id !== "string" || !POLICY_ID.test(doc.policy_id))
     err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
   int(doc, "version", $, 1, 2 ** 31 - 1);
@@ -128,7 +129,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.asset_safety !== undefined) {
-    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2") err("$.asset_safety", 'requires schema_version "1.1" or later');
+    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2" && doc.schema_version !== "1.3") err("$.asset_safety", 'requires schema_version "1.1" or later');
     const safety = obj(doc, "asset_safety", $);
     if (safety) {
       const p = "$.asset_safety";
@@ -148,7 +149,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.upoch_recovery !== undefined) {
-    if (doc.schema_version !== "1.2") err("$.upoch_recovery", 'requires schema_version "1.2"');
+    if (doc.schema_version !== "1.2" && doc.schema_version !== "1.3") err("$.upoch_recovery", 'requires schema_version "1.2" or later');
     const up = obj(doc, "upoch_recovery", $);
     if (up) {
       const p = "$.upoch_recovery";
@@ -157,6 +158,37 @@ export function validatePolicy(doc: unknown): ValidationError[] {
       int(up, "max_checkpoint_age_seconds", p, 60, 31536000);
       bool(up, "require_guardian", p);
       if (up.on_unavailable !== "deny" && up.on_unavailable !== "review") err(`${p}.on_unavailable`, 'must be "deny" or "review"');
+    }
+  }
+
+  if (doc.loss_limit !== undefined) {
+    if (doc.schema_version !== "1.3") err("$.loss_limit", 'requires schema_version "1.3"');
+    const loss = obj(doc, "loss_limit", $);
+    if (loss) {
+      const p = "$.loss_limit";
+      fields(loss, p, [
+        "enabled", "max_drawdown_bps", "max_loss_usd_micros", "window_seconds", "on_breach", "on_valuation_unavailable",
+        "stablecoins", "exit_addresses", "max_exit_slippage_bps", "max_closed_market_price_age_seconds", "reset_epoch",
+      ]);
+      bool(loss, "enabled", p);
+      int(loss, "max_drawdown_bps", p, 0, 10000);
+      uint(loss, "max_loss_usd_micros", p);
+      if (loss.max_drawdown_bps === 0 && loss.max_loss_usd_micros === "0") err(p, "needs max_drawdown_bps or max_loss_usd_micros above zero");
+      int(loss, "window_seconds", p, 3600, 604800);
+      if (loss.on_breach !== "pause_risk" && loss.on_breach !== "review") err(`${p}.on_breach`, 'must be "pause_risk" or "review"');
+      if (loss.on_valuation_unavailable !== "deny" && loss.on_valuation_unavailable !== "review")
+        err(`${p}.on_valuation_unavailable`, 'must be "deny" or "review"');
+      for (const key of ["stablecoins", "exit_addresses"]) {
+        const list = loss[key];
+        if (!Array.isArray(list)) err(`${p}.${key}`, "required array");
+        else {
+          if (list.length > MAX_LOSS_ADDRESSES) err(`${p}.${key}`, `at most ${MAX_LOSS_ADDRESSES} entries`);
+          list.forEach((a, i) => address(a, `${p}.${key}[${i}]`));
+        }
+      }
+      int(loss, "max_exit_slippage_bps", p, 0, 10000);
+      int(loss, "max_closed_market_price_age_seconds", p, 0, 604800);
+      int(loss, "reset_epoch", p, 0, 2 ** 31 - 1);
     }
   }
 

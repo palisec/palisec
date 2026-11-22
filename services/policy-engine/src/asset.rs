@@ -18,16 +18,16 @@ use Asset::*;
 
 type Res<T> = Result<T, String>;
 
-fn bad<T>(why: &str) -> Res<T> {
+pub(crate) fn bad<T>(why: &str) -> Res<T> {
     Err(format!("asset simulation input: {why}"))
 }
-fn str_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a str> {
+pub(crate) fn str_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a str> {
     match v {
         Some(Value::String(s)) => Ok(s),
         _ => bad(&format!("{what} must be a string")),
     }
 }
-fn amount_of(v: Option<&Value>, what: &str) -> Res<BigUint> {
+pub(crate) fn amount_of(v: Option<&Value>, what: &str) -> Res<BigUint> {
     let s = str_of(v, what)?;
     if is_uint(s) {
         Ok(s.parse().unwrap_or_default())
@@ -35,25 +35,25 @@ fn amount_of(v: Option<&Value>, what: &str) -> Res<BigUint> {
         bad(&format!("{what} must be a decimal integer"))
     }
 }
-fn int_of(v: Option<&Value>, what: &str) -> Res<i64> {
+pub(crate) fn int_of(v: Option<&Value>, what: &str) -> Res<i64> {
     match v.and_then(int) {
         Some(n) => Ok(n),
         None => bad(&format!("{what} must be an integer")),
     }
 }
-fn list_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a Vec<Value>> {
+pub(crate) fn list_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a Vec<Value>> {
     match v {
         Some(Value::Array(a)) => Ok(a),
         _ => bad(&format!("{what} must be an array")),
     }
 }
-fn record_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a Map<String, Value>> {
+pub(crate) fn record_of<'a>(v: Option<&'a Value>, what: &str) -> Res<&'a Map<String, Value>> {
     match v {
         Some(Value::Object(m)) => Ok(m),
         _ => bad(&format!("{what} must be an object")),
     }
 }
-fn bool_of(v: Option<&Value>, what: &str) -> Res<bool> {
+pub(crate) fn bool_of(v: Option<&Value>, what: &str) -> Res<bool> {
     match v {
         Some(Value::Bool(b)) => Ok(*b),
         _ => bad(&format!("{what} must be a boolean")),
@@ -61,7 +61,7 @@ fn bool_of(v: Option<&Value>, what: &str) -> Res<bool> {
 }
 
 /// token (lowercase) -> amount, summed, in first-seen order (a JavaScript Map).
-fn amounts(v: Option<&Value>, what: &str) -> Res<Vec<(String, BigUint)>> {
+pub(crate) fn amounts(v: Option<&Value>, what: &str) -> Res<Vec<(String, BigUint)>> {
     let mut out: Vec<(String, BigUint)> = Vec::new();
     for x in list_of(v, what)? {
         let o = record_of(Some(x), what)?;

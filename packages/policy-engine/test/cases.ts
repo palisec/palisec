@@ -76,6 +76,43 @@ function upochStatus(r: Rng, now: number): Record<string, unknown> {
   };
 }
 
+/** Schema 1.3 loss limit, mostly valid and enabled. */
+function lossLimit(r: Rng): Record<string, unknown> {
+  const bps = pick(r, [0, 100, 500, 500, 10000]);
+  return {
+    enabled: chance(r, 0.85),
+    max_drawdown_bps: bps,
+    max_loss_usd_micros: bps === 0 ? pick(r, ["1", "5000", "50000000"]) : pick(r, ["0", "0", "5000", "50000000", digits(r, int(r, 1, 12))]),
+    window_seconds: pick(r, [3600, 86400, 604800]),
+    on_breach: pick(r, ["pause_risk", "pause_risk", "review"]),
+    on_valuation_unavailable: pick(r, ["deny", "deny", "review"]),
+    stablecoins: TOKENS.slice(1).filter(() => chance(r, 0.4)),
+    exit_addresses: POOL.filter(() => chance(r, 0.25)),
+    max_exit_slippage_bps: pick(r, [0, 100, 300, 10000]),
+    max_closed_market_price_age_seconds: pick(r, [0, 259200]),
+    reset_epoch: int(r, 0, 3),
+  };
+}
+
+/** An account-value snapshot, mostly well-formed and fresh. */
+function lossSnapshot(r: Rng, now: number): Record<string, unknown> {
+  const priced = chance(r, 0.85);
+  const value = pick(r, ["0", "1000", "1000000000", digits(r, int(r, 1, 14))]);
+  const peak = chance(r, 0.5) ? value : (BigInt(value) + BigInt(pick(r, ["1", "4000", "60000000", digits(r, int(r, 1, 12))]))).toString();
+  return {
+    observed_at: now - pick(r, [0, 1, 5, 30, 61, -1]),
+    value_usd_micros: priced ? value : null,
+    baseline_usd_micros: priced ? peak : null,
+    paused: pick(r, [null, null, null, "PS_LOSS_001", "PS_LOSS_002"]),
+    prices: TOKENS.filter(() => chance(r, 0.75)).map((token) => ({
+      token: chance(r, 0.2) ? token.toUpperCase().replace("0X", "0x") : token,
+      price_micros: pick(r, ["0", "1000000", "3200000000", digits(r, int(r, 1, 12))]),
+      decimals: pick(r, [0, 6, 18, 18]),
+    })),
+    unavailable: TOKENS.filter(() => chance(r, 0.1)),
+  };
+}
+
 const amountList = (r: Rng, n: number) =>
   Array.from({ length: n }, () => ({
     token: pick(r, TOKENS),
@@ -175,6 +212,10 @@ function policyFor(r: Rng): unknown {
     p.schema_version = chance(r, 0.96) ? "1.2" : "1.1";
     p.upoch_recovery = upochRecovery(r);
   }
+  if (chance(r, 0.3)) {
+    p.schema_version = chance(r, 0.96) ? "1.3" : "1.2";
+    p.loss_limit = lossLimit(r);
+  }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
 }
@@ -212,6 +253,8 @@ export function evalCase(seed: number): EvalCase {
   if (sim !== null || chance(r, 0.5)) env.asset_simulation = sim;
   const up = chance(r, 0.12) ? null : upochStatus(r, now);
   if (up !== null || chance(r, 0.5)) env.upoch = up;
+  const snap = chance(r, 0.1) ? null : lossSnapshot(r, now);
+  if (snap !== null || chance(r, 0.5)) env.loss_snapshot = snap;
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {
@@ -246,6 +289,11 @@ export function evalCase(seed: number): EvalCase {
       });
       (env.verified_code as Record<string, boolean>)[target] = chance(r, 0.9);
       if (p.upoch_recovery && up && chance(r, 0.6)) Object.assign(up, { workflow_id: "12", linked: true, active: true, checkpoint_count: 3, last_checkpoint_at: now - 10, observed_at: now });
+      if (p.loss_limit && snap && chance(r, 0.6)) {
+        Object.assign(snap, { observed_at: now, paused: chance(r, 0.7) ? null : snap.paused });
+        if (chance(r, 0.3)) p.loss_limit.exit_addresses = [intent.to];
+        if (chance(r, 0.5) && sim) Object.assign(sim, { observed_at: now, reverted: false });
+      }
       if (p.asset_safety && sim && chance(r, 0.7)) {
         coherentAsset(r, intent, sim);
         if (!sel && chance(r, 0.6)) {
@@ -329,6 +377,7 @@ export function mutatePolicy(r: Rng, doc: unknown, times: number): unknown {
 export function validateCase(seed: number): unknown {
   const r = rng(seed ^ 0x5bd1e995);
   if (chance(r, 0.03)) return pick(r, [null, 5, "policy", [], [EXAMPLE_POLICY]]);
+  if (chance(r, 0.2)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.3", loss_limit: lossLimit(r) }, int(r, 0, 5));
   if (chance(r, 0.25)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.2", upoch_recovery: upochRecovery(r) }, int(r, 0, 5));
   if (chance(r, 0.5)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.1", asset_safety: assetSafety(r) }, int(r, 0, 5));
   return mutatePolicy(r, EXAMPLE_POLICY, int(r, 0, 5));

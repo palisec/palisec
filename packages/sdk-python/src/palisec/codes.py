@@ -27,6 +27,9 @@ REASON_CODES: dict[str, str] = {
     "PS_RECOVERY_001": "Agent is not recoverable on Upoch",
     "PS_RECOVERY_002": "Upoch checkpoint is too old",
     "PS_RECOVERY_003": "Upoch data unavailable",
+    "PS_LOSS_001": "Loss limit reached: drawdown percentage",
+    "PS_LOSS_002": "Loss limit reached: USD loss",
+    "PS_LOSS_003": "Account value unavailable",
 }
 
 #: Whether a client may retry the same request after the condition clears.
@@ -55,4 +58,7 @@ RETRYABLE: dict[str, bool] = {
     "PS_RECOVERY_001": False,
     "PS_RECOVERY_002": False,
     "PS_RECOVERY_003": True,
+    "PS_LOSS_001": False,
+    "PS_LOSS_002": False,
+    "PS_LOSS_003": True,
 }

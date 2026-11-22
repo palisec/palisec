@@ -226,6 +226,8 @@ export function evaluate(
 
   run("recovery", "Recoverable on Upoch (checkpoint, guardian)", () => recoveryCheck(policy!, env));
 
+  run("loss", "Loss limit (account value against the window's peak)", () => lossCheck(policy!, intent, env, selector, value));
+
   run("human", "Human approval threshold", () => {
     const t = BigInt(policy!.human_approval.usd_threshold_micros);
     if (usd >= t) return { status: "review", code: "PS_HUMAN_001", detail: `${formatUsd(usd)} meets the ${formatUsd(t)} approval threshold.` };
@@ -468,6 +470,171 @@ function recoveryCheck(policy: Policy, env: Environment): Outcome {
   if (age > rules.max_checkpoint_age_seconds)
     return { status: "fail", code: "PS_RECOVERY_002", detail: `The last Upoch checkpoint is ${age}s old; maximum is ${rules.max_checkpoint_age_seconds}s.` };
   return { status: "pass", detail: `Upoch workflow ${wf}: ${count} checkpoint(s), last ${age}s ago, ${guardians} guardian(s).` };
+}
+
+// ---------------------------------------------------------------- loss limit (schema 1.3)
+
+export const LOSS_SNAPSHOT_MAX_AGE = 60;
+const TRANSFER_SELECTOR = "0xa9059cbb";
+const LOSS_CODES = ["PS_LOSS_001", "PS_LOSS_002"] as const;
+
+/** USD micros for `amount` base units at `price` micros per whole token; up rounds against the account. */
+export function tokenUsdMicros(amount: bigint, price: bigint, decimals: number, up: boolean): bigint {
+  const scale = 10n ** BigInt(decimals);
+  const n = amount * price;
+  return up ? (n + scale - 1n) / scale : n / scale;
+}
+
+/** Drawdown from `peak` to `value`, in whole basis points (rounded down). */
+export function drawdownBps(peak: bigint, value: bigint): bigint {
+  const loss = peak > value ? peak - value : 0n;
+  return peak === 0n ? 0n : (loss * 10000n) / peak;
+}
+
+/**
+ * The breach a loss of (peak - value) means under the policy's limits, USD first: "PS_LOSS_002",
+ * "PS_LOSS_001" or null. Shared by the evaluator and the server's snapshots (the latch).
+ */
+export function lossBreach(rules: { max_drawdown_bps: number; max_loss_usd_micros: string }, peak: bigint, value: bigint): "PS_LOSS_001" | "PS_LOSS_002" | null {
+  const loss = peak > value ? peak - value : 0n;
+  const usdMax = BigInt(rules.max_loss_usd_micros);
+  if (usdMax > 0n && loss >= usdMax) return "PS_LOSS_002";
+  if (rules.max_drawdown_bps > 0 && drawdownBps(peak, value) >= BigInt(rules.max_drawdown_bps)) return "PS_LOSS_001";
+  return null;
+}
+
+/** The recipient of an ERC-20 `transfer(address,uint256)` call, lowercase, or null. */
+function transferRecipient(data: string): string | null {
+  if (data.length < 138 || data.slice(0, 10).toLowerCase() !== TRANSFER_SELECTOR) return null;
+  if (!/^0{24}$/.test(data.slice(10, 34))) return null;
+  return "0x" + data.slice(34, 74).toLowerCase();
+}
+
+/**
+ * Loss limit. The account's value (Chainlink prices, deposits and withdrawals taken out) and the window's
+ * peak are an input made before evaluation; this applies the policy's rules to them and to this
+ * operation's simulated balance changes, so the result is deterministic. Order: withdrawal to an exit
+ * address, snapshot availability and age, this operation's flows, paused (latched or already over the
+ * limit: only risk-reducing actions), then whether this operation would cross the limit.
+ */
+function lossCheck(policy: Policy, intent: Intent, env: Environment, selector: string | null, value: bigint): Outcome {
+  const rules = policy.loss_limit;
+  if (!rules || !rules.enabled) return { status: "pass", detail: "Loss limit is off for this policy." };
+  const exits = rules.exit_addresses.map((a) => a.toLowerCase());
+  const stables = rules.stablecoins.map((a) => a.toLowerCase());
+  const unavailable = (why: string): Outcome =>
+    rules.on_valuation_unavailable === "review"
+      ? { status: "review", code: "PS_LOSS_003", detail: `${why} The policy holds this for a human instead of allowing it.` }
+      : { status: "fail", code: "PS_LOSS_003", detail: `${why} Without a reliable account value, nothing that adds risk is allowed.` };
+  const breach = (code: ReasonCode, why: string): Outcome =>
+    rules.on_breach === "review"
+      ? { status: "review", code, detail: `${why} The policy holds this for a human.` }
+      : { status: "fail", code, detail: `${why} Only risk-reducing actions are allowed until the owner resets the limit.` };
+  const to = intent.to.toLowerCase();
+  const rawSim = env.asset_simulation;
+
+  // A withdrawal to the owner or recovery wallet is never a loss, and needs no price.
+  if (selector === null && exits.includes(to)) return { status: "pass", detail: `Transfer to exit address ${to}: a withdrawal, not a loss.` };
+  const recipient = selector === TRANSFER_SELECTOR && value === 0n ? transferRecipient(intent.data) : null;
+  if (recipient !== null && exits.includes(recipient)) {
+    let pure = true;
+    if (rawSim !== undefined && rawSim !== null) {
+      const sim = recordOf(rawSim, "asset_simulation");
+      const out = amounts(sim.outflows, "outflows");
+      const inn = amounts(sim.inflows, "inflows");
+      pure = inn.size === 0 && [...out.keys()].every((t) => t === to);
+    }
+    if (pure) return { status: "pass", detail: `Token transfer to exit address ${recipient}: a withdrawal, not a loss.` };
+  }
+
+  const raw = env.loss_snapshot;
+  if (raw === undefined || raw === null) return unavailable("Account value unavailable.");
+  const snap = recordOf(raw, "loss_snapshot");
+  const age = env.now - intOf(snap.observed_at, "loss_snapshot.observed_at");
+  if (age > LOSS_SNAPSHOT_MAX_AGE) return unavailable(`Account value is ${age}s old; maximum is ${LOSS_SNAPSHOT_MAX_AGE}s.`);
+  let paused: ReasonCode | null = null;
+  if (snap.paused !== null) {
+    const p = str(snap.paused, "loss_snapshot.paused");
+    paused = (LOSS_CODES as readonly string[]).includes(p) ? (p as ReasonCode) : bad("loss_snapshot.paused must be PS_LOSS_001, PS_LOSS_002 or null");
+  }
+  const prices = new Map<string, { price: bigint; decimals: number }>();
+  for (const x of listOf(snap.prices, "loss_snapshot.prices")) {
+    const o = recordOf(x, "loss_snapshot.prices");
+    const t = str(o.token, "prices.token").toLowerCase();
+    const price = amountOf(o.price_micros, "prices.price_micros");
+    const decimals = intOf(o.decimals, "prices.decimals");
+    if (decimals < 0 || decimals > 36) bad("prices.decimals must be between 0 and 36");
+    if (!prices.has(t)) prices.set(t, { price, decimals });
+  }
+  const missing = new Set(listOf(snap.unavailable, "loss_snapshot.unavailable").map((t) => str(t, "unavailable").toLowerCase()));
+  const valueNow = snap.value_usd_micros === null ? null : amountOf(snap.value_usd_micros, "loss_snapshot.value_usd_micros");
+  const peak = snap.baseline_usd_micros === null ? null : amountOf(snap.baseline_usd_micros, "loss_snapshot.baseline_usd_micros");
+
+  // What this operation does to the account's assets.
+  let out = new Map<string, bigint>();
+  let inn = new Map<string, bigint>();
+  let approvals: { spender: string; amount: bigint }[] = [];
+  if (selector === null) {
+    if (value > 0n) out.set(NATIVE_TOKEN, value);
+  } else {
+    if (rawSim === undefined || rawSim === null) return unavailable("No simulation of this operation, so its effect on the account's value is unknown.");
+    const sim = recordOf(rawSim, "asset_simulation");
+    const simAge = env.now - intOf(sim.observed_at, "observed_at");
+    if (simAge > LOSS_SNAPSHOT_MAX_AGE) return unavailable(`Simulation is ${simAge}s old; maximum is ${LOSS_SNAPSHOT_MAX_AGE}s.`);
+    out = amounts(sim.outflows, "outflows");
+    inn = amounts(sim.inflows, "inflows");
+    approvals = listOf(sim.approvals, "approvals").map((x) => {
+      const o = recordOf(x, "approvals");
+      return { spender: str(o.spender, "approvals.spender").toLowerCase(), amount: amountOf(o.amount, "approvals.amount") };
+    });
+  }
+  /** Value of a set of amounts; null when one of them has no reliable price right now. */
+  const worth = (m: Map<string, bigint>, up: boolean): bigint | null => {
+    let sum = 0n;
+    for (const [t, a] of m) {
+      if (missing.has(t)) return null;
+      const p = prices.get(t);
+      if (p) sum += tokenUsdMicros(a, p.price, p.decimals, up);
+    }
+    return sum;
+  };
+
+  if (paused === null && valueNow !== null && peak !== null) paused = lossBreach(rules, peak, valueNow);
+
+  if (out.size === 0 && inn.size === 0) {
+    if (paused === null) return { status: "pass", detail: "No value moves in this operation." };
+    const deny = policy.contracts.denylist.map((a) => a.toLowerCase());
+    const trusted = (a: string) => !deny.includes(a) && policy.contracts.allowlist.some((e) => e.address.toLowerCase() === a);
+    if (approvals.every((a) => a.amount < UNLIMITED && trusted(a.spender)))
+      return { status: "pass", detail: "No value moves (bounded approvals to allowlisted contracts only): allowed while paused." };
+    return breach(paused, `The loss limit was reached (${paused}) and this operation grants an approval that is not bounded or not to an allowlisted contract.`);
+  }
+
+  if (paused !== null) {
+    const reducing = inn.size > 0 && [...inn.keys()].every((t) => stables.includes(t));
+    if (!reducing) return breach(paused, `The loss limit was reached (${paused}) and this operation adds risk.`);
+    const sold = worth(out, true);
+    const got = worth(inn, false);
+    if (sold === null || got === null) return unavailable("A price needed to check this exit swap is unavailable.");
+    const min = (sold * BigInt(10000 - rules.max_exit_slippage_bps)) / 10000n;
+    if (got < min)
+      return breach(paused, `Exit swap returns ${formatUsd(got)} for ${formatUsd(sold)}, more than the ${formatBps(rules.max_exit_slippage_bps)} exit slippage allowed while paused.`);
+    return { status: "pass", detail: `Risk-reducing swap into a stablecoin (${formatUsd(got)} for ${formatUsd(sold)}): allowed while paused.` };
+  }
+
+  if (valueNow === null || peak === null) return unavailable("A price for an asset the account holds is unavailable.");
+  const sold = worth(out, true);
+  const got = worth(inn, false);
+  if (sold === null || got === null) return unavailable("A price for an asset this operation moves is unavailable.");
+  const after = valueNow + got > sold ? valueNow + got - sold : 0n;
+  const loss = peak > after ? peak - after : 0n;
+  const dd = drawdownBps(peak, after);
+  const code = lossBreach(rules, peak, after);
+  if (code === "PS_LOSS_002")
+    return breach(code, `This operation would bring the loss to ${formatUsd(loss)}, at or above the ${formatUsd(BigInt(rules.max_loss_usd_micros))} limit (peak ${formatUsd(peak)}, value after ${formatUsd(after)}).`);
+  if (code === "PS_LOSS_001")
+    return breach(code, `This operation would bring the drawdown to ${formatBps(Number(dd))}, at or above the ${formatBps(rules.max_drawdown_bps)} limit (peak ${formatUsd(peak)}, value after ${formatUsd(after)}).`);
+  return { status: "pass", detail: `Loss after this operation ${formatUsd(loss)}, drawdown ${formatBps(Number(dd))} (peak ${formatUsd(peak)}, value after ${formatUsd(after)}).` };
 }
 
 export function formatUsd(micros: bigint): string {

@@ -26,6 +26,7 @@ import { db, type Row } from "./db";
 import { BadRequest, HttpError, logEvent } from "./http";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { signReceipt } from "./peaa";
+import { latch, lossLimitOn, safeReason, takeSnapshot, type LossTarget } from "./loss-limits";
 import type { ReceiptJson } from "policy-enforced-accounts";
 
 /** How long an ALLOW can be used, and how long a request may wait for a human approver. */
@@ -101,10 +102,12 @@ async function liveEnvironment(
   pausedAgents: string[],
   simulateFrom: `0x${string}` | null = null,
   upoch: { orgId: string; account: string; workflowId: string | null } | null = null,
+  loss: LossTarget | null = null,
+  recordLoss = true,
 ) {
   const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
   const simulate = simulateFrom !== null && chainEnabled && input.data !== "0x";
-  const [gasPrice, price, code, sim, up] = await Promise.all([
+  const [gasPrice, price, code, sim, up, lossSnap] = await Promise.all([
     chainEnabled ? gasPriceWei(input.chain_id) : null,
     ethUsd(),
     chainEnabled ? hasDeployedCode(input.chain_id, input.to) : null,
@@ -112,6 +115,8 @@ async function liveEnvironment(
       ? simulateOperation({ chainId: input.chain_id, account: simulateFrom, to: input.to, valueWei: BigInt(input.value_wei), data: input.data, gasLimit: input.gas_limit })
       : null,
     upoch && chainEnabled ? memberAddresses(upoch.orgId).then((m) => readUpoch(input.chain_id, upoch.account, upoch.workflowId, m)) : null,
+    // Phase 9: the account's value and the window's peak, measured now (only for policies with a loss limit).
+    loss ? takeSnapshot(loss, now, { record: recordLoss }) : null,
   ]);
   if (sim) logEvent("info", "asset_sim.done", { chain_id: input.chain_id, ms: sim.ms, available: sim.sim !== null });
   const feeWei = gasPrice === null ? null : gasPrice * BigInt(input.gas_limit);
@@ -125,12 +130,15 @@ async function liveEnvironment(
     ...(simulate ? { asset_simulation: sim?.sim ?? null } : {}),
     // Phase 6.5: only read (and passed) when the policy requires Upoch recovery.
     ...(upoch ? { upoch: toEngineInput(up ?? null) } : {}),
+    ...(loss ? { loss_snapshot: lossSnap } : {}),
   };
   return { env, feeWei, simulationMs: sim?.ms ?? null };
 }
 
 /** Asset safety applies to this policy: the request's declared intent goes to the engines and the operation is simulated. */
 const assetSafetyOn = (p: Policy | null) => p?.asset_safety?.enabled === true;
+/** The operation is simulated when asset safety or (Phase 9) a loss limit needs its balance changes. */
+const simulationNeeded = (p: Policy | null) => assetSafetyOn(p) || lossLimitOn(p);
 
 /** Disabled chains deny, and live-only checks say plainly that this deployment does not perform them. */
 function finish(r: ReturnType<typeof evaluate>, chainId: number) {
@@ -163,7 +171,9 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   void _g;
   const intent: Intent = { ...base, agent_id: "draft_test", from: getAddress(account.address) };
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(declared ?? null, input.to, input.value_wei, input.data);
-  const { env } = await liveEnvironment(input, now, false, [], assetSafetyOn(policy) ? intent.from : null);
+  // Phase 9: a draft with a loss limit is tested against the account's value now (read-only, nothing recorded).
+  const lossTarget = lossLimitOn(policy) ? { orgId: "", policyUuid: "", chainId: input.chain_id, account: intent.from, policy } : null;
+  const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, null, lossTarget, false);
   const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
@@ -224,8 +234,9 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
 
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
   const { env, feeWei } = await liveEnvironment(
-    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], assetSafetyOn(policy) ? agent.account : null,
+    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null,
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
+    lossLimitOn(policy) && agent.policyId ? { orgId: agent.orgId, policyUuid: agent.policyId, chainId: input.chain_id, account: agent.account, policy: policy! } : null,
   );
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
@@ -306,6 +317,12 @@ export async function createOperation(
   try {
     const res = await recordOperation(agent, input, idempotencyKey, p);
     if (res.replayed) await unmeterDecision(agent, meter, input.request_id);
+    // Phase 9: the first decision that hits the loss limit pauses everything that adds risk until the owner resets.
+    const code = res.body.reason_code;
+    if (!res.replayed && p.policy && p.policyUuid && lossLimitOn(p.policy) && (code === "PS_LOSS_001" || code === "PS_LOSS_002"))
+      await latch({ orgId: agent.orgId, policyUuid: p.policyUuid, chainId: input.chain_id, account: agent.account, policy: p.policy }, code, { operation_id: res.body.operation_id, source: "decision" }).catch((e) =>
+        logEvent("error", "loss_limit.latch_failed", { message: safeReason(e) }),
+      );
     if (res.body.operation_id)
       res.body.receipt = await signReceipt({
         chainId: input.chain_id, account: agent.account, target: input.to, valueWei: input.value_wei, data: input.data,

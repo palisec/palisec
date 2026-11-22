@@ -79,4 +79,15 @@ export function ethUsd(): Promise<{ price_micros: string; observed_at: number } 
   });
 }
 
-export const PRICE_SOURCE = "Coinbase public spot price (ETH-USD), falling back to Kraken's last trade";
+/**
+ * Phase 9: USDG/USD from the same two exchanges, only as a depeg check next to Chainlink (never as the
+ * value). Micros, or null.
+ */
+export function usdgUsdMicros(): Promise<bigint | null> {
+  return cached("usdg-usd", PRICE_TTL_MS, async () =>
+    (await fetchPrice("https://api.coinbase.com/v2/prices/USDG-USD/spot", (b) => b?.data?.amount)) ??
+    (await fetchPrice("https://api.kraken.com/0/public/Ticker?pair=USDGUSD", (b) => b?.result?.USDGUSD?.c?.[0])),
+  );
+}
+
+export const PRICE_SOURCE ="Coinbase public spot price (ETH-USD), falling back to Kraken's last trade";

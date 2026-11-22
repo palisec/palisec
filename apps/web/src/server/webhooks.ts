@@ -35,6 +35,11 @@ export const EVENT_TYPES = [
   "mandate.vote_closed",
   "mandate.applied",
   "mandate.cancelled",
+  // Phase 9: loss limit reached (the account is paused for risk), reset requested (with its countdown), reset applied.
+  // Delivered only to webhooks that list them: existing subscriptions opt in.
+  "loss_limit.triggered",
+  "loss_limit.reset_pending",
+  "loss_limit.reset",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
