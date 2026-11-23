@@ -1,3 +1,4 @@
+import { zolvaConfigured } from "@/server/zolva";
 import { engineStatus } from "@palisec/policy-engine";
 import { secretsConfigured } from "@/server/secrets";
 import { bundlerState, signerState, smartAccountsStatus } from "@/server/smart-accounts";
@@ -101,6 +102,9 @@ export const GET = handle(async (req: Request) => {
       reason: agentModel ? null : "The PALISEC Agent is off: no model key is configured." },
     { id: "webhooks", label: "Webhook signing", critical: "none", configured: webhooks, ok: webhooks, verified: false, state: webhooks ? "configured" : "not_configured",
       reason: webhooks ? null : "Webhooks cannot be created: the secrets key is not configured." },
+    // Zolva: the read key only raises the rate limit; without it Zolva is read keyless. Never the value.
+    { id: "zolva", label: "Zolva read key", critical: "none", configured: zolvaConfigured(), ok: true, verified: false, state: zolvaConfigured() ? "configured" : "not_configured",
+      reason: zolvaConfigured() ? null : "Zolva is read without a key, at the lower keyless rate limit." },
   );
 
   const status = overallStatus(checks);
@@ -125,7 +129,7 @@ export const GET = handle(async (req: Request) => {
       schema_migration: schema,
       policy_engine: { implementation: "rust-wasm+reference", version: engine.version, source_hash: engine.source_hash.slice(0, 12) },
       // Whether optional features are configured on this deployment (never the values).
-      features: { agent_model: agentModel, webhooks, mcp: true, smart_accounts: test.available || main.available },
+      features: { agent_model: agentModel, webhooks, zolva: zolvaConfigured(), mcp: true, smart_accounts: test.available || main.available },
       default_chain: defaultChain(),
       chains: Object.entries(CHAINS).map(([id, c]) => {
         const s = smartAccountsStatus(Number(id));

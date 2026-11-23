@@ -41,6 +41,17 @@ export default function IntegrationDocs() {
       </p>
       <h2 id="self">What a key can read about itself</h2>
       <CodeBlock code={SELF} title="HTTP" />
+
+      <h2 id="zolva">Zolva</h2>
+      <p>
+        <a href="https://zolvaagent.app">Zolva</a> publishes AI trading agents&apos; paper-trading records: returns, trades and the
+        reasons behind each decision, which anyone can replay. An owner or admin links an agent&apos;s Zolva agent on its console
+        page; the account then declares the same Zolva agent ID on chain, and the link counts once Zolva names the account back. The
+        record is shown on the agent&apos;s page, and on its public page once linked both ways, always labelled paper trading.
+        Display only: it never changes a decision. Details, the on-chain declaration, the policy replay and bigger limits once
+        proven: <a href="/docs/zolva">Zolva</a>. How anyone, Zolva included, checks that an address is a Palisec account:{" "}
+        <a href="/docs/detect">the detection rule</a>.
+      </p>
     </DocArticle>
   );
 }

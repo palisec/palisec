@@ -10,6 +10,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.7.0",
+    date: "2026-11-23",
+    tag: "Zolva",
+    changes: [
+      "Zolva track records: an agent can link its Zolva agent, and its page shows the Zolva record: return since start, compared with simply holding, worst drop, trades, the latest decisions with their reasons and Zolva's replay check. Always labelled paper trading with virtual money. Guide: /docs/zolva.",
+      "The link is two-sided and on chain: the agent's Palisec account declares its Zolva agent ID in AgentLinks (0x737f1AcF46acE6d403977eB4944845fD251fC8C6 on Robinhood Chain, no owner, holds no funds), and the Zolva agent names the account back. Only both together, on an account Palisec enforces, show as linked, and only then on the agent's public page.",
+      "Test a policy before going live: replay an agent's policy, active or draft, through both engines against a Zolva agent's recorded trades, and see which it would have blocked and why. Read only.",
+      "Policy schema 1.4, bigger limits once proven on Zolva: an agent starts on the policy's own limits and unlocks bigger ones once its Zolva record is verified (link verified both ways, replay match, enough verified hours, a fresh read). The unlock is a loosening that waits out the organization's delay; anything missing, stale or unclear returns the agent to its own limits at once.",
+      "Zolva is read at most once every 5 minutes per agent (its replay check hourly), with the last good data shown if Zolva is unavailable. Zolva data never changes a decision except through the opt-in schema 1.4 rule, and is never given to the PALISEC Agent.",
+    ],
+  },
+  {
     version: "1.6.0",
     date: "2026-11-23",
     tag: "Loss limits",

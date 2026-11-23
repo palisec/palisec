@@ -32,6 +32,7 @@ const LABEL: Record<string, string> = {
   delay_change: "Shorter delay",
   agent_upoch: "Agent's Upoch workflow change",
   mandate_envelope: "Mandate envelope loosening",
+  proven_unlock: "Bigger limits: proven on Zolva (paper trading)",
 };
 
 function left(ms: number) {

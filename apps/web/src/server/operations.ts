@@ -1,4 +1,5 @@
 import "server-only";
+import { provenInput } from "./zolva";
 import { evaluateDual, type Disagreement } from "@palisec/policy-engine";
 import {
   type evaluate,
@@ -238,6 +239,9 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
     lossLimitOn(policy) && agent.policyId ? { orgId: agent.orgId, policyUuid: agent.policyId, chainId: input.chain_id, account: agent.account, policy: policy! } : null,
   );
+  // Proven on Zolva: the agent's record decides between the policy's own and its unlocked limits.
+  // Unavailable or unclear: null, and the engines keep the policy's own (smaller) limits.
+  if (policy?.proven_record?.enabled === true) env.proven_record = await provenInput(agent.orgId, agent.agentId, policy);
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {

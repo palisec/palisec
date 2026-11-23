@@ -53,6 +53,7 @@ export const safeReason = (e: unknown): string =>
   (e instanceof Error ? ((e as { shortMessage?: string }).shortMessage ?? e.message) : String(e))
     .split(/\r?\n/)[0]!
     .replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, "<url>")
+    .replace(/zk_[A-Za-z0-9_-]{8,}/g, "<key>")
     .slice(0, 200);
 
 interface State {

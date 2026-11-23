@@ -9,6 +9,7 @@ import { Btn, Confirm, Empty, Field, inputCls, KV, Mono, Notice, PageTitle, Pane
 import { ago, DecisionPill, LoadError, Loading, thCls, usd, useAction, utc, type LiveOperation } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 import { UpochPanel } from "./upoch-panel";
+import { ZolvaPanel } from "./zolva-panel";
 import { LossLimitPanel } from "./loss-limit-panel";
 
 interface AgentRow {
@@ -262,6 +263,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
       <LossLimitPanel agentId={id} canReset={a.status !== "revoked" && can.own(org?.role)} />
 
       <UpochPanel agentId={id} canEdit={a.status !== "revoked" && can.manage(org?.role)} />
+      <ZolvaPanel agentId={id} canEdit={a.status !== "revoked" && can.manage(org?.role)} />
 
       <Panel title={`API keys · ${a.credentials.filter((c) => !c.revoked_at).length} active`} bodyClassName="p-4 space-y-3">
         {secret && (

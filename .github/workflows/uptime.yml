@@ -32,3 +32,7 @@ jobs:
         run: |
           body=$(curl -s --max-time 120 -X POST -H 'origin: https://palisec.tech' https://palisec.tech/api/v1/public/loss/snapshot) || true
           printf '%s' "$body" | grep -oE '"(accounts|measured|unavailable|paused)":[0-9]+' | tr '\n' ' '; echo
+      - name: Refresh linked Zolva records (prints counts only, because this log is public)
+        run: |
+          body=$(curl -s --max-time 120 -X POST -H 'origin: https://palisec.tech' https://palisec.tech/api/v1/public/zolva/refresh) || true
+          printf '%s' "$body" | grep -oE '"(agents|read|unavailable)":[0-9]+' | tr '\n' ' '; echo

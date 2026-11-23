@@ -212,6 +212,17 @@ export default function PoliciesPage() {
         and resets: <Link href="/docs/loss-limits">Loss limits</Link>.
       </p>
 
+      <h2 id="proven-record">Bigger limits once proven on Zolva (schema 1.4)</h2>
+      <p>
+        An optional <code>proven_record</code> section (and <code>schema_version</code> &quot;1.4&quot;) gives an agent bigger
+        limits once it has a verified Zolva record (paper trading): <code>unlocked_limits</code> replace{" "}
+        <code>limits.max_transaction_value_wei</code> and <code>limits.hourly_budget_usd_micros</code>, each at least the
+        policy&apos;s own. They apply only with the Zolva link verified from both sides, Zolva&apos;s replay check
+        &quot;match&quot;, at least <code>min_verified_hours</code> verified, a record no older than{" "}
+        <code>max_record_age_seconds</code>, and an unlock that has waited out the loosening delay. Anything missing, stale or
+        unclear keeps the policy&apos;s own limits. Details: <Link href="/docs/zolva#proven">Zolva</Link>.
+      </p>
+
       <h2 id="loosening-delay">Loosening delay</h2>
       <p>
         A change that makes the rules weaker waits before it takes effect; a change that makes them stronger applies at once.

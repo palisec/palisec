@@ -7,6 +7,7 @@ import { PageHeader, Section } from "@/components/ui";
 import { requireMandatesVisible } from "@/server/mandate-access";
 import { publicMandate } from "@/server/mandates";
 import { MandateLive, type PublicMandate } from "./mandate-live";
+import { ZolvaRecordSection } from "./zolva-record";
 
 export const metadata: Metadata = {
   title: "Holder mandate",
@@ -47,6 +48,9 @@ async function MandateBody({ params }: { params: Promise<{ slug: string }> }) {
       <Section label="Mandate">
         <MandateLive slug={slug} initial={data} />
       </Section>
+      <Suspense fallback={null}>
+        <ZolvaRecordSection slug={slug} />
+      </Suspense>
     </>
   );
 }

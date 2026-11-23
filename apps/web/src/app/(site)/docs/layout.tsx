@@ -32,6 +32,7 @@ const DOCS_NAV = [
       { href: "/docs/token", label: "Token" },
       { href: "/docs/mandates", label: "Holder mandates" },
       { href: "/docs/loss-limits", label: "Loss limits" },
+      { href: "/docs/zolva", label: "Zolva" },
       { href: "/docs/integrations", label: "Integrations and keys" },
     ],
   },

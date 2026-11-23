@@ -66,6 +66,10 @@ jobs:
       # The agent suite's scripted model server (no real model or key in CI).
       PALISEC_AGENT_API_KEY: test
       PALISEC_AGENT_BASE_URL: http://127.0.0.1:4556/v1
+      # The Zolva suite's local fake Zolva, a 2 s cache window and a test-only key (never production).
+      PALISEC_TEST_ZOLVA_URL: http://127.0.0.1:4560
+      PALISEC_TEST_ZOLVA_CACHE_SECONDS: "2"
+      ZOLVA_API_KEY: zk_test_e2e_key_000000000000
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -92,6 +96,8 @@ jobs:
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-connect.mjs
       # PALISEC Agent: tool permissions, tenant isolation, prompt injection, confirmed actions, outages.
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-agent.mjs
+      # Zolva: linking, caching, 429 and outages, the two-sided check, escaping, replay, bigger limits once proven.
+      - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-zolva.mjs
       # Hostile input: malformed, oversized and forged requests. Last, because its burst spends the rate limit.
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/adversarial.mjs
       - if: failure()

@@ -67,6 +67,12 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "POST", path: "/agents/{id}/revoke", auth: "session", role: "admin", summary: "Permanently revoke the agent and all its keys.", body: { confirm: "true" } },
       { method: "POST", path: "/agents/{id}/credentials", auth: "session", role: "admin", summary: "Create an API key. The secret is in this response only.", body: { label: "optional string", scopes: "optional array: operations:write, operations:read, policy:read, audit:read, mcp (default all)" } },
       { method: "POST", path: "/credentials/{id}/revoke", auth: "session", role: "admin", summary: "Revoke an API key immediately." },
+      { method: "GET", path: "/agents/{id}/loss-limit", auth: "session", role: "viewer", summary: "Loss limits: value, window peak, loss and whether the agent is paused for risk." },
+      { method: "POST", path: "/agents/{id}/loss-limit/reset", auth: "session", role: "owner", summary: "Loss limits: reset a breach (a delayed loosening)." },
+      { method: "GET", path: "/agents/{id}/zolva", auth: "session", role: "viewer", summary: "Zolva: the linked Zolva agent's record (paper trading), the two-sided link, the on-chain declaration and the bigger-limits state." },
+      { method: "PUT", path: "/agents/{id}/zolva", auth: "session", role: "admin", summary: "Zolva: link a Zolva agent (display only; locks bigger limits until earned again).", body: { zolva_agent_id: "Zolva agent ID (UUID)" } },
+      { method: "DELETE", path: "/agents/{id}/zolva", auth: "session", role: "admin", summary: "Zolva: unlink." },
+      { method: "POST", path: "/agents/{id}/zolva/replay", auth: "session", role: "viewer", summary: "Zolva: replay the agent's policy (both engines) against a Zolva agent's recorded trades. Read only.", body: { version: "optional: active (default) or draft", capital_usd: "optional: scale the trades to this account size", zolva_agent_id: "optional: another Zolva agent" } },
     ],
   },
   {
