@@ -15,7 +15,7 @@ import { homedir } from "node:os";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createPalisec } from "../../../packages/sdk/dist/index.js";
-import { REGISTRY_ABI, REGISTRY_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
+import { REGISTRY_V1_ABI as REGISTRY_ABI, REGISTRY_V1_ADDRESSES as REGISTRY_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
 const RPC = "https://rpc.mainnet.chain.robinhood.com";

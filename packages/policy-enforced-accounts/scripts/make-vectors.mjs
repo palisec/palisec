@@ -1,4 +1,5 @@
-// Generates vectors/vectors.json from the built library (pnpm build first). Keys are TEST-ONLY:
+// Generates vectors/vectors.json (v2: intents with the operation, EIP-712 domain version "2") from the built
+// library (pnpm build first). The first draft's set stays in vectors/vectors-v1.json. Keys are TEST-ONLY:
 // keccak256 of fixed labels, published so anyone can reproduce every signature. Never fund them.
 import { writeFileSync } from "node:fs";
 import { hashTypedData, keccak256, stringToHex } from "viem";
@@ -32,8 +33,9 @@ const policies = [
 ].map((p) => ({ ...p, jcs: canonicalize(p.document), policyHash: policyHash(p.document) }));
 
 const intents = [
-  { name: "native transfer", intent: { chainId: 4663, account: ACCOUNT, target: "0x2222222222222222222222222222222222222222", value: "20000000000000", data: "0x" } },
-  { name: "token transfer call", intent: { chainId: 4663, account: ACCOUNT, target: "0x2222222222222222222222222222222222222222", value: "0", data: "0xa9059cbb0000000000000000000000003333333333333333333333333333333333333333000000000000000000000000000000000000000000000000000000000000000a" } },
+  { name: "native transfer", intent: { chainId: 4663, account: ACCOUNT, target: "0x2222222222222222222222222222222222222222", value: "20000000000000", data: "0x", operation: 0 } },
+  { name: "token transfer call", intent: { chainId: 4663, account: ACCOUNT, target: "0x2222222222222222222222222222222222222222", value: "0", data: "0xa9059cbb0000000000000000000000003333333333333333333333333333333333333333000000000000000000000000000000000000000000000000000000000000000a", operation: 0 } },
+  { name: "same call as a delegatecall", intent: { chainId: 4663, account: ACCOUNT, target: "0x2222222222222222222222222222222222222222", value: "0", data: "0xa9059cbb0000000000000000000000003333333333333333333333333333333333333333000000000000000000000000000000000000000000000000000000000000000a", operation: 1 } },
 ].map((i) => ({ ...i, intentHash: intentHash(i.intent) }));
 
 const base = { chainId: "4663", registry: REGISTRY, account: ACCOUNT, policyHash: policies[4].policyHash, policyVersion: "3", issuedAt: "1800000000", expiresAt: "1800000300" };
@@ -42,15 +44,18 @@ for (const [name, decision, reasonCode, detailCode, intent] of [
   ["allow", "ALLOW", "NONE", "NONE", intents[0]],
   ["deny over limit", "DENY", "OVER_LIMIT", "palisec:PS_BUDGET_001", intents[0]],
   ["review: human approval", "REVIEW", "HUMAN_APPROVAL_REQUIRED", "palisec:PS_HUMAN_001", intents[1]],
+  ["deny: delegatecall not allowed", "DENY", "METHOD_NOT_ALLOWED", "palisec:PS_METHOD_001", intents[2]],
 ]) {
   const r = { ...base, intentHash: intent.intentHash, decision, reasonCode, detailCode, decisionId: keccak256(stringToHex(`decision ${name}`)), signer: signer.address };
-  const typed = typedReceipt({ ...r, signature: "0x" });
+  const typed = typedReceipt({ ...r, signature: "0x" }, "2");
   const signature = await signer.signTypedData(typed);
   receipts.push({ name, receipt: { ...r, signature }, digest: hashTypedData(typed), encodedReason: encodeReason(reasonCode), encodedDetail: encodeReason(detailCode) });
 }
 const out = {
   description: "Test vectors for the draft ERC Policy-Enforced Agent Accounts. Keys are test-only and public; never fund them.",
-  interfaceId: "0xcc16d336",
+  version: 2,
+  domain: { name: "PolicyDecisionReceipt", version: "2" },
+  interfaceId: "0x7e0f19f9",
   testKeys: { receiptSigner: { privateKey: receiptKey, address: signer.address, label: "policy-enforced-accounts test vector key: receipt signer 1" } },
   policies,
   intents,

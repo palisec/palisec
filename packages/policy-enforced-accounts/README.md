@@ -2,10 +2,10 @@
 
 Reader and receipt verifier for the draft ERC **Policy-Enforced Agent Accounts**. It answers, from the chain alone:
 
-- Is this account enforced by an external policy signer?
+- Is this account enforced by an external policy signer, and how long must changes wait?
 - Which policy is active?
-- Is a loosening pending?
-- Is this decision receipt genuine?
+- Is a change pending, of the policy or of the signers?
+- Is this decision receipt genuine, and may I act on it now?
 
 No API key and no private key are needed.
 
@@ -21,23 +21,36 @@ const client = createPublicClient({ transport: http("https://rpc.mainnet.chain.r
 const registry = REGISTRY_ADDRESSES[4663];
 
 const status = await readAccount(client, "0x9aEC761B2F0FdA08C683e8388478C9A2F7C9170c", registry);
-// { enforced, policySigner, publisher, receiptSigner, policy, pending, mandate, stopped }
+// { standard, enforced, policySigner, publisher, receiptSigner, minDelay, signerType, pendingSigners, policy, pending, mandate, stopped }
 
 const { matches } = await fetchPolicy(status.policy);   // the document hashes to the on-chain commitment
+
+// An audit: is this receipt genuine?
 const check = await verifyReceipt(client, receipt, { intent }); // { valid, signer, problems }
+
+// Acting on an ALLOW (a gate): also the current policy, no emergency stop, and a decisionId used only once.
+const gate = await verifyReceipt(client, receipt, { intent, use: true, seen: usedIdsStore });
 ```
 
 ## What's included
 
-- `readAccount`: ERC-165 discovery (the account first, then the registry), signers, active and pending policy, mandate, and stop state.
+- `readAccount`: ERC-165 discovery (the account first, then the registry), signers with `minDelay` and `signerType`, a pending signer change, active and pending policy, mandate, and stop state. It reads v2 and first-draft (v1) sources.
 - `fetchPolicy`: fetches `policyURI` and checks it against `policyHash`. It is HTTPS only, refuses local and private hosts, and has a time and size limit.
-- `verifyReceipt`: checks a receipt against a trusted registry only. It also checks the validity window and the signer: EOA recovery, or ERC-1271 for contract signers. Keys that have been rotated out are rejected unless `allowRotatedSigner` is set for audits.
+- `verifyReceipt`: checks a receipt against a trusted registry only. It also checks the validity window and the signer: EOA recovery, or ERC-1271 for contract signers. Keys that have been rotated out are rejected unless `allowRotatedSigner` is set for audits. With `use: true` it adds the use-time rules: an ALLOW bound to the intent, the registry's current policy hash and version, no emergency stop, and a `decisionId` not used before. `seen` is your store, with one atomic `claim(id)` that returns true only the first time (for example `INSERT ... ON CONFLICT DO NOTHING`, or Redis `SET NX`); the default is in memory, per process.
 - `policyHash` / `canonicalize`: RFC 8785 JSON canonicalization, then keccak256.
-- `intentHash`, `typedReceipt`, `REASONS`, `encodeReason`, `decodeReason`, `REGISTRY_ABI`, `INTERFACE_ID` (`0xcc16d336`).
-- `vectors/vectors.json`: the ERC's test vectors.
+- `intentHash` (v2: includes `operation`, 0 call or 1 delegatecall), `intentHashV1`, `typedReceipt`, `REASONS`, `encodeReason`, `decodeReason`, `REGISTRY_ABI`, `REGISTRY_V1_ABI`, `INTERFACE_ID` (`0x7e0f19f9`), `INTERFACE_ID_V1` (`0xcc16d336`), `SIGNER_TYPES`.
+- `vectors/vectors.json`: the ERC's test vectors (v2), and `vectors/vectors-v1.json` for the first draft.
 
 ## Reference registry
 
-Robinhood Chain mainnet (4663): `0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92`. It was deployed with the deterministic deployer `0x4e59b448…956C`, salt `keccak256("policy-enforced-accounts registry v1")`.
+Robinhood Chain mainnet (4663), v2: `0xCa3bAE26d29a3A2cED7B87Fa996ca4C44367448d`. It was deployed with the deterministic deployer `0x4e59b448…956C`, salt `keccak256("policy-enforced-accounts registry v2")`.
+
+The first draft's registry, `0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92`, stays as it is. Receipts issued under it verify with EIP-712 domain version "1".
+
+## Upgrading from 0.1
+
+- The intent type has an `operation` field, so `intentHash` differs from 0.1 for the same transaction; `intentHashV1` keeps the old one.
+- `REGISTRY_ADDRESSES` points to v2. Pass `REGISTRY_V1_ADDRESSES[4663]` as `registry` to read or audit the first draft.
+- `readAccount` returns `standard`, `minDelay`, `signerType` and `pendingSigners`.
 
 The spec and guide are at https://palisec.tech/docs/standard. License: CC0-1.0.

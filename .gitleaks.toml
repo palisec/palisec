@@ -14,5 +14,5 @@ regexes = ['''zk_test_[A-Za-z0-9_-]+''']
 description = "Test data only: engine parity fixtures (random addresses and amounts) and the ERC test vectors (published test-only key)"
 paths = [
   '''^packages/policy-engine/fixtures/parity\.jsonl$''',
-  '''(^|/)vectors\.json$''',
+  '''(^|/)vectors(-v[0-9]+)?\.json$''',
 ]
