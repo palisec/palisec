@@ -22,6 +22,8 @@ export function priceAt(list: Closes, t: number): number | null {
 
 /** Hours before the first trade covered by the rebuild (the longest loss-limit window). */
 const LEAD_SECONDS = 7 * 86400;
+/** The rebuild never goes further back than this (Zolva's closes cover 30 days); older trades have no value. */
+export const MAX_REBUILD_HOURS = 45 * 24;
 
 export function rebuildValues(input: {
   /** Zolva's hourly value: [unix seconds, agent value, ...], oldest first. */
@@ -65,7 +67,7 @@ export function rebuildValues(input: {
     const r = valueAt(t);
     if (r === null || v === null || Math.abs(r - v) > Math.max(0.01, Math.abs(v) * 1e-5)) return { values: own, rebuilt: false };
   }
-  const first = times[0]! - LEAD_SECONDS;
+  const first = Math.max(times[0]! - LEAD_SECONDS, own[0]![0] - MAX_REBUILD_HOURS * 3600);
   const before: Values = [];
   for (let t = own[0]![0] - 3600; t >= first; t -= 3600) before.push([t, valueAt(t)]);
   return { values: [...before.reverse(), ...own], rebuilt: before.length > 0 };

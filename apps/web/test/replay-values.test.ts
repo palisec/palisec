@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { rebuildValues, windowValue, type Closes, type ValueTrade } from "../src/lib/replay-values.ts";
+import { MAX_REBUILD_HOURS, rebuildValues, windowValue, type Closes, type ValueTrade } from "../src/lib/replay-values.ts";
 
 const BASE = 1_790_000_000 - (1_790_000_000 % 3600);
 const H = (k: number) => BASE + k * 3600;
@@ -27,6 +27,14 @@ describe("replay account value: rebuilt from recorded trades and closes", () => 
     assert.equal(at(13), null, "a held market without a close yet: no value");
     assert.equal(at(16), 10_000 - 221 + 2 * 116);
     assert.equal(at(25), FLAT);
+  });
+
+  it("never reaches further back than its bound: older trades have no value", () => {
+    const old = { ...trades[0]!, at: new Date((H(0) - 400 * 86400) * 1000).toISOString(), side: "sell", quantity: 0, price: 1, cost_usd: 0 };
+    const { values, rebuilt } = rebuildValues({ ...input, trades: [old, ...trades], tradesCount: 3 });
+    assert.equal(rebuilt, true);
+    assert.equal(values.length, MAX_REBUILD_HOURS + equity.length);
+    assert.equal(windowValue(values, Date.parse(old.at) / 1000, 3600), null);
   });
 
   it("is not used when it differs from Zolva's own value", () => {
