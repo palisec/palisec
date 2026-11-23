@@ -18,7 +18,7 @@ const ENTRIES = [
       "Time rules: the account chooses a minimum delay (Palisec accounts: 15 minutes). Every policy the publisher posts waits it and decides from its effective time; confirming early reverts. Signer changes after the first wait it too (lowering the delay included), and the account can cancel them; clearing to zeros applies at once. Every removal of a pending policy emits PolicyCancelled. The account itself can engage the emergency stop.",
       "Signers gain minDelay and signerType (1 co-signer, 2 validator module, 3 guard or hook, 4 other), with new reads and events for pending signer changes.",
       "Receipts: the intent now includes the operation (call or delegatecall), and the EIP-712 domain version is 2. A verifier acting on an ALLOW also checks that its policy is the current one on the registry, that the account is not stopped, and that its decisionId is used once.",
-      "Palisec publishes to v2: a tightening applies off chain at once and shows on the registry after the minimum delay; loosenings keep their own delay. The first draft's registry 0x20D6…7e92 is unchanged and readable, and its receipts still verify.",
+      "Palisec publishes to v2: a tightening applies off chain at once and shows on the registry after the minimum delay; loosenings keep their own delay. The first draft's registry 0x20D6…7e92 is unchanged and readable, and its receipts still verify. Both demo accounts moved to v2 through ordinary co-signed operations.",
       "Client library policy-enforced-accounts 0.2.0 (breaking: the intent type): reads both registries, verifies both receipt versions, and adds the use-time checks. New test vectors, with the first draft's kept as vectors-v1.json.",
     ],
   },
