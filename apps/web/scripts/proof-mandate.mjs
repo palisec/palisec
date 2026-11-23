@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 7 mainnet proof, in stages (state in PROOF_STATE, outside the repo; keys never printed):
+ * Holder mandates mainnet demo, in stages (state in PROOF_STATE, outside the repo; keys never printed):
  *   setup                 demo org, a Palisec smart account (Safe), its policy, agent and the demo mandate
  *   propose loosen|tighten  voter 1 opens a proposal (per-tx limit 0.0003 ETH, or back to 0.00001 ETH)
  *   vote <proposal-id>    the three voter wallets sign "for" (gasless)
@@ -47,7 +47,7 @@ const utc = () => new Date().toISOString();
 
 let previewCookie = null;
 async function call(method, path, { cookie, key, body } = {}) {
-  // Mandate pages are preview-only until go-live: their API needs a signed-in session.
+  // Mandate pages can be hidden (MANDATES_PUBLIC=0): their API then needs a signed-in session.
   if (!cookie && !key && path.startsWith("/public/")) cookie = previewCookie ??= await signIn();
   const h = { origin: BASE };
   if (body !== undefined) h["content-type"] = "application/json";

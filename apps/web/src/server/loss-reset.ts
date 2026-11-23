@@ -6,9 +6,9 @@ import { afterChange } from "./events";
 import { HttpError } from "./http";
 
 /**
- * Phase 9: the owner resets a breached loss limit. The reset is a new policy version with
+ * Loss limits: the owner resets a breached loss limit. The reset is a new policy version with
  * loss_limit.reset_epoch + 1, so it is a loosening: it waits for the organization's delay (alert,
- * countdown, Cancel) and is published through the Phase 8 registry like every other policy change. When
+ * countdown, Cancel) and is published through the policy registry like every other policy change. When
  * it applies, the pause clears and the window starts again from the account's value at that moment.
  */
 export async function requestLossReset(ctx: MemberContext, agentId: string, body: Record<string, unknown>) {

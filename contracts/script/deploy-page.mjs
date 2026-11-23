@@ -19,7 +19,7 @@ const cfg = {
   ethUsd: "0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9",
   admin: process.env.ADMIN ?? "",
   treasury: process.env.TREASURY ?? "",
-  // Approved values (Phase 5 go-ahead): $5 per 1,000; 20% off in PALISEC; $10 / $25 caps; $1,000 per USDG/ETH purchase;
+  // Plan values: $5 per 1,000; 20% off in PALISEC; $10 / $25 caps; $1,000 per USDG/ETH purchase;
   // ETH/USD at most 25 h old (Chainlink heartbeat 24 h); no sequencer uptime feed is published for this chain yet.
   words: [5_000_000, 2_000, 10_000_000, 25_000_000, 1_000_000_000, 90_000, 3_600],
   sequencer: "0x0000000000000000000000000000000000000000",

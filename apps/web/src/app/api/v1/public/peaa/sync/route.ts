@@ -3,7 +3,7 @@ import { HttpError, handle, ok, rateLimited } from "@/server/http";
 import { syncCommitments } from "@/server/peaa";
 
 /**
- * Phase 8: publish opted-in accounts' policy changes to the registry now (also run hourly). Safe to
+ * Policy publishing: publish opted-in accounts' policy changes to the registry now (also run hourly). Safe to
  * call by anyone: it only publishes Palisec's own authoritative state, and sends nothing when the
  * chain already matches.
  */

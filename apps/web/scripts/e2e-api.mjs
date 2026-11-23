@@ -74,8 +74,8 @@ check("create policy draft", r.status === 201 && r.body.status === "draft", r.bo
 const policyId = r.body.id;
 check("duplicate policy key is refused", (await call("POST", "/policies", { cookie: o.cookie, body: { name: "x", policy_key: "treasury_bot", chain_id: CHAIN, account: ACCOUNT } })).status === 409);
 
-check("new policies start in schema 1.1 with asset safety on (Phase 6)", r.body.draft?.schema_version === "1.1" && r.body.draft?.asset_safety?.enabled === true, r.body.draft);
-// This suite covers the Phase 1–5 rules; asset safety (and its simulation) has its own suite, e2e-phase6.mjs.
+check("new policies start in schema 1.1 with asset safety on", r.body.draft?.schema_version === "1.1" && r.body.draft?.asset_safety?.enabled === true, r.body.draft);
+// This suite covers the core rules; asset safety (and its simulation) has its own suite, e2e-delay-assets.mjs.
 const draft = {
   ...r.body.draft,
   asset_safety: { ...r.body.draft.asset_safety, enabled: false },
@@ -193,7 +193,7 @@ const saved = await call("PUT", `/policies/${p2.body.id}`, { cookie: o.cookie, b
 await call("POST", `/policies/${p2.body.id}/activate`, { cookie: o.cookie, body: { confirm: true, draft_hash: saved.body.draft_hash } });
 const a2 = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Racer", chain_id: CHAIN, account: ACCOUNT, policy_id: p2.body.id } });
 const k2 = (await call("POST", `/agents/${a2.body.id}/credentials`, { cookie: o.cookie, body: {} })).body.secret;
-// Phase 6: a second agent on an account that is already protected starts paused for the loosening delay.
+// Loosening delay: a second agent on an account that is already protected starts paused for the loosening delay.
 check("a second agent on a protected account starts paused, pending the delay", a2.body.status === "paused", a2.body);
 await new Promise((res) => setTimeout(res, 3500));
 await call("GET", "/agents", { cookie: o.cookie });
@@ -209,7 +209,7 @@ check("pause agent", r.status === 200 && r.body.status === "paused", r.body);
 r = await call("POST", "/operations", { key: KEY, body: intent() });
 check("paused agent is PS_PAUSED_001", r.body.reason_code === "PS_PAUSED_001", r.body);
 r = await call("POST", `/agents/${agentId}/resume`, { cookie: o.cookie, body: { confirm: true } });
-// Phase 6: resuming is a loosening, so it waits out the organization's delay (3 s on this test server).
+// Loosening delay: resuming is a loosening, so it waits out the organization's delay (3 s on this test server).
 check("resume agent waits out the loosening delay", r.status === 200 && r.body.status === "paused" && r.body.pending_change?.kind === "agent_resume", r.body);
 await new Promise((res) => setTimeout(res, 3500));
 r = await call("GET", `/agents/${agentId}`, { cookie: o.cookie });

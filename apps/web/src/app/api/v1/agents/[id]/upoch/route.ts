@@ -4,7 +4,7 @@ import { handle, ok } from "@/server/http";
 import { memberAddresses, readUpoch, upochScore } from "@/server/upoch";
 
 /**
- * Phase 6.5: the agent's Upoch status, read live from Upoch's public contract (read-only). `available:
+ * Upoch: the agent's Upoch status, read live from Upoch's public contract (read-only). `available:
  * false` means it could not be read: the console then shows "Unknown", never a guess.
  */
 export const GET = handle<RouteContext<"/api/v1/agents/[id]/upoch">>(async (req, ctx) => {

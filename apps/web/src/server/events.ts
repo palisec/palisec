@@ -52,6 +52,6 @@ export function afterChange(orgId: string, type: EventType, data: Record<string,
     await emit(orgId, type, data);
     if (runDetection) await detect(orgId, true);
   });
-  // Phase 8: publish policy, pending and stop changes of opted-in accounts to the on-chain registry.
+  // Policy publishing: publish policy, pending and stop changes of opted-in accounts to the on-chain registry.
   if (/^(policy\.|organization\.emergency_stop|agent\.status_changed|mandate\.applied)/.test(type)) queueSync(orgId);
 }

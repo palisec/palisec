@@ -1,4 +1,4 @@
--- Phase 3: an evaluate-only API key scope, for the homepage's Live API demo.
+-- An evaluate-only API key scope, for the homepage's Live API demo.
 -- A key whose only scope is authorizations:evaluate can run dry runs (POST /v1/authorizations/evaluate)
 -- and nothing else: no operations, no execution, no reads of records. Additive: existing keys keep
 -- their scopes; the column default (keys created without a scope list) is unchanged.

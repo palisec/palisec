@@ -56,7 +56,7 @@ export async function requireMember(req: Request, permission: Permission): Promi
   if (!membership) throw new HttpError(403, "PS_AUTH_001", "You are not a member of this organization");
   if (!(ROLES[permission] as readonly Role[]).includes(membership.role))
     throw new HttpError(403, "PS_AUTH_001", `The ${membership.role} role cannot perform this action`);
-  // Phase 6: changes whose delay has run out take effect before anything is read or changed.
+  // Loosening delay: changes whose delay has run out take effect before anything is read or changed.
   await applyDue(membership.orgId);
   return { user, orgId: membership.orgId, role: membership.role };
 }
@@ -82,7 +82,7 @@ export interface AgentContext {
   account: `0x${string}`;
   policyId: string | null;
   emergencyStop: boolean;
-  /** Phase 6.5: the agent's Upoch workflow, if set. */
+  /** Upoch: the agent's Upoch workflow, if set. */
   upochWorkflowId: string | null;
 }
 
@@ -112,7 +112,7 @@ export async function requireAgent(req: Request, scope: Scope | null): Promise<A
       EXISTS (SELECT 1 FROM pending_changes pc WHERE pc.org_id = a.org_id AND pc.state = 'pending' AND pc.effective_at <= now()) AS due
     FROM c JOIN agents a ON a.id = c.agent_id JOIN organizations o ON o.id = a.org_id LEFT JOIN billing_accounts b ON b.org_id = a.org_id`;
   let rows = await lookup();
-  // Phase 6: a change whose delay ran out applies before this request is decided, then state is re-read.
+  // Loosening delay: a change whose delay ran out applies before this request is decided, then state is re-read.
   if (rows[0]?.due) {
     await applyDue(rows[0].org_id);
     rows = await lookup();

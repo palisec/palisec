@@ -1,4 +1,4 @@
--- Phase 9: loss limits the agent can't override. Palisec records the account's value itself (the
+-- Loss limits the agent can't override. Palisec records the account's value itself (the
 -- public RPC keeps no history), with deposits and withdrawals taken out, and latches a breach until the
 -- owner resets it (a new policy version with loss_limit.reset_epoch + 1, which is a delayed loosening).
 -- State belongs to one organization and account: another organization's policy on the same address can

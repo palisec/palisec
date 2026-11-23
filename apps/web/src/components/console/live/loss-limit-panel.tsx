@@ -6,7 +6,7 @@ import { usd, utc } from "./common";
 import { api } from "./session";
 
 /**
- * Phase 9: the agent's loss limit. Current loss against the limit, paused or not, and the owner's reset
+ * Loss limits: the agent's loss limit. Current loss against the limit, paused or not, and the owner's reset
  * with its countdown. Values come from Palisec's own measurements (before every decision and hourly);
  * nothing here reads the chain.
  */

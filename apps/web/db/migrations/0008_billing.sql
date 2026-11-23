@@ -1,4 +1,4 @@
--- Phase 5: decision credits, metering and Pro by holdings. Additive only.
+-- Billing: decision credits, metering and Pro by holdings. Additive only.
 --
 -- billing_accounts: one row per organization, created on first use. Holds the opaque purchase account
 --   (what buyers pass to the PalisecCredits contract), the prepaid credit balance, this month's metered

@@ -1,5 +1,5 @@
 /**
- * Phase 9, loss limits: separating deposits and withdrawals from trading results, and the window's
+ * Loss limits: separating deposits and withdrawals from trading results, and the window's
  * peak. Pure functions, shared by the server's snapshots and unit-tested.
  *
  * Every Palisec account is a Safe that cannot move funds without Palisec's co-signature, so a

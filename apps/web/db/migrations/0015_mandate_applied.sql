@@ -1,4 +1,4 @@
--- Phase 7: a passed loosening waits as a pending change; when that change takes effect, the proposal
+-- Holder mandates: a passed loosening waits as a pending change; when that change takes effect, the proposal
 -- is marked applied too (it stayed 'pending' before). One trigger, so every path that applies a pending
 -- change (lazy apply, health check, console) keeps the two in step.
 CREATE OR REPLACE FUNCTION ps_mandate_pending_applied() RETURNS trigger LANGUAGE plpgsql AS $$

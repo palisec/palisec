@@ -72,7 +72,7 @@ function buildPolicy(c: Controls): { policy: Policy; inputErrors: string[] } {
   if (Number.isNaN(cooldown)) inputErrors.push("Cooldown must be whole seconds.");
   const policy: Policy = {
     ...EXAMPLE_POLICY,
-    // Phase 6: the example policy as a new policy gets it, with asset safety on.
+    // The example policy as a new policy gets it, with asset safety on.
     schema_version: "1.1",
     asset_safety: EXAMPLE_ASSET_SAFETY,
     limits: {

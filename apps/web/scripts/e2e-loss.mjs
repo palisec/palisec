@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 9 end to end against a test server: the loss limit (schema 1.3) with real Chainlink prices and
+ * Loss limits end to end against a test server: the loss limit (schema 1.3) with real Chainlink prices and
  * balances read from mainnet. Decisions only: nothing is signed or sent on chain. The account is the
  * Palisec demo smart account (read-only here); the exit address is its recovery owner.
  *

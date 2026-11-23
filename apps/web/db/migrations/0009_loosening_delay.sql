@@ -1,4 +1,4 @@
--- Phase 6: loosening delay.
+-- Loosening delay.
 --
 -- Any change that weakens an organization's rules waits in pending_changes until effective_at; until
 -- then the current state keeps deciding every request. Tightening applies at once. Pending changes are

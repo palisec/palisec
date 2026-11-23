@@ -6,7 +6,7 @@ import { CHAINS, chainTransport, type ChainId } from "./config";
 import { MAINNET, TESTNET } from "@/lib/networks";
 
 /*
- * Phase 9, loss limits: what each asset is worth, from Chainlink on Robinhood Chain. Never from a DEX
+ * Loss limits: what each asset is worth, from Chainlink on Robinhood Chain. Never from a DEX
  * pool or a single block's spot price. Every price is checked (positive, fresh, not paused, cross-checked);
  * a price that fails a check is "unavailable", and the engines then refuse anything that adds risk.
  *

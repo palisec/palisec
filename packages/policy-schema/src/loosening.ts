@@ -1,7 +1,7 @@
 import type { Policy } from "./types";
 
 /**
- * Phase 6, loosening delay: classifies the difference between the version that decides today and a
+ * Loosening delay: classifies the difference between the version that decides today and a
  * proposed one. Every leaf difference is classified; anything not recognised is loosening, so a new
  * field or an odd edit can never slip through as "harmless". A change with any loosening part is
  * delayed as a whole; a change that only tightens applies at once.

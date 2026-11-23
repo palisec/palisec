@@ -33,7 +33,7 @@ export interface AssetSafety {
   max_simulation_age_seconds: number;
 }
 
-/** Schema 1.2 (Phase 6.5): the agent must be recoverable on Upoch, read from chain before evaluation. */
+/** Schema 1.2: the agent must be recoverable on Upoch, read from chain before evaluation. */
 export interface UpochRecovery {
   require_upoch_recoverable: boolean;
   /** The newest checkpoint may be at most this old. */
@@ -44,7 +44,7 @@ export interface UpochRecovery {
 }
 
 /**
- * Schema 1.3 (Phase 9): a loss limit outside the agent. The account's value is measured before each
+ * Schema 1.3: a loss limit outside the agent. The account's value is measured before each
  * decision (an input, like the simulation); breaching the limit pauses everything that adds risk
  * until the owner resets it (a new version with `reset_epoch` + 1, which is a loosening).
  */
@@ -203,9 +203,9 @@ export interface Environment {
   paused_agents: string[];
   /** Simulation of this exact operation; absent or null means unavailable (fails closed). */
   asset_simulation?: AssetSimulation | null;
-  /** Phase 6.5: the agent's Upoch workflow; absent or null means unavailable (fails closed when required). */
+  /** Upoch: the agent's Upoch workflow; absent or null means unavailable (fails closed when required). */
   upoch?: UpochStatus | null;
-  /** Phase 9: the account's value; absent or null means unavailable (fails closed when a loss limit is on). */
+  /** Loss limits: the account's value; absent or null means unavailable (fails closed when a loss limit is on). */
   loss_snapshot?: LossSnapshot | null;
 }
 

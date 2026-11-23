@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * "Enforced by Palisec": the reference detection function (Phase 6.5, for Upoch and anyone else).
+ * "Enforced by Palisec": the reference detection function (for Upoch and anyone else).
  * Reads only public chain state. An address qualifies only if ALL of these hold:
  *
  *   1. It is a Safe: a proxy whose singleton (storage slot 0) is the Safe v1.4.1 singleton.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 3 Part 2: the homepage's Live API demo (POST /api/demo/evaluate) against a running deployment
+ * The homepage's Live API demo (POST /api/demo/evaluate) against a running deployment
  * with a database. Two steps, because the server reads the demo key from its environment at start:
  *
  *   BASE_URL=http://localhost:3002 node scripts/e2e-demo.mjs setup > <state file outside the repo>

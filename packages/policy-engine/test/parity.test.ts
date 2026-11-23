@@ -123,7 +123,7 @@ describe("policy engine", () => {
   }, 60_000);
 });
 
-describe("loosening delay (Phase 6): the version that decides is an input", () => {
+describe("loosening delay: the version that decides is an input", () => {
   // The server passes the active version while a looser one is pending, and the new one after
   // effective_at. Both engines must reach the same decision for each, and the two must differ.
   const strict = JSON.parse(JSON.stringify(EXAMPLE_POLICY)) as Policy;

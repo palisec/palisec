@@ -6,7 +6,7 @@ import { BadRequest, logEvent } from "./http";
 import { SELL_PROBE_CODE } from "./sell-probe";
 
 /*
- * Phase 6, asset safety: what an operation actually does to the account's assets, measured on current
+ * Asset safety: what an operation actually does to the account's assets, measured on current
  * chain state with eth_simulateV1 (the chain's own RPC; no third party). The result is an input to both
  * policy engines, like price and fee; the engines apply the rules. Nothing is cached: every decision
  * simulates afresh, and a failure returns null, which the engines treat as unavailable (fail closed).

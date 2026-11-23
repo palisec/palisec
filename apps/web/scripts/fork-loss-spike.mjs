@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 9 price-manipulation test on a mainnet fork (no real money). A test server reads the chain from
+ * Loss limits price-manipulation test on a mainnet fork (no real money). A test server reads the chain from
  * an Anvil fork of Robinhood Chain mainnet. A large swap then moves the USDG/ETH Uniswap pool's price in
  * one block, and the test shows:
  *  1. the account's value (Chainlink prices) and the decision for an account that is not trading are unchanged:

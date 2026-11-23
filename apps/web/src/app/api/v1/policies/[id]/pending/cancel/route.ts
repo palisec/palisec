@@ -3,7 +3,7 @@ import { getPolicy } from "@/server/control";
 import { HttpError, handle, ok } from "@/server/http";
 import { cancelPending } from "@/server/pending";
 
-/** Phase 6: cancels this policy's pending activation at once (owner, admin or operator). */
+/** Loosening delay: cancels this policy's pending activation at once (owner, admin or operator). */
 export const POST = handle<RouteContext<"/api/v1/policies/[id]/pending/cancel">>(async (req, ctx) => {
   const m = await requireMember(req, "operate");
   const id = await idParam(ctx);

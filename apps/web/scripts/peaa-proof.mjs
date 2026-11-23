@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 8 mainnet proof on the mandate demo smart account 0x9aEC…170c (keys outside the repo, never printed):
+ * Policy publishing mainnet demo on the mandate demo smart account 0x9aEC…170c (keys outside the repo, never printed):
  *   allow      owner: allow the registry's declare() in the mandate envelope and the policy (two loosenings, 60 min)
  *   declare    agent: the Safe calls registry.declare(co-signer, publisher, receipt signer) through Palisec (co-signed)
  *   sync       publish the account's commitments now (POST /v1/public/peaa/sync)
@@ -27,7 +27,7 @@ const COMPANY = "0x989EfcD8Ad76E695CFD5ba915b1b12118471c430";
 const pg = (f) => JSON.parse(readFileSync(`${homedir()}/palisec-pg/${f}`, "utf8"));
 const demo = pg("mandate-demo.json");
 const proof = pg("mandate-proof.json");
-const keys = pg("phase8-keys.json");
+const keys = pg("registry-keys.json");
 const owner = privateKeyToAccount(demo.owner);
 const agentKey = privateKeyToAccount(demo.agent);
 const publisher = privateKeyToAccount(keys.publisher).address;

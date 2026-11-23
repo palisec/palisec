@@ -177,7 +177,7 @@ check("chain: the recipient received exactly the authorized value", (await pub.g
   } else check("held operation is pending approval", false, held.body);
 
   const plain = privateKeyToAccount(generatePrivateKey());
-  // Phase 6: asset safety simulates the send, so the plain account needs the ETH it would send (on the fork).
+  // Asset safety simulates the send, so the plain account needs the ETH it would send (on the fork).
   await pub.request({ method: "anvil_setBalance", params: [plain.address, "0x2386F26FC10000"] });
   const P = await agentFor(plain.address, "plain", recipient);
   const pop = await call("POST", "/operations", { key: P.key, body: intent() });

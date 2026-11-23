@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Live smoke test of PALISEC smart-account execution (Phase 2 Step 4, blocker B-02). Run by the owner on
+ * Live smoke test of PALISEC smart-account execution (against the live API). Run on
  * their own computer; the agent key never leaves it and is never printed or written anywhere.
  *
  *   mkdir palisec-smoke && cd palisec-smoke && npm init -y && npm install @palisec/sdk viem

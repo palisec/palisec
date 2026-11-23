@@ -6,7 +6,7 @@ import { LoadError, Loading, useAction } from "./common";
 import { api, can, useConsoleSession, useLive } from "./session";
 
 /**
- * Phase 7: holder mandates for owners. Create a mandate for an agent, set its envelope (tightening now,
+ * Holder mandates for owners. Create a mandate for an agent, set its envelope (tightening now,
  * loosening after the delay), follow proposals and cancel a passed loosening that is waiting (with a
  * reason that is shown publicly). Votes themselves are signed by holders, not here.
  */

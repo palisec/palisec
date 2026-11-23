@@ -21,16 +21,16 @@ export const REASON_CODES = {
   PS_CHAIN_001: "Chain or bundler unavailable",
   // Extension to the §5.7 table: request schema failures need their own code.
   PS_REQUEST_001: "Request failed schema validation",
-  // Phase 6, asset safety (schema 1.1). PS_SIM_001 above covers an unavailable, stale or reverting simulation.
+  // Asset safety (schema 1.1). PS_SIM_001 above covers an unavailable, stale or reverting simulation.
   PS_ASSET_001: "Sell simulation failed: likely honeypot",
   PS_ASSET_002: "Transfer tax above the policy maximum",
   PS_ASSET_003: "Simulated balance changes do not match the declared intent",
   PS_APPROVAL_001: "Unlimited or oversized approval to a non-allowlisted spender",
-  // Phase 6.5, Upoch recovery (schema 1.2).
+  // Upoch recovery (schema 1.2).
   PS_RECOVERY_001: "Agent is not recoverable on Upoch",
   PS_RECOVERY_002: "Upoch checkpoint is too old",
   PS_RECOVERY_003: "Upoch data unavailable",
-  // Phase 9, loss limit (schema 1.3).
+  // Loss limit (schema 1.3).
   PS_LOSS_001: "Loss limit reached: drawdown percentage",
   PS_LOSS_002: "Loss limit reached: USD loss",
   PS_LOSS_003: "Account value unavailable",

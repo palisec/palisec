@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 5 billing end to end on an anvil fork of Robinhood Chain mainnet (real USDG, real Chainlink
+ * Billing end to end on an anvil fork of Robinhood Chain mainnet (real USDG, real Chainlink
  * ETH/USD, real $PALISEC and its Pons curve). Two steps, because the server reads the contract address
  * from its environment:
  *

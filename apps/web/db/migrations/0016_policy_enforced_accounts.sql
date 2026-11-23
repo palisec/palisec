@@ -1,4 +1,4 @@
--- Phase 8: draft ERC "Policy-Enforced Agent Accounts". Opted-in agents have their policy commitments
+-- Policy publishing: draft ERC "Policy-Enforced Agent Accounts". Opted-in agents have their policy commitments
 -- published to the on-chain registry (once the account itself has declared Palisec's signers there),
 -- and their committed policy documents are publicly readable by hash. Additive: nothing existing changes.
 
@@ -28,7 +28,7 @@ CREATE TABLE peaa_commitments (
 CREATE INDEX peaa_commitments_hash ON peaa_commitments (policy_hash) WHERE document IS NOT NULL;
 CREATE INDEX peaa_commitments_agent ON peaa_commitments (agent_id, created_at DESC);
 
--- Opt in the two Palisec demo smart accounts on mainnet (approved for Phase 8).
+-- Opt in the two Palisec demo smart accounts on mainnet.
 INSERT INTO peaa_accounts (agent_id)
 SELECT DISTINCT ON (lower(account)) id FROM agents
 WHERE chain_id = 4663 AND status <> 'revoked'

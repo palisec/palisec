@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6.5 B1: the Palisec demo agent's checkpoints on Upoch (Robinhood Chain mainnet).
+ * Upoch: the Palisec demo agent's checkpoints on Upoch (Robinhood Chain mainnet).
  *
  * The first run registers the agent's Upoch workflow (executor: the checkpoint key; guardian: the
  * company wallet, which is also the recovery owner of the agent's smart account, so the workflow is

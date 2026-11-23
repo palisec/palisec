@@ -1,7 +1,7 @@
--- Phase 7: holder mandates. Token holders vote (gasless EIP-712 signatures, weight = balance at a fixed
+-- Holder mandates. Token holders vote (gasless EIP-712 signatures, weight = balance at a fixed
 -- snapshot block, rebuilt from the token's Transfer logs) on typed changes inside an owner-set envelope.
 -- A passed proposal compiles into an ordinary policy version activated through ps_activate_policy, with
--- the mandate as the actor; loosening waits out the Phase 6 delay. Envelope loosening is a pending change
+-- the mandate as the actor; loosening waits out the loosening delay. Envelope loosening is a pending change
 -- of kind mandate_envelope.
 
 CREATE TABLE mandates (

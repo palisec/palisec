@@ -1,4 +1,4 @@
--- Phase 6.5: changing an agent's Upoch workflow while its policy requires Upoch recovery is a loosening,
+-- Upoch: changing an agent's Upoch workflow while its policy requires Upoch recovery is a loosening,
 -- so it waits out the delay like an agent move (pending kind agent_upoch).
 
 DO $$

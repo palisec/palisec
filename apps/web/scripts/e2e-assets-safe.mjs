@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Phase 6 on real testnet with a PALISEC smart account: a Safe (threshold 2; owners: the agent's key,
+ * Asset safety on real testnet with a PALISEC smart account: a Safe (threshold 2; owners: the agent's key,
  * PALISEC's testnet co-signer, a recovery owner) built exactly as the console builds one, then buys of a
  * normal token, a honeypot and a 20%-sell-tax token decided by the real API (POST /v1/operations) with
- * asset safety on. Uses the AssetTestKit already deployed by e2e-phase6.mjs on testnet.
+ * asset safety on. Uses the AssetTestKit already deployed by e2e-delay-assets.mjs on testnet.
  *
  *   BASE_URL=https://palisec.tech TESTNET_KEY_FILE=<test-only funded key> USD=… NORMAL=… HONEY=… TAX=… ROUTER=… \
- *     node apps/web/scripts/e2e-phase6-safe.mjs
+ *     node apps/web/scripts/e2e-assets-safe.mjs
  */
 import { readFileSync } from "node:fs";
 import { concat, createPublicClient, createWalletClient, encodeFunctionData, erc20Abi, http, maxUint256, parseAbi } from "viem";
@@ -96,7 +96,7 @@ const sigs = concat(await Promise.all(signers.map((s) => s.signTypedData(typed))
 await wait(await wallet.writeContract({ address: safe, abi: SAFE_TX, functionName: "execTransaction", args: [USD, 0n, approveData, 0, 0n, 0n, 0n, ZERO, ZERO, sigs] }), "Safe approves the test router (setup)");
 
 // Policy with asset safety (the defaults new policies get), agent bound to the Safe.
-const p = await call("POST", "/policies", { cookie, body: { name: "Phase 6 Safe test", policy_key: `p6_safe_${Date.now()}`, chain_id: CHAIN, account: safe } });
+const p = await call("POST", "/policies", { cookie, body: { name: "Asset safety Safe test", policy_key: `assets_safe_${Date.now()}`, chain_id: CHAIN, account: safe } });
 const doc = {
   ...p.body.draft,
   limits: { ...p.body.draft.limits, max_price_age_seconds: 600, max_gas_cost_wei: "1000000000000000000" },
@@ -107,7 +107,7 @@ const doc = {
 const s = await call("PUT", `/policies/${p.body.id}`, { cookie, body: { document: doc } });
 const act = await call("POST", `/policies/${p.body.id}/activate`, { cookie, body: { confirm: true, draft_hash: s.body.draft_hash } });
 check("policy active with asset safety on", act.body.state === "active" && act.body.active_document?.asset_safety?.enabled === true, act.body);
-const ag = await call("POST", "/agents", { cookie, body: { name: "Phase 6 Safe agent", chain_id: CHAIN, account: safe, policy_id: p.body.id } });
+const ag = await call("POST", "/agents", { cookie, body: { name: "Asset safety Safe agent", chain_id: CHAIN, account: safe, policy_id: p.body.id } });
 const key = (await call("POST", `/agents/${ag.body.id}/credentials`, { cookie, body: {} })).body.secret;
 
 const entryNonce = () => pub.readContract({ address: ENTRY_POINT, abi: parseAbi(["function getNonce(address,uint192) view returns (uint256)"]), functionName: "getNonce", args: [safe, 0n] });

@@ -1,4 +1,4 @@
--- Phase 6 follow-up: whether a loosening activation waits is decided inside the activation transaction.
+-- Loosening delay: whether a loosening activation waits is decided inside the activation transaction.
 
 CREATE OR REPLACE FUNCTION ps_activate_policy(
   p_policy uuid, p_org uuid, p_user uuid, p_expected_active integer, p_draft jsonb, p_next integer,

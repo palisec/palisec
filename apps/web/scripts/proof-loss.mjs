@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 9 mainnet proof: loss limits, on a new demo smart account. Stages (state and keys in files outside
+ * Loss limits mainnet demo, on a new demo smart account. Stages (state and keys in files outside
  * the repository; keys are never printed). Stages that send a transaction say so and need --send.
  *
  *   keys                    create the demo owner and agent keys (if missing); prints the owner address to fund
@@ -8,7 +8,7 @@
  *   safe [--send]           owner: create the Palisec smart account (Safe: agent key, Palisec co-signer, company wallet)
  *   fund [--send]           owner: send the Safe 0.0003 ETH and 1 USDG
  *   policy                  policy (no loss limit yet), agent and API key; allowlist: router, USDG, WETH, registry, company wallet
- *   declare [--send]        agent: the Safe declares Palisec in the Phase 8 registry (co-signed)
+ *   declare [--send]        agent: the Safe declares Palisec in the policy registry (co-signed)
  *   limit                   turn on the loss limit: $0.005 over 24 h (a tightening: applies at once)
  *   buy <wei> [--send]      agent: swap ETH -> USDG through the Safe (co-signed)
  *   sell <micros> [--send]  agent: approve exactly, then swap USDG -> WETH through the Safe (two co-signed operations)
@@ -49,17 +49,17 @@ const APPROVE = "0x095ea7b3";
 const TRANSFER = "0xa9059cbb";
 
 const dir = `${homedir()}/palisec-pg`;
-const keysPath = `${dir}/phase9-demo-keys.json`;
-const statePath = `${dir}/phase9-proof.json`;
+const keysPath = `${dir}/loss-demo-keys.json`;
+const statePath = `${dir}/loss-demo-state.json`;
 const [stage, arg] = process.argv.slice(2).filter((a) => a !== "--send");
 const SEND = process.argv.includes("--send");
 if (stage === "keys" && !existsSync(keysPath)) writeFileSync(keysPath, JSON.stringify({ owner: generatePrivateKey(), agent: generatePrivateKey() }));
 const keys = JSON.parse(readFileSync(keysPath, "utf8"));
 const owner = privateKeyToAccount(keys.owner);
 const agentKey = privateKeyToAccount(keys.agent);
-const phase8 = JSON.parse(readFileSync(`${dir}/phase8-keys.json`, "utf8"));
-const publisher = privateKeyToAccount(phase8.publisher).address;
-const receiptSigner = privateKeyToAccount(phase8.receipt).address;
+const registryKeys = JSON.parse(readFileSync(`${dir}/registry-keys.json`, "utf8"));
+const publisher = privateKeyToAccount(registryKeys.publisher).address;
+const receiptSigner = privateKeyToAccount(registryKeys.receipt).address;
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath, "utf8")) : {};
 const save = () => writeFileSync(statePath, JSON.stringify(state, null, 2));
 const chain = { id: 4663, name: "Robinhood Chain", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [RPC] } } };
@@ -85,7 +85,7 @@ async function signIn() {
 }
 const needSend = (what) => {
   if (SEND) return true;
-  console.log(`${utc()}  preview: ${what}. Nothing sent; add --send after approval.`);
+  console.log(`${utc()}  preview: ${what}. Nothing sent; add --send to send it.`);
   return false;
 };
 const gasNote = async (tx) => {

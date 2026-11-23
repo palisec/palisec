@@ -85,7 +85,7 @@ export interface Scenario {
   label: string;
   summary: string;
   intent: Omit<Intent, "request_id" | "deadline">;
-  /** Phase 6: the example's simulated result (the browser has no chain); observed_at is set at evaluation. */
+  /** Asset safety: the example's simulated result (the browser has no chain); observed_at is set at evaluation. */
   simulation?: Omit<AssetSimulation, "observed_at">;
 }
 

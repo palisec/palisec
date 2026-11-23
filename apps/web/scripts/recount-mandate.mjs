@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Recount a Palisec holder-mandate vote independently (Phase 7). Needs only Node.js, viem and a public
+ * Recount a Palisec holder-mandate vote independently. Needs only Node.js, viem and a public
  * Robinhood Chain RPC; it does not trust Palisec's numbers:
  *
  *   1. every vote signature must recover to its voter for this exact mandate, proposal, choice and snapshot block;

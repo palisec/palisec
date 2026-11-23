@@ -2,7 +2,7 @@ import type { Address, Hex, Policy } from "./types";
 import { validatePolicy } from "./validate";
 
 /**
- * Phase 7, holder mandates: the pure parts (no I/O), shared by the server, the SDK and the recount
+ * Holder mandates: the pure parts (no I/O), shared by the server, the SDK and the recount
  * script. A mandate is an envelope (owner-set hard limits) plus typed proposals that token holders vote
  * on. A passed proposal compiles into an ordinary policy version, so the engines decide as before.
  */

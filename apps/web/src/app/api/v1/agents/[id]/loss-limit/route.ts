@@ -3,7 +3,7 @@ import { HttpError, handle, ok } from "@/server/http";
 import { lossStatus } from "@/server/loss-limits";
 
 /**
- * Phase 9: the agent's loss limit as last measured (value, window peak, loss and drawdown against the
+ * Loss limits: the agent's loss limit as last measured (value, window peak, loss and drawdown against the
  * limits, paused or not, a pending reset with its effective time). No chain reads: the value is measured
  * before every decision and hourly.
  */

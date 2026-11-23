@@ -3,7 +3,7 @@ import { BadRequest, handle, ok, readJson } from "@/server/http";
 import { requestLossReset } from "@/server/loss-reset";
 
 /**
- * Phase 9: the owner resets a breached loss limit. A loosening: it waits for the organization's delay
+ * Loss limits: the owner resets a breached loss limit. A loosening: it waits for the organization's delay
  * (alert, countdown, Cancel under pending changes) and is published on chain like any policy change.
  */
 export const POST = handle<RouteContext<"/api/v1/agents/[id]/loss-limit/reset">>(async (req, ctx) => {

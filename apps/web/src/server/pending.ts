@@ -6,7 +6,7 @@ import { afterChange } from "./events";
 import { BadRequest, HttpError, logEvent } from "./http";
 
 /*
- * Phase 6, loosening delay. Changes that weaken an organization's rules wait in pending_changes; the
+ * Loosening delay. Changes that weaken an organization's rules wait in pending_changes; the
  * current state keeps deciding until effective_at. Due changes are applied lazily by ps_apply_due():
  * on every agent request that finds one due, on console requests, and on the health check that the
  * uptime monitor calls, so nothing depends on a paid scheduler.
@@ -51,7 +51,7 @@ export async function applyDue(orgId: string | null): Promise<Row[]> {
         diff: a.diff,
         effective_at: a.effective_at,
       });
-    // The events these changes sent before Phase 6, now sent when they take effect.
+    // The events these changes sent before the loosening delay existed, now sent when they take effect.
     for (const a of list) {
       if (a.kind === "emergency_lift") afterChange(a.org_id, "organization.emergency_stop", { active: false });
       if (a.kind === "agent_resume") afterChange(a.org_id, "agent.status_changed", { agent_id: a.agent_id, status: "active" });

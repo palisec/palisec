@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Phase 6 latency: decision time with and without asset simulation, on live mainnet state, through
+ * Asset-simulation latency: decision time with and without asset simulation, on live mainnet state, through
  * dry runs (nothing is reserved, recorded or sent). A USDG transfer from an account that holds USDG.
- *   BASE_URL=http://localhost:3002 ACCOUNT=0x… node apps/web/scripts/latency-phase6.mjs
+ *   BASE_URL=http://localhost:3002 ACCOUNT=0x… node apps/web/scripts/latency-asset-sim.mjs
  */
 import { encodeFunctionData, erc20Abi } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";

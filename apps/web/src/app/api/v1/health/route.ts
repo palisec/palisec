@@ -34,10 +34,10 @@ export const GET = handle(async (req: Request) => {
     if (!cached || Date.now() - cached.at > CACHE_MS) {
       try {
         const rows = await db()`SELECT max(version) AS v FROM schema_migrations`;
-        // Phase 6: the hourly uptime check also applies any loosening whose delay has run out, so it
+        // Loosening delay: the hourly uptime check also applies any loosening whose delay has run out, so it
         // takes effect (and is announced) even when no agent or member is active.
         await applyDue(null);
-        // Phase 7: close mandate votes whose period ended, even when nobody is looking.
+        // Holder mandates: close mandate votes whose period ended, even when nobody is looking.
         await closeDue(null).catch(() => {});
         // Proof that each co-signer really signs: the time of the last operation PALISEC co-signed that
         // then succeeded on chain. Only the UTC day is public: an exact time could be matched to a block and

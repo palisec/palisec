@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Phase 6 end to end: the loosening delay and asset safety.
+ * End to end: the loosening delay and asset safety.
  *
  *   Part 1 (loosening delay), any test server with PALISEC_TEST_DEFAULT_DELAY_SECONDS=3:
- *     BASE_URL=http://localhost:3002 node apps/web/scripts/e2e-phase6.mjs delay
+ *     BASE_URL=http://localhost:3002 node apps/web/scripts/e2e-delay-assets.mjs delay
  *   Part 2 (asset safety on a mainnet fork; no real money). Start `anvil --fork-url <mainnet RPC>` on
  *   8545, a server with RH_MAINNET_RPC_URL=http://127.0.0.1:8545 on BASE_URL, and a second one with
  *   PALISEC_SIMULATION=off as OFF_URL:
- *     BASE_URL=http://localhost:3003 OFF_URL=http://localhost:3004 node apps/web/scripts/e2e-phase6.mjs assets
+ *     BASE_URL=http://localhost:3003 OFF_URL=http://localhost:3004 node apps/web/scripts/e2e-delay-assets.mjs assets
  */
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -84,7 +84,7 @@ async function delayPart() {
     contracts: { default: "deny", allowlist: [{ address: TARGET, selectors: [], require_verified_code: false }], denylist: [] },
     human_approval: { usd_threshold_micros: "999999999999", require_for_unknown_methods: false },
   });
-  const pol = await policyFor(cookie, "phase6_delay", CHAIN, ACCOUNT, base);
+  const pol = await policyFor(cookie, "delay_test", CHAIN, ACCOUNT, base);
   check("a policy no agent uses activates at once", pol.act.status === 200 && pol.act.body.state === "active" && pol.act.body.active_version === 1, pol.act.body);
   const agent = await call("POST", "/agents", { cookie, body: { name: "Delay agent", chain_id: CHAIN, account: ACCOUNT, policy_id: pol.id } });
   const key = (await call("POST", `/agents/${agent.body.id}/credentials`, { cookie, body: {} })).body.secret;
@@ -228,7 +228,7 @@ async function assetsPart() {
 
   const owner = privateKeyToAccount(generatePrivateKey());
   const cookie = await signIn(owner, CHAIN);
-  const pol = await policyFor(cookie, "phase6_assets", CHAIN, agentAcct.address, (d) => ({
+  const pol = await policyFor(cookie, "assets_test", CHAIN, agentAcct.address, (d) => ({
     ...d,
     limits: { ...d.limits, max_price_age_seconds: 600, max_pending_operations: 50, max_gas_cost_wei: "1000000000000000000" },
     cooldowns: { identical_calldata_seconds: 0, identical_intent_seconds: 0 },

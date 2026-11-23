@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Phase 3 live flows through the PALISEC smart account, one flow per run. Sibling of smoke-live.mjs
- * (flow A); run by the owner on their own computer. Keys are read from the environment or asked for
+ * Live flows through the PALISEC smart account, one flow per run. Sibling of smoke-live.mjs
+ * (flow A); run on the operator's own computer. Keys are read from the environment or asked for
  * with hidden input, and are never printed or written anywhere.
  *
  *   node smoke-flows.mjs --flow B           preview: chain read + dry run (reserves and records nothing)
@@ -35,7 +35,7 @@ const FLOWS = {
   C: { value: 1_000_000_000_000n, offPolicy: true, execute: false, expect: "DENY PS_TARGET_001" },
   D: { value: 1_000_000_000_000n, offPolicy: false, execute: false, expect: "DENY PS_LOOP_001 (run right after A)" },
   E: { value: 20_000_000_000_000n, offPolicy: false, execute: false, expect: "DENY PS_BUDGET_001 (after B and A in the same hour)" },
-  // Phase 6: a tiny real swap, ETH -> USDG on Uniswap v3 (SwapRouter02, 0.01% pool), checked by asset safety.
+  // A tiny real swap, ETH -> USDG on Uniswap v3 (SwapRouter02, 0.01% pool), checked by asset safety.
   S: { value: 250_000_000_000_000n, offPolicy: false, execute: true, swap: true, expect: "ALLOW with the asset check (tax, sell leg), then executes" },
 };
 // Uniswap v3 on Robinhood Chain (developers.uniswap.org, Robinhood Chain deployments), checked on chain.
@@ -50,7 +50,7 @@ const flowName = (args[args.indexOf("--flow") + 1] ?? "").toUpperCase();
 const flow = args.includes("--flow") ? FLOWS[flowName] : undefined;
 if (!flow) throw new Error("Choose a flow: --flow A|B|C|D|E|S (F = A with the emergency stop on, then off; S = tiny swap).");
 const send = args.includes("--send");
-// Phase 6.5: every recorded demo run ends with a checkpoint on Upoch, so the demo agent's last checkpoint
+// Upoch: every recorded demo run ends with a checkpoint on Upoch, so the demo agent's last checkpoint
 // never goes stale. Uses the checkpoint key file (UPOCH_KEY_FILE, or ~/palisec-pg/upoch-executor.json when
 // present); without one it says so and skips. Runs after the flow, whatever its outcome.
 if (send) {
@@ -129,7 +129,7 @@ if (flow.swap) {
 }
 
 const palisec = createPalisec({ apiKey, chainId: net.chainId });
-// The swap needs calldata and the Phase 6 asset_intent, so flow S calls the API directly (same endpoints).
+// The swap needs calldata and the asset_intent, so flow S calls the API directly (same endpoints).
 const BASE = (process.env.PALISEC_BASE_URL || "https://palisec.tech").replace(/\/$/, "");
 async function decideRaw(path) {
   const res = await fetch(`${BASE}/api/v1${path}`, {

@@ -1,4 +1,4 @@
--- Phase 9: opt the loss-limit demo smart account on mainnet into policy publishing (Phase 8 registry),
+-- Loss limits: opt the loss-limit demo smart account on mainnet into policy publishing (policy registry),
 -- so its loss-limit policy changes and reset are committed on chain. Additive: nothing existing changes.
 INSERT INTO peaa_accounts (agent_id)
 SELECT DISTINCT ON (lower(account)) id FROM agents

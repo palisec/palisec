@@ -91,7 +91,7 @@ interface IPonsCurve {
 /**
  * @notice Spot price from a Pons V2 bonding curve before graduation: virtual ETH reserve / token reserve.
  * Depth is the ETH the curve really holds. Used to test the oracle on mainnet state; option A in the
- * Phase 5 plan prices from the graduated Uniswap v4 pool instead.
+ * Plan prices from the graduated Uniswap v4 pool instead.
  */
 contract PonsCurveSource is IPalisecPoolSource {
     IPonsCurve public immutable curve;

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { PageHeader, Section } from "@/components/ui";
-import { requireMandatePreview } from "@/server/mandate-preview";
+import { requireMandatesVisible } from "@/server/mandate-access";
 import { publicMandate } from "@/server/mandates";
 import { MandateLive, type PublicMandate } from "./mandate-live";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Token holders vote on an agent's limits inside an owner-set envelope; Palisec enforces the result. Live counts, vote files and decisions.",
 };
 
-/** Phase 7: a mandate's public page. Signed out, real data only (database and chain); refreshes itself. */
+/** Holder mandates: a mandate's public page. Signed out, real data only (database and chain); refreshes itself. */
 export default function MandatePage({ params }: { params: Promise<{ slug: string }> }) {
   return (
     <Suspense fallback={null}>
@@ -28,7 +28,7 @@ async function MandateBody({ params }: { params: Promise<{ slug: string }> }) {
   let data: PublicMandate;
   try {
     // Public unless MANDATES_PUBLIC=0 (then signed-in sessions only; everyone else gets "not found").
-    await requireMandatePreview(new Request("https://palisec.tech/m", { headers: await headers() }));
+    await requireMandatesVisible(new Request("https://palisec.tech/m", { headers: await headers() }));
     data = (await publicMandate(slug)) as unknown as PublicMandate;
   } catch {
     notFound();

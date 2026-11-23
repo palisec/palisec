@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Phase 6.5 end to end against a deployment: the "must be recoverable on Upoch" rule (schema 1.2) and the
+ * Upoch end to end against a deployment: the "must be recoverable on Upoch" rule (schema 1.2) and the
  * agent's Upoch status, with real Upoch reads on mainnet. Dry runs only (POST /v1/authorizations/evaluate):
  * nothing is recorded, reserved or sent. The agent is the Palisec demo smart account; its Upoch workflow
  * is WORKFLOW (owner: the checkpoint key; guardian: the company wallet, a recovery owner of the account).
  *
- *   BASE_URL=http://localhost:3002 WORKFLOW=10 node apps/web/scripts/e2e-phase65.mjs   (test server with 3 s delays)
+ *   BASE_URL=http://localhost:3002 WORKFLOW=10 node apps/web/scripts/e2e-upoch.mjs   (test server with 3 s delays)
  */
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 

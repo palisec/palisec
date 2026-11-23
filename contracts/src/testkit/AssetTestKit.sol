@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 /**
- * Test-only contracts for PALISEC's asset-safety checks (Phase 6): a plain token, a honeypot, a
+ * Test-only contracts for PALISEC's asset-safety checks: a plain token, a honeypot, a
  * 20%-sell-tax token, a minimal Uniswap-V2-style pair and router. Deployed on a mainnet fork and on
  * testnet only. Never deployed on mainnet, never given real value.
  */

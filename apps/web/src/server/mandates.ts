@@ -30,12 +30,12 @@ import { canonicalJson, sha256Hex } from "./tokens";
 import { MAINNET } from "@/lib/networks";
 
 /*
- * Phase 7, holder mandates. Holders of the mandate's token vote with gasless EIP-712 signatures on typed
+ * Holder mandates. Holders of the mandate's token vote with gasless EIP-712 signatures on typed
  * changes inside the owner's envelope. Voting power is the balance at a snapshot block fixed when the
  * proposal opens, rebuilt by replaying the token's Transfer logs (the public RPC keeps old state for only
  * minutes, but logs for good) and cross-checked against the chain while that block is still readable.
  * A passed proposal compiles into an ordinary policy version, activated through ps_activate_policy with
- * the mandate as the actor: tightening at once, loosening after the Phase 6 delay. Anything that cannot
+ * the mandate as the actor: tightening at once, loosening after the loosening delay. Anything that cannot
  * be counted, read or compiled changes nothing (fail closed).
  */
 

@@ -6,7 +6,7 @@ import { utc } from "./common";
 import { api } from "./session";
 
 /**
- * Phase 6.5: the agent's Upoch status, read live from Upoch's public contract. Anything that cannot be
+ * Upoch: the agent's Upoch status, read live from Upoch's public contract. Anything that cannot be
  * read shows "Unknown", never a guess. Owners and admins can set the agent's Upoch workflow.
  */
 interface UpochStatus {

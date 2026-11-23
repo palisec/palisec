@@ -26,16 +26,16 @@ export const EVENT_TYPES = [
   "security.finding",
   "operation.submitted",
   "operation.executed",
-  // Phase 6: a weakening change is waiting (with its diff and effective_at), took effect, or was cancelled.
+  // Loosening delay: a weakening change is waiting (with its diff and effective_at), took effect, or was cancelled.
   "policy.loosening_pending",
   "policy.loosening_applied",
   "policy.loosening_cancelled",
-  // Phase 7: holder mandates.
+  // Holder mandates.
   "mandate.proposal_created",
   "mandate.vote_closed",
   "mandate.applied",
   "mandate.cancelled",
-  // Phase 9: loss limit reached (the account is paused for risk), reset requested (with its countdown), reset applied.
+  // Loss limits: limit reached (the account is paused for risk), reset requested (with its countdown), reset applied.
   // Delivered only to webhooks that list them: existing subscriptions opt in.
   "loss_limit.triggered",
   "loss_limit.reset_pending",

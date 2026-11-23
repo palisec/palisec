@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "./session";
 
 /**
- * Phase 6: every change that weakens the rules waits out a delay. This banner shows each one with a
+ * Loosening delay: every change that weakens the rules waits out a delay. This banner shows each one with a
  * countdown, what it changes, and a Cancel button (owner, admin or operator; the server checks).
  */
 interface Change {

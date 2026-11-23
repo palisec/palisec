@@ -80,7 +80,7 @@ export function ethUsd(): Promise<{ price_micros: string; observed_at: number } 
 }
 
 /**
- * Phase 9: USDG/USD from the same two exchanges, only as a depeg check next to Chainlink (never as the
+ * Loss limits: USDG/USD from the same two exchanges, only as a depeg check next to Chainlink (never as the
  * value). Micros, or null.
  */
 export function usdgUsdMicros(): Promise<bigint | null> {

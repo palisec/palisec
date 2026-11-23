@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Mandate pages are public unless the server under test sets MANDATES_PUBLIC=0.
 /**
- * Phase 7 end to end: holder mandates with the real $PALISEC token on a mainnet fork (no test tokens).
+ * Holder mandates end to end with the real $PALISEC token on a mainnet fork (no test tokens).
  * Start `anvil --fork-url https://rpc.mainnet.chain.robinhood.com --chain-id 4663` on 8545 and a test
  * server with RH_MAINNET_RPC_URL=http://127.0.0.1:8545 and 3-second delays, then:
  *

@@ -1,6 +1,6 @@
 # Decision: no wallet connection in the frontend-only release
 
-**Status:** Accepted for the pre-release frontend · revisit at spec Phase 2 (API, identity and SDK)
+**Status:** Accepted for the pre-release frontend · revisit at the API, identity and SDK work
 
 ## Short answer
 
@@ -31,5 +31,5 @@ Palisec does need wallets eventually, but only for two jobs, and both are meanin
 
 ## When to add it
 
-- **Phase 2 (API, identity, SDK):** wallet sign-in via viem and an EIP-1193 connector, wired to the challenge endpoints and session cookies.
-- **Phase 5 (console, audit, approvals):** Approve & Sign through the approver's wallet, bound to the real operation hash and verified by the approval service and validation module.
+- **API, identity, SDK:** wallet sign-in via viem and an EIP-1193 connector, wired to the challenge endpoints and session cookies.
+- **Console, audit, approvals:** Approve & Sign through the approver's wallet, bound to the real operation hash and verified by the approval service and validation module.

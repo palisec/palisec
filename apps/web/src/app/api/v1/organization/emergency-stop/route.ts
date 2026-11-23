@@ -5,7 +5,7 @@ import { handle, ok, readJson } from "@/server/http";
 
 /**
  * Operators can stop (instant); only owners can lift the stop (checked in setEmergencyStop), and a lift
- * waits out the organization's lift delay (Phase 6). The stop event is sent when the state changes.
+ * waits out the organization's lift delay. The stop event is sent when the state changes.
  */
 export const POST = handle(async (req) => {
   const m = await requireMember(req, "operate");

@@ -1,5 +1,5 @@
 /**
- * Holder mandates (Phase 7): sign a vote and check a published vote file. Votes are gasless EIP-712
+ * Holder mandates: sign a vote and check a published vote file. Votes are gasless EIP-712
  * signatures; weight is the voter's token balance at the proposal's snapshot block.
  */
 import { proposalTypedData, tally, voteTypedData, type Tally, type VoteChoice } from "./schema";

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 8: deploys PolicyEnforcedRegistry with the deterministic deployer (CREATE2, same address on any
+ * Policy publishing: deploys PolicyEnforcedRegistry with the deterministic deployer (CREATE2, same address on any
  * chain), then funds the publisher key. The deployer key is read from the company key file outside the
  * repository and is never printed.
  *
@@ -19,7 +19,7 @@ const CREATE2_DEPLOYER = "0x4e59b44847b379578588920cA78FbF26c0B4956C";
 export const SALT = keccak256(stringToHex("policy-enforced-accounts registry v1"));
 const MANDATE_SAFE = "0x9aEC761B2F0FdA08C683e8388478C9A2F7C9170c";
 
-const keys = JSON.parse(readFileSync(`${homedir()}/palisec-pg/phase8-keys.json`, "utf8"));
+const keys = JSON.parse(readFileSync(`${homedir()}/palisec-pg/registry-keys.json`, "utf8"));
 const deployer = privateKeyToAccount(keys.deployer);
 const publisher = privateKeyToAccount(keys.publisher);
 const pub = createPublicClient({ chain, transport: http(RPC) });

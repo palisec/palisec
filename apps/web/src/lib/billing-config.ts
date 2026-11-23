@@ -1,5 +1,5 @@
 /**
- * Phase 5 billing and token settings (approved values, 2026-11-19). Public: no secrets here.
+ * Billing and token settings. Public: no secrets here.
  * The server reads the environment overrides in `server/billing.ts`; pages show these values.
  */
 export const BILLING = {

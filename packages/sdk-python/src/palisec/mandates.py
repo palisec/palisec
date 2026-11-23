@@ -1,4 +1,4 @@
-"""Holder mandates (Phase 7): the vote message to sign, and the tally of a vote file.
+"""Holder mandates: the vote message to sign, and the tally of a vote file.
 
 Votes are gasless EIP-712 signatures; weight is the voter's token balance at the proposal's snapshot
 block. This module has no dependencies: sign the typed data with your wallet library (for example

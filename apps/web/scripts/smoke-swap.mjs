@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6: one tiny real swap through the PALISEC smart account, with asset safety on.
+ * One tiny real swap through the PALISEC smart account, with asset safety on.
  * 0.00025 ETH -> USDG on Uniswap v3 (SwapRouter02, 0.01% pool); the USDG returns to the smart account.
  *
  *   node smoke-swap.mjs           preview: quote, Palisec dry run with the asset check, amount and gas. Sends nothing.

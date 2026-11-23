@@ -8,7 +8,7 @@ import { db } from "./db";
 import { HttpError, logEvent } from "./http";
 
 /**
- * Phase 5 billing: metering of mainnet decisions, prepaid credits bought on chain, and Pro by holdings.
+ * Billing: metering of mainnet decisions, prepaid credits bought on chain, and Pro by holdings.
  * Settings come from `lib/billing-config.ts`; deployment values and test overrides from the environment.
  */
 const env = (k: string) => (process.env[k] ?? "").trim();

@@ -118,7 +118,7 @@ async function candidates(orgId: string): Promise<Candidate[]> {
         : { category: "emergency_stop", severity: "critical", title: "Emergency stop engaged", fingerprint: `stop:${e.event_id}`, evidence: { audit_event_id: e.event_id, at: e.created_at } },
     );
 
-  // Phase 6: every weakening change that is waiting out its delay, until it applies or is cancelled.
+  // Loosening delay: every weakening change that is waiting out its delay, until it applies or is cancelled.
   const pending = await db()`
     SELECT pc.id, pc.kind, pc.policy_id, pc.policy_version, pc.agent_id, pc.summary, pc.diff, pc.effective_at, pc.requested_at,
       p.policy_key, a.name AS agent_name, u.address AS requested_by
