@@ -12,6 +12,7 @@ import {
 } from "@palisec/policy-schema";
 import { encodeFunctionData, getAddress, parseAbi, type Address } from "viem";
 import { BadRequest, HttpError } from "./http";
+import { priceAt, rebuildValues, windowValue, type Closes, type Values } from "@/lib/replay-values";
 import { zolvaRecord, type ZolvaTrade } from "./zolva";
 
 /*
@@ -24,8 +25,10 @@ import { zolvaRecord, type ZolvaTrade } from "./zolva";
  *   spending USDG for a buy and the token for a sell, at Zolva's recorded quantity and price;
  * - the balance changes are the recorded ones (Zolva's paper fills), used as the simulation;
  * - ETH/USD is Zolva's hourly ETH close at the trade's hour; the fee is a fixed 0.00002 ETH;
- * - for a loss limit, the account value and window peak come from Zolva's hourly value (last 7 days only:
- *   older trades have no value, so a loss limit fails closed on them, as it would live).
+ * - for a loss limit, the account value and window peak come from Zolva's hourly value (last 7 days), extended
+ *   back by rebuilding it from the recorded trades and Zolva's hourly closes. The rebuild is used only when the
+ *   agent's full trade list is published and it matches Zolva's own value wherever both exist; any hour it cannot
+ *   value leaves the trade without a value, so a loss limit fails closed on it, as it would live.
  * Amounts can be scaled to the account's own size (`capital_usd`).
  */
 
@@ -76,11 +79,6 @@ async function closes(symbol: string): Promise<[number, number][]> {
   return list;
 }
 
-const priceAt = (list: [number, number][], t: number): number | null => {
-  let best: number | null = null;
-  for (const [ts, p] of list) if (ts <= t) best = p;
-  return best;
-};
 const micros = (usd: number) => BigInt(Math.max(0, Math.round(usd * 1e6)));
 const units = (qty: number, decimals: number) => {
   // Six significant decimals from the float, then exact integer scaling.
@@ -129,7 +127,6 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
     "Paper trading with virtual money: these are Zolva's recorded paper trades, not trades that ran through Palisec.",
     "Each spot trade is replayed as an exact-input swap on Uniswap's SwapRouter02 from the policy's account, at Zolva's recorded quantity and price.",
     "The balance changes are the recorded fills (used in place of a live simulation); ETH/USD is Zolva's hourly ETH close; the network fee is a fixed 0.00002 ETH.",
-    "A loss limit uses Zolva's hourly account value, which covers the last 7 days only; older trades have no value and fail closed.",
     ...(scale !== 1 ? [`Amounts are scaled by ${scale.toFixed(4)} to a ${capitalUsd} USD account.`] : []),
   ];
   const trades = [...rec.trades].sort((a, b) => (a.at < b.at ? -1 : 1));
@@ -140,6 +137,13 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
   }
   const [mk, eth] = await Promise.all([markets(), closes("ETH")]);
   const bySymbol = new Map(mk.map((m) => [m.symbol, m]));
+  const { values, rebuilt } = doc.loss_limit?.enabled ? await accountValues() : { values: [] as Values, rebuilt: false };
+  if (doc.loss_limit?.enabled)
+    assumptions.push(
+      rebuilt
+        ? "A loss limit uses Zolva's hourly account value for the last 7 days, and before that the value rebuilt from the recorded trades and Zolva's hourly closes (it matches Zolva's own value wherever both exist). Trades at hours that cannot be valued fail closed."
+        : "A loss limit uses Zolva's hourly account value, which covers the last 7 days only; older trades have no value and fail closed.",
+    );
   let state: LedgerState = { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} };
   let paused: "PS_LOSS_001" | "PS_LOSS_002" | null = null;
   const rows: ReplayRow[] = [];
@@ -203,16 +207,24 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
     return { ...base, decision: r.decision, reason_code: r.reason_code, check: deciding?.label ?? null, detail: deciding?.detail ?? r.message };
   }
 
-  /** Account value and window peak at `now` from Zolva's hourly value, scaled; null when outside its 7 days. */
+  /** Hourly account value: Zolva's own, extended back by the rebuild from trades and closes (lib/replay-values). */
+  async function accountValues(): Promise<{ values: Values; rebuilt: boolean }> {
+    const symbols = [...new Set(trades.map((t) => t.market.toUpperCase()))];
+    let closesBy: Map<string, Closes> | null = null;
+    try {
+      closesBy = new Map(await Promise.all(symbols.map(async (s) => [s, await closes(s)] as const)));
+    } catch {
+      closesBy = null;
+    }
+    return rebuildValues({ equity: rec!.equity, startCapital: rec!.start_capital_usd, tradesCount: rec!.trades_count, trades, closes: closesBy });
+  }
+
+  /** Account value and window peak at `now`, scaled; null when any hour of the window has no value. */
   function lossAt(now: number, m: Market, price: number): LossSnapshot | null {
-    const eq = rec!.equity;
-    if (eq.length === 0 || now < eq[0]![0] || now > eq[eq.length - 1]![0] + 3600) return null;
-    const window = doc.loss_limit!.window_seconds;
-    const inWindow = eq.filter(([ts]) => ts <= now && ts > now - window);
-    const current = [...eq].reverse().find(([ts]) => ts <= now);
-    if (!current || inWindow.length === 0) return null;
-    const value = micros(current[1] * scale);
-    const peak = inWindow.reduce((mx, [, v]) => (v > mx ? v : mx), 0);
+    const w = windowValue(values, now, doc.loss_limit!.window_seconds);
+    if (!w) return null;
+    const value = micros(w.value * scale);
+    const peak = w.peak;
     return {
       observed_at: now,
       value_usd_micros: value.toString(),
