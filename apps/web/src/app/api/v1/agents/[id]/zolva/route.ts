@@ -3,6 +3,9 @@ import { BadRequest, handle, HttpError, ok } from "@/server/http";
 import { agentRow, zolvaView } from "@/server/zolva";
 import { setZolvaLink } from "@/server/zolva-link";
 
+// Zolva can take several seconds to answer.
+export const maxDuration = 60;
+
 /**
  * Zolva: the agent's track record from Zolva (paper trading), the two-sided link and the on-chain
  * declaration for the account's owners. Display only. Members can read it; owners and admins link.

@@ -2,6 +2,9 @@ import { connection } from "next/server";
 import { HttpError, handle, ok, rateLimited } from "@/server/http";
 import { refreshLinked } from "@/server/zolva";
 
+// Zolva can take several seconds to answer.
+export const maxDuration = 60;
+
 /**
  * Zolva: refresh every linked Zolva agent and re-check bigger limits (also run hourly by the scheduled
  * job). Safe to call by anyone: reads go through the 5-minute cache, so Zolva is never read more often.

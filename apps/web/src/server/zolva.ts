@@ -279,10 +279,10 @@ async function refreshVerify(id: string, timeoutMs: number) {
 
 /** The cached record, refreshed first when due (at most one read per Zolva agent per 5 minutes). */
 export async function zolvaRecord(id: string, opts: { timeoutMs?: number; refresh?: boolean; verify?: boolean } = {}): Promise<CachedRecord> {
-  // Zolva's replay check can take seconds uncached: it gets a longer timeout, and the decision path
-  // (verify: false) never waits for it; views and the hourly job keep it fresh.
+  // Zolva's record can take several seconds uncached and its replay check longer, so both get generous timeouts.
+  // The decision path passes its own short timeout and never waits for the replay check (verify: false).
   if (opts.refresh !== false)
-    await Promise.all([refreshRecord(id, opts.timeoutMs ?? 5000), opts.verify === false ? null : refreshVerify(id, Math.max(opts.timeoutMs ?? 5000, 10_000))]);
+    await Promise.all([refreshRecord(id, opts.timeoutMs ?? 10_000), opts.verify === false ? null : refreshVerify(id, Math.max(opts.timeoutMs ?? 10_000, 25_000))]);
   const [row] = await db()`SELECT record, fetched_at, verify, verified_at, last_error, last_error_at FROM zolva_cache WHERE zolva_agent_id = ${id}`;
   const t = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
   return {
@@ -574,7 +574,7 @@ export async function refreshLinked(): Promise<{ agents: number; read: number; u
   for (const r of rows) {
     const policy = r.policy as Policy | null;
     if (policy?.proven_record?.enabled) await provenInput(r.org_id, r.id, policy, 5000);
-    const c = await zolvaRecord(r.zolva_agent_id, { timeoutMs: 5000 });
+    const c = await zolvaRecord(r.zolva_agent_id, { timeoutMs: 10_000 });
     if (c.record) read++;
     if (c.error) unavailable++;
   }
