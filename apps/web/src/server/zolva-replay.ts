@@ -48,7 +48,7 @@ async function zolvaPublic(path: string): Promise<unknown> {
   const base = process.env.VERCEL_ENV !== "production" && t && /^http:\/\/127\.0\.0\.1:\d{2,5}$/.test(t) ? t : "https://zolvaagent.app/api/public/v1";
   const headers: Record<string, string> = { accept: "application/json" };
   if (/^zk_[A-Za-z0-9_-]{16,}$/.test(process.env.ZOLVA_API_KEY ?? "")) headers.authorization = `Bearer ${process.env.ZOLVA_API_KEY}`;
-  const r = await fetch(`${base}${path}`, { headers, redirect: "error", signal: AbortSignal.timeout(6000), cache: "no-store" });
+  const r = await fetch(`${base}${path}`, { headers, redirect: "error", signal: AbortSignal.timeout(15_000), cache: "no-store" });
   if (r.status === 429) throw new HttpError(503, "PS_STATE_001", "Zolva asked us to slow down. Try again in a few minutes.", true);
   if (!r.ok) throw new HttpError(503, "PS_STATE_001", "Zolva could not be read just now. Try again later.", true);
   const text = await r.text();

@@ -2,6 +2,9 @@ import { idParam, requireMember } from "@/server/access";
 import { handle, HttpError, ok, rateLimited } from "@/server/http";
 import { replayForAgent } from "@/server/zolva-link";
 
+// Zolva can take several seconds to answer each read.
+export const maxDuration = 60;
+
 /**
  * Test a policy before going live: replays the agent's policy (active or draft, both engines) against a
  * Zolva agent's recorded paper trades and reports which it would have blocked, with reason codes.
