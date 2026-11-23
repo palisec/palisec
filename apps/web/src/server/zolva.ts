@@ -299,20 +299,28 @@ async function readDeclared(chainId: number, account: Address): Promise<string |
   }
 }
 
-/** Whether Palisec enforces the account (the /docs/detect rule: Safe, 4337 module, Palisec co-signer, threshold ≥ 2). */
-const enforcedCache = new Map<string, { at: number; v: boolean | null }>();
-async function enforced(chainId: number, account: Address): Promise<boolean | null> {
+/**
+ * Whether Palisec enforces the account (the /docs/detect rule: Safe, 4337 module, Palisec co-signer,
+ * threshold of at least 2), and its owners. null when it cannot be read.
+ */
+type AccountFacts = { enforced: boolean; owners: string[] };
+const enforcedCache = new Map<string, { at: number; v: AccountFacts | null }>();
+async function accountFacts(chainId: number, account: Address): Promise<AccountFacts | null> {
   const key = `${chainId}:${account.toLowerCase()}`;
   const hit = enforcedCache.get(key);
   if (hit && Date.now() - hit.at < recordSeconds() * 1000) return hit.v;
-  let v: boolean | null;
+  let v: AccountFacts | null;
   const test = testBase();
   if (test) {
     const r = await fetch(`${test}/__chain/enforced/${account.toLowerCase()}`, { signal: AbortSignal.timeout(3000) }).catch(() => null);
-    v = r?.ok ? Boolean(((await r.json()) as { enforced?: boolean }).enforced) : null;
+    const j = r?.ok ? ((await r.json()) as { enforced?: boolean; owners?: string[] }) : null;
+    v = j ? { enforced: j.enforced === true, owners: (j.owners ?? []).map((o) => o.toLowerCase()) } : null;
   } else {
     // Loaded lazily: smart-accounts imports the operations module, which imports this one.
-    v = await import("./smart-accounts").then((m) => m.inspectAccount(chainId, account)).then((r) => r.enforced).catch(() => null);
+    v = await import("./smart-accounts")
+      .then((m) => m.inspectAccount(chainId, account))
+      .then((r) => ({ enforced: r.enforced, owners: r.owners.map((o) => o.toLowerCase()) }))
+      .catch(() => null);
   }
   enforcedCache.set(key, { at: Date.now(), v });
   return v;
@@ -328,7 +336,9 @@ async function declaredFor(agent: Row): Promise<string | null> {
     await db()`UPDATE agents SET zolva_declared_id = ${declared}, zolva_declared_read_at = now() WHERE id = ${agent.id}::uuid`;
     return declared;
   }
-  return agent.zolva_declared_id ?? null;
+  // The chain could not be read: keep the last value only while it is recent, then "unavailable".
+  const recent = agent.zolva_declared_read_at && Date.now() - new Date(agent.zolva_declared_read_at).getTime() < 2 * recordSeconds() * 1000;
+  return recent ? (agent.zolva_declared_id ?? "") : null;
 }
 
 export interface LinkStatus {
@@ -339,13 +349,23 @@ export interface LinkStatus {
   zolva_side: "confirmed" | "waiting" | "different" | "unavailable";
   /** The account is a Palisec smart account Palisec enforces. */
   account_enforced: boolean | null;
+  /** A member of this organization is an owner of the account, so the organization controls it. */
+  org_controls_account: boolean | null;
   verified: boolean;
   label: string;
 }
 
 export async function linkStatus(agent: Row, rec: ZolvaRecord | null): Promise<LinkStatus> {
   const zid = agent.zolva_agent_id as string;
-  const [declared, isEnforced] = await Promise.all([declaredFor(agent), enforced(Number(agent.chain_id), getAddress(agent.account))]);
+  const [declared, facts, members] = await Promise.all([
+    declaredFor(agent),
+    accountFacts(Number(agent.chain_id), getAddress(agent.account)),
+    import("./upoch").then((m) => m.memberAddresses(agent.org_id)).then((l) => l.map((a) => a.toLowerCase())),
+  ]);
+  const isEnforced = facts ? facts.enforced : null;
+  // Another organization can register an agent on the same account; only an organization one of whose
+  // members owns the account can show the link as verified.
+  const controls = facts ? facts.owners.some((o) => members.includes(o)) : null;
   const palisec_side = declared === null ? "unavailable" : declared === "" ? "not_declared" : declared.toLowerCase() === zid ? "declared" : "different";
   const pa = rec?.palisec_account ?? null;
   const zolva_side = !rec
@@ -355,7 +375,7 @@ export async function linkStatus(agent: Row, rec: ZolvaRecord | null): Promise<L
       : pa.chain_id === Number(agent.chain_id) && pa.address.toLowerCase() === String(agent.account).toLowerCase()
         ? "confirmed"
         : "different";
-  const verified = palisec_side === "declared" && zolva_side === "confirmed" && isEnforced === true;
+  const verified = palisec_side === "declared" && zolva_side === "confirmed" && isEnforced === true && controls === true;
   const label = verified
     ? "Linked: verified both ways"
     : zolva_side === "different"
@@ -368,8 +388,10 @@ export async function linkStatus(agent: Row, rec: ZolvaRecord | null): Promise<L
             ? "Waiting for Zolva to confirm"
             : isEnforced === false
               ? "Not linked: this account is not enforced by Palisec"
-              : "Link status unavailable right now";
-  return { palisec_side, declared_id: declared, zolva_side, account_enforced: isEnforced, verified, label };
+              : controls === false
+                ? "Not linked: no member of this organization is an owner of this account"
+                : "Link status unavailable right now";
+  return { palisec_side, declared_id: declared, zolva_side, account_enforced: isEnforced, org_controls_account: controls, verified, label };
 }
 
 /** The transaction the account's owners execute to declare the Zolva agent on chain (value 0, moves nothing). */
@@ -445,8 +467,14 @@ export async function zolvaView(agent: Row, opts: { refresh?: boolean } = {}): P
 /** Whether the record qualifies under the policy's rules now (fresh, verified both ways, replay match, enough hours). */
 function qualifies(policy: Policy, c: CachedRecord, link: LinkStatus): boolean {
   const rules = policy.proven_record!;
-  if (!link.verified || !c.verify || c.verify.status !== "match" || c.verify.hours_verified < rules.min_verified_hours || !c.fetched_at) return false;
-  return Date.now() - new Date(c.fetched_at).getTime() <= rules.max_record_age_seconds * 1000;
+  if (!link.verified || !c.verify || c.verify.status !== "match" || c.verify.hours_verified < rules.min_verified_hours || !c.fetched_at || !c.verified_at) return false;
+  return verifyFresh(policy, c) && Date.now() - new Date(c.fetched_at).getTime() <= rules.max_record_age_seconds * 1000;
+}
+
+/** The replay check is read hourly, so it may be up to two of its windows old (or the record's own limit, if longer); never older. */
+function verifyFresh(policy: Policy, c: CachedRecord): boolean {
+  if (!c.verified_at) return false;
+  return Date.now() - new Date(c.verified_at).getTime() <= Math.max(policy.proven_record!.max_record_age_seconds, 2 * verifySeconds()) * 1000;
 }
 
 /**
@@ -475,7 +503,8 @@ export async function provenInput(orgId: string, agentId: string, policy: Policy
     return {
       observed_at: Math.floor(new Date(c.fetched_at).getTime() / 1000),
       link_verified: link.verified,
-      replay_status: c.verify?.status ?? "no_history",
+      // A stale replay check counts as no history: the engines then keep the policy's own limits.
+      replay_status: c.verify && verifyFresh(policy, c) ? c.verify.status : "no_history",
       hours_verified: c.verify?.hours_verified ?? 0,
       unlocked_at: unlockedAt ? Math.floor(unlockedAt.getTime() / 1000) : null,
     };

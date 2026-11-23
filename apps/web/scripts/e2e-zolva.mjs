@@ -48,7 +48,7 @@ const state = {
   [Z2]: { mode: "ok", palisec: null, verify: { status: "match", hoursVerified: 10 } },
   [Z3]: { mode: "ok", palisec: null, verify: { status: "no_history", hoursVerified: 0 } },
 };
-const chain = { declared: {}, enforced: {} };
+const chain = { declared: {}, enforced: {}, owners: {} };
 const now = Date.now();
 const hour = (h) => new Date(Math.floor((now - h * 3600_000) / 3600_000) * 3600_000).toISOString();
 const agentBody = (id) => ({
@@ -100,7 +100,7 @@ const fake = createServer((req, res) => {
   const send = (code, body, headers = {}) => res.writeHead(code, { "content-type": "application/json", ...headers }).end(JSON.stringify(body));
   let m;
   if ((m = p.match(/^\/__chain\/links\/(0x[0-9a-f]{40})$/))) return send(200, { id: chain.declared[m[1]] ?? "" });
-  if ((m = p.match(/^\/__chain\/enforced\/(0x[0-9a-f]{40})$/))) return send(200, { enforced: chain.enforced[m[1]] === true });
+  if ((m = p.match(/^\/__chain\/enforced\/(0x[0-9a-f]{40})$/))) return send(200, { enforced: chain.enforced[m[1]] === true, owners: chain.owners[m[1]] ?? [] });
   if (p === "/markets") return send(200, MARKETS);
   if (p === "/markets/ETH") return send(200, { closes: Array.from({ length: 72 }, (_, i) => [hour(71 - i), 3000]) });
   if ((m = p.match(/^\/agents\/([0-9a-f-]{36})(\/verify)?$/))) {
@@ -191,9 +191,14 @@ await sleep(2200);
 r = await zolva();
 check("both sides match but Palisec does not enforce the account: not linked", r.body.link?.palisec_side === "declared" && r.body.link?.zolva_side === "confirmed" && !r.body.link?.verified, r.body.link);
 chain.enforced[acct] = true;
+chain.owners[acct] = [OTHER.toLowerCase()];
 await sleep(2200);
 r = await zolva();
-check("both sides match on an enforced account: verified both ways", r.body.link?.verified === true && r.body.link?.label === "Linked: verified both ways", r.body.link);
+check("both sides match, but no member of this organization owns the account: not linked", r.body.link?.org_controls_account === false && !r.body.link?.verified && /no member of this organization/.test(r.body.link?.label), r.body.link);
+chain.owners[acct] = [owner.address.toLowerCase(), OTHER.toLowerCase()];
+await sleep(2200);
+r = await zolva();
+check("both sides match on an enforced account the organization owns: verified both ways", r.body.link?.verified === true && r.body.link?.label === "Linked: verified both ways", r.body.link);
 
 /* ───────── Bigger limits once proven ───────── */
 let d = await dry("5000");
