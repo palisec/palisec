@@ -1,7 +1,7 @@
 # Reviewed false positives, by fingerprint (commit:path:rule:line).
 # Public token contract addresses on Robinhood Chain (the priced-asset list), not keys.
-125ceedcb588455e728466c9b4546284c6a44e05:apps/web/src/server/valuation.ts:generic-api-key:33
-125ceedcb588455e728466c9b4546284c6a44e05:apps/web/src/server/valuation.ts:generic-api-key:34
-125ceedcb588455e728466c9b4546284c6a44e05:apps/web/src/server/valuation.ts:generic-api-key:35
-125ceedcb588455e728466c9b4546284c6a44e05:apps/web/src/server/valuation.ts:generic-api-key:36
-125ceedcb588455e728466c9b4546284c6a44e05:apps/web/src/server/valuation.ts:generic-api-key:37
+5bc091043a4e51412c92b6ff0f2d3d70728cfa6a:apps/web/src/server/valuation.ts:generic-api-key:33
+5bc091043a4e51412c92b6ff0f2d3d70728cfa6a:apps/web/src/server/valuation.ts:generic-api-key:34
+5bc091043a4e51412c92b6ff0f2d3d70728cfa6a:apps/web/src/server/valuation.ts:generic-api-key:35
+5bc091043a4e51412c92b6ff0f2d3d70728cfa6a:apps/web/src/server/valuation.ts:generic-api-key:36
+5bc091043a4e51412c92b6ff0f2d3d70728cfa6a:apps/web/src/server/valuation.ts:generic-api-key:37
