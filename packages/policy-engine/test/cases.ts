@@ -76,6 +76,32 @@ function upochStatus(r: Rng, now: number): Record<string, unknown> {
   };
 }
 
+/** Schema 1.4 proven record, mostly valid; unlocked limits at or above the base (sometimes below). */
+function provenRecord(r: Rng, limits: Record<string, any>): Record<string, unknown> {
+  const up = (base: unknown) =>
+    typeof base === "string" && /^(0|[1-9][0-9]*)$/.test(base)
+      ? pick(r, [base, (BigInt(base) * 10n).toString(), (BigInt(base) + 1n).toString(), "9".repeat(60), base === "0" ? "0" : (BigInt(base) - 1n).toString()])
+      : uintish(r);
+  return {
+    enabled: chance(r, 0.85),
+    source: chance(r, 0.97) ? "zolva" : "other",
+    min_verified_hours: chance(r, 0.95) ? pick(r, [24, 72, 168, 720]) : pick(r, [0, 23, 9000]),
+    max_record_age_seconds: chance(r, 0.95) ? pick(r, [600, 3600, 7200, 86400]) : pick(r, [599, 86401]),
+    unlocked_limits: { max_transaction_value_wei: up(limits.max_transaction_value_wei), hourly_budget_usd_micros: up(limits.hourly_budget_usd_micros) },
+  };
+}
+
+function provenStatus(r: Rng, now: number): Record<string, unknown> {
+  if (chance(r, 0.04)) return { observed_at: "x", link_verified: true, replay_status: "match", hours_verified: 200, unlocked_at: null };
+  return {
+    observed_at: now - pick(r, [0, 60, 900, 7000, 90000, -5]),
+    link_verified: chance(r, 0.8),
+    replay_status: pick(r, ["match", "match", "match", "differs", "no_history", "MATCH"]),
+    hours_verified: pick(r, [0, 23, 24, 72, 168, 500, 2000]),
+    unlocked_at: chance(r, 0.25) ? null : now - pick(r, [0, 1, 3600, -10]),
+  };
+}
+
 /** Schema 1.3 loss limit, mostly valid and enabled. */
 function lossLimit(r: Rng): Record<string, unknown> {
   const bps = pick(r, [0, 100, 500, 500, 10000]);
@@ -216,6 +242,10 @@ function policyFor(r: Rng): unknown {
     p.schema_version = chance(r, 0.96) ? "1.3" : "1.2";
     p.loss_limit = lossLimit(r);
   }
+  if (chance(r, 0.3)) {
+    p.schema_version = chance(r, 0.96) ? "1.4" : "1.3";
+    p.proven_record = provenRecord(r, p.limits);
+  }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
 }
@@ -255,6 +285,8 @@ export function evalCase(seed: number): EvalCase {
   if (up !== null || chance(r, 0.5)) env.upoch = up;
   const snap = chance(r, 0.1) ? null : lossSnapshot(r, now);
   if (snap !== null || chance(r, 0.5)) env.loss_snapshot = snap;
+  const proven = chance(r, 0.15) ? null : provenStatus(r, now);
+  if (proven !== null || chance(r, 0.5)) env.proven_record = proven;
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {
@@ -281,6 +313,22 @@ export function evalCase(seed: number): EvalCase {
       p.limits.max_price_age_seconds = 600;
       p.cooldowns = { identical_calldata_seconds: chance(r, 0.8) ? 0 : 600, identical_intent_seconds: chance(r, 0.8) ? 0 : 900 };
       p.human_approval.usd_threshold_micros = chance(r, 0.7) ? "9".repeat(60) : pick(r, ["0", "1", "5000000"]);
+      if (p.proven_record && chance(r, 0.5)) {
+        // Tight base limits, generous unlocked ones: whether the unlock applies decides the outcome.
+        p.limits.max_transaction_value_wei = pick(r, ["0", "1000", "100000"]);
+        p.limits.hourly_budget_usd_micros = pick(r, ["0", "1000"]);
+        p.proven_record.unlocked_limits = { max_transaction_value_wei: "9".repeat(78), hourly_budget_usd_micros: "9".repeat(40) };
+        if (validatePolicy(p).length === 0 && chance(r, 0.6)) {
+          p.proven_record.enabled = true;
+          env.proven_record = {
+            observed_at: now - int(r, 0, 500),
+            link_verified: chance(r, 0.9),
+            replay_status: chance(r, 0.9) ? "match" : "differs",
+            hours_verified: chance(r, 0.9) ? 10_000 : 1,
+            unlocked_at: chance(r, 0.85) ? now - int(r, 0, 100) : pick(r, [null, now + 60]),
+          };
+        }
+      }
       Object.assign(env, {
         fee_estimate_wei: chance(r, 0.9) ? String(int(r, 0, 10 ** 9)) : env.fee_estimate_wei,
         eth_usd: chance(r, 0.9) ? { price_micros: "3200000000", observed_at: now - int(r, 0, 300) } : env.eth_usd,
@@ -377,6 +425,10 @@ export function mutatePolicy(r: Rng, doc: unknown, times: number): unknown {
 export function validateCase(seed: number): unknown {
   const r = rng(seed ^ 0x5bd1e995);
   if (chance(r, 0.03)) return pick(r, [null, 5, "policy", [], [EXAMPLE_POLICY]]);
+  if (chance(r, 0.15)) {
+    const base = clone(EXAMPLE_POLICY) as unknown as Record<string, any>;
+    return mutatePolicy(r, { ...base, schema_version: "1.4", proven_record: provenRecord(r, base.limits) }, int(r, 0, 5));
+  }
   if (chance(r, 0.2)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.3", loss_limit: lossLimit(r) }, int(r, 0, 5));
   if (chance(r, 0.25)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.2", upoch_recovery: upochRecovery(r) }, int(r, 0, 5));
   if (chance(r, 0.5)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.1", asset_safety: assetSafety(r) }, int(r, 0, 5));

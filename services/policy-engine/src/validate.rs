@@ -1,10 +1,10 @@
-//! Policy schema 1.0 to 1.3 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
+//! Policy schema 1.0 to 1.4 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
 //! same paths, same messages, same order. Unknown fields are rejected so a typo cannot disable a rule.
 
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSIONS: [&str; 4] = ["1.0", "1.1", "1.2", "1.3"];
+pub const SCHEMA_VERSIONS: [&str; 5] = ["1.0", "1.1", "1.2", "1.3", "1.4"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
 const MAX_LOSS_ADDRESSES: usize = 16;
@@ -72,11 +72,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record"],
     );
 
     if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
-        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\" or \"1.3\"");
+        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\", \"1.3\" or \"1.4\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -167,7 +167,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("asset_safety") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3" || s == "1.4") {
             v.err("$.asset_safety", "requires schema_version \"1.1\" or later");
         }
         if let Some(safety) = v.obj(doc, "asset_safety", "$") {
@@ -198,7 +198,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("upoch_recovery") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3" || s == "1.4") {
             v.err("$.upoch_recovery", "requires schema_version \"1.2\" or later");
         }
         if let Some(up) = v.obj(doc, "upoch_recovery", "$") {
@@ -214,8 +214,8 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("loss_limit") {
-        if doc.get("schema_version") != Some(&Value::String("1.3".into())) {
-            v.err("$.loss_limit", "requires schema_version \"1.3\"");
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.3" || s == "1.4") {
+            v.err("$.loss_limit", "requires schema_version \"1.3\" or later");
         }
         if let Some(loss) = v.obj(doc, "loss_limit", "$") {
             let p = "$.loss_limit";
@@ -270,7 +270,42 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
         }
     }
 
+    if doc.contains_key("proven_record") {
+        if doc.get("schema_version") != Some(&Value::String("1.4".into())) {
+            v.err("$.proven_record", "requires schema_version \"1.4\"");
+        }
+        if let Some(pr) = v.obj(doc, "proven_record", "$") {
+            let p = "$.proven_record";
+            v.fields(pr, p, &["enabled", "source", "min_verified_hours", "max_record_age_seconds", "unlocked_limits"]);
+            v.bool(pr, "enabled", p);
+            if pr.get("source") != Some(&Value::String("zolva".into())) {
+                v.err(format!("{p}.source"), "must be \"zolva\"");
+            }
+            v.int(pr, "min_verified_hours", p, 24, 8760);
+            v.int(pr, "max_record_age_seconds", p, 600, 86400);
+            if let Some(un) = v.obj(pr, "unlocked_limits", p) {
+                let q = format!("{p}.unlocked_limits");
+                v.fields(un, &q, &["max_transaction_value_wei", "hourly_budget_usd_micros"]);
+                let limits = doc.get("limits").and_then(Value::as_object);
+                for k in ["max_transaction_value_wei", "hourly_budget_usd_micros"] {
+                    v.uint(un, k, &q);
+                    let base = limits.and_then(|l| l.get(k)).and_then(Value::as_str);
+                    if let (Some(Value::String(x)), Some(b)) = (un.get(k), base) {
+                        if crate::js::is_uint(x) && crate::js::is_uint(b) && uint_lt(x, b) {
+                            v.err(format!("{q}.{k}"), format!("must be at least limits.{k}"));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     v.errors
+}
+
+/// `a < b` for canonical decimal integer strings (no leading zeros).
+fn uint_lt(a: &str, b: &str) -> bool {
+    a.len() < b.len() || (a.len() == b.len() && a < b)
 }
 
 /// The `ValidationError[]` shape the TypeScript validator returns.

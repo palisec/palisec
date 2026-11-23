@@ -36,9 +36,12 @@
     "schema_version": {
       "enum": [
         "1.0",
-        "1.1"
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
       ],
-      "description": "1.0, or 1.1 which adds asset_safety."
+      "description": "1.0; 1.1 adds asset_safety; 1.2 upoch_recovery; 1.3 loss_limit; 1.4 proven_record."
     },
     "policy_id": {
       "type": "string",
@@ -243,6 +246,159 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 300
+        }
+      }
+    },
+    "upoch_recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Schema 1.2: the agent must be recoverable on Upoch.",
+      "required": [
+        "require_upoch_recoverable",
+        "max_checkpoint_age_seconds",
+        "require_guardian",
+        "on_unavailable"
+      ],
+      "properties": {
+        "require_upoch_recoverable": {
+          "type": "boolean"
+        },
+        "max_checkpoint_age_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 31536000
+        },
+        "require_guardian": {
+          "type": "boolean"
+        },
+        "on_unavailable": {
+          "enum": [
+            "deny",
+            "review"
+          ]
+        }
+      }
+    },
+    "loss_limit": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Schema 1.3: a loss limit the agent cannot override (/docs/loss-limits).",
+      "required": [
+        "enabled",
+        "max_drawdown_bps",
+        "max_loss_usd_micros",
+        "window_seconds",
+        "on_breach",
+        "on_valuation_unavailable",
+        "stablecoins",
+        "exit_addresses",
+        "max_exit_slippage_bps",
+        "max_closed_market_price_age_seconds",
+        "reset_epoch"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "max_drawdown_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_loss_usd_micros": {
+          "$ref": "#/$defs/uint"
+        },
+        "window_seconds": {
+          "type": "integer",
+          "minimum": 3600,
+          "maximum": 604800
+        },
+        "on_breach": {
+          "enum": [
+            "pause_risk",
+            "review"
+          ]
+        },
+        "on_valuation_unavailable": {
+          "enum": [
+            "deny",
+            "review"
+          ]
+        },
+        "stablecoins": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/address"
+          }
+        },
+        "exit_addresses": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/address"
+          }
+        },
+        "max_exit_slippage_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_closed_market_price_age_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800
+        },
+        "reset_epoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "proven_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Schema 1.4: bigger limits once the agent has a verified Zolva record (paper trading) and the link is verified from both sides; the unlock waits out the loosening delay. Each unlocked limit must be at least the policy's own (/docs/zolva).",
+      "required": [
+        "enabled",
+        "source",
+        "min_verified_hours",
+        "max_record_age_seconds",
+        "unlocked_limits"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "source": {
+          "const": "zolva"
+        },
+        "min_verified_hours": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 8760
+        },
+        "max_record_age_seconds": {
+          "type": "integer",
+          "minimum": 600,
+          "maximum": 86400
+        },
+        "unlocked_limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_transaction_value_wei",
+            "hourly_budget_usd_micros"
+          ],
+          "properties": {
+            "max_transaction_value_wei": {
+              "$ref": "#/$defs/uint"
+            },
+            "hourly_budget_usd_micros": {
+              "$ref": "#/$defs/uint"
+            }
+          }
         }
       }
     }

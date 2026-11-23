@@ -49,6 +49,11 @@ const NUMERIC: Record<string, { looserWhen: "higher" | "lower"; label: string }>
   "$.loss_limit.window_seconds": { looserWhen: "lower", label: "loss limit window" },
   "$.loss_limit.max_exit_slippage_bps": { looserWhen: "higher", label: "exit slippage allowed while paused" },
   "$.loss_limit.max_closed_market_price_age_seconds": { looserWhen: "higher", label: "accepted stock-token price age while markets are closed" },
+  // Proven on Zolva: anything that makes the unlock easier to reach, or the unlocked limits bigger, loosens.
+  "$.proven_record.min_verified_hours": { looserWhen: "lower", label: "verified Zolva hours needed to unlock" },
+  "$.proven_record.max_record_age_seconds": { looserWhen: "higher", label: "accepted Zolva record age" },
+  "$.proven_record.unlocked_limits.max_transaction_value_wei": { looserWhen: "higher", label: "unlocked per-transaction limit" },
+  "$.proven_record.unlocked_limits.hourly_budget_usd_micros": { looserWhen: "higher", label: "unlocked hourly budget" },
 };
 
 /** Loss limits where 0 means "not used", the loosest value of all. */
@@ -72,6 +77,7 @@ const STRICT_BOOL: Record<string, { strict: boolean; label: string }> = {
   "$.upoch_recovery.require_upoch_recoverable": { strict: true, label: "must be recoverable on Upoch" },
   "$.upoch_recovery.require_guardian": { strict: true, label: "Upoch guardian required" },
   "$.loss_limit.enabled": { strict: true, label: "loss limit" },
+  "$.proven_record.enabled": { strict: false, label: "bigger limits once proven on Zolva" },
 };
 
 function numeric(path: string, from: unknown, to: unknown): PolicyChange {
@@ -201,6 +207,14 @@ function walk(path: string, a: unknown, b: unknown, out: PolicyChange[]) {
   }
   if (path === "$.asset_safety.on_simulation_unavailable")
     return void out.push({ path, kind: b === "deny" ? "tightening" : "loosening", from: a, to: b, note: `no simulation: ${String(a)} to ${String(b)}` });
+  if (path === "$.proven_record") {
+    // Switched off (or removed), the section changes nothing: the policy's own limits apply.
+    const on = (v: unknown) => typeof v === "object" && v !== null && (v as Record<string, unknown>).enabled === true;
+    if (a === undefined && b && typeof b === "object")
+      return void out.push({ path, kind: on(b) ? "loosening" : "tightening", from: null, to: b, note: `bigger limits once proven on Zolva added (${on(b) ? "on" : "off"})` });
+    if (b === undefined && a && typeof a === "object")
+      return void out.push({ path, kind: "tightening", from: a, to: null, note: "bigger limits once proven on Zolva removed" });
+  }
   if (path === "$.asset_safety") {
     // Adding the section can only add checks (or, switched off, change nothing).
     if (a === undefined && b && typeof b === "object") {

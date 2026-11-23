@@ -233,7 +233,7 @@ describe("loss limit: evaluation", () => {
 describe("loss limit: schema and loosening", () => {
   it("validates, and needs schema 1.3 and at least one limit", () => {
     expect(validatePolicy(policy())).toEqual([]);
-    expect(validatePolicy({ ...policy(), schema_version: "1.2" })).toEqual([{ path: "$.loss_limit", message: 'requires schema_version "1.3"' }]);
+    expect(validatePolicy({ ...policy(), schema_version: "1.2" })).toEqual([{ path: "$.loss_limit", message: 'requires schema_version "1.3" or later' }]);
     expect(validatePolicy(policy({ max_drawdown_bps: 0, max_loss_usd_micros: "0" }))[0]!.message).toContain("needs max_drawdown_bps");
     expect(validatePolicy(policy({ window_seconds: 60 }))[0]!.path).toBe("$.loss_limit.window_seconds");
     expect(validatePolicy(policy({ exit_addresses: ["0x12" as `0x${string}`] }))[0]!.path).toBe("$.loss_limit.exit_addresses[0]");

@@ -165,10 +165,16 @@ export function evaluate(
     return { status: "fail", code: "PS_METHOD_001", detail: `Selector ${selector} is not allowed.` };
   });
 
+  // Proven on Zolva: read once, after the policy has validated. Malformed input is an engine error.
+  let proven: boolean | null = null;
+  const unlocked = () => (proven ??= provenUnlocked(policy!, env));
+  const PROVEN_NOTE = " Unlocked limit: verified Zolva record (paper trading).";
+
   run("value", "Per-transaction value limit", () => {
-    const max = BigInt(policy!.limits.max_transaction_value_wei);
-    if (value > max) return { status: "fail", code: "PS_BUDGET_001", detail: `Value ${value} wei exceeds the per-transaction limit of ${max} wei.` };
-    return { status: "pass", detail: `${value} wei ≤ ${max} wei.` };
+    const max = BigInt(unlocked() ? policy!.proven_record!.unlocked_limits.max_transaction_value_wei : policy!.limits.max_transaction_value_wei);
+    const note = unlocked() ? PROVEN_NOTE : "";
+    if (value > max) return { status: "fail", code: "PS_BUDGET_001", detail: `Value ${value} wei exceeds the per-transaction limit of ${max} wei.${note}` };
+    return { status: "pass", detail: `${value} wei ≤ ${max} wei.${note}` };
   });
 
   run("fee", "Fee estimate", () => {
@@ -194,10 +200,11 @@ export function evaluate(
     const used = reservations
       .filter((r) => r.state !== "released" && r.created_at > since)
       .reduce((s, r) => s + BigInt(r.amount_usd_micros), 0n);
-    const max = BigInt(policy!.limits.hourly_budget_usd_micros);
+    const max = BigInt(unlocked() ? policy!.proven_record!.unlocked_limits.hourly_budget_usd_micros : policy!.limits.hourly_budget_usd_micros);
+    const note = unlocked() ? PROVEN_NOTE : "";
     if (used + usd > max)
-      return { status: "fail", code: "PS_BUDGET_001", detail: `${formatUsd(used)} used + ${formatUsd(usd)} requested exceeds the ${formatUsd(max)} hourly budget.` };
-    return { status: "pass", detail: `${formatUsd(used + usd)} of ${formatUsd(max)} after this reservation.` };
+      return { status: "fail", code: "PS_BUDGET_001", detail: `${formatUsd(used)} used + ${formatUsd(usd)} requested exceeds the ${formatUsd(max)} hourly budget.${note}` };
+    return { status: "pass", detail: `${formatUsd(used + usd)} of ${formatUsd(max)} after this reservation.${note}` };
   });
 
   run("pending", "Pending operation limit", () => {
@@ -333,6 +340,28 @@ function amounts(v: unknown, what: string): Map<string, bigint> {
 }
 
 type Outcome = { status: "pass" | "fail" | "review"; detail: string; code?: ReasonCode };
+
+/**
+ * Proven on Zolva (schema 1.4): whether the policy's unlocked limits apply. Only with the section on,
+ * a link verified from both sides, Zolva's replay check "match", enough verified hours, a fresh read,
+ * and an unlock that has already waited out the loosening delay. Anything else: the policy's own
+ * (smaller) limits. Malformed input is an engine error, so the dual evaluator fails closed.
+ */
+export function provenUnlocked(policy: Policy, env: Environment): boolean {
+  const rules = policy.proven_record;
+  if (!rules || rules.enabled !== true) return false;
+  const raw = env.proven_record;
+  if (raw === undefined || raw === null) return false;
+  const r = recordOf(raw, "proven_record");
+  const observed = intOf(r.observed_at, "proven_record.observed_at");
+  const linked = boolOf(r.link_verified, "proven_record.link_verified");
+  const status = str(r.replay_status, "proven_record.replay_status");
+  const hours = intOf(r.hours_verified, "proven_record.hours_verified");
+  const at = r.unlocked_at === null ? null : intOf(r.unlocked_at, "proven_record.unlocked_at");
+  if (!linked || status !== "match" || hours < rules.min_verified_hours) return false;
+  if (observed > env.now || env.now - observed > rules.max_record_age_seconds) return false;
+  return at !== null && at <= env.now;
+}
 
 /**
  * Asset safety. The simulation is an input (made before evaluation against current chain state);

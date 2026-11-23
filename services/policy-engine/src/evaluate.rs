@@ -294,12 +294,25 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
         Ok(Fail("PS_METHOD_001", format!("Selector {sel} is not allowed.")))
     })?;
 
-    r.run("value", "Per-transaction value limit", || {
-        let max = big(&pstr(&["limits", "max_transaction_value_wei"])?);
-        if value > max {
-            return Ok(Fail("PS_BUDGET_001", format!("Value {value} wei exceeds the per-transaction limit of {max} wei.")));
+    // Proven on Zolva: read once, after the policy has validated. Malformed input is an engine error.
+    let proven: std::cell::Cell<Option<bool>> = std::cell::Cell::new(None);
+    let unlocked = || -> Res<bool> {
+        if let Some(u) = proven.get() {
+            return Ok(u);
         }
-        Ok(Pass(format!("{value} wei \u{2264} {max} wei.")))
+        let u = crate::proven::unlocked(p, env, now)?;
+        proven.set(Some(u));
+        Ok(u)
+    };
+
+    r.run("value", "Per-transaction value limit", || {
+        let un = unlocked()?;
+        let max = big(&crate::proven::limit(p, un, "max_transaction_value_wei")?);
+        let note = if un { crate::proven::NOTE } else { "" };
+        if value > max {
+            return Ok(Fail("PS_BUDGET_001", format!("Value {value} wei exceeds the per-transaction limit of {max} wei.{note}")));
+        }
+        Ok(Pass(format!("{value} wei \u{2264} {max} wei.{note}")))
     })?;
 
     r.run("fee", "Fee estimate", || {
@@ -335,15 +348,17 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
                 used += big_strict(s(x, "amount_usd_micros")?)?;
             }
         }
-        let max = big(&pstr(&["limits", "hourly_budget_usd_micros"])?);
+        let un = unlocked()?;
+        let max = big(&crate::proven::limit(p, un, "hourly_budget_usd_micros")?);
+        let note = if un { crate::proven::NOTE } else { "" };
         let total = &used + &usd;
         if total > max {
             return Ok(Fail(
                 "PS_BUDGET_001",
-                format!("{} used + {} requested exceeds the {} hourly budget.", format_usd(&used), format_usd(&usd), format_usd(&max)),
+                format!("{} used + {} requested exceeds the {} hourly budget.{note}", format_usd(&used), format_usd(&usd), format_usd(&max)),
             ));
         }
-        Ok(Pass(format!("{} of {} after this reservation.", format_usd(&total), format_usd(&max))))
+        Ok(Pass(format!("{} of {} after this reservation.{note}", format_usd(&total), format_usd(&max))))
     })?;
 
     r.run("pending", "Pending operation limit", || {

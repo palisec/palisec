@@ -7,7 +7,7 @@ export type Hex = `0x${string}`;
 
 /** The version new policies are written in. 1.0 documents stay valid; 1.1 adds `asset_safety`. */
 export const SCHEMA_VERSION = "1.1" as const;
-export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3"] as const;
+export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3", "1.4"] as const;
 export type SchemaVersion = (typeof SCHEMA_VERSIONS)[number];
 
 /** Native ETH in balance changes and declared intent (the common 0xEeee… convention), lowercase. */
@@ -70,6 +70,38 @@ export interface LossLimit {
   max_closed_market_price_age_seconds: number;
   /** Raised by the owner to reset a breach; the window starts again when it activates. */
   reset_epoch: number;
+}
+
+/**
+ * Schema 1.4: an agent starts on the policy's limits and unlocks bigger ones once it has a verified
+ * track record on Zolva (paper trading). The record is read before evaluation (an input, like the
+ * simulation). Anything missing, stale or unclear keeps the policy's own, smaller limits.
+ */
+export interface ProvenRecord {
+  enabled: boolean;
+  source: "zolva";
+  /** Zolva must have verified at least this many hours of the agent's record by replay. */
+  min_verified_hours: number;
+  /** The record must have been read at most this long ago. */
+  max_record_age_seconds: number;
+  /** The limits used once unlocked. Each is at least the policy's own limit. */
+  unlocked_limits: {
+    max_transaction_value_wei: UintString;
+    hourly_budget_usd_micros: UintString;
+  };
+}
+
+/** The agent's Zolva record as Palisec last read it. */
+export interface ProvenRecordStatus {
+  /** Unix seconds of the read. */
+  observed_at: number;
+  /** The account declared the Zolva agent on chain and the Zolva agent names the account back. */
+  link_verified: boolean;
+  /** Zolva's replay check of the agent's record. */
+  replay_status: "match" | "differs" | "no_history";
+  hours_verified: number;
+  /** When the unlock took effect after the loosening delay; null while locked or pending. */
+  unlocked_at: number | null;
 }
 
 /** The account's value before this decision, from Chainlink prices and Palisec's own snapshots. */
@@ -174,6 +206,8 @@ export interface Policy {
   upoch_recovery?: UpochRecovery;
   /** Schema 1.3. Absent means off. */
   loss_limit?: LossLimit;
+  /** Schema 1.4. Absent means off. */
+  proven_record?: ProvenRecord;
 }
 
 /** A proposed action from an agent. Typed intent, never free text. */
@@ -207,6 +241,8 @@ export interface Environment {
   upoch?: UpochStatus | null;
   /** Loss limits: the account's value; absent or null means unavailable (fails closed when a loss limit is on). */
   loss_snapshot?: LossSnapshot | null;
+  /** Proven on Zolva: the agent's record; absent or null means the policy's own limits apply. */
+  proven_record?: ProvenRecordStatus | null;
 }
 
 export type ReservationState = "reserved" | "pending_approval" | "released" | "finalized";
