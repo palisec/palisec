@@ -114,7 +114,10 @@ export default function PoliciesPage() {
         <li><strong>Native value and fees</strong> are integer wei.</li>
         <li><strong>USD amounts</strong> are integer micros (1 USD = 1,000,000). Conversion rounds up, so limits are never under-counted.</li>
         <li><strong>USD enforcement needs a fresh price.</strong> A missing price, or one older than <code>max_price_age_seconds</code>, fails closed with <code>PS_STATE_001</code>.</li>
-        <li><strong>Exposure</strong> is native value plus estimated fee. Token-denominated allocations are not part of schema 1.0.</li>
+        <li><strong>Exposure</strong> is native value plus estimated fee. The per-transaction value limit, the hourly budget and the
+          approval threshold count exposure only: tokens a call spends (an ERC-20 transfer, a swap from USDG or a stock token) are not
+          counted there. Token spend is bounded by the contract and selector allowlist, by asset safety (no outflow beyond the declared
+          spend, slippage, approvals) and by the loss limit.</li>
       </ul>
 
       <h2 id="precedence">Precedence</h2>

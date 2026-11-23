@@ -94,8 +94,15 @@ export default function ZolvaDocsPage() {
       <p>
         The past cannot give every live input exactly, so the replay reconstructs them and says so. Each spot trade becomes an exact-input
         swap on Uniswap&apos;s SwapRouter02 from the policy&apos;s account. Zolva&apos;s recorded fills stand in for the simulation. ETH/USD
-        is Zolva&apos;s hourly close, and the network fee is fixed. A loss limit uses Zolva&apos;s hourly value, which covers the last seven
-        days: older trades have no value and fail closed, as they would live. Perpetual futures trades are not replayed.
+        is Zolva&apos;s hourly close, and the network fee is fixed. A loss limit uses Zolva&apos;s hourly value for the last seven days and,
+        before that, the value rebuilt from the recorded trades and Zolva&apos;s hourly closes (used only when it matches Zolva&apos;s own
+        value wherever both exist). Trades at hours that cannot be valued fail closed, as they would live. Perpetual futures trades are
+        not replayed.
+      </p>
+      <p>
+        The per-transaction value limit, the hourly budget and the approval threshold count the ETH a transaction sends plus its network
+        fee, so a token swap that sends no ETH stays inside them whatever its size. Token amounts are bounded by the contract allowlist,
+        asset safety and the loss limit (see <Link href="/docs/policies#units">Units</Link>).
       </p>
 
       <h2 id="proven">Bigger limits once proven on Zolva</h2>

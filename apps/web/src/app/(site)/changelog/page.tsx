@@ -10,6 +10,16 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.7.1",
+    date: "2026-11-23",
+    tag: "Zolva",
+    changes: [
+      "Policy replay values the account before Zolva's last seven days: the value is rebuilt from the recorded trades and Zolva's hourly closes, and used only when it matches Zolva's own value wherever both exist, so a loss limit can be tested against the whole record. Hours that cannot be valued still fail closed, and the replay says why when the value cannot be rebuilt.",
+      "The replay and the docs state what the spend limits count: the per-transaction value limit, the hourly budget and the approval threshold count the ETH a transaction sends plus its fee, not tokens a swap spends. Token amounts are bounded by the allowlist, asset safety and the loss limit.",
+      "Zolva reads wait longer for Zolva's slower answers (record, replay check and market prices), so records, the replay check and replays load reliably.",
+    ],
+  },
+  {
     version: "1.7.0",
     date: "2026-11-23",
     tag: "Zolva",

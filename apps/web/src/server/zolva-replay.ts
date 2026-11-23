@@ -135,6 +135,7 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
     "Paper trading with virtual money: these are Zolva's recorded paper trades, not trades that ran through Palisec.",
     "Each spot trade is replayed as an exact-input swap on Uniswap's SwapRouter02 from the policy's account, at Zolva's recorded quantity and price.",
     "The balance changes are the recorded fills (used in place of a live simulation); ETH/USD is Zolva's hourly ETH close; the network fee is a fixed 0.00002 ETH.",
+    "The per-transaction value limit, the hourly budget and the approval threshold count the ETH a transaction sends plus its network fee. These swaps send no ETH, so their token amounts are not counted there; the contract allowlist, asset safety and the loss limit are what apply to token amounts.",
     ...(scale !== 1 ? [`Amounts are scaled by ${scale.toFixed(4)} to a ${capitalUsd} USD account.`] : []),
   ];
   const trades = [...rec.trades].sort((a, b) => (a.at < b.at ? -1 : 1));
