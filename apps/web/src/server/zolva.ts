@@ -51,6 +51,10 @@ function testBase(): string | null {
 const apiBase = () => testBase() ?? ZOLVA_API;
 
 export const zolvaConfigured = () => /^zk_[A-Za-z0-9_-]{16,}$/.test(process.env.ZOLVA_API_KEY ?? "");
+/** When Zolva last refused the key (this server instance). Public reads then go keyless. */
+let keyRefusedAt = 0;
+export const zolvaKeyState = (): "configured" | "not_configured" | "refused" =>
+  !zolvaConfigured() ? "not_configured" : Date.now() - keyRefusedAt < 3600_000 ? "refused" : "configured";
 
 export function parseZolvaId(v: unknown): string | null {
   if (v === undefined || v === null || v === "") return null;
@@ -73,10 +77,17 @@ const word = (v: unknown, allowed: readonly string[]): string | null => (typeof 
 type Fetched = { status: number; body: unknown; retryAfter: number | null };
 
 /** One GET to Zolva. The key goes only to the fixed base URL; redirects are refused; size and time are bounded. */
-async function zolvaGet(path: string, timeoutMs: number): Promise<Fetched> {
+async function zolvaGet(path: string, timeoutMs: number, withKey = true): Promise<Fetched> {
   const headers: Record<string, string> = { accept: "application/json", "user-agent": "palisec/1 (+https://palisec.tech)" };
-  if (zolvaConfigured()) headers.authorization = `Bearer ${process.env.ZOLVA_API_KEY}`;
+  const keyed = withKey && zolvaConfigured() && Date.now() - keyRefusedAt >= 3600_000;
+  if (keyed) headers.authorization = `Bearer ${process.env.ZOLVA_API_KEY}`;
   const res = await fetch(`${apiBase()}${path}`, { headers, redirect: "error", signal: AbortSignal.timeout(timeoutMs), cache: "no-store" });
+  if (keyed && res.status === 401) {
+    // The key was refused (wrong or revoked). Public data needs no key: read it keyless, and report it.
+    keyRefusedAt = Date.now();
+    logEvent("warn", "zolva.key_refused", {});
+    return zolvaGet(path, timeoutMs, false);
+  }
   const length = Number(res.headers.get("content-length") ?? 0);
   if (length > MAX_BYTES) throw new Error("zolva_too_large");
   const text = await res.text();
@@ -425,6 +436,8 @@ export interface ZolvaView {
   as_of: string | null;
   verify_as_of: string | null;
   unavailable: string | null;
+  /** Short code of the last failed read (for the organization's own diagnosis), or null. */
+  unavailable_code: string | null;
   declaration: ReturnType<typeof declaration>;
   proven: { unlocked_at: string | null; pending_effective_at: string | null } | null;
   key_configured: boolean;
@@ -441,7 +454,7 @@ export async function agentRow(orgId: string | null, agentId: string): Promise<R
 export async function zolvaView(agent: Row, opts: { refresh?: boolean } = {}): Promise<ZolvaView> {
   const zid = (agent.zolva_agent_id as string | null) ?? null;
   const base: ZolvaView = {
-    agent_id: agent.id, zolva_agent_id: zid, link: null, record: null, verify: null, as_of: null, verify_as_of: null, unavailable: null,
+    agent_id: agent.id, zolva_agent_id: zid, link: null, record: null, verify: null, as_of: null, verify_as_of: null, unavailable: null, unavailable_code: null,
     declaration: declaration(agent), proven: null, key_configured: zolvaConfigured(),
   };
   if (!zid) return base;
@@ -455,6 +468,7 @@ export async function zolvaView(agent: Row, opts: { refresh?: boolean } = {}): P
     as_of: c.fetched_at,
     verify_as_of: c.verified_at,
     unavailable: c.error === "zolva_429" ? "Zolva asked us to slow down; showing the last data we read." : c.error ? "Zolva could not be read just now; showing the last data we read." : null,
+    unavailable_code: c.error,
     proven: {
       unlocked_at: agent.proven_unlocked_at ? new Date(agent.proven_unlocked_at).toISOString() : null,
       pending_effective_at: agent.proven_pending_at ? new Date(agent.proven_pending_at).toISOString() : null,
