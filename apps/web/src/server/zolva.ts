@@ -234,9 +234,12 @@ async function claim(id: string, kind: "record" | "verify", seconds: number): Pr
   return rows.length > 0;
 }
 
-async function failed(id: string, code: string, retryAfter: number | null) {
+async function failed(id: string, code: string, retryAfter: number | null, kind: "record" | "verify" = "record") {
+  // A failed replay-check read is retried after the record's window (5 minutes), not a full hour.
+  const back = kind === "verify" ? verifySeconds() - recordSeconds() : 0;
   await db()`UPDATE zolva_cache SET last_error = ${code}, last_error_at = now(),
-    next_allowed_at = CASE WHEN ${retryAfter}::int IS NULL THEN next_allowed_at ELSE now() + make_interval(secs => ${retryAfter ?? 0}) END
+    next_allowed_at = CASE WHEN ${retryAfter}::int IS NULL THEN next_allowed_at ELSE now() + make_interval(secs => ${retryAfter ?? 0}) END,
+    verify_claimed_at = CASE WHEN ${back}::int > 0 THEN now() - make_interval(secs => ${back}) ELSE verify_claimed_at END
     WHERE zolva_agent_id = ${id}`;
   logEvent("warn", "zolva.read_failed", { code });
 }
@@ -263,20 +266,23 @@ async function refreshVerify(id: string, timeoutMs: number) {
   if (!(await claim(id, "verify", verifySeconds()))) return;
   try {
     const r = await zolvaGet(`/agents/${id}/verify`, timeoutMs);
-    if (r.status === 429) return failed(id, "zolva_429", r.retryAfter ?? 60);
-    if (r.status === 404) return failed(id, "zolva_not_found", null);
-    if (r.status !== 200) return failed(id, `zolva_verify_${r.status >= 500 ? "5xx" : r.status}`, r.retryAfter);
+    if (r.status === 429) return failed(id, "zolva_429", r.retryAfter ?? 60, "verify");
+    if (r.status === 404) return failed(id, "zolva_not_found", null, "verify");
+    if (r.status !== 200) return failed(id, `zolva_verify_${r.status >= 500 ? "5xx" : r.status}`, r.retryAfter, "verify");
     const v = reduceVerify(r.body);
-    if (!v) return failed(id, "zolva_unclear", null);
+    if (!v) return failed(id, "zolva_unclear", null, "verify");
     await db()`UPDATE zolva_cache SET verify = ${JSON.stringify(v)}::text::jsonb, verified_at = now() WHERE zolva_agent_id = ${id}`;
   } catch (e) {
-    await failed(id, codeOf(e), null);
+    await failed(id, codeOf(e), null, "verify");
   }
 }
 
 /** The cached record, refreshed first when due (at most one read per Zolva agent per 5 minutes). */
-export async function zolvaRecord(id: string, opts: { timeoutMs?: number; refresh?: boolean } = {}): Promise<CachedRecord> {
-  if (opts.refresh !== false) await Promise.all([refreshRecord(id, opts.timeoutMs ?? 5000), refreshVerify(id, opts.timeoutMs ?? 5000)]);
+export async function zolvaRecord(id: string, opts: { timeoutMs?: number; refresh?: boolean; verify?: boolean } = {}): Promise<CachedRecord> {
+  // Zolva's replay check can take seconds uncached: it gets a longer timeout, and the decision path
+  // (verify: false) never waits for it; views and the hourly job keep it fresh.
+  if (opts.refresh !== false)
+    await Promise.all([refreshRecord(id, opts.timeoutMs ?? 5000), opts.verify === false ? null : refreshVerify(id, Math.max(opts.timeoutMs ?? 5000, 10_000))]);
   const [row] = await db()`SELECT record, fetched_at, verify, verified_at, last_error, last_error_at FROM zolva_cache WHERE zolva_agent_id = ${id}`;
   const t = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
   return {
@@ -504,7 +510,7 @@ export async function provenInput(orgId: string, agentId: string, policy: Policy
       await lock(agent, "no Zolva agent linked");
       return null;
     }
-    const c = await zolvaRecord(agent.zolva_agent_id, { timeoutMs });
+    const c = await zolvaRecord(agent.zolva_agent_id, { timeoutMs, verify: timeoutMs > 3000 });
     const link = await linkStatus(agent, c.record);
     const ok = qualifies(policy, c, link);
     let unlockedAt: Date | null = agent.proven_unlocked_at ? new Date(agent.proven_unlocked_at) : null;

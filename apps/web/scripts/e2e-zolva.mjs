@@ -214,6 +214,7 @@ d = await dry("200000");
 check("the unlocked limit is still a limit", d.body.decision === "DENY" && d.body.reason_code === "PS_BUDGET_001", d.body);
 state[Z1].verify = { status: "differs", hoursVerified: 200, firstDifference: { at: hour(3) } };
 await sleep(2200);
+await zolva(); // the replay check is refreshed by views and the hourly job, never on the decision path
 d = await dry("5000");
 check("replay differs: back to the policy's own limits at once (fail closed)", d.body.decision === "DENY" && d.body.reason_code === "PS_BUDGET_001", d.body);
 r = await zolva();
