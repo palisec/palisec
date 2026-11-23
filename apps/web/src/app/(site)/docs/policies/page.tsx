@@ -204,6 +204,14 @@ export default function PoliciesPage() {
       </ul>
       <p>Turning the rule off, allowing older checkpoints or switching to review are loosening changes, so they wait out the delay below.</p>
 
+      <h2 id="loss-limit">Loss limit (schema 1.3)</h2>
+      <p>
+        An optional <code>loss_limit</code> section (and <code>schema_version</code> &quot;1.3&quot;) caps how much the account may
+        lose over a rolling window. Once reached, Palisec stops co-signing anything that adds risk (<code>PS_LOSS_001</code>,{" "}
+        <code>PS_LOSS_002</code>); exits stay open, and only the owner can reset it after the loosening delay. Fields, measurement
+        and resets: <Link href="/docs/loss-limits">Loss limits</Link>.
+      </p>
+
       <h2 id="loosening-delay">Loosening delay</h2>
       <p>
         A change that makes the rules weaker waits before it takes effect; a change that makes them stronger applies at once.

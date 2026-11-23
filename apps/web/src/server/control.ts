@@ -1,5 +1,4 @@
 import "server-only";
-import { lossLimitsAllowed } from "./loss-limits";
 import { classifyPolicyChange, SCHEMA_VERSION, summarizeChanges, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
 import { planLimitError, planLimits, refreshPro } from "./billing";
@@ -66,7 +65,7 @@ export async function getOrganization(ctx: MemberContext) {
 }
 
 /**
- * Phase 6 delay settings (owner). Raising a delay applies now; lowering one is itself a loosening and
+ * Delay settings (owner). Raising a delay applies now; lowering one is itself a loosening and
  * waits out the current loosening delay. A raise also cancels any pending lowering, which could
  * otherwise overtake it later.
  */
@@ -109,7 +108,7 @@ export async function renameOrganization(ctx: MemberContext, body: Record<string
 
 /**
  * Turning the stop on is an operator action and is instant; it also cancels a pending lift. Turning it
- * off needs the owner (spec §11.8) and, since Phase 6, waits out the organization's lift delay.
+ * off needs the owner (spec §11.8) and, with the loosening delay, waits out the organization's lift delay.
  */
 export async function setEmergencyStop(ctx: MemberContext, body: Record<string, unknown>) {
   requireConfirm(body);
@@ -202,12 +201,12 @@ export function starterPolicy(policyKey: string, chain: number, account: string)
     contracts: { default: "deny", allowlist: [], denylist: [] },
     human_approval: { usd_threshold_micros: "25000000", require_for_unknown_methods: true },
     failure_mode: "closed",
-    // Phase 6: on by default for new policies (existing ones keep it off until the owner adds it).
+    // Loosening delay: on by default for new policies (existing ones keep it off until the owner adds it).
     asset_safety: { ...DEFAULT_ASSET_SAFETY },
   };
 }
 
-/** Defaults for schema 1.1 asset safety (Phase 6 brief): 5% tax, sell leg required, no unlimited approvals, deny without a simulation. */
+/** Defaults for schema 1.1 asset safety: 5% tax, sell leg required, no unlimited approvals, deny without a simulation. */
 export const DEFAULT_ASSET_SAFETY = {
   enabled: true,
   max_transfer_tax_bps: 500,
@@ -284,7 +283,7 @@ export async function createPolicy(ctx: MemberContext, body: Record<string, unkn
     doc = starterPolicy(key, chainId(body.chain_id), parseAddress(body.account));
   }
   if (!/^[a-z0-9_]{3,64}$/.test(key)) throw new BadRequest("policy_key (the document's policy_id) must be 3-64 chars of a-z, 0-9, _");
-  // Plan limit (Phase 5): counted on creation only; existing policies are never removed.
+  // Plan limit: counted on creation only; existing policies are never removed.
   await refreshPro(ctx.orgId).catch(() => {});
   const plan = await planLimits(ctx.orgId);
   const [{ n: policyCount }] = await db()`SELECT count(*)::int AS n FROM policies WHERE org_id = ${ctx.orgId}::uuid AND disabled_at IS NULL`;
@@ -325,7 +324,7 @@ export async function saveDraft(ctx: MemberContext, id: string, body: Record<str
  * Activates the current draft as the next immutable version. The caller must send the hash of the
  * draft they reviewed, so a draft edited by someone else in the meantime cannot be activated blind.
  *
- * Phase 6: the draft is classified against the version that decides today. If anything loosens and
+ * Loosening delay: the draft is classified against the version that decides today. If anything loosens and
  * an agent depends on this policy, the version waits as `pending_activation` for the organization's
  * delay while the current version keeps deciding. A change that only tightens applies at once (and
  * supersedes any pending version). A policy no agent uses decides nothing, so it activates at once.
@@ -343,8 +342,6 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
        (SELECT count(*) FROM pending_changes WHERE org_id = ${ctx.orgId}::uuid AND state = 'pending' AND kind = 'agent_rebind'
           AND setting->>'policy_id' = ${id}::text))::int AS bound`;
   const document = { ...(current.draft as object), version: Number(next), status: "active" } as Policy;
-  if (document.loss_limit?.enabled === true && !lossLimitsAllowed(ctx.orgId))
-    throw new HttpError(403, "PS_POLICY_001", "Loss limits are in preview and not yet available to this organization.");
   const hash = await sha256Hex(canonicalJson(document));
   const before = (current.active_document as Policy | null) ?? null;
   const cls = classifyPolicyChange(before, document, { disabled: current.status === "disabled" });
@@ -373,7 +370,7 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
       diff: cls.changes,
       effective_at: effectiveAt,
     });
-  if (r.outcome !== "pending") queueSync(ctx.orgId); // Phase 8: an activation that applies now is published at once
+  if (r.outcome !== "pending") queueSync(ctx.orgId); // Policy publishing: an activation that applies now is published at once
   const after = await getPolicy(ctx, id);
   return {
     ...after,
@@ -472,7 +469,7 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
   const [{ n: agentCount }] = await db()`SELECT count(*)::int AS n FROM agents WHERE org_id = ${ctx.orgId}::uuid AND status <> 'revoked'`;
   if (agentCount >= plan.limits.agents) throw planLimitError("agents", plan.limits.agents);
   await checkPolicyBinding(ctx, policyId, chain, account);
-  // Phase 6: a second agent on an account that PALISEC already protects would be a way around the
+  // Loosening delay: a second agent on an account that PALISEC already protects would be a way around the
   // delay (its policy could be looser), so it starts paused and resumes after the loosening delay.
   const guarded = policyId !== null && (await accountProtected(ctx.orgId, chain, account, null));
   const a = audit("agent.created", { name, chain_id: chain, account, policy_id: policyId, framework, starts_paused: guarded });
@@ -516,7 +513,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
   const policyId = body.policy_id === undefined ? agent.policy_id : optionalPolicyId(body.policy_id);
   const framework = body.framework === undefined ? agent.framework : optionalText(body.framework, "framework", 40);
   const description = body.description === undefined ? agent.description : optionalText(body.description, "description", 280);
-  // Phase 6.5: the agent's Upoch workflow (read-only; linked to the account by its owner or guardians).
+  // Upoch: the agent's Upoch workflow (read-only; linked to the account by its owner or guardians).
   let upochWorkflowId: string | null = agent.upoch_workflow_id ?? null;
   if (body.upoch_workflow_id !== undefined) {
     try {
@@ -526,7 +523,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
     }
   }
   await checkPolicyBinding(ctx, policyId, agent.chain_id, agent.account);
-  // Phase 6.5: if the agent's policy requires Upoch recovery, a different workflow could make it pass
+  // Upoch: if the agent's policy requires Upoch recovery, a different workflow could make it pass
   // where it failed, so the change waits out the loosening delay. Otherwise it applies now.
   let pendingUpoch: Awaited<ReturnType<typeof requestPending>> | null = null;
   if (upochWorkflowId !== (agent.upoch_workflow_id ?? null)) {
@@ -544,7 +541,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
       upochWorkflowId = agent.upoch_workflow_id ?? null;
     }
   }
-  // Phase 6: moving the agent to a looser policy waits out the delay; everything else applies now.
+  // Loosening delay: moving the agent to a looser policy waits out the delay; everything else applies now.
   let boundPolicy = policyId;
   let pendingRebind: Awaited<ReturnType<typeof requestPending>> | null = null;
   if (policyId !== agent.policy_id) {
@@ -584,7 +581,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
 export async function setAgentStatus(ctx: MemberContext, id: string, to: "paused" | "active" | "revoked", body: Record<string, unknown>) {
   requireConfirm(body);
   if (to === "active") {
-    // Phase 6: resuming is a loosening and waits out the delay; pausing and revoking are instant.
+    // Loosening delay: resuming is a loosening and waits out the delay; pausing and revoking are instant.
     const [ag] = await db()`SELECT status FROM agents WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid`;
     if (!ag || ag.status !== "paused") throw conflict("Agent not found, or it is not paused");
     const delays = await orgDelays(ctx.orgId);
@@ -714,7 +711,7 @@ export async function listAudit(ctx: MemberContext, params: URLSearchParams) {
   for (const t of [from, to]) if (t !== null && Number.isNaN(Date.parse(t))) throw new BadRequest("from and to must be ISO timestamps");
   // Security events: denials, holds, pauses, revocations, stops and approval decisions.
   const security = params.get("kind") === "security";
-  // Audit history shown per plan (Phase 5): 90 days, or a year with Pro. Nothing is deleted.
+  // Audit history shown per plan: 90 days, or a year with Pro. Nothing is deleted.
   const { limits } = await planLimits(ctx.orgId);
   const rows = await db()`
     SELECT e.seq, e.event_id, e.type, e.detail, e.created_at, e.schema_version, u.address AS actor_address,

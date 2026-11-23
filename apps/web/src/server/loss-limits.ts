@@ -9,7 +9,7 @@ import { logEvent } from "./http";
 import { ASSETS, pricesFor } from "./valuation";
 
 /*
- * Phase 9, loss limits: the account's value before each decision (and hourly), recorded by Palisec
+ * Loss limits: the account's value before each decision (and hourly), recorded by Palisec
  * itself because the public RPC keeps no history. value = native ETH plus every priced asset
  * (valuation.ts) at Chainlink prices; flows = deposits minus withdrawals (lib/loss-flows.ts); the peak
  * is the highest value - flows in the window, at today's flows. The snapshot is an input to both engines.
@@ -44,15 +44,6 @@ export interface LossTarget {
 
 export const lossLimitOn = (p: Policy | null): boolean => p?.loss_limit?.enabled === true;
 
-/**
- * Until "APPROVED TO GO LIVE", production accepts loss limits only from the organizations listed in
- * LOSS_LIMITS_PREVIEW_ORGS (the mainnet proof). LOSS_LIMITS_PUBLIC=1 opens them to everyone. Test and
- * preview servers are open.
- */
-export function lossLimitsAllowed(orgId: string): boolean {
-  if (process.env.VERCEL_ENV !== "production" || process.env.LOSS_LIMITS_PUBLIC === "1") return true;
-  return (process.env.LOSS_LIMITS_PREVIEW_ORGS ?? "").split(",").map((x) => x.trim()).includes(orgId);
-}
 const lower = (a: string) => a.toLowerCase();
 /**
  * A failure reason safe to log and store: the first line only, with every URL removed (an RPC URL can

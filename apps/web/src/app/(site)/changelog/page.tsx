@@ -10,6 +10,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.6.0",
+    date: "2026-11-23",
+    tag: "Loss limits",
+    changes: [
+      "Loss limits (policy schema 1.3): set a maximum drawdown and/or USD loss over a rolling window. Palisec measures the account before every decision and stops co-signing anything that adds risk once the limit is reached, so the agent cannot override it. Guide: /docs/loss-limits.",
+      "The loss is the drop from the window's peak at Chainlink prices on Robinhood Chain, never pool prices, with deposits and withdrawals taken out. Tokens without a Chainlink price count as $0. The operation that would cross the limit is itself denied, and nothing reaches the chain.",
+      "While paused, exits stay open: transfers to the policy's exit addresses, swaps into its stablecoins within the exit slippage, and bounded approvals to allowlisted contracts. No reliable account value means no added risk (PS_LOSS_003).",
+      "Only the organization's owner can reset a breach. The reset is a loosening: it waits for the organization's delay, can be cancelled, and is published to the Policy-Enforced Agent Accounts registry like every policy change.",
+      "New reason codes PS_LOSS_001, PS_LOSS_002 and PS_LOSS_003; webhooks loss_limit.triggered, loss_limit.reset_pending and loss_limit.reset; GET /v1/agents/{id}/loss-limit and POST /v1/agents/{id}/loss-limit/reset; a loss-limit panel on the agent's console page. Both engines evaluate the rule identically.",
+    ],
+  },
+  {
     version: "1.5.0",
     date: "2026-11-21",
     tag: "Standard: Policy-Enforced Agent Accounts",

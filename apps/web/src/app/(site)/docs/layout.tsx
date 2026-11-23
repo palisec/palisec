@@ -31,6 +31,7 @@ const DOCS_NAV = [
       { href: "/docs/webhooks", label: "Webhooks" },
       { href: "/docs/token", label: "Token" },
       { href: "/docs/mandates", label: "Holder mandates" },
+      { href: "/docs/loss-limits", label: "Loss limits" },
       { href: "/docs/integrations", label: "Integrations and keys" },
     ],
   },
