@@ -20,6 +20,13 @@ export function priceAt(list: Closes, t: number): number | null {
   return best;
 }
 
+/** Why the rebuild was not used, or null when it was. */
+export interface Rebuild {
+  values: Values;
+  rebuilt: boolean;
+  reason: null | "no_record" | "incomplete_trades" | "unsupported" | "no_closes" | "differs";
+}
+
 /** Hours before the first trade covered by the rebuild (the longest loss-limit window). */
 const LEAD_SECONDS = 7 * 86400;
 /** The rebuild never goes further back than this (Zolva's closes cover 30 days); older trades have no value. */
@@ -34,13 +41,16 @@ export function rebuildValues(input: {
   trades: readonly ValueTrade[];
   /** Hourly closes per market symbol (upper case), or null when they could not be read. */
   closes: Map<string, Closes> | null;
-}): { values: Values; rebuilt: boolean } {
+}): Rebuild {
   const own: Values = input.equity.map((r) => [r[0]!, r[1]!]);
   const { startCapital: cap, trades, closes } = input;
-  if (own.length === 0 || cap === null || closes === null || trades.length === 0 || input.tradesCount !== trades.length) return { values: own, rebuilt: false };
-  if (trades.some((t) => t.side !== "buy" && t.side !== "sell")) return { values: own, rebuilt: false };
+  const no = (reason: NonNullable<Rebuild["reason"]>): Rebuild => ({ values: own, rebuilt: false, reason });
+  if (own.length === 0 || cap === null || trades.length === 0) return no("no_record");
+  if (input.tradesCount !== trades.length) return no("incomplete_trades");
+  if (trades.some((t) => t.side !== "buy" && t.side !== "sell")) return no("unsupported");
+  if (closes === null) return no("no_closes");
   const times = trades.map((t) => Date.parse(t.at) / 1000);
-  if (times.some((t, i) => !Number.isFinite(t) || (i > 0 && t < times[i - 1]!))) return { values: own, rebuilt: false };
+  if (times.some((t, i) => !Number.isFinite(t) || (i > 0 && t < times[i - 1]!))) return no("unsupported");
 
   const valueAt = (at: number): number | null => {
     let cash = cap;
@@ -65,12 +75,12 @@ export function rebuildValues(input: {
   // Checked against Zolva's own value: a difference above a cent per 1,000 USD and the rebuild is not used.
   for (const [t, v] of own) {
     const r = valueAt(t);
-    if (r === null || v === null || Math.abs(r - v) > Math.max(0.01, Math.abs(v) * 1e-5)) return { values: own, rebuilt: false };
+    if (r === null || v === null || Math.abs(r - v) > Math.max(0.01, Math.abs(v) * 1e-5)) return no("differs");
   }
   const first = Math.max(times[0]! - LEAD_SECONDS, own[0]![0] - MAX_REBUILD_HOURS * 3600);
   const before: Values = [];
   for (let t = own[0]![0] - 3600; t >= first; t -= 3600) before.push([t, valueAt(t)]);
-  return { values: [...before.reverse(), ...own], rebuilt: before.length > 0 };
+  return { values: [...before.reverse(), ...own], rebuilt: before.length > 0, reason: null };
 }
 
 /** The account value at `now` and the peak over the window before it; null when any hour of the window has no value. */

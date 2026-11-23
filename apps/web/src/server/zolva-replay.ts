@@ -12,7 +12,7 @@ import {
 } from "@palisec/policy-schema";
 import { encodeFunctionData, getAddress, parseAbi, type Address } from "viem";
 import { BadRequest, HttpError } from "./http";
-import { priceAt, rebuildValues, windowValue, type Closes, type Values } from "@/lib/replay-values";
+import { priceAt, rebuildValues, windowValue, type Closes, type Rebuild, type Values } from "@/lib/replay-values";
 import { zolvaRecord, type ZolvaTrade } from "./zolva";
 
 /*
@@ -31,6 +31,14 @@ import { zolvaRecord, type ZolvaTrade } from "./zolva";
  *   value leaves the trade without a value, so a loss limit fails closed on it, as it would live.
  * Amounts can be scaled to the account's own size (`capital_usd`).
  */
+
+const NO_REBUILD: Record<NonNullable<Rebuild["reason"]>, string> = {
+  no_record: "",
+  incomplete_trades: "The older value cannot be rebuilt: Zolva publishes fewer trades than the agent made.",
+  unsupported: "The older value cannot be rebuilt for this agent's trades.",
+  no_closes: "The older value cannot be rebuilt: Zolva's market prices could not be read just now.",
+  differs: "The older value cannot be rebuilt: rebuilding it does not match Zolva's own value.",
+};
 
 const SWAP_ROUTER: Address = "0xcaf681a66d020601342297493863e78c959e5cb2";
 const USDG: Address = "0x5fc5360d0400a0fd4f2af552add042d716f1d168";
@@ -137,12 +145,12 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
   }
   const [mk, eth] = await Promise.all([markets(), closes("ETH")]);
   const bySymbol = new Map(mk.map((m) => [m.symbol, m]));
-  const { values, rebuilt } = doc.loss_limit?.enabled ? await accountValues() : { values: [] as Values, rebuilt: false };
+  const { values, rebuilt, reason } = doc.loss_limit?.enabled ? await accountValues() : ({ values: [] as Values, rebuilt: false, reason: null } as Rebuild);
   if (doc.loss_limit?.enabled)
     assumptions.push(
       rebuilt
         ? "A loss limit uses Zolva's hourly account value for the last 7 days, and before that the value rebuilt from the recorded trades and Zolva's hourly closes (it matches Zolva's own value wherever both exist). Trades at hours that cannot be valued fail closed."
-        : "A loss limit uses Zolva's hourly account value, which covers the last 7 days only; older trades have no value and fail closed.",
+        : `A loss limit uses Zolva's hourly account value, which covers the last 7 days only; older trades have no value and fail closed.${reason ? ` ${NO_REBUILD[reason]}` : ""}`,
     );
   let state: LedgerState = { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} };
   let paused: "PS_LOSS_001" | "PS_LOSS_002" | null = null;
@@ -208,7 +216,7 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
   }
 
   /** Hourly account value: Zolva's own, extended back by the rebuild from trades and closes (lib/replay-values). */
-  async function accountValues(): Promise<{ values: Values; rebuilt: boolean }> {
+  async function accountValues(): Promise<Rebuild> {
     const symbols = [...new Set(trades.map((t) => t.market.toUpperCase()))];
     let closesBy: Map<string, Closes> | null = null;
     try {

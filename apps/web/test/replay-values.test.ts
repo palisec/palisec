@@ -18,8 +18,9 @@ const input = { equity, startCapital: 10_000, tradesCount: 2, trades, closes };
 
 describe("replay account value: rebuilt from recorded trades and closes", () => {
   it("extends Zolva's own value back to a week before the first trade", () => {
-    const { values, rebuilt } = rebuildValues(input);
+    const { values, rebuilt, reason } = rebuildValues(input);
     assert.equal(rebuilt, true);
+    assert.equal(reason, null);
     assert.equal(values[0]![0], H(12) - 7 * 86400);
     assert.deepEqual(values.slice(-10), equity.map(([t, v]) => [t, v]));
     const at = (k: number) => values.find(([t]) => t === H(k))![1];
@@ -41,16 +42,17 @@ describe("replay account value: rebuilt from recorded trades and closes", () => 
     const off = equity.map(([t, , h], i) => [t, i === 3 ? FLAT + 5 : FLAT, h]);
     const r = rebuildValues({ ...input, equity: off });
     assert.equal(r.rebuilt, false);
+    assert.equal(r.reason, "differs");
     assert.equal(r.values.length, 10);
   });
 
   it("is not used when Zolva publishes fewer trades than the agent made", () => {
-    assert.equal(rebuildValues({ ...input, tradesCount: 3 }).rebuilt, false);
+    assert.equal(rebuildValues({ ...input, tradesCount: 3 }).reason, "incomplete_trades");
   });
 
   it("is not used when the closes could not be read, or for short positions", () => {
-    assert.equal(rebuildValues({ ...input, closes: null }).rebuilt, false);
-    assert.equal(rebuildValues({ ...input, trades: [{ ...trades[0]!, side: "short" }, trades[1]!] }).rebuilt, false);
+    assert.equal(rebuildValues({ ...input, closes: null }).reason, "no_closes");
+    assert.equal(rebuildValues({ ...input, trades: [{ ...trades[0]!, side: "short" }, trades[1]!] }).reason, "unsupported");
   });
 });
 
