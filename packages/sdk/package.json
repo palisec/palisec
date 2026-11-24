@@ -4,6 +4,8 @@
   "description": "TypeScript client for Palisec: ask before every agent transaction, send only on ALLOW. viem and ethers.",
   "license": "MIT",
   "homepage": "https://palisec.tech/docs/sdk/typescript",
+  "repository": { "type": "git", "url": "git+https://github.com/palisec/sdk-typescript.git" },
+  "bugs": { "url": "https://github.com/palisec/sdk-typescript/issues" },
   "keywords": [
     "palisec",
     "ai-agents",

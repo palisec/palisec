@@ -4,6 +4,8 @@
   "description": "Read policy-enforced agent accounts and verify signed decision receipts (ERC-8511, Policy-Enforced Agent Accounts). No API key: the chain and the spec only.",
   "license": "CC0-1.0",
   "homepage": "https://palisec.tech/docs/standard",
+  "repository": { "type": "git", "url": "git+https://github.com/palisec/policy-enforced-accounts.git" },
+  "bugs": { "url": "https://github.com/palisec/policy-enforced-accounts/issues" },
   "keywords": [
     "erc",
     "policy",

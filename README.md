@@ -2,6 +2,20 @@
 
 The authorization boundary for autonomous on-chain agents on Robinhood Chain. Every action an agent wants to take is checked against a signed policy before anything is signed or sent, and refusals come back with a reason code. Live at https://palisec.tech.
 
+## Public repositories
+
+Each published part has its own public repository, with its history, CI and releases:
+
+| Repository | What |
+|---|---|
+| [palisec/policy-schema](https://github.com/palisec/policy-schema) | The policy schema (1.5), reason codes, the TypeScript reference evaluator and the **Rust policy engine** (WebAssembly), with the parity suite that proves the two agree. Public: anyone can check the rules Palisec applies. |
+| [palisec/policy-enforced-accounts](https://github.com/palisec/policy-enforced-accounts) | ERC-8511 (Policy-Enforced Agent Accounts): the reference library (npm `policy-enforced-accounts`), the registry contracts v1, v2 and v3, and the test vectors |
+| [palisec/sdk-typescript](https://github.com/palisec/sdk-typescript) | `@palisec/sdk` (npm) |
+| [palisec/sdk-python](https://github.com/palisec/sdk-python) | `palisec` (PyPI) |
+| [palisec/examples](https://github.com/palisec/examples) | Agents that ask Palisec first: Vercel AI SDK, OpenAI Agents SDK, LangGraph, MCP and a plain script |
+
+This repository is where they are developed together, and where npm and PyPI releases are published from.
+
 ## Links
 
 - Docs: https://palisec.tech/docs · Changelog: https://palisec.tech/changelog
