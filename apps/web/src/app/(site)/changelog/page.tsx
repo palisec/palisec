@@ -10,6 +10,14 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.11.1",
+    date: "2026-11-25",
+    tag: "ERC-8511 library",
+    changes: [
+      "policy-enforced-accounts 0.3.1: policy hashing (RFC 8785 JSON canonicalization) now uses the reference implementation, the canonicalize package, in the library and in Palisec's server. Every policy hash is byte-for-byte unchanged: the test vectors, both demo accounts' committed policies and 20,000 random documents give the same result, so nothing changes on chain.",
+    ],
+  },
+  {
     version: "1.11.0",
     date: "2026-11-24",
     tag: "Account stop, token spend votes",
