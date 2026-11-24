@@ -27,8 +27,8 @@ npm install @palisec/sdk viem
 pip install palisec
 
 # Alternative, straight from palisec.tech:
-# npm install https://palisec.tech/sdk/palisec-sdk-0.6.2.tgz viem
-# pip install https://palisec.tech/sdk/palisec-0.4.1-py3-none-any.whl`;
+# npm install https://palisec.tech/sdk/palisec-sdk-0.6.3.tgz viem
+# pip install https://palisec.tech/sdk/palisec-0.4.7-py3-none-any.whl`;
 
 const PY = `import os
 from palisec import Palisec, PalisecDeniedError

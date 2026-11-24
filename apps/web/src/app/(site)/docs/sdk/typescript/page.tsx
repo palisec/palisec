@@ -16,7 +16,7 @@ const INSTALL = `npm install @palisec/sdk viem
 # or: yarn add @palisec/sdk viem
 
 # Alternative, straight from palisec.tech:
-# npm install https://palisec.tech/sdk/palisec-sdk-0.6.2.tgz viem`;
+# npm install https://palisec.tech/sdk/palisec-sdk-0.6.3.tgz viem`;
 
 const ETHERS = `import { JsonRpcProvider, Wallet } from "ethers";
 import { createPalisec, fromEthers } from "@palisec/sdk";
