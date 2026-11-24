@@ -55,7 +55,7 @@ const out = {
   description: "Test vectors for the draft ERC Policy-Enforced Agent Accounts. Keys are test-only and public; never fund them.",
   version: 2,
   domain: { name: "PolicyDecisionReceipt", version: "2" },
-  interfaceId: "0x7e0f19f9",
+  interfaceId: "0xf594edcd",
   testKeys: { receiptSigner: { privateKey: receiptKey, address: signer.address, label: "policy-enforced-accounts test vector key: receipt signer 1" } },
   policies,
   intents,

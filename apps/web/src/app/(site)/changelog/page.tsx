@@ -10,6 +10,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.10.0",
+    date: "2026-11-24",
+    tag: "Standard: registry v3",
+    changes: [
+      "Policy-Enforced Agent Accounts, registry v3 on Robinhood Chain mainnet, source verified: 0x4d37D0aD95593b2C65A0c2A98D5676D51DF3FDAB (ERC-165 0xf594edcd, no owner, not upgradeable, holds no funds). It answers the last open point of the forum review.",
+      "Stop hold: a stop the account engaged itself can only be lifted by the account, so a leaked publisher key cannot undo the account's own way out. A stop the publisher engaged can still be lifted by either, and the account can take it over by engaging it too. New read: stopHeldByAccount(account). Palisec never tries to lift a stop the account holds.",
+      "Registry v2 (0xCa3b…448d) and the first draft's registry stay unchanged and readable; v2's receipts verify exactly as before.",
+      "Client library policy-enforced-accounts 0.3.0: reads v3, v2 and the first draft, returns stopHeldByAccount, and maps PS_PRICE_001 and PS_SIM_002 to the standard codes (DEPENDENCY_UNAVAILABLE, SIMULATION_UNAVAILABLE).",
+    ],
+  },
+  {
     version: "1.9.0",
     date: "2026-11-24",
     tag: "Spend limits count tokens",

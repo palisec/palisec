@@ -1,4 +1,4 @@
-// End-to-end on a local chain (anvil): deploy the reference registry v2, declare, publish through the delay,
+// End-to-end on a local chain (anvil): deploy the reference registry v3, declare, publish through the delay,
 // then read and verify with the library only. Uses anvil's public test accounts.
 // Run: anvil &; node scripts/local-chain-check.mjs
 import { readFileSync } from "node:fs";
@@ -35,7 +35,7 @@ const reverts = async (who, functionName, args) => {
 };
 
 let st = await readAccount(pub, account, registry);
-check("undeclared account reads as not enforced (v2 source)", st.enforced === false && st.policy === null && st.standard === "v2");
+check("undeclared account reads as not enforced (v2 source)", st.enforced === false && st.policy === null && st.standard === "v3");
 await send(accountKey, "declare", [accountKey.address, publisherKey.address, receiptKey.address, DELAY, 1]);
 st = await readAccount(pub, account, registry);
 check("first declaration applies at once, with minDelay and signerType", st.enforced && st.publisher === publisherKey.address && st.minDelay === DELAY && st.signerType === 1);
@@ -83,7 +83,10 @@ allow2.signature = await receiptKey.signTypedData(typedReceipt(allow2));
 await send(accountKey, "setStopped", [account, true, "key check"]);
 v = await verifyReceipt(pub, allow2, { registry, intent, now, use: true, seen: store });
 check("the account can stop itself, and a stopped account's ALLOW is refused", !v.valid && v.problems.includes("the account's emergency stop is engaged"));
-await send(publisherKey, "setStopped", [account, false, ""]);
+check("the account's stop is held by the account", (await readAccount(pub, account, registry)).stopHeldByAccount === true);
+check("the publisher cannot lift a stop the account engaged", (await reverts(publisherKey, "setStopped", [account, false, ""])) === "StopHeldByAccount");
+await send(accountKey, "setStopped", [account, false, ""]);
+check("the account lifts its own stop", (await readAccount(pub, account, registry)).stopped === false);
 const doc2 = { ...doc, version: 2 };
 await send(accountKey, "activate", [account, policyHash(doc2), 2n, "", ""]);
 v = await verifyReceipt(pub, allow2, { registry, intent, now, use: true, seen: store });

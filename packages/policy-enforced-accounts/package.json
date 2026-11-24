@@ -1,6 +1,6 @@
 {
   "name": "policy-enforced-accounts",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Read policy-enforced agent accounts and verify signed decision receipts (draft ERC: Policy-Enforced Agent Accounts). No API key: the chain and the spec only.",
   "license": "CC0-1.0",
   "homepage": "https://palisec.tech/docs/standard",

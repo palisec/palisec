@@ -195,3 +195,14 @@ describe("fetchPolicy limits", () => {
     await expect(fetchPolicy(c("https://[::ffff:7f00:1]/p"), never)).rejects.toThrow("private");
   });
 });
+
+describe("registry v3 interface", () => {
+  it("INTERFACE_ID is the XOR of the eight read selectors (v2's seven plus stopHeldByAccount)", async () => {
+    const { toFunctionSelector } = await import("viem");
+    const { INTERFACE_ID: V3, INTERFACE_ID_V2: V2 } = await import("../src/abi");
+    const reads = ["policySigner(address)", "signersAt(address,uint64)", "pendingSignersOf(address)", "policyOf(address)", "pendingPolicyOf(address)", "mandateOf(address)", "isStopped(address)"];
+    const id = (sigs: string[]) => "0x" + (sigs.reduce((a, s) => (a ^ parseInt(toFunctionSelector(s).slice(2), 16)) >>> 0, 0) >>> 0).toString(16).padStart(8, "0");
+    expect(id(reads)).toBe(V2);
+    expect(id([...reads, "stopHeldByAccount(address)"])).toBe(V3);
+  });
+});

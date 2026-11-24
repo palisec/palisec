@@ -3,7 +3,7 @@ import { pageOpenGraph } from "@/lib/seo";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
-import { REASONS, REGISTRY_ADDRESSES, REGISTRY_V1_ADDRESSES } from "policy-enforced-accounts";
+import { REASONS, REGISTRY_ADDRESSES, REGISTRY_V1_ADDRESSES, REGISTRY_V2_ADDRESSES } from "policy-enforced-accounts";
 
 export const metadata: Metadata = {
   title: "Standard: Policy-Enforced Agent Accounts",
@@ -13,10 +13,11 @@ export const metadata: Metadata = {
 
 const REGISTRY = REGISTRY_ADDRESSES[4663]!;
 const REGISTRY_V1 = REGISTRY_V1_ADDRESSES[4663]!;
+const REGISTRY_V2 = REGISTRY_V2_ADDRESSES[4663]!;
 const EXPLORER = "https://robinhoodchain.blockscout.com";
 const DEMO = "0x9aEC761B2F0FdA08C683e8388478C9A2F7C9170c";
 
-const IFACE = `interface IPolicyEnforcedAccount {            // ERC-165 id 0x7e0f19f9
+const IFACE = `interface IPolicyEnforcedAccount {            // ERC-165 id 0xf594edcd
   struct Signers {
     address policySigner; address publisher; address receiptSigner; uint64 since;
     uint32 minDelay;      // seconds every publisher change and every later signer change waits
@@ -31,6 +32,7 @@ const IFACE = `interface IPolicyEnforcedAccount {            // ERC-165 id 0x7e0
   function pendingPolicyOf(address account) external view returns (bool exists, PolicyCommitment memory);
   function mandateOf(address account) external view returns (string memory mandateURI, bytes32 configHash);
   function isStopped(address account) external view returns (bool);
+  function stopHeldByAccount(address account) external view returns (bool); // only the account can lift it
 
   event SignersDeclared(address indexed account, address policySigner, address publisher, address receiptSigner, uint32 minDelay, uint8 signerType);
   event SignersPending(address indexed account, address policySigner, address publisher, address receiptSigner, uint32 minDelay, uint8 signerType, uint64 effectiveAt);
@@ -86,20 +88,21 @@ export default function StandardPage() {
       <h2 id="live">Reference implementation (live)</h2>
       <table>
         <tbody>
-          <tr><td>Registry v2 (mainnet 4663)</td><td><a href={`${EXPLORER}/address/${REGISTRY}?tab=contract`} className="font-mono text-[12px]">{REGISTRY}</a> · source verified, no owner, no upgrade path, holds no funds</td></tr>
-          <tr><td>ERC-165 interface id</td><td><code>0x7e0f19f9</code></td></tr>
-          <tr><td>Deployment</td><td>Deterministic deployer <code>0x4e59b448…956C</code>, salt <code>keccak256(&quot;policy-enforced-accounts registry v2&quot;)</code></td></tr>
+          <tr><td>Registry v3 (mainnet 4663)</td><td><a href={`${EXPLORER}/address/${REGISTRY}?tab=contract`} className="font-mono text-[12px]">{REGISTRY}</a> · source verified, no owner, no upgrade path, holds no funds</td></tr>
+          <tr><td>ERC-165 interface id</td><td><code>0xf594edcd</code></td></tr>
+          <tr><td>Deployment</td><td>Deterministic deployer <code>0x4e59b448…956C</code>, salt <code>keccak256(&quot;policy-enforced-accounts registry v3&quot;)</code></td></tr>
+          <tr><td>Registry v2</td><td><a href={`${EXPLORER}/address/${REGISTRY_V2}?tab=contract`} className="font-mono text-[12px]">{REGISTRY_V2}</a> · interface <code>0x7e0f19f9</code>; kept as it is and readable, and its receipts verify like v3&apos;s (domain version &quot;2&quot;). There a publisher can lift a stop the account engaged.</td></tr>
           <tr><td>First draft (v1)</td><td><a href={`${EXPLORER}/address/${REGISTRY_V1}?tab=contract`} className="font-mono text-[12px]">{REGISTRY_V1}</a> · interface <code>0xcc16d336</code>; kept as it is, readable, and its receipts still verify (domain version &quot;1&quot;)</td></tr>
           <tr><td>Demo account</td><td><a href={`${EXPLORER}/address/${DEMO}`} className="font-mono text-[12px]">{DEMO}</a> (Palisec smart account, holder mandate)</td></tr>
           <tr><td>Client library</td><td><code>policy-enforced-accounts</code> (TypeScript, viem; CC0)</td></tr>
-          <tr><td>Test vectors</td><td><a href="/standard/vectors.json">vectors.json</a> (v2) and <a href="/standard/vectors-v1.json">vectors-v1.json</a>, checked in TypeScript and Solidity</td></tr>
+          <tr><td>Test vectors</td><td><a href="/standard/vectors.json">vectors.json</a> (v3; receipts as in v2) and <a href="/standard/vectors-v1.json">vectors-v1.json</a>, checked in TypeScript and Solidity</td></tr>
           <tr><td>Independent read test</td><td><a href="/standard/independent-read.mjs">independent-read.mjs</a>: no Palisec API, no keys</td></tr>
         </tbody>
       </table>
 
       <h2 id="interface">Interface</h2>
       <p>
-        A reader calls <code>supportsInterface(0x7e0f19f9)</code> on the account. If the account does not serve the interface, the reader
+        A reader calls <code>supportsInterface(0xf594edcd)</code> on the account. If the account does not serve the interface, the reader
         asks the registry. Existing accounts such as Safes opt in by calling{" "}
         <code>declare(policySigner, publisher, receiptSigner, minDelay, signerType)</code> themselves. After that, only their declared
         publisher can post their commitments, and nobody can write another account&apos;s data.
@@ -120,7 +123,9 @@ export default function StandardPage() {
         <li><strong>Every policy the publisher posts waits.</strong> It goes in with <code>setPending</code> at least <code>minDelay</code> ahead, and decides from its <code>effectiveAt</code>. Confirming it earlier reverts. Only the account itself (its owners) may activate a policy at once.</li>
         <li><strong>Signer changes wait too.</strong> After the first declaration, a new signer set applies <code>minDelay</code> later (lowering <code>minDelay</code> included), and the account can cancel it meanwhile. Clearing to all zeros applies at once: it only removes the claim of enforcement.</li>
         <li><strong>Every removal of a pending policy</strong> (replaced, superseded or cancelled) emits <code>PolicyCancelled</code>.</li>
-        <li><strong>The emergency stop</strong> only restricts, so the publisher or the account engages it at once; either can lift it.</li>
+        <li><strong>The emergency stop</strong> only restricts, so the publisher or the account engages it at once. A stop the account engaged
+          is held: only the account can lift it, so a leaked publisher key cannot undo the account&apos;s own way out. A stop the publisher
+          engaged can be lifted by either, and the account can take it over by engaging it too (<code>stopHeldByAccount</code>).</li>
       </ul>
       <p>
         Palisec applies a tightening off chain at once, because stricter is always safe. The registry shows it after <code>minDelay</code>; until

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Policy publishing: deploys PolicyEnforcedRegistry v2 with the deterministic deployer (CREATE2, same address on
+ * Policy publishing: deploys PolicyEnforcedRegistry v3 with the deterministic deployer (CREATE2, same address on
  * any chain). The address depends only on the salt and the code, so any funded key can send it; the publisher
  * key is used. Keys are read from the company key file outside the repository and are never printed.
  *
@@ -15,7 +15,7 @@ import { privateKeyToAccount } from "viem/accounts";
 const RPC = process.env.RPC ?? "https://rpc.mainnet.chain.robinhood.com";
 const chain = defineChain({ id: 4663, name: "Robinhood Chain", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [RPC] } } });
 const CREATE2_DEPLOYER = "0x4e59b44847b379578588920cA78FbF26c0B4956C";
-export const SALT = keccak256(stringToHex("policy-enforced-accounts registry v2"));
+export const SALT = keccak256(stringToHex("policy-enforced-accounts registry v3"));
 
 const keys = JSON.parse(readFileSync(`${homedir()}/palisec-pg/registry-keys.json`, "utf8"));
 const publisher = privateKeyToAccount(keys.publisher);

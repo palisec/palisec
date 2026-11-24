@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Policy registry v2: moves the two demo smart accounts (mandate demo 0x9aEC…170c, loss-limits demo 0x6677…FD77)
- * from the v1 registry to v2, through Palisec like any other operation. Keys are read from the company key files
+ * Policy registry v3 (the stop hold): moves the two demo smart accounts (mandate demo 0x9aEC…170c, loss-limits demo
+ * 0x6677…FD77) from the v2 registry to v3, through Palisec like any other operation. Keys are read from the company key files
  * outside the repository and are never printed.
- *   allow      owner: allow v2's declare() in each policy (and the mandate envelope): loosenings, they wait the delay
- *   declare    agent: each Safe calls v2.declare(co-signer, publisher, receipt signer, 900 s, co-signer type) (co-signed)
+ *   allow      owner: allow v3's declare() in each policy (and the mandate envelope): loosenings, they wait the delay
+ *   declare    agent: each Safe calls v3.declare(co-signer, publisher, receipt signer, 900 s, co-signer type) (co-signed)
  *   sync       publish each account's commitments now (POST /v1/public/peaa/sync)
  *   status     what both registries say (library only)
  *
@@ -15,13 +15,13 @@ import { homedir } from "node:os";
 import { createPublicClient, encodeFunctionData, http, toFunctionSelector } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createPalisec } from "../../../packages/sdk/dist/index.js";
-import { REGISTRY_ABI, REGISTRY_ADDRESSES, REGISTRY_V1_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
+import { REGISTRY_ABI, REGISTRY_ADDRESSES, REGISTRY_V2_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
 const RPC = "https://rpc.mainnet.chain.robinhood.com";
 const EXPLORER = "https://robinhoodchain.blockscout.com";
 const REGISTRY = REGISTRY_ADDRESSES[4663];
-const V1 = REGISTRY_V1_ADDRESSES[4663];
+const V2 = REGISTRY_V2_ADDRESSES[4663];
 const DECLARE = toFunctionSelector("declare(address,address,address,uint32,uint8)");
 const COSIGNER = "0x628FdA166280b9E2C5E5FBD89fDDDaCe626d8ec7";
 const MIN_DELAY = 900;
@@ -82,7 +82,7 @@ for (const name of names) {
     delete doc.version;
     delete doc.status;
     if (has(doc.contracts.allowlist, REGISTRY)) {
-      console.log(`${utc()}  ${name}: policy already allows v2 declare()`);
+      console.log(`${utc()}  ${name}: policy already allows v3 declare()`);
       continue;
     }
     doc.contracts.allowlist.push({ address: REGISTRY, selectors: [DECLARE], require_verified_code: true });
@@ -105,8 +105,8 @@ for (const name of names) {
   } else if (stage === "status") {
     const show = (s) => ({ standard: s.standard, enforced: s.enforced, publisher: s.publisher, minDelay: s.minDelay, signerType: s.signerType, policy: s.policy && { version: String(s.policy.version), hash: s.policy.policyHash, effectiveAt: String(s.policy.effectiveAt) }, pending: s.pending && { version: String(s.pending.version), effectiveAt: String(s.pending.effectiveAt) }, stopped: s.stopped, mandate: s.mandate?.uri ?? null });
     console.log(name, a.safe);
-    console.log("  v2", JSON.stringify(show(await readAccount(pub, a.safe, REGISTRY))));
-    console.log("  v1", JSON.stringify(show(await readAccount(pub, a.safe, V1))));
+    console.log("  v3", JSON.stringify({ ...show(await readAccount(pub, a.safe, REGISTRY)), stopHeldByAccount: (await readAccount(pub, a.safe, REGISTRY)).stopHeldByAccount }));
+    console.log("  v2", JSON.stringify(show(await readAccount(pub, a.safe, V2))));
   } else if (stage !== "sync") {
     console.error("stage: allow | declare | sync | status");
     process.exit(2);

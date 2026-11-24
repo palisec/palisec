@@ -21,14 +21,15 @@ import { logEvent } from "./http";
  *  - Receipts: every decision for an opted-in account carries an EIP-712 receipt signed by the receipt
  *    key (PEAA_RECEIPT_KEY), never by the co-signer. Additive field; nothing about the decision changes.
  *  - Commitments: a sync compares each opted-in account's authoritative state (active policy, pending
- *    loosening, stop) with the registry (v2) and publishes the difference from the publisher key
+ *    loosening, stop) with the registry (v3) and publishes the difference from the publisher key
  *    (PEAA_PUBLISHER_KEY). Idempotent and claimed per account, so a repeat never sends twice. It runs
  *    after policy and stop changes and from the hourly workflow. Decisions never wait for it.
- *  - Time rules of the v2 registry: everything the publisher posts waits the account's minDelay. A new
+ *  - Time rules of the registry (v3): everything the publisher posts waits the account's minDelay. A new
  *    active policy (a tightening, applied off chain at once) is posted as pending for now + minDelay and
  *    confirmed once due; a Palisec loosening is posted for its own effective time, or later if minDelay
  *    requires. Until then the registry shows the previous policy, and receipts carry the newer version,
  *    which a use-time verifier refuses (fail closed).
+ *  - Stop hold (v3): a stop the account engaged itself is the account's to lift. Palisec never tries to.
  */
 
 export const SCHEMA_URI = "https://palisec.tech/schemas/palisec-policy.json";
@@ -279,7 +280,8 @@ type Send = (kind: string, functionName: string, args: readonly unknown[], recor
 
 async function syncStopAndMandate(t: Target, onChain: Awaited<ReturnType<typeof readAccount>>, send: Send) {
   // 3. Emergency stop (organization stop, or the agent paused).
-  if (t.stopped !== onChain.stopped)
+  // A stop the account holds is left alone: only the account can lift it (the registry would revert).
+  if (t.stopped !== onChain.stopped && !(onChain.stopHeldByAccount && !t.stopped))
     await send(t.stopped ? "stop" : "lift", "setStopped", [t.account, t.stopped, t.stopped ? "emergency stop or agent paused in Palisec" : ""], {});
   // 4. Mandate link.
   if (t.mandate) {
