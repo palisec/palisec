@@ -7,6 +7,7 @@
  *   status                   balances, the router allowance and the active policy's limits
  *   policy                   turn on token_spend (schema 1.5): $0.30 per transaction, $0.70 an hour (a tightening: applies at once)
  *   allow-unpriced           allowlist approve() on a token with no Chainlink feed (a loosening: waits the delay)
+ *   loss off|on              switch this demo's loss limit off (with allow-unpriced; a loosening: waits the delay) or back on (applies at once)
  *   approve <micros> [--send] agent: approve the router for exactly <micros> USDG (counted while it stays open)
  *   swap <micros> [--send]   agent: swap <micros> USDG -> WETH through the Safe (co-signed)
  *   try <micros>             agent: a recorded USDG -> WETH swap request only; prints the decision, checks the Safe's
@@ -116,7 +117,7 @@ if (stage === "status") {
   const d = p.active_document;
   console.log(`  active v${p.active_version ?? d?.version}: schema ${d?.schema_version}, hourly budget ${usd(d?.limits?.hourly_budget_usd_micros)}, approval at ${usd(d?.human_approval?.usd_threshold_micros)}, token_spend ${JSON.stringify(d?.token_spend ?? null)}, loss limit ${d?.loss_limit?.enabled ? "on" : "off"}`);
   if (p.pending) console.log(`  pending: ${JSON.stringify(p.pending)}`);
-} else if (stage === "policy" || stage === "allow-unpriced") {
+} else if (stage === "policy" || stage === "allow-unpriced" || stage === "loss") {
   const cookie = await signIn();
   const p = (await call("GET", `/policies/${state.policy_id}`, { cookie })).body;
   const doc = JSON.parse(JSON.stringify(p.active_document));
@@ -126,6 +127,10 @@ if (stage === "status") {
     doc.schema_version = "1.5";
     doc.limits.hourly_budget_usd_micros = "700000";
     doc.token_spend = { enabled: true, max_transaction_usd_micros: "300000", on_price_unavailable: "deny", max_closed_market_price_age_seconds: 259200, require_output_to_account: true };
+  } else if (stage === "loss") {
+    doc.loss_limit.enabled = arg === "on";
+    if (arg === "off" && !doc.contracts.allowlist.some((e) => e.address.toLowerCase() === UNPRICED.toLowerCase()))
+      doc.contracts.allowlist.push({ address: UNPRICED, selectors: [APPROVE], require_verified_code: true });
   } else {
     doc.contracts.allowlist = doc.contracts.allowlist.filter((e) => e.address.toLowerCase() !== UNPRICED.toLowerCase());
     doc.contracts.allowlist.push({ address: UNPRICED, selectors: [APPROVE], require_verified_code: true });
@@ -146,8 +151,8 @@ if (stage === "status") {
 } else if (stage === "try") {
   const amount = BigInt(arg);
   const q = await quote(amount);
-  const r = await request(ROUTER, swapData(amount, (q * 97n) / 100n), { spend: [{ token: USDG, amount: amount.toString() }], receive: [{ token: WETH, amount: q.toString() }] }, "try");
-  Object.assign(state, { spend_try: { operation_id: r.operation_id, reason_code: r.reason_code } });
+  const r = await request(ROUTER, swapData(amount, (q * 97n) / 100n), { spend: [{ token: USDG, amount: amount.toString() }], receive: [{ token: WETH, amount: q.toString() }] }, `try-${amount}`);
+  state.spend_tries = [...(state.spend_tries ?? []), { amount: amount.toString(), operation_id: r.operation_id, decision: r.decision, reason_code: r.reason_code }];
   save();
 } else if (stage === "try-unpriced") {
   const r = await request(UNPRICED, encodeFunctionData({ abi: ERC20, functionName: "approve", args: [ROUTER, 10n ** 18n] }), { spend: [{ token: UNPRICED, amount: (10n ** 18n).toString() }], receive: [] }, "unpriced");
