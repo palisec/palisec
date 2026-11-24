@@ -14,7 +14,7 @@ const ENTRIES = [
     date: "2026-11-25",
     tag: "SDKs",
     changes: [
-      "TypeScript SDK 0.6.3 and Python SDK 0.4.7: the current policy schema (1.5, token spend), the reason codes PS_PRICE_001 and PS_SIM_002, and package links to their public repositories (palisec/sdk-typescript, palisec/sdk-python).",
+      "TypeScript SDK 0.6.3 and Python SDK 0.4.8: the current policy schema (1.5, token spend), the reason codes PS_PRICE_001 and PS_SIM_002, and package links to their public repositories (palisec/sdk-typescript, palisec/sdk-python).",
       "Each published part now has its own public repository: policy-schema (with the Rust policy engine), policy-enforced-accounts, sdk-typescript, sdk-python and examples.",
     ],
   },

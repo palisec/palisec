@@ -16,7 +16,7 @@ const INSTALL = `pip install palisec
 pip install web3
 
 # Alternative, straight from palisec.tech:
-# pip install https://palisec.tech/sdk/palisec-0.4.7-py3-none-any.whl`;
+# pip install https://palisec.tech/sdk/palisec-0.4.8-py3-none-any.whl`;
 
 const SEND = `import os
 from web3 import AsyncWeb3, AsyncHTTPProvider

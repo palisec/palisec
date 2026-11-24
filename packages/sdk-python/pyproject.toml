@@ -27,7 +27,6 @@ Homepage = "https://palisec.tech"
 Repository = "https://github.com/palisec/sdk-python"
 Issues = "https://github.com/palisec/sdk-python/issues"
 Documentation = "https://palisec.tech/docs/sdk/python"
-Documentation = "https://palisec.tech/docs/sdk/python"
 Changelog = "https://palisec.tech/changelog"
 
 [tool.hatch.version]

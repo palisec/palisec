@@ -131,7 +131,7 @@ const SDK_DOCS = {
     docs: "https://palisec.tech/docs/sdk/typescript",
   },
   python: {
-    install: "pip install palisec (or: pip install https://palisec.tech/sdk/palisec-0.4.7-py3-none-any.whl)",
+    install: "pip install palisec (or: pip install https://palisec.tech/sdk/palisec-0.4.8-py3-none-any.whl)",
     methods: [
       "Palisec(api_key) async client",
       "authorize(**intent), evaluate(**intent), send_transaction(sender, ...)",
