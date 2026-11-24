@@ -164,7 +164,14 @@ export const SPEND_CASES: SpendCase[] = [
   { name: "with the output rule off, the full outflow still counts", policy: spendPolicy({ require_output_to_account: false }), intent: intent(ROUTER, SWAP), state: EMPTY_STATE, env: env(sim({ outflows: [{ token: USDG, amount: usdg(5) }] })), decision: "ALLOW", code: null, reserved: r(5) },
   { name: "a token transfer out is counted", policy: spendPolicy(), intent: intent(USDG, "0xa9059cbb"), state: EMPTY_STATE, env: env(sim({ outflows: [{ token: USDG, amount: usdg(40) }] })), decision: "DENY", code: "PS_BUDGET_001" },
   { name: "a reverting transaction is denied", policy: spendPolicy(), intent: intent(ROUTER, SWAP), state: EMPTY_STATE, env: env(swapSim(5, { reverted: true })), decision: "DENY", code: "PS_SIM_001" },
-  { name: "native ETH over the USD cap is denied", policy: spendPolicy(), intent: intent(RECIPIENT, "", "req-1", "20000000000000000"), state: EMPTY_STATE, env: env(null), decision: "DENY", code: "PS_BUDGET_001" },
-  { name: "native ETH within the USD cap needs no simulation", policy: spendPolicy(), intent: intent(RECIPIENT, "", "req-1", "5000000000000000"), state: EMPTY_STATE, env: env(null), decision: "ALLOW", code: null, reserved: (15_000_000n + FEE).toString() },
+  { name: "native ETH over the USD cap is denied", policy: spendPolicy(), intent: intent(RECIPIENT, "", "req-1", "20000000000000000"), state: EMPTY_STATE, env: env(sim({ outflows: [{ token: NATIVE_TOKEN, amount: "20000000000000000" }] })), decision: "DENY", code: "PS_BUDGET_001" },
+  { name: "native ETH within the USD cap is allowed", policy: spendPolicy(), intent: intent(RECIPIENT, "", "req-1", "5000000000000000"), state: EMPTY_STATE, env: env(sim({ outflows: [{ token: NATIVE_TOKEN, amount: "5000000000000000" }] })), decision: "ALLOW", code: null, reserved: (15_000_000n + FEE).toString() },
+  { name: "native ETH without a simulation is denied (the target could pull tokens)", policy: spendPolicy(), intent: intent(RECIPIENT, "", "req-1", "5000000000000000"), state: EMPTY_STATE, env: env(null), decision: "DENY", code: "PS_SIM_002" },
+  {
+    name: "native ETH to a contract that pulls tokens through an older allowance is counted",
+    policy: spendPolicy({ require_output_to_account: false }), intent: intent(RECIPIENT, "", "req-1", "1000000000000000"), state: EMPTY_STATE,
+    env: env(sim({ outflows: [{ token: NATIVE_TOKEN, amount: "1000000000000000" }, { token: USDG, amount: usdg(40) }] })),
+    decision: "DENY", code: "PS_BUDGET_001",
+  },
   { name: "rule off: a 3,000 USD token swap counts only the fee (the old behaviour)", policy: spendPolicy(null), intent: intent(ROUTER, SWAP), state: EMPTY_STATE, env: env(swapSim(3000)), decision: "ALLOW", code: null, reserved: FEE.toString() },
 ];

@@ -236,7 +236,9 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
         const third = await simulateV1(input.chainId, [{ calls: [...reads, main, ...reads] }]);
         const calls = third[0]!.calls;
         const n = pairs.length;
-        const ok = calls.length === 2 * n + 1 && calls[n]!.status === "0x1" && [...calls.slice(0, n), ...calls.slice(n + 1)].every((c) => c.status === "0x1" && c.returnData.length === 66);
+        // The operation must do exactly what it did in the first run (same logs), or the read is not used.
+        const same = JSON.stringify(calls[n]?.logs ?? []) === JSON.stringify(call.logs ?? []);
+        const ok = same && calls.length === 2 * n + 1 && calls[n]!.status === "0x1" && [...calls.slice(0, n), ...calls.slice(n + 1)].every((c) => c.status === "0x1" && c.returnData.length === 66);
         if (ok)
           allowancesAfter = pairs.map((x, i) => {
             const before = BigInt(calls[i]!.returnData);

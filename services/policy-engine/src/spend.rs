@@ -50,10 +50,6 @@ pub fn check(policy: &Value, env: &Value, now: i64, selector: Option<&str>, valu
             Pass(format!("Exposure {} ({what}) \u{2264} {}.", format_usd(total), format_usd(&cap)))
         }
     };
-    let Some(selector) = selector else {
-        return Ok((capped(base, "value + fee; native transfer, no tokens"), zero));
-    };
-
     let unknown = |why: String| -> (Asset, BigUint) {
         (Fail("PS_SIM_002", format!("{why} The tokens this transaction spends are unknown, so it fails closed.")), BigUint::default())
     };
@@ -87,7 +83,7 @@ pub fn check(policy: &Value, env: &Value, now: i64, selector: Option<&str>, valu
 
     let spent: Vec<&(String, BigUint)> = outflows.iter().filter(|(t, _)| t != NATIVE_TOKEN).collect();
     let require_output = rules.get("require_output_to_account") == Some(&Value::Bool(true));
-    if require_output && selector != TRANSFER_SELECTOR && selector != APPROVE_SELECTOR && !spent.is_empty() && inflows.is_empty() {
+    if require_output && selector != Some(TRANSFER_SELECTOR) && selector != Some(APPROVE_SELECTOR) && !spent.is_empty() && inflows.is_empty() {
         let (t, a) = spent[0];
         return Ok((
             Fail("PS_ASSET_003", format!("{a} of {t} leaves the account and nothing comes back into it: a swap's output must return to the account.")),

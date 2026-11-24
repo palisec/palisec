@@ -689,7 +689,8 @@ const APPROVE_SELECTOR = "0x095ea7b3";
  * Token spend limits. With the rule on, the exposure the limits count is the ETH value and fee (already
  * priced) plus, in USD, every token the simulation shows leaving the account, any ETH it sends beyond
  * the value, and every allowance still open after the operation. Prices are an input read before
- * evaluation (checked Chainlink prices); a spent token without one is never counted as $0. Order:
+ * evaluation (checked Chainlink prices); a spent token without one is never counted as $0. A native
+ * transfer is simulated too: the target may be a contract that pulls tokens through an older allowance. Order:
  * simulation availability and age, revert, output back to the account, unbounded allowances, prices,
  * then the per-transaction USD cap. `base` is the exposure so far (value + fee); `add` is what this adds.
  */
@@ -701,8 +702,6 @@ function spendCheck(policy: Policy, intent: Intent, env: Environment, selector: 
     total > cap
       ? { status: "fail", code: "PS_BUDGET_001", detail: `Exposure ${formatUsd(total)} (${what}) exceeds the per-transaction limit of ${formatUsd(cap)}.` }
       : { status: "pass", detail: `Exposure ${formatUsd(total)} (${what}) ≤ ${formatUsd(cap)}.` };
-  if (selector === null) return { outcome: capped(base, "value + fee; native transfer, no tokens"), add: 0n };
-
   const unknown = (why: string): { outcome: Outcome; add: bigint } => ({
     outcome: { status: "fail", code: "PS_SIM_002", detail: `${why} The tokens this transaction spends are unknown, so it fails closed.` },
     add: 0n,

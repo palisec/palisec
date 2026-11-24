@@ -103,12 +103,13 @@ async function liveEnvironment(
   emergencyStop: boolean,
   pausedAgents: string[],
   simulateFrom: `0x${string}` | null = null,
+  simulateNative = false,
   upoch: { orgId: string; account: string; workflowId: string | null } | null = null,
   loss: LossTarget | null = null,
   recordLoss = true,
 ) {
   const chainEnabled = CHAINS[input.chain_id as ChainId]?.enabled === true;
-  const simulate = simulateFrom !== null && chainEnabled && input.data !== "0x";
+  const simulate = simulateFrom !== null && chainEnabled && (input.data !== "0x" || simulateNative);
   const [gasPrice, price, code, sim, up, lossSnap] = await Promise.all([
     chainEnabled ? gasPriceWei(input.chain_id) : null,
     ethUsd(),
@@ -178,7 +179,7 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   // Loss limits: a draft with a loss limit is tested against the account's value now (read-only, nothing recorded).
   const lossTarget = lossLimitOn(policy) ? { orgId: "", policyUuid: "", chainId: input.chain_id, account: intent.from, policy } : null;
   const prices = spendPricesFor(policy, input.chain_id);
-  const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, null, lossTarget, false);
+  const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, tokenSpendOn(policy), null, lossTarget, false);
   if (prices) env.spend_prices = await prices;
   const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
@@ -241,7 +242,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
   const prices = spendPricesFor(policy, input.chain_id);
   const { env, feeWei } = await liveEnvironment(
-    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null,
+    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null, tokenSpendOn(policy),
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
     lossLimitOn(policy) && agent.policyId ? { orgId: agent.orgId, policyUuid: agent.policyId, chainId: input.chain_id, account: agent.account, policy: policy! } : null,
   );
