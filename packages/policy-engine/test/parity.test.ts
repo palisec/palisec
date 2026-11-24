@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import { engineStatus, evaluateDual, evaluateRust, sameJson, SOURCE_HASH, validateRust } from "../src/index";
 import { evalCase, validateCase, type EvalCase } from "./cases";
 import { SPEND_CASES } from "../../policy-schema/test/spend-cases";
+import { STOP_CASES, STOP_STATE } from "../../policy-schema/test/account-stop-cases";
 // @ts-expect-error plain ESM helper without types
 import { sourceHash } from "../../../services/policy-engine/source-hash.mjs";
 
@@ -187,4 +188,13 @@ describe("token spend cases: both engines agree", () => {
       expect(sameJson(evaluateRust(c.policy, c.intent, c.state, c.env), ref)).toBeNull();
     });
   }
+});
+
+describe("account stop cases: both engines agree", () => {
+  for (const c of STOP_CASES)
+    it(c.name, () => {
+      const ref = evaluate(c.policy, c.intent, STOP_STATE, c.env);
+      expect(ref.decision).toBe(c.decision);
+      expect(sameJson(evaluateRust(c.policy, c.intent, STOP_STATE, c.env), ref)).toBeNull();
+    });
 });

@@ -248,6 +248,37 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
         Ok(Pass("No emergency stop; agent is active.".into()))
     })?;
 
+    r.run("account_stop", "Emergency stop engaged by the account on the registry", || {
+        use crate::asset::{bool_of, int_of, record_of};
+        let raw = match env.get("registry_stop") {
+            None => return Ok(Pass("The account does not publish to a policy registry.".into())),
+            Some(Value::Null) => return Ok(Fail("PS_STATE_001", "The account's stop on the policy registry could not be read, so the request fails closed.".into())),
+            v => record_of(v, "registry_stop")?,
+        };
+        let held = bool_of(raw.get("held_by_account"), "registry_stop.held_by_account")?;
+        let age = now - int_of(raw.get("observed_at"), "registry_stop.observed_at")?;
+        const MAX: i64 = 60;
+        if age > MAX {
+            return Ok(Fail("PS_STATE_001", format!("The registry read is {age}s old; maximum is {MAX}s.")));
+        }
+        if !held {
+            return Ok(Pass("No stop engaged by the account on the registry.".into()));
+        }
+        let exits: Vec<String> = match p.get("loss_limit").and_then(|l| l.get("exit_addresses")) {
+            Some(Value::Array(a)) => a.iter().filter_map(Value::as_str).map(lower).collect(),
+            _ => Vec::new(),
+        };
+        let recipient = match selector.as_deref() {
+            None => Some(to_lower.clone()),
+            Some("0xa9059cbb") if value == BigUint::default() => crate::loss::transfer_recipient(data),
+            _ => None,
+        };
+        if let Some(rcp) = recipient.filter(|r| exits.contains(r)) {
+            return Ok(Pass(format!("The account engaged its stop; a withdrawal to exit address {rcp} stays allowed.")));
+        }
+        Ok(Fail("PS_PAUSED_001", "The account engaged its emergency stop on the registry. Nothing that adds risk is co-signed until the account lifts it.".into()))
+    })?;
+
     r.run("chain", "Chain and account binding", || {
         let pc = pint(&["account", "chain_id"])?;
         if chain_id != pc {

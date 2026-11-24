@@ -134,6 +134,8 @@ export function evaluate(
     return { status: "pass", detail: "No emergency stop; agent is active." };
   });
 
+  run("account_stop", "Emergency stop engaged by the account on the registry", () => accountStopCheck(policy!, intent, env, selector, value));
+
   run("chain", "Chain and account binding", () => {
     if (intent.chain_id !== policy!.account.chain_id)
       return { status: "fail", code: "PS_TARGET_001", detail: `Chain ${intent.chain_id} does not match policy chain ${policy!.account.chain_id}.` };
@@ -678,6 +680,33 @@ function lossCheck(policy: Policy, intent: Intent, env: Environment, selector: s
   if (code === "PS_LOSS_001")
     return breach(code, `This operation would bring the drawdown to ${formatBps(Number(dd))}, at or above the ${formatBps(rules.max_drawdown_bps)} limit (peak ${formatUsd(peak)}, value after ${formatUsd(after)}).`);
   return { status: "pass", detail: `Loss after this operation ${formatUsd(loss)}, drawdown ${formatBps(Number(dd))} (peak ${formatUsd(peak)}, value after ${formatUsd(after)}).` };
+}
+
+// ---------------------------------------------------------------- account stop (ERC-8511 registry)
+
+export const REGISTRY_STOP_MAX_AGE = 60;
+
+/**
+ * A stop the account engaged itself on the registry stops Palisec's decisions too, until the account lifts it.
+ * Nothing that adds risk is co-signed; only a withdrawal (ETH or an ERC-20 transfer) to one of the loss limit's
+ * exit addresses stays allowed. The registry read is an input; unreadable or stale fails closed.
+ */
+function accountStopCheck(policy: Policy, intent: Intent, env: Environment, selector: string | null, value: bigint): Outcome {
+  const raw = env.registry_stop;
+  if (raw === undefined) return { status: "pass", detail: "The account does not publish to a policy registry." };
+  if (raw === null) return { status: "fail", code: "PS_STATE_001", detail: "The account's stop on the policy registry could not be read, so the request fails closed." };
+  const r = recordOf(raw, "registry_stop");
+  const held = boolOf(r.held_by_account, "registry_stop.held_by_account");
+  const age = env.now - intOf(r.observed_at, "registry_stop.observed_at");
+  if (age > REGISTRY_STOP_MAX_AGE)
+    return { status: "fail", code: "PS_STATE_001", detail: `The registry read is ${age}s old; maximum is ${REGISTRY_STOP_MAX_AGE}s.` };
+  if (!held) return { status: "pass", detail: "No stop engaged by the account on the registry." };
+  const exits = (policy.loss_limit?.exit_addresses ?? []).map((a) => a.toLowerCase());
+  const to = intent.to.toLowerCase();
+  const recipient = selector === null ? to : selector === TRANSFER_SELECTOR && value === 0n ? transferRecipient(intent.data) : null;
+  if (recipient !== null && exits.includes(recipient))
+    return { status: "pass", detail: `The account engaged its stop; a withdrawal to exit address ${recipient} stays allowed.` };
+  return { status: "fail", code: "PS_PAUSED_001", detail: "The account engaged its emergency stop on the registry. Nothing that adds risk is co-signed until the account lifts it." };
 }
 
 // ---------------------------------------------------------------- token spend (schema 1.5)

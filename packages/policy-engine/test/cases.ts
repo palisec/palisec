@@ -315,6 +315,7 @@ export function evalCase(seed: number): EvalCase {
   if (snap !== null || chance(r, 0.5)) env.loss_snapshot = snap;
   const proven = chance(r, 0.15) ? null : provenStatus(r, now);
   if (proven !== null || chance(r, 0.5)) env.proven_record = proven;
+  if (chance(r, 0.3)) env.registry_stop = chance(r, 0.1) ? null : { held_by_account: chance(r, 0.4), observed_at: now - pick(r, [0, 5, 60, 61, -1]) };
   const prices = chance(r, 0.12) ? null : spendPrices(r, now);
   if (prices !== null || chance(r, 0.5)) env.spend_prices = prices;
   if (sim && chance(r, 0.4)) {

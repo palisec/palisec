@@ -57,6 +57,7 @@ const ORDER = [
   ["Request schema", "Fields are well-formed and within size bounds.", "PS_REQUEST_001"],
   ["Replay", "request_id is new and the deadline has not passed.", "PS_REPLAY_001"],
   ["Emergency stop and agent", "No global stop; the agent is not paused.", "PS_PAUSED_001"],
+  ["Account stop", "For accounts on the policy registry: no stop held by the account, or a withdrawal to an exit address.", "PS_PAUSED_001 / PS_STATE_001"],
   ["Chain and account", "Chain ID and sender match the policy.", "PS_TARGET_001"],
   ["Explicit deny", "Target is not denylisted.", "PS_POLICY_002"],
   ["Target", "Target is allowlisted (and code-verified if required).", "PS_TARGET_001"],

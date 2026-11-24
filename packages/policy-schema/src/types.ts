@@ -280,6 +280,12 @@ export interface Environment {
   loss_snapshot?: LossSnapshot | null;
   /** Proven on Zolva: the agent's record; absent or null means the policy's own limits apply. */
   proven_record?: ProvenRecordStatus | null;
+  /**
+   * The account's emergency stop on the policy registry (ERC-8511), for accounts that publish there. Absent: not
+   * published, nothing to check. Null: the registry could not be read (fails closed). A stop the account holds
+   * stops Palisec's decisions too: only withdrawals to the loss limit's exit addresses stay allowed.
+   */
+  registry_stop?: { held_by_account: boolean; observed_at: number } | null;
   /** Token spend limits: prices for spent tokens; absent or null means none (spent tokens fail closed). */
   spend_prices?: SpendPrices | null;
 }

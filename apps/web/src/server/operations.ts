@@ -26,7 +26,7 @@ import { CHAINS, type ChainId } from "./config";
 import { db, type Row } from "./db";
 import { BadRequest, HttpError, logEvent } from "./http";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
-import { signReceipt } from "./peaa";
+import { registryStopInput, signReceipt } from "./peaa";
 import { latch, lossLimitOn, safeReason, takeSnapshot, type LossTarget } from "./loss-limits";
 import { spendPrices, tokenSpendOn } from "./valuation";
 import type { ReceiptJson } from "policy-enforced-accounts";
@@ -241,6 +241,8 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
 
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
   const prices = spendPricesFor(policy, input.chain_id);
+  // The account's own stop on the registry (ERC-8511): read alongside the other inputs.
+  const accountStop = registryStopInput(input.chain_id, agent.account);
   const { env, feeWei } = await liveEnvironment(
     input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null, tokenSpendOn(policy),
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
@@ -251,6 +253,8 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   if (policy?.proven_record?.enabled === true) env.proven_record = await provenInput(agent.orgId, agent.agentId, policy);
   // Token spend: the spent tokens' prices (null when none could be read; spent tokens then fail closed).
   if (prices) env.spend_prices = await prices;
+  const stop = await accountStop;
+  if (stop !== undefined) env.registry_stop = stop;
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {

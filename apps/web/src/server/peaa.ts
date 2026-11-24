@@ -61,6 +61,28 @@ async function optedIn(chainId: number, account: string): Promise<boolean> {
   return optIn.accounts.has(`${chainId}:${account.toLowerCase()}`);
 }
 
+// ----------------------------------------------------------------- the account's own stop
+
+/**
+ * For the decision engines: whether the account holds its own emergency stop on the registry (undefined when the
+ * account does not publish there; null when the registry cannot be read, which fails closed). Read every decision.
+ */
+export async function registryStopInput(chainId: number, account: string): Promise<{ held_by_account: boolean; observed_at: number } | null | undefined> {
+  const registry = registryFor(chainId);
+  try {
+    if (!registry || !(await optedIn(chainId, account))) return undefined;
+  } catch {
+    return null;
+  }
+  try {
+    const pub = createPublicClient({ transport: chainTransport(chainId as ChainId, 4000) });
+    const held = await pub.readContract({ address: registry, abi: REGISTRY_ABI, functionName: "stopHeldByAccount", args: [getAddress(account)] });
+    return { held_by_account: held === true, observed_at: Math.floor(Date.now() / 1000) };
+  } catch {
+    return null;
+  }
+}
+
 // ----------------------------------------------------------------- receipts
 
 export interface ReceiptInput {

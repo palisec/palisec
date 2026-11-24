@@ -49,7 +49,7 @@ fn loss_breach(usd_max: &BigUint, bps_max: i64, peak: &BigUint, value: &BigUint)
     None
 }
 
-fn transfer_recipient(data: &str) -> Option<String> {
+pub(crate) fn transfer_recipient(data: &str) -> Option<String> {
     if data.len() < 138 || lower(&data[..10]) != TRANSFER_SELECTOR {
         return None;
     }
