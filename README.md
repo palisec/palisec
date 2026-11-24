@@ -2,6 +2,12 @@
 
 The authorization boundary for autonomous on-chain agents on Robinhood Chain. Every action an agent wants to take is checked against a signed policy before anything is signed or sent, and refusals come back with a reason code. Live at https://palisec.tech.
 
+## Links
+
+- Docs: https://palisec.tech/docs · Changelog: https://palisec.tech/changelog
+- Packages: [`@palisec/sdk`](https://www.npmjs.com/package/@palisec/sdk), [`palisec`](https://pypi.org/project/palisec/) (Python), [`policy-enforced-accounts`](https://www.npmjs.com/package/policy-enforced-accounts)
+- Standard: ERC-8511, Policy-Enforced Agent Accounts ([pull request](https://github.com/ethereum/ERCs/pull/2196), [discussion](https://ethereum-magicians.org/t/erc-8511-policy-enforced-agent-accounts/30467))
+
 ## Layout
 
 | Path | What |
@@ -28,6 +34,10 @@ pnpm dev:web
 ```
 
 Contracts: `cd contracts && forge test`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
 

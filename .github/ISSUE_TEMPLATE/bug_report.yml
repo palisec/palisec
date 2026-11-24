@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in Palisec does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Security issues: do not file them here. See SECURITY.md."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: ids
+    attributes:
+      label: Decision or request ID
+      description: If a decision looks wrong, its operation ID or request ID and reason code (for example PS_BUDGET_001).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - API or decisions
+        - Console
+        - TypeScript SDK
+        - Python SDK
+        - policy-enforced-accounts library
+        - Contracts
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: network
+    attributes:
+      label: Network
+      description: Robinhood Chain mainnet (4663) or testnet (46630).

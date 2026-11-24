@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security issue
+    url: https://palisec.tech/.well-known/security.txt
+    about: Please report vulnerabilities privately, never in a public issue.
+  - name: Discuss the standard (ERC-8511)
+    url: https://ethereum-magicians.org/t/erc-8511-policy-enforced-agent-accounts/30467
+    about: Questions and proposals about the Policy-Enforced Agent Accounts specification.
+  - name: Documentation
+    url: https://palisec.tech/docs
+    about: Guides, the policy reference, reason codes and the API.
