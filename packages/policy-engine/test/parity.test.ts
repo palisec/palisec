@@ -14,6 +14,7 @@ import { EXAMPLE_POLICY, evaluate, validatePolicy, type Environment, type Intent
 import { describe, expect, it } from "vitest";
 import { engineStatus, evaluateDual, evaluateRust, sameJson, SOURCE_HASH, validateRust } from "../src/index";
 import { evalCase, validateCase, type EvalCase } from "./cases";
+import { SPEND_CASES } from "../../policy-schema/test/spend-cases";
 // @ts-expect-error plain ESM helper without types
 import { sourceHash } from "../../../services/policy-engine/source-hash.mjs";
 
@@ -110,7 +111,7 @@ describe("policy engine", () => {
     // The generator must reach every outcome, or the comparison proves little.
     expect(decisions.ALLOW).toBeGreaterThan(FUZZ / 100);
     expect(decisions.REQUIRES_HUMAN_SIGNATURE).toBeGreaterThan(FUZZ / 100);
-    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001", "PS_RECOVERY_001", "PS_RECOVERY_002", "PS_RECOVERY_003", "PS_LOSS_001", "PS_LOSS_002", "PS_LOSS_003"])
+    for (const code of ["PS_POLICY_001", "PS_POLICY_002", "PS_TARGET_001", "PS_METHOD_001", "PS_BUDGET_001", "PS_RATE_001", "PS_LOOP_001", "PS_REPLAY_001", "PS_FEE_001", "PS_HUMAN_001", "PS_PAUSED_001", "PS_STATE_001", "PS_REQUEST_001", "PS_SIM_001", "PS_ASSET_001", "PS_ASSET_002", "PS_ASSET_003", "PS_APPROVAL_001", "PS_RECOVERY_001", "PS_RECOVERY_002", "PS_RECOVERY_003", "PS_LOSS_001", "PS_LOSS_002", "PS_LOSS_003", "PS_PRICE_001", "PS_SIM_002"])
       expect(codes.has(code), code).toBe(true);
   }, 600_000);
 
@@ -176,4 +177,14 @@ describe("dual evaluation", () => {
     expect(r.decision).toBe("DENY");
     expect(r.reason_code).toBe("PS_STATE_001");
   });
+});
+
+describe("token spend cases: both engines agree", () => {
+  for (const c of SPEND_CASES) {
+    it(c.name, () => {
+      const ref = evaluate(c.policy, c.intent, c.state, c.env);
+      expect(ref.decision).toBe(c.decision);
+      expect(sameJson(evaluateRust(c.policy, c.intent, c.state, c.env), ref)).toBeNull();
+    });
+  }
 });

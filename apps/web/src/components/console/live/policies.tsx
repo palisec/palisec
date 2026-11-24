@@ -355,7 +355,7 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
       {unitField("Max gas cost (ETH)", 18, doc.limits?.max_gas_cost_wei, (d, v) => (d.limits.max_gas_cost_wei = v), "Bound = gas limit × current gas price. Unknown fees are denied, never treated as zero.")}
       <div className={section}>
         <p className="label">Budget window · rolling hour</p>
-        {unitField("Hourly budget (USD)", 6, doc.limits?.hourly_budget_usd_micros, (d, v) => (d.limits.hourly_budget_usd_micros = v), "Value plus fee bound, shared by every agent on this policy.")}
+        {unitField("Hourly budget (USD)", 6, doc.limits?.hourly_budget_usd_micros, (d, v) => (d.limits.hourly_budget_usd_micros = v), "Counts ETH value plus fee, and tokens too when token_spend is on (in the JSON). Shared by every agent on this policy.")}
         {intField("Max pending operations", doc.limits?.max_pending_operations, (d, v) => (d.limits.max_pending_operations = Math.min(v, 1000)))}
         {intField("Max price age (seconds)", doc.limits?.max_price_age_seconds, (d, v) => (d.limits.max_price_age_seconds = Math.min(Math.max(v, 1), 3600)), "Older ETH/USD prices fail closed. 30 or more is recommended.")}
       </div>

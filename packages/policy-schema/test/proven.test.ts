@@ -56,7 +56,7 @@ describe("proven on Zolva: validation", () => {
     expect(validatePolicy(policy())).toEqual([]);
   });
   it("needs schema 1.4", () => {
-    expect(validatePolicy({ ...policy(), schema_version: "1.3" })).toContainEqual({ path: "$.proven_record", message: 'requires schema_version "1.4"' });
+    expect(validatePolicy({ ...policy(), schema_version: "1.3" })).toContainEqual({ path: "$.proven_record", message: 'requires schema_version "1.4" or later' });
   });
   it("only knows the zolva source and bounded settings", () => {
     const errs = validatePolicy(policy({ source: "other" as "zolva", min_verified_hours: 1, max_record_age_seconds: 100 }));

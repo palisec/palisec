@@ -159,7 +159,7 @@ describe("reason codes", () => {
   });
   it("maps every Palisec code to a standard code", () => {
     for (const v of Object.values(PALISEC_REASON_MAP)) expect(REASONS).toHaveProperty(v);
-    expect(Object.keys(PALISEC_REASON_MAP)).toHaveLength(24);
+    expect(Object.keys(PALISEC_REASON_MAP)).toHaveLength(26);
   });
 });
 

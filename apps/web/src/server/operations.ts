@@ -28,6 +28,7 @@ import { BadRequest, HttpError, logEvent } from "./http";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { signReceipt } from "./peaa";
 import { latch, lossLimitOn, safeReason, takeSnapshot, type LossTarget } from "./loss-limits";
+import { spendPrices, tokenSpendOn } from "./valuation";
 import type { ReceiptJson } from "policy-enforced-accounts";
 
 /** How long an ALLOW can be used, and how long a request may wait for a human approver. */
@@ -138,8 +139,10 @@ async function liveEnvironment(
 
 /** Asset safety applies to this policy: the request's declared intent goes to the engines and the operation is simulated. */
 const assetSafetyOn = (p: Policy | null) => p?.asset_safety?.enabled === true;
-/** The operation is simulated when asset safety or a loss limit needs its balance changes. */
-const simulationNeeded = (p: Policy | null) => assetSafetyOn(p) || lossLimitOn(p);
+/** The operation is simulated when asset safety, a loss limit or the token spend rule needs its balance changes. */
+const simulationNeeded = (p: Policy | null) => assetSafetyOn(p) || lossLimitOn(p) || tokenSpendOn(p);
+/** Token spend: prices for the tokens a transaction may spend, read alongside the other inputs. */
+const spendPricesFor = (p: Policy | null, chainId: number) => (tokenSpendOn(p) ? spendPrices(chainId, p!.token_spend!.max_closed_market_price_age_seconds) : null);
 
 /** Disabled chains deny, and live-only checks say plainly that this deployment does not perform them. */
 function finish(r: ReturnType<typeof evaluate>, chainId: number) {
@@ -174,7 +177,9 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(declared ?? null, input.to, input.value_wei, input.data);
   // Loss limits: a draft with a loss limit is tested against the account's value now (read-only, nothing recorded).
   const lossTarget = lossLimitOn(policy) ? { orgId: "", policyUuid: "", chainId: input.chain_id, account: intent.from, policy } : null;
+  const prices = spendPricesFor(policy, input.chain_id);
   const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, null, lossTarget, false);
+  if (prices) env.spend_prices = await prices;
   const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
@@ -234,6 +239,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   };
 
   if (assetSafetyOn(policy)) intent.asset_intent = declaredIntent(input.asset_intent ?? null, input.to, input.value_wei, input.data);
+  const prices = spendPricesFor(policy, input.chain_id);
   const { env, feeWei } = await liveEnvironment(
     input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null,
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
@@ -242,6 +248,8 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   // Proven on Zolva: the agent's record decides between the policy's own and its unlocked limits.
   // Unavailable or unclear: null, and the engines keep the policy's own (smaller) limits.
   if (policy?.proven_record?.enabled === true) env.proven_record = await provenInput(agent.orgId, agent.agentId, policy);
+  // Token spend: the spent tokens' prices (null when none could be read; spent tokens then fail closed).
+  if (prices) env.spend_prices = await prices;
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {

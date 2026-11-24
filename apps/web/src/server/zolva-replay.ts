@@ -135,7 +135,9 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
     "Paper trading with virtual money: these are Zolva's recorded paper trades, not trades that ran through Palisec.",
     "Each spot trade is replayed as an exact-input swap on Uniswap's SwapRouter02 from the policy's account, at Zolva's recorded quantity and price.",
     "The balance changes are the recorded fills (used in place of a live simulation); ETH/USD is Zolva's hourly ETH close; the network fee is a fixed 0.00002 ETH.",
-    "The per-transaction value limit, the hourly budget and the approval threshold count the ETH a transaction sends plus its network fee. These swaps send no ETH, so their token amounts are not counted there; the contract allowlist, asset safety and the loss limit are what apply to token amounts.",
+    doc.token_spend?.enabled
+      ? "The policy counts token spend: the per-transaction USD limit, the hourly budget and the approval threshold count each swap's USDG or stock-token amount, at $1 for USDG and Zolva's recorded price for the stock token, plus the network fee."
+      : "The per-transaction value limit, the hourly budget and the approval threshold count the ETH a transaction sends plus its network fee. This policy does not count token spend, so these swaps' token amounts are not counted there; the contract allowlist, asset safety and the loss limit are what apply to token amounts.",
     ...(scale !== 1 ? [`Amounts are scaled by ${scale.toFixed(4)} to a ${capitalUsd} USD account.`] : []),
   ];
   const trades = [...rec.trades].sort((a, b) => (a.at < b.at ? -1 : 1));
@@ -203,6 +205,18 @@ export async function replayPolicy(policy: Policy, which: "active" | "draft", zo
         round_trip_loss_bps: null,
       },
       loss_snapshot: doc.loss_limit?.enabled ? lossAt(now, m, t.price) : undefined,
+      // Token spend: the same prices a live decision would read (USDG at $1, the stock token at the fill price).
+      spend_prices: doc.token_spend?.enabled
+        ? {
+            observed_at: now,
+            prices: [
+              { token: USDG.toLowerCase() as Address, price_micros: "1000000", decimals: 6 },
+              { token: m.address.toLowerCase() as Address, price_micros: micros(t.price).toString(), decimals: m.decimals },
+              ...(ethPrice(now) ? [{ token: NATIVE_TOKEN, price_micros: ethPrice(now)!, decimals: 18 }] : []),
+            ],
+            unavailable: [],
+          }
+        : undefined,
     };
     let r;
     try {

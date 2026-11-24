@@ -1,6 +1,6 @@
 //! Palisec policy engine.
 //!
-//! The production evaluator for policy schema 1.0 and 1.1, compiled to WebAssembly and run by the API
+//! The production evaluator for policy schema 1.0 to 1.5, compiled to WebAssembly and run by the API
 //! alongside the TypeScript reference evaluator. Both must agree on every field of every result;
 //! if they ever differ, or this engine cannot run, the API denies (fails closed).
 //!
@@ -16,6 +16,7 @@ pub mod evaluate;
 pub mod loss;
 pub mod proven;
 pub mod recovery;
+pub mod spend;
 pub mod js;
 pub mod validate;
 

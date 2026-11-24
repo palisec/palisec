@@ -64,7 +64,8 @@ const ORDER = [
   ["Value", "Native value ≤ per-transaction limit.", "PS_BUDGET_001"],
   ["Fee", "A bounded fee estimate exists and is within the gas limit.", "PS_FEE_001 / PS_BUDGET_001"],
   ["Price", "A price exists and is fresher than max_price_age_seconds.", "PS_STATE_001"],
-  ["Budget", "Window usage + this request ≤ hourly budget; reserve atomically.", "PS_BUDGET_001"],
+  ["Token spend", "With token_spend on: tokens out and open allowances priced in USD; exposure ≤ max_transaction_usd_micros.", "PS_BUDGET_001 / PS_PRICE_001 / PS_SIM_002"],
+  ["Budget", "Window usage + this request's exposure ≤ hourly budget; reserve atomically.", "PS_BUDGET_001"],
   ["Pending", "Open reservations < max_pending_operations.", "PS_RATE_001"],
   ["Loop", "No identical calldata or equivalent intent within cooldowns.", "PS_LOOP_001"],
   ["Human threshold", "Exposure below the approval threshold, else review.", "PS_HUMAN_001"],
@@ -114,10 +115,36 @@ export default function PoliciesPage() {
         <li><strong>Native value and fees</strong> are integer wei.</li>
         <li><strong>USD amounts</strong> are integer micros (1 USD = 1,000,000). Conversion rounds up, so limits are never under-counted.</li>
         <li><strong>USD enforcement needs a fresh price.</strong> A missing price, or one older than <code>max_price_age_seconds</code>, fails closed with <code>PS_STATE_001</code>.</li>
-        <li><strong>Exposure</strong> is native value plus estimated fee. The per-transaction value limit, the hourly budget and the
-          approval threshold count exposure only: tokens a call spends (an ERC-20 transfer, a swap from USDG or a stock token) are not
-          counted there. Token spend is bounded by the contract and selector allowlist, by asset safety (no outflow beyond the declared
-          spend, slippage, approvals) and by the loss limit.</li>
+        <li><strong>Exposure</strong> is what the per-transaction limits, the hourly budget and the approval threshold count. Without{" "}
+          <code>token_spend</code> it is native value plus estimated fee only, so a swap from USDG or a stock token counts as its fee.
+          With <code>token_spend</code> on (schema 1.5), it is native value plus fee plus the USD value of every token the transaction
+          spends and every allowance it leaves open. See <a href="#token-spend">Token spend</a>.</li>
+      </ul>
+
+      <h2 id="token-spend">Token spend (schema 1.5)</h2>
+      <p>
+        With <code>token_spend.enabled</code>, the spending limits count tokens, not only ETH. Before each decision PALISEC simulates the
+        exact call (the same simulation asset safety uses) and prices what it spends with the Chainlink feeds on Robinhood Chain.
+      </p>
+      <ul>
+        <li><strong>What counts:</strong> ETH sent, the fee, every token that leaves the account (through a router, a multicall or any other
+          contract), and every allowance the call grants that is still open when it ends, at its full amount. An approval pulled in full
+          inside the same call counts once, as the tokens that left. An approval and a later swap that uses it are each counted.</li>
+        <li><strong>Where it counts:</strong> <code>max_transaction_usd_micros</code> per transaction, the hourly budget, and the human
+          approval threshold. Over a limit: <code>PS_BUDGET_001</code>; at the threshold: <code>PS_HUMAN_001</code>.</li>
+        <li><strong>Prices:</strong> ETH, WETH, USDG and the listed stock tokens, from Chainlink, with the loss limit&apos;s checks (fresh
+          within the feed&apos;s heartbeat, stock tokens up to <code>max_closed_market_price_age_seconds</code> while markets are closed, no
+          oracle pause, USDG within 2% of $1). A token without a reliable price is never counted as $0: <code>PS_PRICE_001</code>, denied
+          or held for a human per <code>on_price_unavailable</code>.</li>
+        <li><strong>Unknown outflows:</strong> no simulation, or one older than 60 seconds, means the outflows are unknown and the request is
+          denied (<code>PS_SIM_002</code>), whatever <code>on_price_unavailable</code> says. An unlimited allowance cannot fit a limit and is
+          denied (<code>PS_BUDGET_001</code>).</li>
+        <li><strong>A swap&apos;s output returns to the account:</strong> with <code>require_output_to_account</code>, a contract call that
+          spends tokens and brings nothing back is denied (<code>PS_ASSET_003</code>).</li>
+        <li><strong>Existing policies:</strong> the rule is opt-in. Adding it, or lowering its cap, is a tightening and applies at once;
+          raising the cap, switching it off or holding missing prices for review is a loosening and waits the delay. Allowances granted
+          before the rule was on are not counted; revoke them when you turn it on. Unlocked limits from a Zolva record do not raise{" "}
+          <code>max_transaction_usd_micros</code>.</li>
       </ul>
 
       <h2 id="precedence">Precedence</h2>
@@ -259,7 +286,8 @@ export default function PoliciesPage() {
           against it as a draft, compare the decisions with the active version, then activate it explicitly.</li>
       </ul>
       <p>
-        Schema 1.1 adds the optional asset_safety section and needs no migration: 1.0 documents stay valid and keep asset safety off. Each future schema version will list its changes and a conversion
+        Schema 1.1 adds the optional asset_safety section and needs no migration: 1.0 documents stay valid and keep asset safety off.
+        Schema 1.5 adds the optional token_spend section the same way: a document moved to 1.5 without it decides exactly as before. Each future schema version will list its changes and a conversion
         table in the <Link href="/changelog">changelog</Link>.
       </p>
 

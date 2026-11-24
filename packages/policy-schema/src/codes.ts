@@ -34,6 +34,9 @@ export const REASON_CODES = {
   PS_LOSS_001: "Loss limit reached: drawdown percentage",
   PS_LOSS_002: "Loss limit reached: USD loss",
   PS_LOSS_003: "Account value unavailable",
+  // Token spend limits (schema 1.5). Limits themselves reuse PS_BUDGET_001 and PS_HUMAN_001.
+  PS_PRICE_001: "No reliable price for a token the transaction spends",
+  PS_SIM_002: "The transaction's outflows could not be determined",
 } as const;
 
 export type ReasonCode = keyof typeof REASON_CODES;
@@ -67,4 +70,6 @@ export const RETRYABLE: Record<ReasonCode, boolean> = {
   PS_LOSS_001: false,
   PS_LOSS_002: false,
   PS_LOSS_003: true,
+  PS_PRICE_001: true,
+  PS_SIM_002: true,
 };

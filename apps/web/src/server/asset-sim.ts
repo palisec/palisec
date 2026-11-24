@@ -50,6 +50,8 @@ const PROBE_ABI = [
 ] as const;
 
 const hex = (n: bigint | number) => `0x${BigInt(n).toString(16)}`;
+const word = (a: string) => a.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+const ALLOWANCE = "0xdd62ed3e"; // allowance(address owner, address spender)
 const topicAddress = (t: string) => `0x${t.slice(26)}`.toLowerCase();
 
 export interface SimulationInput {
@@ -221,6 +223,30 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
         tax = blocked ? null : clampBps(worst);
       }
     }
+    // What the operation leaves newly approved, per spender it approved: the allowance read right after it,
+    // less the allowance right before it, in the same simulated block. So the token spend rule counts an
+    // approval that stays open, but not one a router pulled within the call, and not an older allowance a
+    // swap merely uses up (some tokens emit Approval on every transferFrom). Unavailable: left out, and the
+    // engines count the approved amounts instead.
+    let allowancesAfter: AssetSimulation["allowances_after"];
+    const pairs = [...new Map(a.approvals.map((x) => [`${x.token}|${x.spender}`, x])).values()];
+    if (!reverted && pairs.length > 0 && pairs.length <= 8) {
+      try {
+        const reads = pairs.map((x) => ({ from: input.account, to: x.token, data: `${ALLOWANCE}${word(account)}${word(x.spender)}` }));
+        const third = await simulateV1(input.chainId, [{ calls: [...reads, main, ...reads] }]);
+        const calls = third[0]!.calls;
+        const n = pairs.length;
+        const ok = calls.length === 2 * n + 1 && calls[n]!.status === "0x1" && [...calls.slice(0, n), ...calls.slice(n + 1)].every((c) => c.status === "0x1" && c.returnData.length === 66);
+        if (ok)
+          allowancesAfter = pairs.map((x, i) => {
+            const before = BigInt(calls[i]!.returnData);
+            const after = BigInt(calls[n + 1 + i]!.returnData);
+            return { token: x.token, spender: x.spender, amount: (after > before ? after - before : 0n).toString() };
+          });
+      } catch {
+        allowancesAfter = undefined;
+      }
+    }
     // eth_simulateV1 runs on the latest block's state in a virtual next block (stamped ~12 s ahead), so
     // report the state's block and the moment the simulation answered.
     const sim: AssetSimulation = {
@@ -230,6 +256,7 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
       outflows: a.outflows,
       inflows: a.inflows,
       approvals: a.approvals,
+      ...(allowancesAfter ? { allowances_after: allowancesAfter } : {}),
       sell,
       tax_bps: tax,
       round_trip_loss_bps: loss,

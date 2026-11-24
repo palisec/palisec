@@ -17,7 +17,7 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /**
- * Validates a policy document against schema 1.0 to 1.4. Unknown fields are rejected so a
+ * Validates a policy document against schema 1.0 to 1.5. Unknown fields are rejected so a
  * typo can never silently disable a rule. Returns an empty array when valid.
  */
 export function validatePolicy(doc: unknown): ValidationError[] {
@@ -55,10 +55,10 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   const $ = "$";
   fields(doc, $, [
     "schema_version", "policy_id", "version", "account", "status",
-    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record",
+    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend",
   ]);
 
-  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1", "1.2", "1.3" or "1.4"');
+  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1", "1.2", "1.3", "1.4" or "1.5"');
   if (typeof doc.policy_id !== "string" || !POLICY_ID.test(doc.policy_id))
     err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
   int(doc, "version", $, 1, 2 ** 31 - 1);
@@ -129,7 +129,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.asset_safety !== undefined) {
-    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4") err("$.asset_safety", 'requires schema_version "1.1" or later');
+    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.asset_safety", 'requires schema_version "1.1" or later');
     const safety = obj(doc, "asset_safety", $);
     if (safety) {
       const p = "$.asset_safety";
@@ -149,7 +149,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.upoch_recovery !== undefined) {
-    if (doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4") err("$.upoch_recovery", 'requires schema_version "1.2" or later');
+    if (doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.upoch_recovery", 'requires schema_version "1.2" or later');
     const up = obj(doc, "upoch_recovery", $);
     if (up) {
       const p = "$.upoch_recovery";
@@ -162,7 +162,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.loss_limit !== undefined) {
-    if (doc.schema_version !== "1.3" && doc.schema_version !== "1.4") err("$.loss_limit", 'requires schema_version "1.3" or later');
+    if (doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.loss_limit", 'requires schema_version "1.3" or later');
     const loss = obj(doc, "loss_limit", $);
     if (loss) {
       const p = "$.loss_limit";
@@ -193,7 +193,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.proven_record !== undefined) {
-    if (doc.schema_version !== "1.4") err("$.proven_record", 'requires schema_version "1.4"');
+    if (doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.proven_record", 'requires schema_version "1.4" or later');
     const pr = obj(doc, "proven_record", $);
     if (pr) {
       const p = "$.proven_record";
@@ -214,6 +214,20 @@ export function validatePolicy(doc: unknown): ValidationError[] {
             err(`${q}.${k}`, `must be at least limits.${k}`);
         }
       }
+    }
+  }
+
+  if (doc.token_spend !== undefined) {
+    if (doc.schema_version !== "1.5") err("$.token_spend", 'requires schema_version "1.5"');
+    const ts = obj(doc, "token_spend", $);
+    if (ts) {
+      const p = "$.token_spend";
+      fields(ts, p, ["enabled", "max_transaction_usd_micros", "on_price_unavailable", "max_closed_market_price_age_seconds", "require_output_to_account"]);
+      bool(ts, "enabled", p);
+      uint(ts, "max_transaction_usd_micros", p);
+      if (ts.on_price_unavailable !== "deny" && ts.on_price_unavailable !== "review") err(`${p}.on_price_unavailable`, 'must be "deny" or "review"');
+      int(ts, "max_closed_market_price_age_seconds", p, 0, 604800);
+      bool(ts, "require_output_to_account", p);
     }
   }
 

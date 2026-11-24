@@ -30,6 +30,8 @@ REASON_CODES: dict[str, str] = {
     "PS_LOSS_001": "Loss limit reached: drawdown percentage",
     "PS_LOSS_002": "Loss limit reached: USD loss",
     "PS_LOSS_003": "Account value unavailable",
+    "PS_PRICE_001": "No reliable price for a token the transaction spends",
+    "PS_SIM_002": "The transaction's outflows could not be determined",
 }
 
 #: Whether a client may retry the same request after the condition clears.
@@ -61,4 +63,6 @@ RETRYABLE: dict[str, bool] = {
     "PS_LOSS_001": False,
     "PS_LOSS_002": False,
     "PS_LOSS_003": True,
+    "PS_PRICE_001": True,
+    "PS_SIM_002": True,
 }

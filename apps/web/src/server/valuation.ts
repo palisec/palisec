@@ -1,5 +1,5 @@
 import "server-only";
-import { NATIVE_TOKEN } from "@palisec/policy-schema";
+import { NATIVE_TOKEN, type Policy, type SpendPrices } from "@palisec/policy-schema";
 import { createPublicClient, getAddress, parseAbi, type Address } from "viem";
 import { ethUsd, usdgUsdMicros } from "./chain-env";
 import { CHAINS, chainTransport, type ChainId } from "./config";
@@ -133,6 +133,28 @@ async function loadPrice(chainId: ChainId, asset: PricedAsset, now: number, clos
     if (bpsOff(crossUsdg, 1_000_000n) > DEPEG_BPS) return { ok: false, token: asset.contract, reason: `${asset.symbol}: trades more than 2% away from $1` };
   }
   return p;
+}
+
+/** Token spend limits (schema 1.5) apply to this policy: spent tokens are priced before each decision. */
+export const tokenSpendOn = (p: Policy | null): boolean => p?.token_spend?.enabled === true;
+
+/**
+ * Prices for the tokens a transaction may spend, for the token spend rule: every asset with a feed on
+ * the chain, checked exactly as for the loss limit. A token without a feed is in neither list, and a
+ * failed check puts it in `unavailable`; the engines then deny (or hold) instead of counting it as $0.
+ * Null when nothing could be read at all.
+ */
+export async function spendPrices(chainId: number, closedMarketMaxAge: number): Promise<SpendPrices | null> {
+  try {
+    const all = await pricesFor(chainId, closedMarketMaxAge);
+    return {
+      observed_at: Math.floor(Date.now() / 1000),
+      prices: all.flatMap((p) => (p.ok ? [{ token: p.token as Address, price_micros: p.price_micros.toString(), decimals: p.decimals }] : [])),
+      unavailable: all.flatMap((p) => (p.ok ? [] : [p.token as Address])),
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** Every priced asset on the chain, checked. Unknown chains have none. */

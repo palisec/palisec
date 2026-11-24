@@ -15,7 +15,7 @@ const TRANSFER_SELECTOR: &str = "0xa9059cbb";
 type Res<T> = Result<T, String>;
 
 /// `tokenUsdMicros`: USD micros for `amount` base units at `price` micros per whole token.
-fn token_usd(amount: &BigUint, price: &BigUint, decimals: u32, up: bool) -> BigUint {
+pub(crate) fn token_usd(amount: &BigUint, price: &BigUint, decimals: u32, up: bool) -> BigUint {
     let scale = BigUint::from(10u32).pow(decimals);
     let n = amount * price;
     if up {

@@ -54,6 +54,8 @@ const NUMERIC: Record<string, { looserWhen: "higher" | "lower"; label: string }>
   "$.proven_record.max_record_age_seconds": { looserWhen: "higher", label: "accepted Zolva record age" },
   "$.proven_record.unlocked_limits.max_transaction_value_wei": { looserWhen: "higher", label: "unlocked per-transaction limit" },
   "$.proven_record.unlocked_limits.hourly_budget_usd_micros": { looserWhen: "higher", label: "unlocked hourly budget" },
+  "$.token_spend.max_transaction_usd_micros": { looserWhen: "higher", label: "per-transaction USD limit (ETH and tokens)" },
+  "$.token_spend.max_closed_market_price_age_seconds": { looserWhen: "higher", label: "accepted stock-token price age for token spend while markets are closed" },
 };
 
 /** Loss limits where 0 means "not used", the loosest value of all. */
@@ -78,6 +80,8 @@ const STRICT_BOOL: Record<string, { strict: boolean; label: string }> = {
   "$.upoch_recovery.require_guardian": { strict: true, label: "Upoch guardian required" },
   "$.loss_limit.enabled": { strict: true, label: "loss limit" },
   "$.proven_record.enabled": { strict: false, label: "bigger limits once proven on Zolva" },
+  "$.token_spend.enabled": { strict: true, label: "limits count token spend" },
+  "$.token_spend.require_output_to_account": { strict: true, label: "a swap's output must return to the account" },
 };
 
 function numeric(path: string, from: unknown, to: unknown): PolicyChange {
@@ -203,6 +207,19 @@ function walk(path: string, a: unknown, b: unknown, out: PolicyChange[]) {
     if (b === undefined && a && typeof a === "object") {
       const s = a as Record<string, unknown>;
       return void out.push({ path, kind: s.require_upoch_recoverable === true ? "loosening" : "tightening", from: a, to: null, note: "Upoch recovery rule removed" });
+    }
+  }
+  if (path === "$.token_spend.on_price_unavailable")
+    return void out.push({ path, kind: b === "deny" ? "tightening" : "loosening", from: a, to: b, note: `no price for a spent token: ${String(a)} to ${String(b)}` });
+  if (path === "$.token_spend") {
+    // Adding the rule can only count more (or, switched off, change nothing); removing an active one loosens.
+    if (a === undefined && b && typeof b === "object") {
+      const s = b as Record<string, unknown>;
+      return void out.push({ path, kind: "tightening", from: null, to: b, note: `limits count token spend: rule added (${s.enabled === true ? "on" : "off"})` });
+    }
+    if (b === undefined && a && typeof a === "object") {
+      const s = a as Record<string, unknown>;
+      return void out.push({ path, kind: s.enabled === true ? "loosening" : "tightening", from: a, to: null, note: "limits count token spend: rule removed" });
     }
   }
   if (path === "$.asset_safety.on_simulation_unavailable")

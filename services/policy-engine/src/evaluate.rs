@@ -12,7 +12,7 @@ const RESERVATION_TTL_SECONDS: i64 = 300;
 const MAX_CALLDATA_BYTES: usize = 65536;
 
 pub fn retryable(code: &str) -> bool {
-    matches!(code, "PS_BUDGET_001" | "PS_RATE_001" | "PS_ATTEST_001" | "PS_FEE_001" | "PS_PAUSED_001" | "PS_STATE_001" | "PS_CHAIN_001" | "PS_RECOVERY_003" | "PS_LOSS_003")
+    matches!(code, "PS_BUDGET_001" | "PS_RATE_001" | "PS_ATTEST_001" | "PS_FEE_001" | "PS_PAUSED_001" | "PS_STATE_001" | "PS_CHAIN_001" | "PS_RECOVERY_003" | "PS_LOSS_003" | "PS_PRICE_001" | "PS_SIM_002")
 }
 
 const LIVE_CHECKS: [(&str, &str); 5] = [
@@ -338,6 +338,16 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
         }
         usd = wei_to_usd_micros(&(&value + &fee), &big_strict(price)?);
         Ok(Pass(format!("Price is {age}s old. Exposure: {} (value + fee).", format_usd(&usd))))
+    })?;
+
+    r.run("spend", "Token spend (simulated outflows and open allowances, in USD)", || {
+        let (outcome, add) = crate::spend::check(policy, env, now, selector.as_deref(), &value, &usd)?;
+        usd += add;
+        Ok(match outcome {
+            crate::asset::Asset::Pass(d) => Pass(d),
+            crate::asset::Asset::Fail(c, d) => Fail(c, d),
+            crate::asset::Asset::Review(c, d) => Review(c, d),
+        })
     })?;
 
     r.run("budget", "Rolling hourly budget (atomic reservation)", || {

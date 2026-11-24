@@ -7,7 +7,7 @@ export type Hex = `0x${string}`;
 
 /** The version new policies are written in. 1.0 documents stay valid; 1.1 adds `asset_safety`. */
 export const SCHEMA_VERSION = "1.1" as const;
-export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3", "1.4"] as const;
+export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"] as const;
 export type SchemaVersion = (typeof SCHEMA_VERSIONS)[number];
 
 /** Native ETH in balance changes and declared intent (the common 0xEeee… convention), lowercase. */
@@ -91,6 +91,35 @@ export interface ProvenRecord {
   };
 }
 
+/**
+ * Schema 1.5: the spending limits count tokens, not only ETH. With this on, a transaction's exposure is
+ * the ETH it sends plus the fee plus, in USD, every token the simulation shows leaving the account and
+ * every allowance still open after it. That exposure counts in the per-transaction USD cap below, the
+ * hourly budget and the human approval threshold. Spent tokens are priced from Chainlink (the same
+ * checked prices the loss limit uses); a token with no reliable price is never counted as $0.
+ */
+export interface TokenSpend {
+  enabled: boolean;
+  /** Largest exposure of one transaction (ETH, fee and tokens), USD micros. */
+  max_transaction_usd_micros: UintString;
+  /** A spent token or open allowance has no reliable price: deny (default) or hold for a human. Never allow. */
+  on_price_unavailable: "deny" | "review";
+  /** Stock-token prices while markets are closed may be at most this old (read by the valuation). */
+  max_closed_market_price_age_seconds: number;
+  /** A contract call that spends tokens must bring something back into the account (a swap's output). */
+  require_output_to_account: boolean;
+}
+
+/** Prices for the tokens a transaction spends, read before evaluation (schema 1.5). */
+export interface SpendPrices {
+  /** Unix seconds of the read. */
+  observed_at: number;
+  /** USD micros per whole token. */
+  prices: { token: Address; price_micros: UintString; decimals: number }[];
+  /** Tokens with a feed whose price is unavailable right now (stale, paused, depegged). */
+  unavailable: Address[];
+}
+
 /** The agent's Zolva record as Palisec last read it. */
 export interface ProvenRecordStatus {
   /** Unix seconds of the read. */
@@ -156,6 +185,12 @@ export interface AssetSimulation {
   inflows: AssetAmount[];
   /** Allowances the account granted during the operation. */
   approvals: { token: Address; spender: Address; amount: UintString }[];
+  /**
+   * What the operation leaves newly approved to each spender above: the allowance at its end less the
+   * allowance before it (never below zero). Absent: unknown, and the token spend rule counts the approved
+   * amounts instead.
+   */
+  allowances_after?: { token: Address; spender: Address; amount: UintString }[];
   /** Sell leg for received tokens; null when nothing was received or no leg could be built. */
   sell: { reverted: boolean } | null;
   /** Highest transfer tax seen on the buy or sell leg, basis points; null if nothing was received. */
@@ -208,6 +243,8 @@ export interface Policy {
   loss_limit?: LossLimit;
   /** Schema 1.4. Absent means off. */
   proven_record?: ProvenRecord;
+  /** Schema 1.5. Absent means off: the limits count ETH and the fee only. */
+  token_spend?: TokenSpend;
 }
 
 /** A proposed action from an agent. Typed intent, never free text. */
@@ -243,6 +280,8 @@ export interface Environment {
   loss_snapshot?: LossSnapshot | null;
   /** Proven on Zolva: the agent's record; absent or null means the policy's own limits apply. */
   proven_record?: ProvenRecordStatus | null;
+  /** Token spend limits: prices for spent tokens; absent or null means none (spent tokens fail closed). */
+  spend_prices?: SpendPrices | null;
 }
 
 export type ReservationState = "reserved" | "pending_approval" | "released" | "finalized";

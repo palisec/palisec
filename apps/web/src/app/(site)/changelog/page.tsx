@@ -10,6 +10,18 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.9.0",
+    date: "2026-11-24",
+    tag: "Spend limits count tokens",
+    changes: [
+      "Policy schema 1.5 adds token_spend. With it on, the per-transaction limit, the hourly budget and the approval threshold count the USD value of everything a transaction spends: ETH sent, the fee, every token that leaves the account (through a router, a multicall or any contract) and every allowance it grants and leaves open. A new max_transaction_usd_micros caps one transaction in USD.",
+      "Spent tokens are priced from Chainlink on Robinhood Chain (ETH, WETH, USDG and the listed stock tokens) with the loss limit's checks: stale, paused or closed-market prices and USDG off its peg are unavailable. A spent token without a reliable price is never counted as $0: PS_PRICE_001, denied or held for a person per the policy. Outflows that cannot be determined (no fresh simulation) are denied: PS_SIM_002. Both codes are new; over a limit is still PS_BUDGET_001 and the threshold PS_HUMAN_001.",
+      "Approvals count: an allowance the call grants and leaves open counts at its full amount (read from the chain before and after the simulated call), an unlimited one is denied, and an approval a router pulls within the same call counts once. With require_output_to_account, a call that spends tokens and brings nothing back is denied.",
+      "Opt-in for existing policies, so nothing changes for live accounts until an owner adds it. Adding the rule or lowering its cap applies at once; raising the cap or switching it off waits the loosening delay. Both engines (Rust and TypeScript) agree on 30 new named cases and 20,000 seeded cases.",
+      "Policy replay against a Zolva record counts token spend when the policy does, at $1 for USDG and the recorded fill price for the stock token.",
+    ],
+  },
+  {
     version: "1.8.0",
     date: "2026-11-23",
     tag: "Standard: registry v2",

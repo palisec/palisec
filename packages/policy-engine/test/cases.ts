@@ -120,6 +120,30 @@ function lossLimit(r: Rng): Record<string, unknown> {
   };
 }
 
+/** Schema 1.5 token spend rule, mostly valid and enabled. */
+function tokenSpend(r: Rng): Record<string, unknown> {
+  return {
+    enabled: chance(r, 0.85),
+    max_transaction_usd_micros: pick(r, ["0", "1000", "5000000", digits(r, int(r, 1, 14)), "9".repeat(40)]),
+    on_price_unavailable: pick(r, ["deny", "deny", "review"]),
+    max_closed_market_price_age_seconds: pick(r, [0, 259200]),
+    require_output_to_account: chance(r, 0.6),
+  };
+}
+
+/** Prices for spent tokens, mostly well-formed and fresh. */
+function spendPrices(r: Rng, now: number): Record<string, unknown> {
+  return {
+    observed_at: now - pick(r, [0, 0, 1, 30, 61, -1]),
+    prices: TOKENS.filter(() => chance(r, 0.8)).map((token) => ({
+      token: chance(r, 0.2) ? token.toUpperCase().replace("0X", "0x") : token,
+      price_micros: pick(r, ["0", "1000000", "3200000000", digits(r, int(r, 1, 12))]),
+      decimals: pick(r, [0, 6, 18, 18]),
+    })),
+    unavailable: TOKENS.filter(() => chance(r, 0.1)),
+  };
+}
+
 /** An account-value snapshot, mostly well-formed and fresh. */
 function lossSnapshot(r: Rng, now: number): Record<string, unknown> {
   const priced = chance(r, 0.85);
@@ -246,6 +270,10 @@ function policyFor(r: Rng): unknown {
     p.schema_version = chance(r, 0.96) ? "1.4" : "1.3";
     p.proven_record = provenRecord(r, p.limits);
   }
+  if (chance(r, 0.35)) {
+    p.schema_version = chance(r, 0.96) ? "1.5" : "1.4";
+    p.token_spend = tokenSpend(r);
+  }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
 }
@@ -287,6 +315,16 @@ export function evalCase(seed: number): EvalCase {
   if (snap !== null || chance(r, 0.5)) env.loss_snapshot = snap;
   const proven = chance(r, 0.15) ? null : provenStatus(r, now);
   if (proven !== null || chance(r, 0.5)) env.proven_record = proven;
+  const prices = chance(r, 0.12) ? null : spendPrices(r, now);
+  if (prices !== null || chance(r, 0.5)) env.spend_prices = prices;
+  if (sim && chance(r, 0.4)) {
+    // What is left approved at the end: sometimes everything was pulled, sometimes not.
+    sim.allowances_after = (sim.approvals as { token: string; spender: string; amount: string }[]).map((a) => ({
+      ...a,
+      amount: pick(r, ["0", "0", a.amount, "1000", digits(r, int(r, 1, 24))]),
+    }));
+    if (chance(r, 0.1)) (sim.allowances_after as unknown[]).push({ token: pick(r, TOKENS.slice(1)), spender: pick(r, POOL), amount: pick(r, ["0", "5000"]) });
+  }
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {
@@ -341,6 +379,16 @@ export function evalCase(seed: number): EvalCase {
         Object.assign(snap, { observed_at: now, paused: chance(r, 0.7) ? null : snap.paused });
         if (chance(r, 0.3)) p.loss_limit.exit_addresses = [intent.to];
         if (chance(r, 0.5) && sim) Object.assign(sim, { observed_at: now, reverted: false });
+      }
+      if (p.token_spend && chance(r, 0.6)) {
+        // Fresh prices for every token and a usable simulation, so the cap and the budget decide.
+        p.token_spend.max_transaction_usd_micros = chance(r, 0.6) ? "9".repeat(40) : pick(r, ["1000", "5000000", "40000000000"]);
+        env.spend_prices = {
+          observed_at: now - int(r, 0, 60),
+          prices: TOKENS.map((token) => ({ token, price_micros: pick(r, ["1000000", "3200000000", "180000000"]), decimals: pick(r, [6, 18]) })),
+          unavailable: chance(r, 0.85) ? [] : [pick(r, TOKENS)],
+        };
+        if (sim && chance(r, 0.8)) Object.assign(sim, { observed_at: now - int(r, 0, 60), reverted: false });
       }
       if (p.asset_safety && sim && chance(r, 0.7)) {
         coherentAsset(r, intent, sim);
@@ -425,6 +473,7 @@ export function mutatePolicy(r: Rng, doc: unknown, times: number): unknown {
 export function validateCase(seed: number): unknown {
   const r = rng(seed ^ 0x5bd1e995);
   if (chance(r, 0.03)) return pick(r, [null, 5, "policy", [], [EXAMPLE_POLICY]]);
+  if (chance(r, 0.12)) return mutatePolicy(r, { ...clone(EXAMPLE_POLICY), schema_version: "1.5", token_spend: tokenSpend(r) }, int(r, 0, 5));
   if (chance(r, 0.15)) {
     const base = clone(EXAMPLE_POLICY) as unknown as Record<string, any>;
     return mutatePolicy(r, { ...base, schema_version: "1.4", proven_record: provenRecord(r, base.limits) }, int(r, 0, 5));

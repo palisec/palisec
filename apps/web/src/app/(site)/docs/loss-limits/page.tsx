@@ -58,6 +58,7 @@ export default function LossLimitsDocsPage() {
         <li><strong>Deposits and withdrawals don&apos;t count:</strong> money sent into the account raises the starting point, money sent back to an exit address lowers it, and only trading results count.</li>
         <li><strong>Peak in the window:</strong> the loss is the drop from the highest value in the window, with deposits and withdrawals taken out.</li>
         <li><strong>Before every decision:</strong> Palisec measures the account and checks the operation&apos;s simulated result. The operation that would cross the limit is itself denied, and nothing reaches the chain.</li>
+        <li><strong>Losses, not trade size:</strong> a large trade that loses nothing passes the loss limit. To cap the size of token trades and the tokens spent per hour, add <Link href="/docs/policies#token-spend">token spend limits</Link> (schema 1.5): the per-transaction limit, the hourly budget and the approval threshold then count tokens at the same Chainlink prices.</li>
       </ul>
 
       <h2 id="reached">When the limit is reached</h2>

@@ -39,9 +39,10 @@
         "1.1",
         "1.2",
         "1.3",
-        "1.4"
+        "1.4",
+        "1.5"
       ],
-      "description": "1.0; 1.1 adds asset_safety; 1.2 upoch_recovery; 1.3 loss_limit; 1.4 proven_record."
+      "description": "1.0; 1.1 adds asset_safety; 1.2 upoch_recovery; 1.3 loss_limit; 1.4 proven_record; 1.5 token_spend."
     },
     "policy_id": {
       "type": "string",
@@ -399,6 +400,42 @@
               "$ref": "#/$defs/uint"
             }
           }
+        }
+      }
+    },
+    "token_spend": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Schema 1.5: the limits count tokens, not only ETH. Exposure becomes ETH value + fee + the USD value of every token the simulation shows leaving the account and every allowance left open; it counts in max_transaction_usd_micros, the hourly budget and the approval threshold. A spent token with no reliable Chainlink price is denied or held (PS_PRICE_001), never counted as $0; unknown outflows are denied (PS_SIM_002). Off when absent (/docs/policies#token-spend).",
+      "required": [
+        "enabled",
+        "max_transaction_usd_micros",
+        "on_price_unavailable",
+        "max_closed_market_price_age_seconds",
+        "require_output_to_account"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "max_transaction_usd_micros": {
+          "$ref": "#/$defs/uint",
+          "description": "Largest exposure of one transaction (ETH, fee and tokens), USD micros."
+        },
+        "on_price_unavailable": {
+          "enum": [
+            "deny",
+            "review"
+          ]
+        },
+        "max_closed_market_price_age_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800
+        },
+        "require_output_to_account": {
+          "type": "boolean",
+          "description": "A contract call that spends tokens must bring something back into the account (a swap's output)."
         }
       }
     }

@@ -1,10 +1,10 @@
-//! Policy schema 1.0 to 1.4 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
+//! Policy schema 1.0 to 1.5 validation. Mirrors `validatePolicy` in packages/policy-schema: same rules,
 //! same paths, same messages, same order. Unknown fields are rejected so a typo cannot disable a rule.
 
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSIONS: [&str; 5] = ["1.0", "1.1", "1.2", "1.3", "1.4"];
+pub const SCHEMA_VERSIONS: [&str; 6] = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
 const MAX_LOSS_ADDRESSES: usize = 16;
@@ -72,11 +72,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend"],
     );
 
     if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
-        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\", \"1.3\" or \"1.4\"");
+        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\", \"1.3\", \"1.4\" or \"1.5\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -167,7 +167,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("asset_safety") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3" || s == "1.4") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3" || s == "1.4" || s == "1.5") {
             v.err("$.asset_safety", "requires schema_version \"1.1\" or later");
         }
         if let Some(safety) = v.obj(doc, "asset_safety", "$") {
@@ -198,7 +198,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("upoch_recovery") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3" || s == "1.4") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3" || s == "1.4" || s == "1.5") {
             v.err("$.upoch_recovery", "requires schema_version \"1.2\" or later");
         }
         if let Some(up) = v.obj(doc, "upoch_recovery", "$") {
@@ -214,7 +214,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("loss_limit") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.3" || s == "1.4") {
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.3" || s == "1.4" || s == "1.5") {
             v.err("$.loss_limit", "requires schema_version \"1.3\" or later");
         }
         if let Some(loss) = v.obj(doc, "loss_limit", "$") {
@@ -271,8 +271,8 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("proven_record") {
-        if doc.get("schema_version") != Some(&Value::String("1.4".into())) {
-            v.err("$.proven_record", "requires schema_version \"1.4\"");
+        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.4" || s == "1.5") {
+            v.err("$.proven_record", "requires schema_version \"1.4\" or later");
         }
         if let Some(pr) = v.obj(doc, "proven_record", "$") {
             let p = "$.proven_record";
@@ -297,6 +297,23 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
                     }
                 }
             }
+        }
+    }
+
+    if doc.contains_key("token_spend") {
+        if doc.get("schema_version") != Some(&Value::String("1.5".into())) {
+            v.err("$.token_spend", "requires schema_version \"1.5\"");
+        }
+        if let Some(ts) = v.obj(doc, "token_spend", "$") {
+            let p = "$.token_spend";
+            v.fields(ts, p, &["enabled", "max_transaction_usd_micros", "on_price_unavailable", "max_closed_market_price_age_seconds", "require_output_to_account"]);
+            v.bool(ts, "enabled", p);
+            v.uint(ts, "max_transaction_usd_micros", p);
+            if !matches!(ts.get("on_price_unavailable"), Some(Value::String(s)) if s == "deny" || s == "review") {
+                v.err(format!("{p}.on_price_unavailable"), "must be \"deny\" or \"review\"");
+            }
+            v.int(ts, "max_closed_market_price_age_seconds", p, 0, 604800);
+            v.bool(ts, "require_output_to_account", p);
         }
     }
 
