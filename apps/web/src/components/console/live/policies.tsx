@@ -376,6 +376,41 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
         <p className="text-[11.5px] text-muted">Failure mode is always <Mono>closed</Mono>: a missing policy, price or fee never allows.</p>
       </div>
       <div className={section}>
+        <p className="label">Token spend · schema 1.5</p>
+        <label className="flex items-start gap-2 text-[12px] text-soft">
+          <input
+            type="checkbox"
+            checked={doc.token_spend?.enabled === true}
+            onChange={(e) =>
+              edit((d) => {
+                if (e.target.checked) {
+                  d.schema_version = "1.5";
+                  d.token_spend = { enabled: true, max_transaction_usd_micros: "5000000", on_price_unavailable: "deny", max_closed_market_price_age_seconds: 259200, require_output_to_account: true, ...(d.token_spend ?? {}) };
+                  d.token_spend.enabled = true;
+                } else if (d.token_spend) d.token_spend.enabled = false;
+              })
+            }
+            className="mt-0.5 accent-[#9cf6ee]"
+          />
+          <span>Count tokens in the limits. The per-transaction limit below, the hourly budget and the approval threshold then count every token a transaction spends or leaves approved, priced from Chainlink. Turning it on applies at once; turning it off waits the delay.</span>
+        </label>
+        {doc.token_spend?.enabled === true && (
+          <>
+            {unitField("Max per transaction, tokens included (USD)", 6, doc.token_spend?.max_transaction_usd_micros, (d, v) => (d.token_spend.max_transaction_usd_micros = v), "ETH sent, the fee and every token out, in USD.")}
+            <Field id={`${uid}-noprice`} label="A spent token has no reliable price">
+              <select id={`${uid}-noprice`} className={inputCls} value={doc.token_spend?.on_price_unavailable ?? "deny"} onChange={(e) => edit((d) => (d.token_spend.on_price_unavailable = e.target.value))}>
+                <option value="deny">Deny (PS_PRICE_001)</option>
+                <option value="review">Send to a human (PS_PRICE_001)</option>
+              </select>
+            </Field>
+            <label className="flex items-start gap-2 text-[12px] text-soft">
+              <input type="checkbox" checked={doc.token_spend?.require_output_to_account !== false} onChange={(e) => edit((d) => (d.token_spend.require_output_to_account = e.target.checked))} className="mt-0.5 accent-[#9cf6ee]" />
+              <span>A swap&apos;s output must come back to the account.</span>
+            </label>
+          </>
+        )}
+      </div>
+      <div className={section}>
         <p className="label">Contracts and methods · default deny</p>
         {allow.length === 0 ? (
           <p className="text-[12px] text-muted">Nothing is allowed yet.</p>

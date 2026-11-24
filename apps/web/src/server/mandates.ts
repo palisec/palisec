@@ -160,6 +160,12 @@ export async function setEnvelope(ctx: MemberContext, id: string, body: Record<s
   cmp("max_transaction_value_wei", true, "envelope per-transaction maximum");
   cmp("max_hourly_budget_usd_micros", true, "envelope hourly budget maximum");
   cmp("min_approval_threshold_usd_micros", false, "envelope approval threshold minimum");
+  if (cur.max_transaction_usd_micros !== next.max_transaction_usd_micros) {
+    // Absent means a vote cannot set it: adding the field allows more (loosening), removing it allows less.
+    const a = cur.max_transaction_usd_micros, b = next.max_transaction_usd_micros;
+    const looser = a === undefined || (b !== undefined && BigInt(b) > BigInt(a));
+    notes.push({ path: "$.envelope.max_transaction_usd_micros", kind: looser ? "loosening" : "tightening", from: a ?? null, to: b ?? null, note: b === undefined ? "envelope per-transaction USD maximum removed" : a === undefined ? "envelope per-transaction USD maximum set" : `envelope per-transaction USD maximum ${BigInt(b) > BigInt(a) ? "raised" : "lowered"}` });
+  }
   const sel = (e: MandateEnvelope) => new Set(e.allowed_contracts.flatMap((c) => c.selectors.map((s) => `${c.address.toLowerCase()}:${s.toLowerCase()}`).concat(`${c.address.toLowerCase()}:*`)));
   const a = sel(cur), b = sel(next);
   for (const x of b) if (!a.has(x)) notes.push({ path: "$.envelope.allowed_contracts", kind: "loosening", from: null, to: x, note: `envelope now allows ${x}` });

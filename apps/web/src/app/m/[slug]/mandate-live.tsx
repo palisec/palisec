@@ -13,7 +13,7 @@ export interface PublicMandate {
   smart_account: string | null;
   cosigner: string | null;
   emergency_stop: boolean;
-  envelope: { max_transaction_value_wei: string; max_hourly_budget_usd_micros: string; min_approval_threshold_usd_micros: string; allowed_contracts: { address: string; selectors: string[] }[] };
+  envelope: { max_transaction_value_wei: string; max_hourly_budget_usd_micros: string; min_approval_threshold_usd_micros: string; allowed_contracts: { address: string; selectors: string[] }[]; max_transaction_usd_micros?: string };
   active: { version: number; since: string; max_transaction_value_wei: string; hourly_budget_usd_micros: string; approval_threshold_usd_micros: string; allowlist: { address: string; selectors: string[] }[]; denylist: string[] } | null;
   proposals: {
     id: string;
@@ -53,6 +53,7 @@ function describe(c: Record<string, unknown>) {
     case "set_hourly_budget": return `Hourly budget → ${usd(String(c.usd_micros))}`;
     case "set_max_transaction_value": return `Per-transaction limit → ${eth(String(c.wei))}`;
     case "set_approval_threshold": return `Human approval at or above → ${usd(String(c.usd_micros))}`;
+    case "set_max_transaction_usd": return `Per-transaction limit, tokens included → ${usd(String(c.usd_micros))}`;
     case "allow_contract": return `Allow ${short(String(c.address))} (${(c.selectors as string[]).join(", ") || "no functions"})`;
     case "remove_contract": return `Remove ${short(String(c.address))} from the allowlist`;
     case "add_deny": return `Deny ${short(String(c.address))}`;
@@ -146,6 +147,7 @@ export function MandateLive({ slug, initial }: { slug: string; initial: PublicMa
       <Card title="Envelope (the owner's hard limits; votes cannot go past these)">
         <Row k="Per-transaction value at most" v={eth(d.envelope.max_transaction_value_wei)} />
         <Row k="Hourly budget at most" v={usd(d.envelope.max_hourly_budget_usd_micros)} />
+        {d.envelope.max_transaction_usd_micros !== undefined && <Row k="Per-transaction limit, tokens included, at most" v={usd(d.envelope.max_transaction_usd_micros)} />}
         <Row k="Human approval threshold at least" v={usd(d.envelope.min_approval_threshold_usd_micros)} />
         <Row k="Contracts a vote may allow" v={d.envelope.allowed_contracts.map((c) => `${short(c.address)} (${c.selectors.join(", ") || "none"})`).join("; ") || "none"} />
       </Card>

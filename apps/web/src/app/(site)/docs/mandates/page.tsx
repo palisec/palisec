@@ -58,6 +58,7 @@ export default function MandatesDocsPage() {
         <tbody>
           <tr><td><code>set_max_transaction_value</code></td><td>envelope maximum</td></tr>
           <tr><td><code>set_hourly_budget</code></td><td>envelope maximum</td></tr>
+          <tr><td><code>set_max_transaction_usd</code></td><td>envelope <code>max_transaction_usd_micros</code> (optional; without it a vote cannot set the limit). The policy must count token spend (<code>token_spend</code>, schema 1.5): this is its per-transaction limit, tokens included.</td></tr>
           <tr><td><code>set_approval_threshold</code></td><td>envelope minimum</td></tr>
           <tr><td><code>allow_contract</code></td><td>only contracts and functions in the envelope</td></tr>
           <tr><td><code>remove_contract</code>, <code>add_deny</code></td><td>always allowed (they tighten)</td></tr>

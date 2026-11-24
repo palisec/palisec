@@ -15,11 +15,14 @@ export interface MandateEnvelope {
   min_approval_threshold_usd_micros: string;
   /** The only contracts (and functions) a vote may ever allowlist. */
   allowed_contracts: { address: Address; selectors: Hex[] }[];
+  /** Token spend (schema 1.5): the highest per-transaction USD limit a vote may set. Absent: holders cannot set it. */
+  max_transaction_usd_micros?: string;
 }
 
 export type MandateChange =
   | { kind: "set_hourly_budget"; usd_micros: string }
   | { kind: "set_max_transaction_value"; wei: string }
+  | { kind: "set_max_transaction_usd"; usd_micros: string }
   | { kind: "set_approval_threshold"; usd_micros: string }
   | { kind: "allow_contract"; address: Address; selectors: Hex[] }
   | { kind: "remove_contract"; address: Address }
@@ -46,7 +49,9 @@ export function validateEnvelope(e: unknown): string[] {
   const o = e as Record<string, unknown>;
   if (!o || typeof o !== "object") return ["envelope must be an object"];
   for (const k of Object.keys(o))
-    if (!["max_transaction_value_wei", "max_hourly_budget_usd_micros", "min_approval_threshold_usd_micros", "allowed_contracts"].includes(k)) errs.push(`unknown field ${k}`);
+    if (!["max_transaction_value_wei", "max_hourly_budget_usd_micros", "min_approval_threshold_usd_micros", "allowed_contracts", "max_transaction_usd_micros"].includes(k)) errs.push(`unknown field ${k}`);
+  if (o.max_transaction_usd_micros !== undefined && (typeof o.max_transaction_usd_micros !== "string" || !UINT.test(o.max_transaction_usd_micros)))
+    errs.push("max_transaction_usd_micros must be a non-negative integer string");
   for (const k of ["max_transaction_value_wei", "max_hourly_budget_usd_micros", "min_approval_threshold_usd_micros"])
     if (typeof o[k] !== "string" || !UINT.test(o[k] as string)) errs.push(`${k} must be a non-negative integer string`);
   if (!Array.isArray(o.allowed_contracts) || o.allowed_contracts.length > 64) errs.push("allowed_contracts must be an array of at most 64");
@@ -65,6 +70,7 @@ export function validateChange(c: unknown): string[] {
   switch (o.kind) {
     case "set_hourly_budget":
     case "set_approval_threshold":
+    case "set_max_transaction_usd":
       return [...only(["usd_micros"]), ...(typeof o.usd_micros === "string" && UINT.test(o.usd_micros) ? [] : ["usd_micros must be a non-negative integer string"])];
     case "set_max_transaction_value":
       return [...only(["wei"]), ...(typeof o.wei === "string" && UINT.test(o.wei) ? [] : ["wei must be a non-negative integer string"])];
@@ -92,6 +98,9 @@ export function outsideEnvelope(change: MandateChange, env: MandateEnvelope): st
       return BigInt(change.wei) > BigInt(env.max_transaction_value_wei) ? "per-transaction value above the envelope maximum" : null;
     case "set_approval_threshold":
       return BigInt(change.usd_micros) < BigInt(env.min_approval_threshold_usd_micros) ? "approval threshold below the envelope minimum" : null;
+    case "set_max_transaction_usd":
+      if (env.max_transaction_usd_micros === undefined) return "the envelope sets no per-transaction USD maximum";
+      return BigInt(change.usd_micros) > BigInt(env.max_transaction_usd_micros) ? "per-transaction USD limit above the envelope maximum" : null;
     case "allow_contract": {
       const e = env.allowed_contracts.find((a) => lc(a.address) === lc(change.address));
       if (!e) return "contract not in the envelope's allowed list";
@@ -111,6 +120,8 @@ export function policyInsideEnvelope(p: Policy, env: MandateEnvelope): string | 
   if (BigInt(p.limits.max_transaction_value_wei) > BigInt(env.max_transaction_value_wei)) return "per-transaction value above the envelope maximum";
   if (BigInt(p.limits.hourly_budget_usd_micros) > BigInt(env.max_hourly_budget_usd_micros)) return "hourly budget above the envelope maximum";
   if (BigInt(p.human_approval.usd_threshold_micros) < BigInt(env.min_approval_threshold_usd_micros)) return "approval threshold below the envelope minimum";
+  if (p.token_spend?.enabled && env.max_transaction_usd_micros !== undefined && BigInt(p.token_spend.max_transaction_usd_micros) > BigInt(env.max_transaction_usd_micros))
+    return "per-transaction USD limit above the envelope maximum";
   for (const a of p.contracts.allowlist) {
     const e = env.allowed_contracts.find((x) => lc(x.address) === lc(a.address));
     if (!e) return `contract ${a.address} is not in the envelope`;
@@ -132,6 +143,9 @@ export function compileChange(current: Policy, change: MandateChange): Policy {
       break;
     case "set_approval_threshold":
       p.human_approval.usd_threshold_micros = change.usd_micros;
+      break;
+    case "set_max_transaction_usd":
+      if (p.token_spend) p.token_spend.max_transaction_usd_micros = change.usd_micros;
       break;
     case "allow_contract": {
       const i = p.contracts.allowlist.findIndex((e) => lc(e.address) === lc(change.address));
@@ -157,6 +171,8 @@ export function compileChange(current: Policy, change: MandateChange): Policy {
 export function compileProposal(current: Policy, change: MandateChange, env: MandateEnvelope): { ok: true; document: Policy } | { ok: false; reason: string } {
   const out = outsideEnvelope(change, env);
   if (out) return { ok: false, reason: out };
+  if (change.kind === "set_max_transaction_usd" && current.token_spend?.enabled !== true)
+    return { ok: false, reason: "the policy does not count token spend (token_spend is off)" };
   const doc = compileChange(current, change);
   const errs = validatePolicy({ ...doc, status: "active", version: 1 });
   if (errs.length) return { ok: false, reason: `compiled policy is invalid: ${errs[0]!.path} ${errs[0]!.message}` };

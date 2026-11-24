@@ -80,3 +80,30 @@ describe("snapshot replay", () => {
     expect([...b]).toEqual([["0xc", 100n]]);
   });
 });
+
+
+describe("holders vote the per-transaction USD limit (token spend)", async () => {
+  const { compileProposal, validateChange, validateEnvelope } = await import("../src");
+  const { spendPolicy } = await import("./spend-cases");
+  const base = { max_transaction_value_wei: (10n ** 30n).toString(), max_hourly_budget_usd_micros: "100000000", min_approval_threshold_usd_micros: "0", allowed_contracts: [] as never[] };
+  const env = { ...base, max_transaction_usd_micros: "50000000" };
+  const change = (usd: string) => ({ kind: "set_max_transaction_usd" as const, usd_micros: usd });
+  const policy = () => ({ ...spendPolicy(), contracts: { default: "deny" as const, allowlist: [], denylist: [] } });
+  it("validates the change and the envelope field", () => {
+    expect(validateChange(change("1"))).toEqual([]);
+    expect(validateChange({ kind: "set_max_transaction_usd", usd_micros: "x" })).not.toEqual([]);
+    expect(validateEnvelope(env)).toEqual([]);
+    expect(validateEnvelope({ ...base, max_transaction_usd_micros: 5 })).not.toEqual([]);
+  });
+  it("inside the envelope: compiles into token_spend", () => {
+    const r = compileProposal(policy(), change("40000000"), env);
+    expect(r.ok && r.document.token_spend?.max_transaction_usd_micros).toBe("40000000");
+  });
+  it("above the envelope maximum: refused", () => expect(compileProposal(policy(), change("60000000"), env)).toMatchObject({ ok: false }));
+  it("no envelope maximum: a vote cannot set it", () => expect(compileProposal(policy(), change("1"), base)).toMatchObject({ ok: false }));
+  it("policy without token spend: refused", () => {
+    const p = policy();
+    delete (p as { token_spend?: unknown }).token_spend;
+    expect(compileProposal(p, change("1"), env)).toMatchObject({ ok: false });
+  });
+});

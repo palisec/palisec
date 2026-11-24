@@ -10,6 +10,17 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.11.0",
+    date: "2026-11-24",
+    tag: "Account stop, token spend votes",
+    changes: [
+      "The account's own stop now stops Palisec too: while an account holds its emergency stop on the ERC-8511 registry, Palisec co-signs nothing that adds risk (PS_PAUSED_001). Only withdrawals to the policy's exit addresses stay allowed. The registry is read before every decision, in both engines; an unreadable or stale read fails closed (PS_STATE_001).",
+      "Holder mandates: holders can vote the per-transaction USD limit of token spend (set_max_transaction_usd), up to the envelope's new optional max_transaction_usd_micros. Without that field, or on a policy that does not count token spend, the vote is refused.",
+      "Console rule builder: a Token spend section turns the rule on (schema 1.5) and sets its per-transaction USD limit, what happens when a spent token has no price, and whether a swap's output must come back to the account.",
+      "Policy-Enforced Agent Accounts is now ERC-8511: the draft, its assets and the docs use the number, and the discussion moved to the renamed forum topic.",
+    ],
+  },
+  {
     version: "1.10.0",
     date: "2026-11-24",
     tag: "Standard: registry v3",
