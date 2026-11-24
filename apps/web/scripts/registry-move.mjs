@@ -5,6 +5,8 @@
  * outside the repository and are never printed.
  *   allow      owner: allow v3's declare() in each policy (and the mandate envelope): loosenings, they wait the delay
  *   declare    agent: each Safe calls v3.declare(co-signer, publisher, receipt signer, 900 s, co-signer type) (co-signed)
+ *   clear      agent: each Safe clears its signers on v2 (and on the first draft's registry, if its policy allows it), so
+ *              readers of the older registries see "not enforced" instead of state that is no longer updated (co-signed)
  *   sync       publish each account's commitments now (POST /v1/public/peaa/sync)
  *   status     what both registries say (library only)
  *
@@ -15,13 +17,15 @@ import { homedir } from "node:os";
 import { createPublicClient, encodeFunctionData, http, toFunctionSelector } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createPalisec } from "../../../packages/sdk/dist/index.js";
-import { REGISTRY_ABI, REGISTRY_ADDRESSES, REGISTRY_V2_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
+import { REGISTRY_ABI, REGISTRY_ADDRESSES, REGISTRY_V1_ABI, REGISTRY_V1_ADDRESSES, REGISTRY_V2_ABI, REGISTRY_V2_ADDRESSES, readAccount } from "../../../packages/policy-enforced-accounts/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
 const RPC = "https://rpc.mainnet.chain.robinhood.com";
 const EXPLORER = "https://robinhoodchain.blockscout.com";
 const REGISTRY = REGISTRY_ADDRESSES[4663];
 const V2 = REGISTRY_V2_ADDRESSES[4663];
+const V1 = REGISTRY_V1_ADDRESSES[4663];
+const ZERO = "0x0000000000000000000000000000000000000000";
 const DECLARE = toFunctionSelector("declare(address,address,address,uint32,uint8)");
 const COSIGNER = "0x628FdA166280b9E2C5E5FBD89fDDDaCe626d8ec7";
 const MIN_DELAY = 900;
@@ -102,13 +106,39 @@ for (const name of names) {
       ex = await palisec.getExecution(operation.operationId);
     }
     console.log(`${utc()}  ${name}: declare ${operation.decision}${operation.reasonCode ? ` ${operation.reasonCode}` : ""} → ${ex.status} ${ex.transactionHash ? `${EXPLORER}/tx/${ex.transactionHash}` : ""}`);
+  } else if (stage === "clear") {
+    const palisec = createPalisec({ apiKey: a.apiKey, chainId: 4663, baseUrl: `${BASE}/api/v1` });
+    const v3 = await readAccount(pub, a.safe, REGISTRY);
+    if (!v3.enforced) throw new Error(`${name}: not declared on v3 yet; clear the older registries only after the move`);
+    const olds = [
+      [V2, encodeFunctionData({ abi: REGISTRY_V2_ABI, functionName: "declare", args: [ZERO, ZERO, ZERO, 0, 0] })],
+      [V1, encodeFunctionData({ abi: REGISTRY_V1_ABI, functionName: "declare", args: [ZERO, ZERO, ZERO] })],
+    ];
+    for (const [reg, data] of olds) {
+      if (!(await readAccount(pub, a.safe, reg)).enforced) {
+        console.log(`${utc()}  ${name}: ${reg} already shows not enforced`);
+        continue;
+      }
+      try {
+        const { operation, execution } = await palisec.executeWithSmartAccount(privateKeyToAccount(a.agent), { to: reg, value: 0n, data, gasLimit: 150000 });
+        let ex = execution;
+        const until = Date.now() + 180_000;
+        while (ex.status === "submitted" && Date.now() < until) {
+          await new Promise((r) => setTimeout(r, 3000));
+          ex = await palisec.getExecution(operation.operationId);
+        }
+        console.log(`${utc()}  ${name}: clear ${reg} ${operation.decision} → ${ex.status} ${ex.transactionHash ? `${EXPLORER}/tx/${ex.transactionHash}` : ""}`);
+      } catch (e) {
+        console.log(`${utc()}  ${name}: clear ${reg} not done: ${e.code ?? ""} ${String(e.message).slice(0, 160)}`);
+      }
+    }
   } else if (stage === "status") {
     const show = (s) => ({ standard: s.standard, enforced: s.enforced, publisher: s.publisher, minDelay: s.minDelay, signerType: s.signerType, policy: s.policy && { version: String(s.policy.version), hash: s.policy.policyHash, effectiveAt: String(s.policy.effectiveAt) }, pending: s.pending && { version: String(s.pending.version), effectiveAt: String(s.pending.effectiveAt) }, stopped: s.stopped, mandate: s.mandate?.uri ?? null });
     console.log(name, a.safe);
     console.log("  v3", JSON.stringify({ ...show(await readAccount(pub, a.safe, REGISTRY)), stopHeldByAccount: (await readAccount(pub, a.safe, REGISTRY)).stopHeldByAccount }));
     console.log("  v2", JSON.stringify(show(await readAccount(pub, a.safe, V2))));
   } else if (stage !== "sync") {
-    console.error("stage: allow | declare | sync | status");
+    console.error("stage: allow | declare | clear | sync | status");
     process.exit(2);
   }
 }
