@@ -126,6 +126,10 @@ export default function StandardPage() {
         <li><strong>The emergency stop</strong> only restricts, so the publisher or the account engages it at once. A stop the account engaged
           is held: only the account can lift it, so a leaked publisher key cannot undo the account&apos;s own way out. A stop the publisher
           engaged can be lifted by either, and the account can take it over by engaging it too (<code>stopHeldByAccount</code>).</li>
+        <li><strong>Who the delay binds:</strong> <code>minDelay</code> binds the publisher. The account&apos;s own authority is immediate: it can
+          activate a policy at once, or clear its signers and declare new ones in one transaction. Both are public events. A policy that allowlists
+          the registry&apos;s <code>declare</code> or <code>activate</code> gives the agent that authority; Palisec&apos;s demo accounts allow it only
+          while they move to a new registry.</li>
       </ul>
       <p>
         Palisec applies a tightening off chain at once, because stricter is always safe. The registry shows it after <code>minDelay</code>; until
