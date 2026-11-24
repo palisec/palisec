@@ -7,7 +7,7 @@ import { REASONS, REGISTRY_ADDRESSES, REGISTRY_V1_ADDRESSES, REGISTRY_V2_ADDRESS
 
 export const metadata: Metadata = {
   title: "Standard: Policy-Enforced Agent Accounts",
-  description: "A draft ERC for reading, from the chain alone, whether an agent's account is protected by a policy signer, which policy is active, why a transaction was refused, and whether a decision receipt is genuine.",
+  description: "ERC-8511 (draft) for reading, from the chain alone, whether an agent's account is protected by a policy signer, which policy is active, why a transaction was refused, and whether a decision receipt is genuine.",
   alternates: { canonical: "/docs/standard" }, openGraph: pageOpenGraph("/docs/standard"),
 };
 
@@ -74,9 +74,9 @@ export default function StandardPage() {
   return (
     <DocArticle
       title="Policy-Enforced Agent Accounts"
-      lede="A draft ERC, with a live reference implementation: anyone can check from the chain alone whether an agent's account is protected by a policy signer, which policy is active, why something was refused, and whether a decision receipt is genuine."
+      lede="ERC-8511 (draft), with a live reference implementation: anyone can check from the chain alone whether an agent's account is protected by a policy signer, which policy is active, why something was refused, and whether a decision receipt is genuine."
       maturity="service"
-      compat="Draft ERC · Robinhood Chain 4663"
+      compat="ERC-8511 (draft) · Robinhood Chain 4663"
     >
       <h2 id="why">Why</h2>
       <p>
@@ -88,6 +88,7 @@ export default function StandardPage() {
       <h2 id="live">Reference implementation (live)</h2>
       <table>
         <tbody>
+          <tr><td>Specification</td><td>ERC-8511 (draft): <a href="https://github.com/ethereum/ERCs/pull/2196">ethereum/ERCs #2196</a> · discussion on <a href="https://ethereum-magicians.org/t/erc-8511-policy-enforced-agent-accounts/30467">Ethereum Magicians</a></td></tr>
           <tr><td>Registry v3 (mainnet 4663)</td><td><a href={`${EXPLORER}/address/${REGISTRY}?tab=contract`} className="font-mono text-[12px]">{REGISTRY}</a> · source verified, no owner, no upgrade path, holds no funds</td></tr>
           <tr><td>ERC-165 interface id</td><td><code>0xf594edcd</code></td></tr>
           <tr><td>Deployment</td><td>Deterministic deployer <code>0x4e59b448…956C</code>, salt <code>keccak256(&quot;policy-enforced-accounts registry v3&quot;)</code></td></tr>

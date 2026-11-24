@@ -1,6 +1,6 @@
 # policy-enforced-accounts
 
-Reader and receipt verifier for the draft ERC **Policy-Enforced Agent Accounts**. It answers, from the chain alone:
+Reader and receipt verifier for **ERC-8511: Policy-Enforced Agent Accounts** (draft). It answers, from the chain alone:
 
 - Is this account enforced by an external policy signer, and how long must changes wait?
 - Which policy is active?

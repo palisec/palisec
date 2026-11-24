@@ -282,7 +282,7 @@ export interface DecisionResponse {
   message: string;
   checks: CheckResult[];
   dry_run: boolean;
-  /** Policy publishing: EIP-712 decision receipt (draft ERC Policy-Enforced Agent Accounts), for opted-in accounts. */
+  /** Policy publishing: EIP-712 decision receipt (ERC-8511, Policy-Enforced Agent Accounts), for opted-in accounts. */
   receipt?: ReceiptJson | null;
 }
 

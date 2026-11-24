@@ -17,7 +17,7 @@ import { db } from "./db";
 import { logEvent } from "./http";
 
 /**
- * Policy publishing: the draft ERC "Policy-Enforced Agent Accounts", Palisec's side.
+ * Policy publishing: ERC-8511 "Policy-Enforced Agent Accounts" (draft), Palisec's side.
  *  - Receipts: every decision for an opted-in account carries an EIP-712 receipt signed by the receipt
  *    key (PEAA_RECEIPT_KEY), never by the co-signer. Additive field; nothing about the decision changes.
  *  - Commitments: a sync compares each opted-in account's authoritative state (active policy, pending

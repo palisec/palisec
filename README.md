@@ -11,9 +11,9 @@ The authorization boundary for autonomous on-chain agents on Robinhood Chain. Ev
 | `services/policy-engine` | Rust policy engine (WebAssembly), dual-evaluated with the reference |
 | `packages/policy-engine` | The engine's WebAssembly build, embedded in the app |
 | `packages/sdk`, `packages/sdk-python` | TypeScript (`@palisec/sdk`) and Python (`palisec`) SDKs |
-| `packages/policy-enforced-accounts` | Client library for the draft ERC "Policy-Enforced Agent Accounts" |
+| `packages/policy-enforced-accounts` | Client library for ERC-8511 "Policy-Enforced Agent Accounts" (draft) |
 | `contracts` | Solidity: the policy-enforced accounts registry, PalisecCredits and tests (Foundry) |
-| `docs/erc` | The draft ERC text and its reference implementation |
+| `docs/erc` | The ERC-8511 text (draft) and its reference implementation |
 | `docs/decisions` | Architecture decision records |
 
 ## Development

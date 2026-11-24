@@ -19,7 +19,7 @@ const DOCS_NAV = [
       { href: "/docs/errors", label: "Errors and operations" },
       { href: "/docs/account-abstraction", label: "Account abstraction" },
       { href: "/docs/detect", label: "Detect a Palisec agent" },
-      { href: "/docs/standard", label: "Standard (draft ERC)" },
+      { href: "/docs/standard", label: "Standard (ERC-8511)" },
     ],
   },
   {

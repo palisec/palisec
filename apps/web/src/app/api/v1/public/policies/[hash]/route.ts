@@ -3,7 +3,7 @@ import { HttpError, handle, rateLimited } from "@/server/http";
 import { committedDocument } from "@/server/peaa";
 
 /**
- * Policy publishing: a policy document committed on chain (draft ERC Policy-Enforced Agent Accounts), by its
+ * Policy publishing: a policy document committed on chain (ERC-8511, Policy-Enforced Agent Accounts), by its
  * policyHash. Only for accounts that opted in to publishing; content-addressed, so it never changes.
  */
 export const GET = handle<RouteContext<"/api/v1/public/policies/[hash]">>(async (req, ctx) => {
