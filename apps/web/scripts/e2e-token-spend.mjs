@@ -7,7 +7,7 @@
  *   status                   balances, the router allowance and the active policy's limits
  *   policy                   turn on token_spend (schema 1.5): $0.30 per transaction, $0.70 an hour (a tightening: applies at once)
  *   allow-unpriced           allowlist approve() on a token with no Chainlink feed (a loosening: waits the delay)
- *   loss off|on              switch this demo's loss limit off (with allow-unpriced; a loosening: waits the delay) or back on (applies at once)
+ *   loss off|on              switch this demo's loss limit off (with allow-unpriced; a loosening: waits the delay) or back on (without it; applies at once)
  *   approve <micros> [--send] agent: approve the router for exactly <micros> USDG (counted while it stays open)
  *   swap <micros> [--send]   agent: swap <micros> USDG -> WETH through the Safe (co-signed)
  *   try <micros>             agent: a recorded USDG -> WETH swap request only; prints the decision, checks the Safe's
@@ -20,7 +20,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { createPublicClient, encodeFunctionData, formatEther, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { createPalisec } from "../../../packages/sdk/dist/index.js";
+import { createPalisec, safeOpTypedData } from "../../../packages/sdk/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
 const RPC = "https://rpc.mainnet.chain.robinhood.com";
@@ -92,6 +92,25 @@ async function execute(to, data, gasLimit = 300000) {
   return { operation, execution: ex };
 }
 
+/** A decision with the declared asset intent (asset safety needs it for a swap), then executed if allowed. */
+async function executeDeclared(to, data, assetIntent, tag) {
+  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `spend-${tag}-${Date.now()}`, chain_id: 4663, to, value_wei: "0", data, asset_intent: assetIntent, gas_limit: 300000, deadline: Math.floor(Date.now() / 1000) + 300 } });
+  console.log(`${utc()}  decision ${r.body.operation_id} ${r.body.decision} ${r.body.reason_code ?? ""}: ${r.body.message}`);
+  console.log(`  spend: ${spendDetail(r.body.checks)}
+  budget: ${budgetDetail(r.body.checks)}`);
+  if (r.body.decision !== "ALLOW") return r.body;
+  const p = palisec();
+  const prepared = await p.prepareExecution(r.body.operation_id);
+  let ex = await p.submitExecution(r.body.operation_id, await agentKey.signTypedData(safeOpTypedData(prepared.userOperation, 4663)));
+  const until = Date.now() + 180_000;
+  while (ex?.status === "submitted" && Date.now() < until) {
+    await new Promise((res) => setTimeout(res, 3000));
+    ex = await p.getExecution(r.body.operation_id);
+  }
+  console.log(`  → ${ex?.status} ${ex?.transactionHash ? `${EXPLORER}/tx/${ex.transactionHash}` : ""}`);
+  return r.body;
+}
+
 /** A decision request only: nothing is executed. */
 async function request(to, data, assetIntent, tag) {
   const before = await nonce();
@@ -131,6 +150,7 @@ if (stage === "status") {
     doc.loss_limit.enabled = arg === "on";
     if (arg === "off" && !doc.contracts.allowlist.some((e) => e.address.toLowerCase() === UNPRICED.toLowerCase()))
       doc.contracts.allowlist.push({ address: UNPRICED, selectors: [APPROVE], require_verified_code: true });
+    if (arg === "on") doc.contracts.allowlist = doc.contracts.allowlist.filter((e) => e.address.toLowerCase() !== UNPRICED.toLowerCase());
   } else {
     doc.contracts.allowlist = doc.contracts.allowlist.filter((e) => e.address.toLowerCase() !== UNPRICED.toLowerCase());
     doc.contracts.allowlist.push({ address: UNPRICED, selectors: [APPROVE], require_verified_code: true });
@@ -147,7 +167,7 @@ if (stage === "status") {
   const amount = BigInt(arg);
   const q = await quote(amount);
   if (!needSend(`swap ${Number(amount) / 1e6} USDG -> about ${formatEther(q)} WETH through the Safe`)) process.exit(0);
-  await execute(ROUTER, swapData(amount, (q * 97n) / 100n));
+  await executeDeclared(ROUTER, swapData(amount, (q * 97n) / 100n), { spend: [{ token: USDG, amount: amount.toString() }], receive: [{ token: WETH, amount: q.toString() }] }, `swap-${amount}`);
 } else if (stage === "try") {
   const amount = BigInt(arg);
   const q = await quote(amount);
