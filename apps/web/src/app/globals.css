@@ -938,3 +938,105 @@
 @media (prefers-reduced-motion: reduce) {
   .the-line::after { display: none; }
 }
+
+/* ── Homepage: opening animation. The inline script adds html.intro-page on the first visit of a session only. ── */
+@keyframes intro-line { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes intro-bg { from { opacity: 0.35; } to { opacity: 1; } }
+@keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes intro-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes intro-rise { from { transform: translateY(108%); } to { transform: none; } }
+@keyframes intro-glow {
+  0%, 100% { text-shadow: 0 0 0 rgb(156 246 238 / 0); }
+  50% { text-shadow: 0 0 34px rgb(156 246 238 / 0.55); }
+}
+html.intro-page .the-line { animation: intro-line 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.5s both; }
+html.intro-page .site-bg { animation: intro-bg 1.2s var(--ease-out-quint) 1.2s both; }
+html.intro-page [data-intro-labels] { animation: intro-fade 0.8s var(--ease-out-quint) 1.9s both; }
+html.intro-page [data-intro-nav] { animation: intro-fade 1s var(--ease-out-quint) 3s both; }
+html.intro-page .hero-ln > span { animation: intro-rise 1.1s var(--ease-out-quint) both; }
+html.intro-page .hero-ln:nth-child(1) > span { animation-delay: 2.2s; }
+html.intro-page .hero-ln:nth-child(2) > span { animation-delay: 2.52s; }
+html.intro-page .hero-ln:nth-child(3) > span { animation: intro-rise 1.1s var(--ease-out-quint) 2.84s both, intro-glow 0.9s ease-in-out 3s both; }
+html.intro-page [data-intro-sub] { animation: intro-up 0.9s var(--ease-out-quint) 3.3s both; }
+html.intro-page [data-intro-counters] { animation: intro-up 0.9s var(--ease-out-quint) 3.6s both; }
+html.intro-page [data-intro-ctas] { animation: intro-up 0.9s var(--ease-out-quint) 3.9s both; }
+.hero-ln { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.hero-ln > span { display: inline-block; }
+
+/* ── Homepage: the transaction stream. ── */
+.stream { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.stream-item {
+  position: absolute; left: 0; top: 0; height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  white-space: nowrap; font-family: var(--font-martian); font-size: 15px; color: var(--color-silver); opacity: 0; will-change: transform, opacity;
+}
+.stream-item .ag { color: var(--color-dim); }
+.stream-item[data-s="pass"] { color: var(--color-mist); }
+.stream-item[data-s="block"] { color: var(--color-deny); }
+.stream-item[data-s="held"] { color: var(--color-review); }
+.stream-item .tail { color: var(--color-allow); pointer-events: auto; }
+.stream-stamp {
+  position: absolute; top: 0; left: calc(var(--line-x) + 24px); height: 40px; display: flex; align-items: center; gap: 10px;
+  white-space: nowrap; font-family: var(--font-martian); font-size: 14px; color: var(--color-deny); opacity: 0;
+}
+.stream-stamp[data-k="held"] { color: var(--color-review); }
+.stream-stamp i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.stream-flash {
+  position: absolute; top: 0; left: calc(var(--line-x) - 8px); width: 16px; height: 40px; border-radius: 8px; opacity: 0;
+  background: radial-gradient(closest-side, rgb(255 122 140 / 0.9), transparent); filter: blur(4px);
+}
+.stream-flash[data-k="pass"] { background: radial-gradient(closest-side, rgb(203 255 252 / 0.95), transparent); }
+.stream-flash[data-k="held"] { background: radial-gradient(closest-side, rgb(242 191 94 / 0.9), transparent); }
+/* The stream runs only with script, on wide screens, without reduced motion; otherwise the static list shows. */
+.stream-live { display: none; }
+.stream-static { display: block; }
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .js .stream-live { display: block; }
+  .js .stream-static { display: none; }
+}
+
+/* ── Homepage: limits list (the row nearest 52% of the viewport is active). ── */
+.limit-row { border-top: 1px solid var(--color-line); min-height: 180px; }
+.limit-row .lw { color: var(--color-line-strong); transition: color 0.35s var(--ease-out-quint); }
+.limit-row .ld { color: var(--color-dim); transition: color 0.35s var(--ease-out-quint); }
+.limit-row .lc { color: var(--color-dim); opacity: 0.6; transition: color 0.35s, opacity 0.35s; }
+.limit-row .lv { opacity: 0; transition: opacity 0.35s var(--ease-out-quint); }
+.limit-row[data-on] .lw { color: var(--color-mist); }
+.limit-row[data-on] .ld { color: var(--color-foam); }
+.limit-row[data-on] .lc { color: var(--color-aqua); opacity: 1; }
+.limit-row[data-on] .lv { opacity: 1; }
+@media (max-width: 1023px), (prefers-reduced-motion: reduce) {
+  .limit-row .lw { color: var(--color-mist); }
+  .limit-row .ld { color: var(--color-foam); }
+  .limit-row .lc { color: var(--color-aqua); opacity: 1; }
+  .limit-row .lv { opacity: 1; }
+}
+html:not(.js) .limit-row .lw { color: var(--color-mist); }
+html:not(.js) .limit-row .lv { opacity: 1; }
+
+/* Scroll effects show their final state without script or with reduced motion. */
+[data-statement] .sw.end { color: var(--color-aqua); }
+.js [data-statement] .sw { color: var(--color-line-strong); transition: color 0.25s; }
+.js [data-statement] .sw[data-lit] { color: var(--color-mist); }
+.js [data-statement] .sw.end[data-lit] { color: var(--color-aqua); }
+.js .proof-row { clip-path: inset(0 100% 0 0); }
+.js .proof-rows[data-on] .proof-row { clip-path: inset(0 0 0 0); transition: clip-path 0.7s var(--ease-out-quint); transition-delay: calc(var(--i) * 140ms); }
+.js .type-ch { visibility: hidden; }
+.js .type-ch[data-on] { visibility: visible; }
+.js .type-caption { opacity: 0; transition: opacity 0.6s var(--ease-out-quint); }
+.js [data-typed] .type-caption { opacity: 1; }
+.caret { display: inline-block; width: 0.5ch; color: var(--color-aqua); animation: blink 0.84s steps(1) infinite; }
+.js .closing-l, .js .closing-r, .js .closing-f { opacity: 0; transition: opacity 0.9s var(--ease-out-quint), transform 0.9s var(--ease-out-quint); }
+.js .closing-l { transform: translateX(60px); }
+.js .closing-r { transform: translateX(-60px); }
+.js [data-met] .closing-l { opacity: 1; transform: none; transition-delay: 0.3s; }
+.js [data-met] .closing-r { opacity: 1; transform: none; transition-delay: 0.7s; }
+.js [data-met] .closing-f { opacity: 1; transition-delay: 1.1s; }
+.js [data-met] .closing-f.late { transition-delay: 1.2s; }
+@media (prefers-reduced-motion: reduce) {
+  .js [data-statement] .sw { color: var(--color-mist); }
+  .js [data-statement] .sw.end { color: var(--color-aqua); }
+  .js .proof-row { clip-path: none; }
+  .js .type-ch { visibility: visible; }
+  .js .type-caption, .js .closing-l, .js .closing-r, .js .closing-f { opacity: 1; transform: none; }
+  .caret { display: none; }
+}

@@ -1,0 +1,45 @@
+name: Preview
+# Builds the dev branch as a Vercel preview and points the fixed address palisec-preview.vercel.app at it.
+# Preview deployments are not indexed (Vercel sends X-Robots-Tag: noindex on them). The log never prints the
+# deployment URL or account names; only the fixed address.
+on:
+  push:
+    branches: [dev]
+    paths-ignore: ["docs/**", "*.md"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-preview
+  cancel-in-progress: true
+jobs:
+  preview:
+    if: vars.VERCEL_PROJECT_ID != '' && vars.VERCEL_ORG_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_CLI: vercel@65.12.1
+      ALIAS: palisec-preview.vercel.app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Deploy the preview
+        run: |
+          rm -rf .git
+          if ! npx --yes "$VERCEL_CLI" deploy --yes --token="$VERCEL_TOKEN" > /tmp/vercel.out 2> /tmp/vercel.log; then
+            grep -iE "error|limit|failed" /tmp/vercel.log | sed -E 's#https?://[^ )]+#<url>#g; s#[A-Za-z0-9-]+-projects#<team>#g' | tail -5
+            echo "::error::Vercel preview failed"; exit 1
+          fi
+          url=$(grep -oE 'https://[^ ]+\.vercel\.app' /tmp/vercel.out | tail -1)
+          npx --yes "$VERCEL_CLI" alias set "$url" "$ALIAS" --token="$VERCEL_TOKEN" > /dev/null 2> /tmp/alias.log || { sed -E 's#https?://[^ )]+#<url>#g' /tmp/alias.log | tail -3; exit 1; }
+          echo "Preview: https://$ALIAS"
+      - name: The preview answers and is not indexed
+        run: |
+          for i in 1 2 3 4 5 6; do code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$ALIAS/"); [ "$code" = 200 ] || [ "$code" = 401 ] && break; sleep 10; done
+          echo "HTTP $code"
+          curl -sI --max-time 20 "https://$ALIAS/" | grep -i '^x-robots-tag' || echo "::warning::no X-Robots-Tag header on the preview"

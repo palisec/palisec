@@ -50,6 +50,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* Reveal animations only hide content once script is known to run; without it, everything renders in place. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        {/* The homepage's opening animation plays once per session, and never with reduced motion. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var h=document.documentElement;if(location.pathname==='/'){if(sessionStorage.getItem('palisec-intro')){h.setAttribute('data-intro','done')}else{sessionStorage.setItem('palisec-intro','1');if(!matchMedia('(prefers-reduced-motion: reduce)').matches){h.classList.add('intro-page');setTimeout(function(){h.classList.remove('intro-page')},5200)}}}}catch(e){}",
+          }}
+        />
       </head>
       <body className="min-h-dvh">{children}</body>
     </html>
