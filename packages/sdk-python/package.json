@@ -9,6 +9,6 @@
     "pack:web": "node scripts/py.mjs scripts/build_wheel.py ../../apps/web/public/sdk"
   },
   "devDependencies": {
-    "viem": "2.57.19"
+    "viem": "2.58.4"
   }
 }
