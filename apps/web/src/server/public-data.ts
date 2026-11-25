@@ -88,8 +88,19 @@ export interface ProofRow {
 
 const SYMBOLS = new Map<string, string>(ASSETS[PUBLIC_DEMO_CHAIN as keyof typeof ASSETS]?.map((a) => [a.contract.toLowerCase(), a.symbol]) ?? []);
 
+/** Palisec's own contracts on mainnet, named in public actions. */
+const NAMED_TARGETS = new Map<string, string>([
+  ["0x4d37d0ad95593b2c65a0c2a98d5676d51df3fdab", "Registry v3 update"],
+  ["0xca3bae26d29a3a2ced7b87fa996ca4c44367448d", "Registry v2 update"],
+  ["0x20d6b38b47f7cb765a2318a1f318ed54a6f87e92", "Registry v1 update"],
+  ["0x737f1acf46ace6d403977eb4944845fd251fc8c6", "Link Zolva agent"],
+  ["0xd5f516d43450293ac9a77bb53e40e2d8be2f5c3a", "Buy decision credits"],
+]);
+
 /** A short readable action from the call: "Swap USDG → NVDA", "Transfer USDG", "Send ETH". */
 export function describeAction(target: string, data: string, valueWei: string | number | bigint): string {
+  const named = NAMED_TARGETS.get(target.toLowerCase());
+  if (named) return named;
   const sel = (data ?? "0x").slice(0, 10).toLowerCase();
   const tgt = SYMBOLS.get(target.toLowerCase());
   if (sel === "0xa9059cbb") return `Transfer ${tgt ?? "token"}`;
