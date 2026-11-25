@@ -1,73 +1,82 @@
 import type { Metadata } from "next";
 import { pageOpenGraph } from "@/lib/seo";
-import { Note, PageHeader, Section } from "@/components/ui";
+import { BILLING, LIMITS } from "@/lib/billing-config";
+import { Accent, Label, LineButton } from "@/components/line/parts";
+import { PageHead, Split } from "@/components/line/split";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Developer, Production Swarm and Institutional plans for Palisec.",
-  alternates: { canonical: "/pricing" }, openGraph: pageOpenGraph("/pricing"),
+  description: "Free to start, pay per decision: mainnet decisions included each month, then credits; with no allowance or credits left, mainnet requests are refused, never allowed unchecked.",
+  alternates: { canonical: "/pricing" },
+  openGraph: pageOpenGraph("/pricing"),
 };
+
+// Every number comes from lib/billing-config.ts.
+const free = BILLING.freeDecisionsPerMonth.toLocaleString("en-US");
+const perThousand = `$${(BILLING.priceUsdE6PerThousand / 1_000_000).toLocaleString("en-US")}`;
+const pro = (BILLING.proHoldingTokens / 10n ** 18n).toLocaleString("en-US");
 
 const PLANS = [
   {
     name: "Developer",
     price: "Free",
-    body: "The hosted authorization API and live console on Robinhood Chain mainnet and testnet. 1,000 mainnet decisions per organization per month are included; after that, prepaid credits at $5 per 1,000 decisions, paid in USDG or ETH. Testnet and dry runs are always free.",
-    items: ["1,000 mainnet decisions a month included", "Credits: $5 per 1,000 decisions (USDG or ETH)", "Pro limits when an owner wallet holds 5,000,000 $PALISEC", "Smart accounts enforced on chain"],
-    note: "With no allowance or credits left, mainnet requests are refused (402 PS_CREDIT_001), never allowed unchecked. See Docs → Token.",
-    available: true,
+    body: `${free} mainnet decisions a month included. Then credits at ${perThousand} per 1,000 decisions, in USDG or ETH.`,
+    items: [
+      `${free} mainnet decisions a month included`,
+      `Credits: ${perThousand} per 1,000 decisions (USDG or ETH)`,
+      `Up to ${LIMITS.normal.agents} agents and ${LIMITS.normal.policies} policies; Pro limits when an owner wallet holds ${pro} $PALISEC`,
+      "Smart accounts enforced on chain",
+      "Testnet and dry runs always free",
+    ],
+    cta: { href: "/console", label: "Start building →", primary: true },
+    highlight: true,
   },
   {
-    name: "Production Swarm",
+    name: "Production",
     price: "Monthly + usage",
-    body: "Hosted policy enforcement, protected signing, audit history and usage-based metering.",
+    body: "Hosted policy enforcement, protected signing, audit history and usage-based metering, priced to your volume.",
     items: ["Protected operation evaluations", "Successful signing operations", "Retained audit storage"],
-    note: "Priced to your volume. Contact us on X @palisecagents.",
-    available: false,
+    cta: { href: "mailto:admin@palisec.tech", label: "Email admin@palisec.tech", primary: false },
+    highlight: false,
   },
   {
     name: "Institutional",
     price: "Contracted",
     body: "Dedicated capacity, defined service objectives, advanced access controls and negotiated support.",
     items: ["Dedicated capacity", "Defined objectives", "Advanced access control"],
-    note: "Contract terms agreed with your team.",
-    available: false,
+    cta: { href: "mailto:admin@palisec.tech", label: "Email admin@palisec.tech", primary: false },
+    highlight: false,
   },
 ];
 
 export default function PricingPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Pricing"
-        title="Metered on decisions and signatures."
-        lede="Simple enough to understand, precise enough to reconcile with usage. Billing is tracked separately from authorization and can never bypass a check."
+      <PageHead
+        label="Pricing"
+        title={<>Free to start. <Accent>Pay per decision.</Accent></>}
+        lede="A decision is one transaction checked. With no allowance or credits left, mainnet requests are refused, never allowed unchecked."
       />
-      <Section label="Plans">
-        <div className="grid gap-px border border-line bg-line lg:grid-cols-3">
-          {PLANS.map((p) => (
-            <article key={p.name} className="flex flex-col bg-ink p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-fg">{p.name}</h3>
-                <span className={`inline-flex items-center gap-2 font-utility text-[13px] font-semibold ${p.available ? "text-allow" : "text-muted"}`}>
-                  <span aria-hidden className={`h-2 w-2 rounded-full ${p.available ? "bg-allow" : "ring-1 ring-muted"}`} />
-                  {p.available ? "Available" : "On request"}
-                </span>
+      <Split
+        left={<Label>Plans</Label>}
+        right={
+          <div className="grid gap-px overflow-hidden rounded-[14px] border border-line bg-line lg:grid-cols-3">
+            {PLANS.map((p) => (
+              <div key={p.name} className={`flex flex-col gap-5 p-7 ${p.highlight ? "bg-[rgb(10_69_65/0.35)]" : "bg-abyss"}`}>
+                <p className="t-label">{p.name}</p>
+                <p className={`t-h3 ${p.highlight ? "text-aqua" : ""}`}>{p.price}</p>
+                <p className="text-[15.5px] leading-relaxed text-foam">{p.body}</p>
+                <ul className="space-y-2 border-t border-line pt-5 text-[14.5px] text-silver">
+                  {p.items.map((i) => <li key={i}>· {i}</li>)}
+                </ul>
+                <div className="mt-auto pt-2">
+                  <LineButton href={p.cta.href} variant={p.cta.primary ? "primary" : "ghost"} small>{p.cta.label}</LineButton>
+                </div>
               </div>
-              <p className="mt-6 font-heading text-[32px] font-medium tracking-[-0.03em] text-mist">{p.price}</p>
-              <p className="mt-4 text-sm leading-relaxed text-muted">{p.body}</p>
-              <ul className="mt-6 space-y-2 border-t border-line pt-4 text-[14.5px] text-soft">
-                {p.items.map((i) => <li key={i} className="flex gap-3"><span aria-hidden className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-aqua" />{i}</li>)}
-              </ul>
-              <p className="mt-auto pt-8 text-[13px] text-muted">{p.note}</p>
-            </article>
-          ))}
-        </div>
-        <Note title="Overages">
-          Exceeding an allowance never silently disables security checks: pending operations and reservations keep their
-          guarantees, and the limits that apply are agreed in your plan.
-        </Note>
-      </Section>
+            ))}
+          </div>
+        }
+      />
     </>
   );
 }

@@ -35,7 +35,10 @@ const nextConfig: NextConfig = {
     return [
       { source: "/overview", destination: "/", permanent: true },
       // /product became /infrastructure in 2.0; old links keep working.
-      { source: "/product", destination: "/infrastructure", permanent: true },
+      { source: "/product", destination: "/accounts", permanent: true },
+      // The new site: /integrations became /ecosystem and /infrastructure became /accounts.
+      { source: "/integrations", destination: "/ecosystem", permanent: true },
+      { source: "/infrastructure", destination: "/accounts", permanent: true },
       // The SDK guides live under /docs/sdk/{typescript,python}; the bare path goes to the SDK list.
       { source: "/docs/sdk", destination: "/docs#connect", permanent: true },
     ];
