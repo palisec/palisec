@@ -192,6 +192,34 @@ function assetSimulation(r: Rng, now: number): Record<string, unknown> {
   };
 }
 
+/** Schema 1.6 treasury guard over one of the generated tokens, mostly valid and enabled. */
+function treasuryGuard(r: Rng): Record<string, unknown> {
+  const venues = POOL.filter(() => chance(r, 0.4));
+  return {
+    enabled: chance(r, 0.9),
+    project_token: pick(r, TOKENS.slice(1)),
+    allowed_destinations: chance(r, 0.5) ? ["0x9999999999999999999999999999999999999999"] : [],
+    allowed_sell_venues: venues,
+    daily_sell_cap: {
+      amount: chance(r, 0.3) ? null : pick(r, ["0", "1000", digits(r, int(r, 1, 22))]),
+      pct_of_holdings_bps: chance(r, 0.6) ? null : pick(r, [0, 1, 500, 10000]),
+    },
+    approvals: "exact_to_venues",
+    protect_liquidity: chance(r, 0.5),
+    lp_tokens: chance(r, 0.5) ? [pick(r, TOKENS.slice(1))] : [],
+    locked_until: pick(r, [0, NOW + 86400]),
+  };
+}
+
+/** Transfers out of the account: to a pool, the insider, or anywhere the generator knows. */
+function transfersOut(r: Rng): Record<string, unknown>[] {
+  return Array.from({ length: pick(r, [0, 1, 1, 2, 3]) }, () => ({
+    token: pick(r, TOKENS.slice(1)),
+    to: pick(r, [...POOL, "0x9999999999999999999999999999999999999999"]),
+    amount: pick(r, ["0", "1000", digits(r, int(r, 1, 24))]),
+  }));
+}
+
 /** Make the declared intent match the simulation, so the later asset rules are reached. */
 function coherentAsset(r: Rng, intent: Record<string, unknown>, sim: Record<string, unknown>) {
   const spend = (sim.outflows as { token: string; amount: string }[]).map((o) => ({ ...o }));
@@ -274,6 +302,10 @@ function policyFor(r: Rng): unknown {
     p.schema_version = chance(r, 0.96) ? "1.5" : "1.4";
     p.token_spend = tokenSpend(r);
   }
+  if (chance(r, 0.3)) {
+    p.schema_version = chance(r, 0.96) ? "1.6" : "1.5";
+    p.treasury_guard = treasuryGuard(r);
+  }
   if (chance(r, 0.06)) return mutatePolicy(r, p, int(r, 1, 3));
   return p;
 }
@@ -326,6 +358,11 @@ export function evalCase(seed: number): EvalCase {
     }));
     if (chance(r, 0.1)) (sim.allowances_after as unknown[]).push({ token: pick(r, TOKENS.slice(1)), spender: pick(r, POOL), amount: pick(r, ["0", "5000"]) });
   }
+  if (sim && chance(r, 0.7)) sim.transfers_out = transfersOut(r);
+  if (chance(r, 0.6))
+    env.treasury = chance(r, 0.1)
+      ? null
+      : { observed_at: now - pick(r, [0, 4, 120, 121]), sold_24h: pick(r, ["0", "1000", digits(r, int(r, 1, 22))]), holdings_at_window_start: pick(r, ["0", digits(r, int(r, 1, 24))]) };
   // Four in ten cases start coherent (everything lines up for ALLOW or review), then take at most
   // one perturbation, so every check is reached and every outcome occurs.
   if (policy && typeof policy === "object" && !Array.isArray(policy) && chance(r, 0.4)) {

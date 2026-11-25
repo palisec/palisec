@@ -17,6 +17,7 @@ pub mod loss;
 pub mod proven;
 pub mod recovery;
 pub mod spend;
+pub mod treasury;
 pub mod js;
 pub mod validate;
 

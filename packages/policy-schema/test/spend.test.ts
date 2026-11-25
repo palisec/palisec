@@ -39,7 +39,7 @@ describe("token spend limits (schema 1.5)", () => {
 
   it("validates the rule and its schema version", () => {
     expect(validatePolicy(spendPolicy())).toEqual([]);
-    expect(validatePolicy({ ...spendPolicy(), schema_version: "1.4" })).toContainEqual({ path: "$.token_spend", message: 'requires schema_version "1.5"' });
+    expect(validatePolicy({ ...spendPolicy(), schema_version: "1.4" })).toContainEqual({ path: "$.token_spend", message: 'requires schema_version "1.5" or later' });
     const bad = spendPolicy() as unknown as Record<string, any>;
     bad.token_spend.extra = 1;
     bad.token_spend.on_price_unavailable = "allow";

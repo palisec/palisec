@@ -239,6 +239,8 @@ export function evaluate(
 
   run("asset", "Asset safety (simulated balance changes, sell leg, tax, approvals)", () => assetCheck(policy!, intent, env, selector));
 
+  run("treasury", "Treasury guard (project-token destinations, daily sell cap, approvals, liquidity)", () => treasuryCheck(policy!, env, selector));
+
   run("recovery", "Recoverable on Upoch (checkpoint, guardian)", () => recoveryCheck(policy!, env));
 
   run("loss", "Loss limit (account value against the window's peak)", () => lossCheck(policy!, intent, env, selector, value));
@@ -825,4 +827,97 @@ export function formatUsd(micros: bigint): string {
 
 export function describe(code: ReasonCode): string {
   return REASON_CODES[code];
+}
+
+// ---------------------------------------------------------------- treasury guard (schema 1.6)
+
+/** The simulation and the sell window must be this fresh for the treasury guard, seconds. */
+export const TREASURY_MAX_INPUT_AGE_SECONDS = 120;
+/** At or above this, an approval is unlimited. */
+const TREASURY_UNLIMITED = 2n ** 128n;
+
+/** The cap for the rolling 24 hours: the smaller of the absolute amount and the share of the window's holdings; null when neither is set. */
+export function treasuryCap(cap: { amount: string | null; pct_of_holdings_bps: number | null }, holdings: bigint): bigint | null {
+  let c: bigint | null = null;
+  if (cap.amount !== null) c = BigInt(cap.amount);
+  if (cap.pct_of_holdings_bps !== null) {
+    const p = (holdings * BigInt(cap.pct_of_holdings_bps)) / 10000n;
+    c = c === null || p < c ? p : c;
+  }
+  return c;
+}
+
+function treasuryCheck(policy: Policy, env: Environment, selector: string | null): Outcome {
+  const g = policy.treasury_guard;
+  if (!g || !g.enabled) return { status: "pass", detail: "No treasury guard on this policy." };
+  if (!selector) return { status: "pass", detail: "Native transfer: the project token cannot move." };
+
+  const unknown = (why: string): Outcome => ({ status: "fail", code: "PS_SIM_002", detail: `${why} The project token's movement cannot be determined, so the request fails closed.` });
+  const raw = env.asset_simulation;
+  if (raw === undefined || raw === null) return unknown("Simulation unavailable.");
+  const sim = recordOf(raw, "asset_simulation");
+  const age = env.now - intOf(sim.observed_at, "observed_at");
+  if (age > TREASURY_MAX_INPUT_AGE_SECONDS) return unknown(`Simulation is ${age}s old; maximum is ${TREASURY_MAX_INPUT_AGE_SECONDS}s.`);
+  if (boolOf(sim.reverted, "reverted")) return unknown("The transaction reverts in simulation.");
+  if (sim.transfers_out === undefined) return unknown("The simulation does not list the account's transfers.");
+
+  const pt = g.project_token.toLowerCase();
+  const venues = new Set(g.allowed_sell_venues.map((a) => a.toLowerCase()));
+  const dests = new Set(g.allowed_destinations.map((a) => a.toLowerCase()));
+  const lps = new Set(g.lp_tokens.map((a) => a.toLowerCase()));
+
+  const transfers = listOf(sim.transfers_out, "transfers_out").map((x) => {
+    const o = recordOf(x, "transfers_out");
+    return { token: str(o.token, "transfers_out.token").toLowerCase(), to: str(o.to, "transfers_out.to").toLowerCase(), amount: amountOf(o.amount, "transfers_out.amount") };
+  });
+  const approvals = listOf(sim.approvals, "approvals").map((x) => {
+    const o = recordOf(x, "approvals");
+    return { token: str(o.token, "approvals.token").toLowerCase(), spender: str(o.spender, "approvals.spender").toLowerCase(), amount: amountOf(o.amount, "approvals.amount") };
+  });
+  const after = sim.allowances_after === undefined ? null : listOf(sim.allowances_after, "allowances_after").map((x) => {
+    const o = recordOf(x, "allowances_after");
+    return { token: str(o.token, "allowances_after.token").toLowerCase(), spender: str(o.spender, "allowances_after.spender").toLowerCase(), amount: amountOf(o.amount, "allowances_after.amount") };
+  });
+
+  // 1. Liquidity: a protected LP token never leaves the account and is never approved.
+  if (g.protect_liquidity) {
+    const out = transfers.find((t) => lps.has(t.token) && t.amount > 0n);
+    if (out) return { status: "fail", code: "PS_TREASURY_004", detail: `LP token ${out.token} would leave the account (to ${out.to}); liquidity is protected.` };
+    const ap = approvals.find((a) => lps.has(a.token) && a.amount > 0n);
+    if (ap) return { status: "fail", code: "PS_TREASURY_004", detail: `LP token ${ap.token} would be approved to ${ap.spender}; liquidity is protected.` };
+  }
+
+  // 2. Destinations: the project token goes only to an allowed destination or sell venue.
+  let sold = 0n;
+  for (const t of transfers) {
+    if (t.token !== pt || t.amount === 0n) continue;
+    if (venues.has(t.to)) sold += t.amount;
+    else if (!dests.has(t.to)) return { status: "fail", code: "PS_TREASURY_001", detail: `${t.amount} of the project token would go to ${t.to}, which is not an allowed destination or sell venue.` };
+  }
+
+  const ptApprovals = approvals.filter((a) => a.token === pt);
+  if (sold === 0n && ptApprovals.length === 0) return { status: "pass", detail: "The project token does not leave the account and is not approved." };
+
+  // 3 and 4 need the sell window.
+  const rawWin = env.treasury;
+  if (rawWin === undefined || rawWin === null) return { status: "fail", code: "PS_STATE_001", detail: "The 24-hour sell window is unavailable, so the cap cannot be enforced." };
+  const win = recordOf(rawWin, "treasury");
+  const winAge = env.now - intOf(win.observed_at, "treasury.observed_at");
+  if (winAge > TREASURY_MAX_INPUT_AGE_SECONDS) return { status: "fail", code: "PS_STATE_001", detail: `The sell window is ${winAge}s old; maximum is ${TREASURY_MAX_INPUT_AGE_SECONDS}s.` };
+  const used = amountOf(win.sold_24h, "treasury.sold_24h");
+  const cap = treasuryCap(g.daily_sell_cap, amountOf(win.holdings_at_window_start, "treasury.holdings_at_window_start"));
+  const left = cap === null ? null : cap > used + sold ? cap - used - sold : 0n;
+
+  // 3. Approvals: only to a venue, never unlimited, and never leaving more open than the cap has left.
+  for (const a of ptApprovals) {
+    if (a.amount >= TREASURY_UNLIMITED) return { status: "fail", code: "PS_TREASURY_003", detail: `Unlimited approval of the project token to ${a.spender}.` };
+    if (!venues.has(a.spender)) return { status: "fail", code: "PS_TREASURY_003", detail: `Approval of the project token to ${a.spender}, which is not an allowed sell venue.` };
+    const open = after ? (after.find((x) => x.token === pt && x.spender === a.spender)?.amount ?? 0n) : a.amount;
+    if (left !== null && open > left) return { status: "fail", code: "PS_TREASURY_003", detail: `Approval leaves ${open} of the project token open to ${a.spender}; only ${left} is left under the daily cap.` };
+  }
+
+  // 4. The daily cap over the rolling 24 hours.
+  if (cap !== null && used + sold > cap)
+    return { status: "fail", code: "PS_TREASURY_002", detail: `${used} sold in the last 24 hours + ${sold} now exceeds the daily cap of ${cap}.` };
+  return { status: "pass", detail: cap === null ? `Sells ${sold} through an allowed venue (no daily cap).` : `Sells ${sold}; ${used + sold} of the ${cap} daily cap after this.` };
 }

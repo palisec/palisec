@@ -40,9 +40,10 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ],
-      "description": "1.0; 1.1 adds asset_safety; 1.2 upoch_recovery; 1.3 loss_limit; 1.4 proven_record; 1.5 token_spend."
+      "description": "1.0; 1.1 adds asset_safety; 1.2 upoch_recovery; 1.3 loss_limit; 1.4 proven_record; 1.5 token_spend; 1.6 treasury_guard."
     },
     "policy_id": {
       "type": "string",
@@ -436,6 +437,102 @@
         "require_output_to_account": {
           "type": "boolean",
           "description": "A contract call that spends tokens must bring something back into the account (a swap's output)."
+        }
+      }
+    },
+    "treasury_guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Schema 1.6: anti-rug rules for an agent's treasury of its own project token. Every movement of the project token out of the account is read from the simulation: it may go only to an allowed destination or sell venue (PS_TREASURY_001), sells count toward a rolling 24-hour cap (PS_TREASURY_002), approvals go only to a venue, never unlimited and never above the cap left (PS_TREASURY_003), and protected LP tokens never leave the account (PS_TREASURY_004). Before locked_until, no change may loosen this section (PS_TREASURY_005).",
+      "required": [
+        "enabled",
+        "project_token",
+        "allowed_destinations",
+        "allowed_sell_venues",
+        "daily_sell_cap",
+        "approvals",
+        "protect_liquidity",
+        "lp_tokens",
+        "locked_until"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "project_token": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$"
+        },
+        "allowed_destinations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$"
+          }
+        },
+        "allowed_sell_venues": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$"
+          }
+        },
+        "daily_sell_cap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "pct_of_holdings_bps"
+          ],
+          "properties": {
+            "amount": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]{0,77})$"
+                }
+              ],
+              "description": "Base units per rolling 24 hours; null: not used."
+            },
+            "pct_of_holdings_bps": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10000
+                }
+              ],
+              "description": "Share of the holdings at the window start, basis points; null: not used. With both set, the smaller applies."
+            }
+          }
+        },
+        "approvals": {
+          "const": "exact_to_venues"
+        },
+        "protect_liquidity": {
+          "type": "boolean"
+        },
+        "lp_tokens": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$"
+          }
+        },
+        "locked_until": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32503680000,
+          "description": "Unix seconds; 0: not locked."
         }
       }
     }

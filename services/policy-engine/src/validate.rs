@@ -4,7 +4,7 @@
 use crate::js::{int_in, is_address, is_policy_id, is_selector, is_uint, js_keys};
 use serde_json::{json, Map, Value};
 
-pub const SCHEMA_VERSIONS: [&str; 6] = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"];
+pub const SCHEMA_VERSIONS: [&str; 7] = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"];
 const MAX_ALLOWLIST: usize = 256;
 const MAX_SELECTORS: usize = 64;
 const MAX_LOSS_ADDRESSES: usize = 16;
@@ -72,11 +72,11 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     v.fields(
         doc,
         "$",
-        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend"],
+        &["schema_version", "policy_id", "version", "account", "status", "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend", "treasury_guard"],
     );
 
     if !matches!(doc.get("schema_version"), Some(Value::String(s)) if SCHEMA_VERSIONS.contains(&s.as_str())) {
-        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\", \"1.3\", \"1.4\" or \"1.5\"");
+        v.err("$.schema_version", "must be \"1.0\", \"1.1\", \"1.2\", \"1.3\", \"1.4\", \"1.5\" or \"1.6\"");
     }
     if !matches!(doc.get("policy_id"), Some(Value::String(s)) if is_policy_id(s)) {
         v.err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
@@ -167,7 +167,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("asset_safety") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.1" || s == "1.2" || s == "1.3" || s == "1.4" || s == "1.5") {
+        if !at_least(doc.get("schema_version"), "1.1") {
             v.err("$.asset_safety", "requires schema_version \"1.1\" or later");
         }
         if let Some(safety) = v.obj(doc, "asset_safety", "$") {
@@ -198,7 +198,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("upoch_recovery") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.2" || s == "1.3" || s == "1.4" || s == "1.5") {
+        if !at_least(doc.get("schema_version"), "1.2") {
             v.err("$.upoch_recovery", "requires schema_version \"1.2\" or later");
         }
         if let Some(up) = v.obj(doc, "upoch_recovery", "$") {
@@ -214,7 +214,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("loss_limit") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.3" || s == "1.4" || s == "1.5") {
+        if !at_least(doc.get("schema_version"), "1.3") {
             v.err("$.loss_limit", "requires schema_version \"1.3\" or later");
         }
         if let Some(loss) = v.obj(doc, "loss_limit", "$") {
@@ -271,7 +271,7 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("proven_record") {
-        if !matches!(doc.get("schema_version"), Some(Value::String(s)) if s == "1.4" || s == "1.5") {
+        if !at_least(doc.get("schema_version"), "1.4") {
             v.err("$.proven_record", "requires schema_version \"1.4\" or later");
         }
         if let Some(pr) = v.obj(doc, "proven_record", "$") {
@@ -301,8 +301,8 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
     }
 
     if doc.contains_key("token_spend") {
-        if doc.get("schema_version") != Some(&Value::String("1.5".into())) {
-            v.err("$.token_spend", "requires schema_version \"1.5\"");
+        if !at_least(doc.get("schema_version"), "1.5") {
+            v.err("$.token_spend", "requires schema_version \"1.5\" or later");
         }
         if let Some(ts) = v.obj(doc, "token_spend", "$") {
             let p = "$.token_spend";
@@ -317,7 +317,56 @@ pub fn validate(doc: &Value) -> Vec<(String, String)> {
         }
     }
 
+    if doc.contains_key("treasury_guard") {
+        if !at_least(doc.get("schema_version"), "1.6") {
+            v.err("$.treasury_guard", "requires schema_version \"1.6\" or later");
+        }
+        if let Some(tg) = v.obj(doc, "treasury_guard", "$") {
+            let p = "$.treasury_guard";
+            v.fields(
+                tg,
+                p,
+                &["enabled", "project_token", "allowed_destinations", "allowed_sell_venues", "daily_sell_cap", "approvals", "protect_liquidity", "lp_tokens", "locked_until"],
+            );
+            v.bool(tg, "enabled", p);
+            if !matches!(tg.get("project_token"), Some(Value::String(s)) if is_address(s)) {
+                v.err(format!("{p}.project_token"), "must be an address");
+            }
+            for k in ["allowed_destinations", "allowed_sell_venues", "lp_tokens"] {
+                let ok = matches!(tg.get(k), Some(Value::Array(a)) if a.len() <= 32 && a.iter().all(|x| matches!(x, Value::String(s) if is_address(s))));
+                if !ok {
+                    v.err(format!("{p}.{k}"), "must be a list of at most 32 addresses");
+                }
+            }
+            if let Some(cap) = v.obj(tg, "daily_sell_cap", p) {
+                let q = format!("{p}.daily_sell_cap");
+                v.fields(cap, &q, &["amount", "pct_of_holdings_bps"]);
+                if !matches!(cap.get("amount"), Some(Value::Null)) && !matches!(cap.get("amount"), Some(Value::String(s)) if crate::js::is_uint(s)) {
+                    v.err(format!("{q}.amount"), "must be a base-unit amount or null");
+                }
+                let pct = cap.get("pct_of_holdings_bps");
+                if !matches!(pct, Some(Value::Null)) && !matches!(pct.and_then(crate::js::int), Some(n) if (0..=10000).contains(&n)) {
+                    v.err(format!("{q}.pct_of_holdings_bps"), "must be an integer from 0 to 10000 or null");
+                }
+            }
+            if tg.get("approvals") != Some(&Value::String("exact_to_venues".into())) {
+                v.err(format!("{p}.approvals"), "must be \"exact_to_venues\"");
+            }
+            v.bool(tg, "protect_liquidity", p);
+            v.int(tg, "locked_until", p, 0, 32503680000);
+        }
+    }
+
     v.errors
+}
+
+/// The document's schema version is `min` or later (unknown versions never are).
+fn at_least(version: Option<&Value>, min: &str) -> bool {
+    let Some(Value::String(s)) = version else { return false };
+    match (SCHEMA_VERSIONS.iter().position(|x| x == s), SCHEMA_VERSIONS.iter().position(|x| *x == min)) {
+        (Some(i), Some(j)) => i >= j,
+        _ => false,
+    }
 }
 
 /// `a < b` for canonical decimal integer strings (no leading zeros).

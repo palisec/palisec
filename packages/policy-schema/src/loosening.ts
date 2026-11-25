@@ -68,6 +68,8 @@ const ZERO_IS_OFF: Record<string, string> = {
 const ADDRESS_SETS: Record<string, string> = {
   "$.loss_limit.stablecoins": "stablecoin a paused account may swap into",
   "$.loss_limit.exit_addresses": "exit address (withdrawals allowed while paused)",
+  "$.treasury_guard.allowed_destinations": "allowed destination for the project token",
+  "$.treasury_guard.allowed_sell_venues": "allowed sell venue for the project token",
 };
 
 /** Booleans: the value that is stricter. */
@@ -82,6 +84,8 @@ const STRICT_BOOL: Record<string, { strict: boolean; label: string }> = {
   "$.proven_record.enabled": { strict: false, label: "bigger limits once proven on Zolva" },
   "$.token_spend.enabled": { strict: true, label: "limits count token spend" },
   "$.token_spend.require_output_to_account": { strict: true, label: "a swap's output must return to the account" },
+  "$.treasury_guard.enabled": { strict: true, label: "treasury guard" },
+  "$.treasury_guard.protect_liquidity": { strict: true, label: "liquidity protected" },
 };
 
 function numeric(path: string, from: unknown, to: unknown): PolicyChange {
@@ -220,6 +224,41 @@ function walk(path: string, a: unknown, b: unknown, out: PolicyChange[]) {
     if (b === undefined && a && typeof a === "object") {
       const s = a as Record<string, unknown>;
       return void out.push({ path, kind: s.enabled === true ? "loosening" : "tightening", from: a, to: null, note: "limits count token spend: rule removed" });
+    }
+  }
+  if (path === "$.treasury_guard.locked_until") {
+    const x = num(a);
+    const y = num(b);
+    if (x === null || y === null) return void out.push({ path, kind: "loosening", from: a, to: b, note: "treasury lock changed in a way that cannot be compared" });
+    return void out.push({ path, kind: y > x ? "tightening" : "loosening", from: a, to: b, note: `treasury lock ${y > x ? "extended" : "shortened"}` });
+  }
+  if (path === "$.treasury_guard.lp_tokens") {
+    // More protected LP tokens allow less; removing one allows more.
+    if (!Array.isArray(a) || !Array.isArray(b)) return void out.push({ path, kind: "loosening", from: a ?? null, to: b ?? null, note: "protected LP token list replaced" });
+    const x = new Set(a.map(lower));
+    const y = new Set(b.map(lower));
+    for (const v of y) if (!x.has(v)) out.push({ path, kind: "tightening", from: null, to: v, note: `LP token protected: ${String(v)}` });
+    for (const v of x) if (!y.has(v)) out.push({ path, kind: "loosening", from: v, to: null, note: `LP token no longer protected: ${String(v)}` });
+    return;
+  }
+  if (path === "$.treasury_guard.daily_sell_cap.amount" || path === "$.treasury_guard.daily_sell_cap.pct_of_holdings_bps") {
+    // Null means the cap is not used, the loosest value of all.
+    const label = path.endsWith("amount") ? "daily sell cap (amount)" : "daily sell cap (% of holdings)";
+    const x = a === null ? null : (big(a) ?? (num(a) !== null ? BigInt(Math.trunc(num(a)!)) : undefined));
+    const y = b === null ? null : (big(b) ?? (num(b) !== null ? BigInt(Math.trunc(num(b)!)) : undefined));
+    if (x === undefined || y === undefined) return void out.push({ path, kind: "loosening", from: a, to: b, note: `${label} changed in a way that cannot be compared` });
+    const looser = y === null || (x !== null && y > x);
+    return void out.push({ path, kind: looser ? "loosening" : "tightening", from: a, to: b, note: y === null ? `${label} no longer used` : x === null ? `${label} set` : `${label} ${y > x ? "raised" : "lowered"}` });
+  }
+  if (path === "$.treasury_guard") {
+    // Adding the guard can only deny more; removing an active one loosens.
+    if (a === undefined && b && typeof b === "object") {
+      const s = b as Record<string, unknown>;
+      return void out.push({ path, kind: "tightening", from: null, to: b, note: `treasury guard added (${s.enabled === true ? "on" : "off"})` });
+    }
+    if (b === undefined && a && typeof a === "object") {
+      const s = a as Record<string, unknown>;
+      return void out.push({ path, kind: s.enabled === true ? "loosening" : "tightening", from: a, to: null, note: "treasury guard removed" });
     }
   }
   if (path === "$.asset_safety.on_simulation_unavailable")

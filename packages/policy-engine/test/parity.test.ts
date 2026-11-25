@@ -16,6 +16,7 @@ import { engineStatus, evaluateDual, evaluateRust, sameJson, SOURCE_HASH, valida
 import { evalCase, validateCase, type EvalCase } from "./cases";
 import { SPEND_CASES } from "../../policy-schema/test/spend-cases";
 import { STOP_CASES, STOP_STATE } from "../../policy-schema/test/account-stop-cases";
+import { TREASURY_CASES } from "../../policy-schema/test/treasury-cases";
 // @ts-expect-error plain ESM helper without types
 import { sourceHash } from "../../../services/policy-engine/source-hash.mjs";
 
@@ -188,6 +189,15 @@ describe("token spend cases: both engines agree", () => {
       expect(sameJson(evaluateRust(c.policy, c.intent, c.state, c.env), ref)).toBeNull();
     });
   }
+});
+
+describe("treasury guard cases: both engines agree", () => {
+  for (const c of TREASURY_CASES)
+    it(c.name, () => {
+      const ref = evaluate(c.policy, c.intent, c.state, c.env);
+      expect([ref.decision, ref.reason_code]).toEqual([c.decision, c.code]);
+      expect(sameJson(evaluateRust(c.policy, c.intent, c.state, c.env), ref)).toBeNull();
+    });
 });
 
 describe("account stop cases: both engines agree", () => {

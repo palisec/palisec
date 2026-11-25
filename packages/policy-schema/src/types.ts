@@ -7,7 +7,7 @@ export type Hex = `0x${string}`;
 
 /** The version new policies are written in. 1.0 documents stay valid; 1.1 adds `asset_safety`. */
 export const SCHEMA_VERSION = "1.1" as const;
-export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"] as const;
+export const SCHEMA_VERSIONS = ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"] as const;
 export type SchemaVersion = (typeof SCHEMA_VERSIONS)[number];
 
 /** Native ETH in balance changes and declared intent (the common 0xEeee… convention), lowercase. */
@@ -110,6 +110,41 @@ export interface TokenSpend {
   require_output_to_account: boolean;
 }
 
+/**
+ * Treasury guard (schema 1.6): anti-rug rules for an agent's treasury of its own project token. Every
+ * movement of the project token out of the account is read from the simulation, so direct transfers,
+ * routers, multicalls and unknown contracts are all judged by what they actually move.
+ */
+export interface TreasuryGuard {
+  enabled: boolean;
+  /** The project token the rules protect. */
+  project_token: Address;
+  /** Where the project token may be sent (for example a vesting contract). Everything else is denied. */
+  allowed_destinations: Address[];
+  /** Routers, pools or bonding curves the token may be sold through; tokens sent to them count as sells. */
+  allowed_sell_venues: Address[];
+  /** Sells per rolling 24 hours: an absolute amount and/or a share of the holdings at the window's start. Null: not used. */
+  daily_sell_cap: { amount: UintString | null; pct_of_holdings_bps: number | null };
+  /** Approvals of the project token: only to a sell venue, never unlimited, never more than the cap left. */
+  approvals: "exact_to_venues";
+  /** When true, the listed LP tokens can never leave the account or be approved. */
+  protect_liquidity: boolean;
+  /** ERC-20 LP tokens for the project token held by the account. */
+  lp_tokens: Address[];
+  /** Unix seconds. Before it, no change may loosen this section (rejected, not delayed). 0: not locked. */
+  locked_until: number;
+}
+
+/** The project token's sells in the rolling 24 hours before this decision, read by the server (schema 1.6). */
+export interface TreasuryWindow {
+  /** Unix seconds of the read. */
+  observed_at: number;
+  /** Project token sold through the allowed venues in the last 24 hours, base units. */
+  sold_24h: UintString;
+  /** The account's project-token balance at the start of the 24-hour window, base units. */
+  holdings_at_window_start: UintString;
+}
+
 /** Prices for the tokens a transaction spends, read before evaluation (schema 1.5). */
 export interface SpendPrices {
   /** Unix seconds of the read. */
@@ -191,6 +226,8 @@ export interface AssetSimulation {
    * amounts instead.
    */
   allowances_after?: { token: Address; spender: Address; amount: UintString }[];
+  /** Every ERC-20 transfer out of the account during the operation, with its recipient. Absent: unknown. */
+  transfers_out?: { token: Address; to: Address; amount: UintString }[];
   /** Sell leg for received tokens; null when nothing was received or no leg could be built. */
   sell: { reverted: boolean } | null;
   /** Highest transfer tax seen on the buy or sell leg, basis points; null if nothing was received. */
@@ -245,6 +282,8 @@ export interface Policy {
   proven_record?: ProvenRecord;
   /** Schema 1.5. Absent means off: the limits count ETH and the fee only. */
   token_spend?: TokenSpend;
+  /** Schema 1.6. Absent means off. */
+  treasury_guard?: TreasuryGuard;
 }
 
 /** A proposed action from an agent. Typed intent, never free text. */
@@ -288,6 +327,8 @@ export interface Environment {
   registry_stop?: { held_by_account: boolean; observed_at: number } | null;
   /** Token spend limits: prices for spent tokens; absent or null means none (spent tokens fail closed). */
   spend_prices?: SpendPrices | null;
+  /** Treasury guard: the 24-hour sell window; absent or null means unavailable (fails closed when a sell or approval needs it). */
+  treasury?: TreasuryWindow | null;
 }
 
 export type ReservationState = "reserved" | "pending_approval" | "released" | "finalized";

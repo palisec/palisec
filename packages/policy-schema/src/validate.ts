@@ -55,10 +55,10 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   const $ = "$";
   fields(doc, $, [
     "schema_version", "policy_id", "version", "account", "status",
-    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend",
+    "limits", "cooldowns", "contracts", "human_approval", "failure_mode", "asset_safety", "upoch_recovery", "loss_limit", "proven_record", "token_spend", "treasury_guard",
   ]);
 
-  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1", "1.2", "1.3", "1.4" or "1.5"');
+  if (!(SCHEMA_VERSIONS as readonly unknown[]).includes(doc.schema_version)) err("$.schema_version", 'must be "1.0", "1.1", "1.2", "1.3", "1.4", "1.5" or "1.6"');
   if (typeof doc.policy_id !== "string" || !POLICY_ID.test(doc.policy_id))
     err("$.policy_id", "must be 3-64 chars of a-z, 0-9, _");
   int(doc, "version", $, 1, 2 ** 31 - 1);
@@ -129,7 +129,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.asset_safety !== undefined) {
-    if (doc.schema_version !== "1.1" && doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.asset_safety", 'requires schema_version "1.1" or later');
+    if (!atLeast(doc.schema_version, "1.1")) err("$.asset_safety", 'requires schema_version "1.1" or later');
     const safety = obj(doc, "asset_safety", $);
     if (safety) {
       const p = "$.asset_safety";
@@ -149,7 +149,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.upoch_recovery !== undefined) {
-    if (doc.schema_version !== "1.2" && doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.upoch_recovery", 'requires schema_version "1.2" or later');
+    if (!atLeast(doc.schema_version, "1.2")) err("$.upoch_recovery", 'requires schema_version "1.2" or later');
     const up = obj(doc, "upoch_recovery", $);
     if (up) {
       const p = "$.upoch_recovery";
@@ -162,7 +162,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.loss_limit !== undefined) {
-    if (doc.schema_version !== "1.3" && doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.loss_limit", 'requires schema_version "1.3" or later');
+    if (!atLeast(doc.schema_version, "1.3")) err("$.loss_limit", 'requires schema_version "1.3" or later');
     const loss = obj(doc, "loss_limit", $);
     if (loss) {
       const p = "$.loss_limit";
@@ -193,7 +193,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.proven_record !== undefined) {
-    if (doc.schema_version !== "1.4" && doc.schema_version !== "1.5") err("$.proven_record", 'requires schema_version "1.4" or later');
+    if (!atLeast(doc.schema_version, "1.4")) err("$.proven_record", 'requires schema_version "1.4" or later');
     const pr = obj(doc, "proven_record", $);
     if (pr) {
       const p = "$.proven_record";
@@ -218,7 +218,7 @@ export function validatePolicy(doc: unknown): ValidationError[] {
   }
 
   if (doc.token_spend !== undefined) {
-    if (doc.schema_version !== "1.5") err("$.token_spend", 'requires schema_version "1.5"');
+    if (!atLeast(doc.schema_version, "1.5")) err("$.token_spend", 'requires schema_version "1.5" or later');
     const ts = obj(doc, "token_spend", $);
     if (ts) {
       const p = "$.token_spend";
@@ -231,7 +231,39 @@ export function validatePolicy(doc: unknown): ValidationError[] {
     }
   }
 
+  if (doc.treasury_guard !== undefined) {
+    if (!atLeast(doc.schema_version, "1.6")) err("$.treasury_guard", 'requires schema_version "1.6" or later');
+    const tg = obj(doc, "treasury_guard", $);
+    if (tg) {
+      const p = "$.treasury_guard";
+      fields(tg, p, ["enabled", "project_token", "allowed_destinations", "allowed_sell_venues", "daily_sell_cap", "approvals", "protect_liquidity", "lp_tokens", "locked_until"]);
+      bool(tg, "enabled", p);
+      if (typeof tg.project_token !== "string" || !ADDRESS.test(tg.project_token)) err(`${p}.project_token`, "must be an address");
+      for (const k of ["allowed_destinations", "allowed_sell_venues", "lp_tokens"]) {
+        const v = tg[k];
+        if (!Array.isArray(v) || v.length > 32 || v.some((a) => typeof a !== "string" || !ADDRESS.test(a))) err(`${p}.${k}`, "must be a list of at most 32 addresses");
+      }
+      const cap = obj(tg, "daily_sell_cap", p);
+      if (cap) {
+        const q = `${p}.daily_sell_cap`;
+        fields(cap, q, ["amount", "pct_of_holdings_bps"]);
+        if (cap.amount !== null && (typeof cap.amount !== "string" || !UINT.test(cap.amount))) err(`${q}.amount`, "must be a base-unit amount or null");
+        if (cap.pct_of_holdings_bps !== null && (typeof cap.pct_of_holdings_bps !== "number" || !Number.isInteger(cap.pct_of_holdings_bps) || cap.pct_of_holdings_bps < 0 || cap.pct_of_holdings_bps > 10000))
+          err(`${q}.pct_of_holdings_bps`, "must be an integer from 0 to 10000 or null");
+      }
+      if (tg.approvals !== "exact_to_venues") err(`${p}.approvals`, 'must be "exact_to_venues"');
+      bool(tg, "protect_liquidity", p);
+      int(tg, "locked_until", p, 0, 32503680000);
+    }
+  }
+
   return errors;
+}
+
+/** The document's schema version is `v` or later (unknown versions never are). */
+function atLeast(version: unknown, v: string): boolean {
+  const i = (SCHEMA_VERSIONS as readonly unknown[]).indexOf(version);
+  return i >= 0 && i >= (SCHEMA_VERSIONS as readonly string[]).indexOf(v);
 }
 
 export function isValidPolicy(doc: unknown): doc is Policy {

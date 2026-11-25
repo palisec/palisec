@@ -5,3 +5,4 @@ export * from "./simulator";
 export * from "./examples";
 export * from "./loosening";
 export * from "./mandate";
+export * from "./treasury";
