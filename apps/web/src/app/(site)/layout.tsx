@@ -1,3 +1,4 @@
+import { CommandMenu } from "@/components/command-menu";
 import { LineFooter } from "@/components/line/site-footer";
 import { SiteNav } from "@/components/line/site-nav";
 import { SideLabels, TheLine } from "@/components/line/line";
@@ -12,6 +13,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <LineFooter />
+      <CommandMenu />
     </div>
   );
 }

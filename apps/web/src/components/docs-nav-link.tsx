@@ -4,18 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-/** Docs sidebar link that marks the page you are on. */
+/** Docs sidebar link: the current page is aqua with a 2 px aqua bar on its left. */
 export function DocsNavLink({ href, children }: { href: string; children: ReactNode }) {
   const active = usePathname() === href;
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`-ml-px flex items-center gap-2 border-l py-1 pl-3 text-[13px] transition-colors ${
-        active ? "border-aqua text-mist" : "border-transparent text-muted hover:border-fg hover:text-fg"
+      className={`block border-l-2 py-1.5 pl-3 text-[14.5px] transition-colors ${
+        active ? "border-aqua text-aqua" : "border-transparent text-silver hover:text-mist"
       }`}
     >
-      <span aria-hidden className={`h-1 w-1 ${active ? "bg-aqua" : "bg-transparent"}`} />
       {children}
     </Link>
   );

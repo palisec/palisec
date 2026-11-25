@@ -1,0 +1,1116 @@
+[
+ {
+  "kind": "page",
+  "title": "Home",
+  "href": "/"
+ },
+ {
+  "kind": "page",
+  "title": "Accounts",
+  "href": "/accounts"
+ },
+ {
+  "kind": "page",
+  "title": "Limits",
+  "href": "/limits"
+ },
+ {
+  "kind": "page",
+  "title": "Mandates",
+  "href": "/mandates"
+ },
+ {
+  "kind": "page",
+  "title": "Palisec Agent",
+  "href": "/agent"
+ },
+ {
+  "kind": "page",
+  "title": "Architecture",
+  "href": "/architecture"
+ },
+ {
+  "kind": "page",
+  "title": "Security",
+  "href": "/security"
+ },
+ {
+  "kind": "page",
+  "title": "Pricing",
+  "href": "/pricing"
+ },
+ {
+  "kind": "page",
+  "title": "Standard (ERC-8511)",
+  "href": "/standard"
+ },
+ {
+  "kind": "page",
+  "title": "Proof",
+  "href": "/proof"
+ },
+ {
+  "kind": "page",
+  "title": "Ecosystem",
+  "href": "/ecosystem"
+ },
+ {
+  "kind": "page",
+  "title": "Token",
+  "href": "/token"
+ },
+ {
+  "kind": "page",
+  "title": "Developers",
+  "href": "/developers"
+ },
+ {
+  "kind": "page",
+  "title": "Docs",
+  "href": "/docs"
+ },
+ {
+  "kind": "page",
+  "title": "Status",
+  "href": "/status"
+ },
+ {
+  "kind": "page",
+  "title": "Changelog",
+  "href": "/changelog"
+ },
+ {
+  "kind": "page",
+  "title": "Attestation",
+  "href": "/attestation"
+ },
+ {
+  "kind": "page",
+  "title": "Console",
+  "href": "/console"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Spend",
+  "href": "/limits#spend"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Loss",
+  "href": "/limits#loss"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Approve",
+  "href": "/limits#approve"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Simulate",
+  "href": "/limits#simulate"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Assets",
+  "href": "/limits#assets"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Delay",
+  "href": "/limits#delay"
+ },
+ {
+  "kind": "page",
+  "title": "Limits · Stop",
+  "href": "/limits#stop"
+ },
+ {
+  "kind": "doc",
+  "title": "Smart accounts",
+  "href": "/docs/account-abstraction"
+ },
+ {
+  "kind": "heading",
+  "title": "How it works",
+  "href": "/docs/account-abstraction#model",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Create one",
+  "href": "/docs/account-abstraction#create",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Execute through it",
+  "href": "/docs/account-abstraction#execute",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "What is guaranteed",
+  "href": "/docs/account-abstraction#guarantees",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "With human approval",
+  "href": "/docs/account-abstraction#approvals",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Contracts on Robinhood Chain",
+  "href": "/docs/account-abstraction#contracts",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Security model and limits",
+  "href": "/docs/account-abstraction#limits",
+  "parent": "Smart accounts"
+ },
+ {
+  "kind": "doc",
+  "title": "Palisec Agent",
+  "href": "/docs/agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Use it",
+  "href": "/docs/agent#use",
+  "parent": "Palisec Agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Autonomy levels",
+  "href": "/docs/agent#levels",
+  "parent": "Palisec Agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Evidence and citations",
+  "href": "/docs/agent#evidence",
+  "parent": "Palisec Agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Model provider",
+  "href": "/docs/agent#model",
+  "parent": "Palisec Agent"
+ },
+ {
+  "kind": "heading",
+  "title": "API",
+  "href": "/docs/agent#api",
+  "parent": "Palisec Agent"
+ },
+ {
+  "kind": "doc",
+  "title": "API reference",
+  "href": "/docs/api"
+ },
+ {
+  "kind": "heading",
+  "title": "Authentication",
+  "href": "/docs/api#auth",
+  "parent": "API reference"
+ },
+ {
+  "kind": "heading",
+  "title": "Errors",
+  "href": "/docs/api#errors",
+  "parent": "API reference"
+ },
+ {
+  "kind": "heading",
+  "title": "Operation states",
+  "href": "/docs/api#lifecycle",
+  "parent": "API reference"
+ },
+ {
+  "kind": "doc",
+  "title": "Concepts",
+  "href": "/docs/concepts"
+ },
+ {
+  "kind": "heading",
+  "title": "An operation's life",
+  "href": "/docs/concepts",
+  "parent": "Concepts"
+ },
+ {
+  "kind": "heading",
+  "title": "Units",
+  "href": "/docs/concepts",
+  "parent": "Concepts"
+ },
+ {
+  "kind": "heading",
+  "title": "Three rules that never bend",
+  "href": "/docs/concepts",
+  "parent": "Concepts"
+ },
+ {
+  "kind": "doc",
+  "title": "Detect a Palisec agent",
+  "href": "/docs/detect"
+ },
+ {
+  "kind": "heading",
+  "title": "Palisec co-signers",
+  "href": "/docs/detect#cosigners",
+  "parent": "Detect a Palisec agent"
+ },
+ {
+  "kind": "heading",
+  "title": "The rule",
+  "href": "/docs/detect#rule",
+  "parent": "Detect a Palisec agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Reference function",
+  "href": "/docs/detect#reference",
+  "parent": "Detect a Palisec agent"
+ },
+ {
+  "kind": "heading",
+  "title": "Example",
+  "href": "/docs/detect#example",
+  "parent": "Detect a Palisec agent"
+ },
+ {
+  "kind": "doc",
+  "title": "Errors and operations",
+  "href": "/docs/errors"
+ },
+ {
+  "kind": "heading",
+  "title": "Reason codes",
+  "href": "/docs/errors#codes",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "API errors outside policy decisions",
+  "href": "/docs/errors#api-errors",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "A denial is not a revert",
+  "href": "/docs/errors#denied-is-not-reverted",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "Retry semantics",
+  "href": "/docs/errors#retries",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "Operation states",
+  "href": "/docs/errors#states",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "Failure behaviour",
+  "href": "/docs/errors#failures",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "Recovery procedures",
+  "href": "/docs/errors#recovery",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "RPC and bundler outages",
+  "href": "/docs/errors#rpc-outages",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "heading",
+  "title": "Debugging",
+  "href": "/docs/errors#debugging",
+  "parent": "Errors and operations"
+ },
+ {
+  "kind": "doc",
+  "title": "Integrations and keys",
+  "href": "/docs/integrations"
+ },
+ {
+  "kind": "heading",
+  "title": "Register",
+  "href": "/docs/integrations#register",
+  "parent": "Integrations and keys"
+ },
+ {
+  "kind": "heading",
+  "title": "Scoped keys",
+  "href": "/docs/integrations#scopes",
+  "parent": "Integrations and keys"
+ },
+ {
+  "kind": "heading",
+  "title": "Rotate and revoke",
+  "href": "/docs/integrations#rotate",
+  "parent": "Integrations and keys"
+ },
+ {
+  "kind": "heading",
+  "title": "What a key can read about itself",
+  "href": "/docs/integrations#self",
+  "parent": "Integrations and keys"
+ },
+ {
+  "kind": "heading",
+  "title": "Zolva",
+  "href": "/docs/integrations#zolva",
+  "parent": "Integrations and keys"
+ },
+ {
+  "kind": "doc",
+  "title": "Loss limits",
+  "href": "/docs/loss-limits"
+ },
+ {
+  "kind": "heading",
+  "title": "Setting one",
+  "href": "/docs/loss-limits#setting",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "heading",
+  "title": "How the loss is measured",
+  "href": "/docs/loss-limits#measured",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "heading",
+  "title": "When the limit is reached",
+  "href": "/docs/loss-limits#reached",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "heading",
+  "title": "Resetting",
+  "href": "/docs/loss-limits#reset",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "heading",
+  "title": "API",
+  "href": "/docs/loss-limits#api",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "heading",
+  "title": "On chain",
+  "href": "/docs/loss-limits#chain",
+  "parent": "Loss limits"
+ },
+ {
+  "kind": "doc",
+  "title": "Holder mandates",
+  "href": "/docs/mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "How it works",
+  "href": "/docs/mandates#how",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "What a vote can change",
+  "href": "/docs/mandates#changes",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "The snapshot",
+  "href": "/docs/mandates#snapshot",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "Recount any vote",
+  "href": "/docs/mandates#recount",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "API",
+  "href": "/docs/mandates#api",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "heading",
+  "title": "Live demo",
+  "href": "/docs/mandates#demo",
+  "parent": "Holder mandates"
+ },
+ {
+  "kind": "doc",
+  "title": "MCP server",
+  "href": "/docs/mcp"
+ },
+ {
+  "kind": "heading",
+  "title": "Connect",
+  "href": "/docs/mcp#connect",
+  "parent": "MCP server"
+ },
+ {
+  "kind": "heading",
+  "title": "Tools",
+  "href": "/docs/mcp#tools",
+  "parent": "MCP server"
+ },
+ {
+  "kind": "heading",
+  "title": "Errors",
+  "href": "/docs/mcp#errors",
+  "parent": "MCP server"
+ },
+ {
+  "kind": "heading",
+  "title": "Limits",
+  "href": "/docs/mcp#limits",
+  "parent": "MCP server"
+ },
+ {
+  "kind": "doc",
+  "title": "Documentation",
+  "href": "/docs"
+ },
+ {
+  "kind": "heading",
+  "title": "What exists today",
+  "href": "/docs",
+  "parent": "Documentation"
+ },
+ {
+  "kind": "doc",
+  "title": "Policy schema",
+  "href": "/docs/policies"
+ },
+ {
+  "kind": "heading",
+  "title": "Representative document",
+  "href": "/docs/policies#document",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Field reference",
+  "href": "/docs/policies#fields",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Units",
+  "href": "/docs/policies#units",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Token spend (schema 1.5)",
+  "href": "/docs/policies#token-spend",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Precedence",
+  "href": "/docs/policies#precedence",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Evaluation order",
+  "href": "/docs/policies#contracts",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Budgets and reservations",
+  "href": "/docs/policies#budgets",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Asset safety (schema 1.1)",
+  "href": "/docs/policies#asset-safety",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Recoverable on Upoch (schema 1.2)",
+  "href": "/docs/policies#upoch-recovery",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Loss limit (schema 1.3)",
+  "href": "/docs/policies#loss-limit",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Bigger limits once proven on Zolva (schema 1.4)",
+  "href": "/docs/policies#proven-record",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Loosening delay",
+  "href": "/docs/policies#loosening-delay",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Version migration",
+  "href": "/docs/policies#migration",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
+  "title": "Validation errors",
+  "href": "/docs/policies#validation",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "doc",
+  "title": "Quickstart",
+  "href": "/docs/quickstart"
+ },
+ {
+  "kind": "heading",
+  "title": "1 · Your first authorized operation",
+  "href": "/docs/quickstart#hosted",
+  "parent": "Quickstart"
+ },
+ {
+  "kind": "heading",
+  "title": "2 · Evaluate locally",
+  "href": "/docs/quickstart#local",
+  "parent": "Quickstart"
+ },
+ {
+  "kind": "heading",
+  "title": "Next",
+  "href": "/docs/quickstart#next",
+  "parent": "Quickstart"
+ },
+ {
+  "kind": "doc",
+  "title": "Python SDK",
+  "href": "/docs/sdk/python"
+ },
+ {
+  "kind": "heading",
+  "title": "Install",
+  "href": "/docs/sdk/python#install",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Send only on ALLOW",
+  "href": "/docs/sdk/python#send",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Decisions",
+  "href": "/docs/sdk/python#decisions",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Errors and retries",
+  "href": "/docs/sdk/python#errors",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Agent frameworks",
+  "href": "/docs/sdk/python#frameworks",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Configuration",
+  "href": "/docs/sdk/python#config",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Reference",
+  "href": "/docs/sdk/python#reference",
+  "parent": "Python SDK"
+ },
+ {
+  "kind": "doc",
+  "title": "TypeScript SDK",
+  "href": "/docs/sdk/typescript"
+ },
+ {
+  "kind": "heading",
+  "title": "Install",
+  "href": "/docs/sdk/typescript#install",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Send only on ALLOW",
+  "href": "/docs/sdk/typescript#send",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "With ethers",
+  "href": "/docs/sdk/typescript#ethers",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Decisions",
+  "href": "/docs/sdk/typescript#decisions",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Errors and retries",
+  "href": "/docs/sdk/typescript#errors",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Agent frameworks",
+  "href": "/docs/sdk/typescript#frameworks",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Configuration",
+  "href": "/docs/sdk/typescript#config",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "heading",
+  "title": "Reference",
+  "href": "/docs/sdk/typescript#reference",
+  "parent": "TypeScript SDK"
+ },
+ {
+  "kind": "doc",
+  "title": "Standard: Policy-Enforced Agent Accounts",
+  "href": "/docs/standard"
+ },
+ {
+  "kind": "heading",
+  "title": "Why",
+  "href": "/docs/standard#why",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Reference implementation (live)",
+  "href": "/docs/standard#live",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Interface",
+  "href": "/docs/standard#interface",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Time rules",
+  "href": "/docs/standard#time",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Reason codes",
+  "href": "/docs/standard#reasons",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Decision receipts",
+  "href": "/docs/standard#receipts",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "heading",
+  "title": "Read any account",
+  "href": "/docs/standard#read",
+  "parent": "Standard: Policy-Enforced Agent Accounts"
+ },
+ {
+  "kind": "doc",
+  "title": "Token",
+  "href": "/docs/token"
+ },
+ {
+  "kind": "heading",
+  "title": "Decision credits",
+  "href": "/docs/token#credits",
+  "parent": "Token"
+ },
+ {
+  "kind": "heading",
+  "title": "Paying in $PALISEC",
+  "href": "/docs/token#pay-in-palisec",
+  "parent": "Token"
+ },
+ {
+  "kind": "heading",
+  "title": "Pro by holding",
+  "href": "/docs/token#pro",
+  "parent": "Token"
+ },
+ {
+  "kind": "heading",
+  "title": "Burned so far",
+  "href": "/docs/token#burns",
+  "parent": "Token"
+ },
+ {
+  "kind": "heading",
+  "title": "What the token is not",
+  "href": "/docs/token#what-it-is-not",
+  "parent": "Token"
+ },
+ {
+  "kind": "doc",
+  "title": "Webhooks",
+  "href": "/docs/webhooks"
+ },
+ {
+  "kind": "heading",
+  "title": "Events",
+  "href": "/docs/webhooks#events",
+  "parent": "Webhooks"
+ },
+ {
+  "kind": "heading",
+  "title": "Delivery",
+  "href": "/docs/webhooks#delivery",
+  "parent": "Webhooks"
+ },
+ {
+  "kind": "heading",
+  "title": "Verify every delivery",
+  "href": "/docs/webhooks#verify",
+  "parent": "Webhooks"
+ },
+ {
+  "kind": "doc",
+  "title": "Zolva",
+  "href": "/docs/zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "Link an agent",
+  "href": "/docs/zolva#link",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "What is shown",
+  "href": "/docs/zolva#shown",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "Test a policy against a Zolva record",
+  "href": "/docs/zolva#replay",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "Bigger limits once proven on Zolva",
+  "href": "/docs/zolva#proven",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "For Zolva and anyone else: check a Palisec account",
+  "href": "/docs/zolva#zolva-side",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "heading",
+  "title": "API",
+  "href": "/docs/zolva#api",
+  "parent": "Zolva"
+ },
+ {
+  "kind": "code",
+  "title": "PS_AUTH_001",
+  "href": "/docs/errors#PS_AUTH_001",
+  "detail": "Authentication failed"
+ },
+ {
+  "kind": "code",
+  "title": "PS_POLICY_001",
+  "href": "/docs/errors#PS_POLICY_001",
+  "detail": "No valid active policy"
+ },
+ {
+  "kind": "code",
+  "title": "PS_POLICY_002",
+  "href": "/docs/errors#PS_POLICY_002",
+  "detail": "Explicit deny rule matched"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TARGET_001",
+  "href": "/docs/errors#PS_TARGET_001",
+  "detail": "Target contract not allowed"
+ },
+ {
+  "kind": "code",
+  "title": "PS_METHOD_001",
+  "href": "/docs/errors#PS_METHOD_001",
+  "detail": "Function selector not allowed"
+ },
+ {
+  "kind": "code",
+  "title": "PS_BUDGET_001",
+  "href": "/docs/errors#PS_BUDGET_001",
+  "detail": "Budget limit exceeded"
+ },
+ {
+  "kind": "code",
+  "title": "PS_RATE_001",
+  "href": "/docs/errors#PS_RATE_001",
+  "detail": "Rate limit exceeded"
+ },
+ {
+  "kind": "code",
+  "title": "PS_LOOP_001",
+  "href": "/docs/errors#PS_LOOP_001",
+  "detail": "Repeated intent or calldata detected"
+ },
+ {
+  "kind": "code",
+  "title": "PS_REPLAY_001",
+  "href": "/docs/errors#PS_REPLAY_001",
+  "detail": "Duplicate or expired authorization"
+ },
+ {
+  "kind": "code",
+  "title": "PS_ATTEST_001",
+  "href": "/docs/errors#PS_ATTEST_001",
+  "detail": "Enclave attestation invalid"
+ },
+ {
+  "kind": "code",
+  "title": "PS_SIM_001",
+  "href": "/docs/errors#PS_SIM_001",
+  "detail": "Simulation failed"
+ },
+ {
+  "kind": "code",
+  "title": "PS_FEE_001",
+  "href": "/docs/errors#PS_FEE_001",
+  "detail": "Fee estimation unavailable or invalid"
+ },
+ {
+  "kind": "code",
+  "title": "PS_HUMAN_001",
+  "href": "/docs/errors#PS_HUMAN_001",
+  "detail": "Human approval required"
+ },
+ {
+  "kind": "code",
+  "title": "PS_PAUSED_001",
+  "href": "/docs/errors#PS_PAUSED_001",
+  "detail": "Agent or account is paused"
+ },
+ {
+  "kind": "code",
+  "title": "PS_STATE_001",
+  "href": "/docs/errors#PS_STATE_001",
+  "detail": "Authoritative state unavailable"
+ },
+ {
+  "kind": "code",
+  "title": "PS_CHAIN_001",
+  "href": "/docs/errors#PS_CHAIN_001",
+  "detail": "Chain or bundler unavailable"
+ },
+ {
+  "kind": "code",
+  "title": "PS_REQUEST_001",
+  "href": "/docs/errors#PS_REQUEST_001",
+  "detail": "Request failed schema validation"
+ },
+ {
+  "kind": "code",
+  "title": "PS_ASSET_001",
+  "href": "/docs/errors#PS_ASSET_001",
+  "detail": "Sell simulation failed: likely honeypot"
+ },
+ {
+  "kind": "code",
+  "title": "PS_ASSET_002",
+  "href": "/docs/errors#PS_ASSET_002",
+  "detail": "Transfer tax above the policy maximum"
+ },
+ {
+  "kind": "code",
+  "title": "PS_ASSET_003",
+  "href": "/docs/errors#PS_ASSET_003",
+  "detail": "Simulated balance changes do not match the declared intent"
+ },
+ {
+  "kind": "code",
+  "title": "PS_APPROVAL_001",
+  "href": "/docs/errors#PS_APPROVAL_001",
+  "detail": "Unlimited or oversized approval to a non-allowlisted spender"
+ },
+ {
+  "kind": "code",
+  "title": "PS_RECOVERY_001",
+  "href": "/docs/errors#PS_RECOVERY_001",
+  "detail": "Agent is not recoverable on Upoch"
+ },
+ {
+  "kind": "code",
+  "title": "PS_RECOVERY_002",
+  "href": "/docs/errors#PS_RECOVERY_002",
+  "detail": "Upoch checkpoint is too old"
+ },
+ {
+  "kind": "code",
+  "title": "PS_RECOVERY_003",
+  "href": "/docs/errors#PS_RECOVERY_003",
+  "detail": "Upoch data unavailable"
+ },
+ {
+  "kind": "code",
+  "title": "PS_LOSS_001",
+  "href": "/docs/errors#PS_LOSS_001",
+  "detail": "Loss limit reached: drawdown percentage"
+ },
+ {
+  "kind": "code",
+  "title": "PS_LOSS_002",
+  "href": "/docs/errors#PS_LOSS_002",
+  "detail": "Loss limit reached: USD loss"
+ },
+ {
+  "kind": "code",
+  "title": "PS_LOSS_003",
+  "href": "/docs/errors#PS_LOSS_003",
+  "detail": "Account value unavailable"
+ },
+ {
+  "kind": "code",
+  "title": "PS_PRICE_001",
+  "href": "/docs/errors#PS_PRICE_001",
+  "detail": "No reliable price for a token the transaction spends"
+ },
+ {
+  "kind": "code",
+  "title": "PS_SIM_002",
+  "href": "/docs/errors#PS_SIM_002",
+  "detail": "The transaction's outflows could not be determined"
+ },
+ {
+  "kind": "address",
+  "title": "Policy registry v3 (ERC-8511)",
+  "href": null,
+  "address": "0x4d37D0aD95593b2C65A0c2A98D5676D51DF3FDAB"
+ },
+ {
+  "kind": "address",
+  "title": "Policy registry v2 (ERC-8511)",
+  "href": null,
+  "address": "0xCa3bAE26d29a3A2cED7B87Fa996ca4C44367448d"
+ },
+ {
+  "kind": "address",
+  "title": "Policy registry v1 (ERC-8511 first draft)",
+  "href": null,
+  "address": "0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92"
+ },
+ {
+  "kind": "address",
+  "title": "AgentLinks",
+  "href": null,
+  "address": "0x737f1AcF46acE6d403977eB4944845fD251fC8C6"
+ },
+ {
+  "kind": "address",
+  "title": "PalisecCredits",
+  "href": null,
+  "address": "0xd5f516d43450293ac9a77bb53e40e2d8be2f5c3a"
+ },
+ {
+  "kind": "address",
+  "title": "Safe 1.4.1 singleton",
+  "href": null,
+  "address": "0x41675C099F32341bf84BFc5382aF534df5C7461a"
+ },
+ {
+  "kind": "address",
+  "title": "Safe proxy factory",
+  "href": null,
+  "address": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+ },
+ {
+  "kind": "address",
+  "title": "Safe 4337 module",
+  "href": null,
+  "address": "0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226"
+ },
+ {
+  "kind": "address",
+  "title": "Safe module setup",
+  "href": null,
+  "address": "0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47"
+ },
+ {
+  "kind": "address",
+  "title": "ERC-4337 EntryPoint",
+  "href": null,
+  "address": "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+ },
+ {
+  "kind": "address",
+  "title": "PALISEC token (reference only)",
+  "href": null,
+  "address": "0x1b4d04c8a67bf98bdf791ef928482bcb225d71ab"
+ },
+ {
+  "kind": "address",
+  "title": "$PALISEC token",
+  "href": null,
+  "address": "0x1B4d04c8A67bf98BdF791EF928482bcB225d71AB"
+ },
+ {
+  "kind": "address",
+  "title": "Demo · loss and spend limits",
+  "href": null,
+  "address": "0x667729a0E035332F63e69626CD7A97863C49fD77"
+ },
+ {
+  "kind": "address",
+  "title": "Demo · holder mandates",
+  "href": null,
+  "address": "0x9aEC761B2F0FdA08C683e8388478C9A2F7C9170c"
+ }
+]
