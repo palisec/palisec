@@ -94,7 +94,7 @@ check("setup: two organizations with agents and keys", /^ps_test_/.test(A.key ??
   const bad = await call("POST", `/agents/${A.agentId}/credentials`, { cookie: A.cookie, body: { scopes: ["admin"] } });
   check("unknown scope is refused", bad.status === 400, bad.body);
   const policy = await call("GET", "/integration/policy", { key: A.key });
-  check("integration reads the exact active policy version", policy.status === 200 && policy.body.version === 1 && policy.body.document?.schema_version === "1.1", policy.body);
+  check("integration reads the exact active policy version", policy.status === 200 && policy.body.version === 1 && policy.body.document?.schema_version === "1.6", policy.body);
 }
 
 // ---- operations, own reads, isolation ----------------------------------------------------------
