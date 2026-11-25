@@ -119,18 +119,18 @@ export function SiteNav() {
                 const sinceHover = Date.now() - hoverAt.current;
                 setProduct((v) => (v && sinceHover > 400 ? false : true));
               }}
-              className={`relative font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${productActive || product ? "text-mist" : "text-silver"}`}
+              className={`relative py-2 font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${productActive || product ? "text-mist" : "text-silver"}`}
             >
               Product
-              {productActive ? <span aria-hidden className="absolute -bottom-2 left-0 h-[2px] w-full bg-aqua" /> : null}
+              {productActive ? <span aria-hidden className="absolute bottom-0 left-0 h-[2px] w-full bg-aqua" /> : null}
             </button>
           </div>
           {NAV_LINKS.map((l) => {
             const active = isActive(path, l.href);
             return (
-              <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`relative font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${active ? "text-mist" : "text-silver"}`}>
+              <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`relative py-2 font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${active ? "text-mist" : "text-silver"}`}>
                 {l.label}
-                {active ? <span aria-hidden className="absolute -bottom-2 left-0 h-[2px] w-full bg-aqua" /> : null}
+                {active ? <span aria-hidden className="absolute bottom-0 left-0 h-[2px] w-full bg-aqua" /> : null}
               </Link>
             );
           })}

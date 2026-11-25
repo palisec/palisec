@@ -1015,7 +1015,7 @@ html:not(.js) .limit-row .lv { opacity: 1; }
 
 /* Scroll effects show their final state without script or with reduced motion. */
 [data-statement] .sw.end { color: var(--color-aqua); }
-.js [data-statement] .sw { color: var(--color-line-strong); transition: color 0.25s; }
+.js [data-statement] .sw { color: var(--color-dim); transition: color 0.25s; }
 .js [data-statement] .sw[data-lit] { color: var(--color-mist); }
 .js [data-statement] .sw.end[data-lit] { color: var(--color-aqua); }
 .js .proof-row { clip-path: inset(0 100% 0 0); }
