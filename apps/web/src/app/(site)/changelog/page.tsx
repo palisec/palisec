@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.11.3",
+    date: "2026-11-25",
+    tag: "SDKs",
+    changes: [
+      "Python SDK 0.4.9: the PyPI project page links to its repository (palisec/sdk-python) and its issues.",
+      "The policy-enforced-accounts library ships the full CC0 1.0 license text, and the main repository is MIT licensed.",
+    ],
+  },
+  {
     version: "1.11.2",
     date: "2026-11-25",
     tag: "SDKs",
