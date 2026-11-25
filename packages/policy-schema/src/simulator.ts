@@ -239,7 +239,7 @@ export function evaluate(
 
   run("asset", "Asset safety (simulated balance changes, sell leg, tax, approvals)", () => assetCheck(policy!, intent, env, selector));
 
-  run("treasury", "Treasury guard (project-token destinations, daily sell cap, approvals, liquidity)", () => treasuryCheck(policy!, env, selector));
+  run("treasury", "Treasury guard (project-token destinations, daily sell cap, approvals, liquidity)", () => treasuryCheck(policy!, env));
 
   run("recovery", "Recoverable on Upoch (checkpoint, guardian)", () => recoveryCheck(policy!, env));
 
@@ -847,10 +847,10 @@ export function treasuryCap(cap: { amount: string | null; pct_of_holdings_bps: n
   return c;
 }
 
-function treasuryCheck(policy: Policy, env: Environment, selector: string | null): Outcome {
+function treasuryCheck(policy: Policy, env: Environment): Outcome {
   const g = policy.treasury_guard;
   if (!g || !g.enabled) return { status: "pass", detail: "No treasury guard on this policy." };
-  if (!selector) return { status: "pass", detail: "Native transfer: the project token cannot move." };
+  // No shortcut for calls without a selector: a fallback or receive function can still run code, so every call is simulated.
 
   const unknown = (why: string): Outcome => ({ status: "fail", code: "PS_SIM_002", detail: `${why} The project token's movement cannot be determined, so the request fails closed.` });
   const raw = env.asset_simulation;

@@ -50,14 +50,12 @@ fn cap_of(cap: Option<&Value>, holdings: &BigUint) -> Option<BigUint> {
     c
 }
 
-pub fn check(policy: &Value, env: &Value, now: i64, selector: Option<&str>) -> Res<Asset> {
+pub fn check(policy: &Value, env: &Value, now: i64) -> Res<Asset> {
     let g = match policy.get("treasury_guard") {
         Some(Value::Object(g)) if g.get("enabled") == Some(&Value::Bool(true)) => g,
         _ => return Ok(Pass("No treasury guard on this policy.".into())),
     };
-    if selector.is_none() {
-        return Ok(Pass("Native transfer: the project token cannot move.".into()));
-    }
+    // No shortcut for calls without a selector: a fallback or receive function can still run code, so every call is simulated.
     let unknown = |why: String| Fail("PS_SIM_002", format!("{why} The project token's movement cannot be determined, so the request fails closed."));
     let sim = match env.get("asset_simulation") {
         None | Some(Value::Null) => return Ok(unknown("Simulation unavailable.".into())),

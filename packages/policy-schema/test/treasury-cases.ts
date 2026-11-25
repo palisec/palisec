@@ -113,7 +113,9 @@ export const TREASURY_CASES: TreasuryCase[] = [
   T("no sell window: a sell is denied", sell, tenv(moveSim([out(CURVE, 1)]), null), "DENY", "PS_STATE_001"),
   T("a stale sell window is denied", sell, tenv(moveSim([out(CURVE, 1)]), window(0, 10000, { observed_at: NOW - 121 })), "DENY", "PS_STATE_001"),
   T("a guard that is switched off changes nothing", transfer, tenv(moveSim([out(INSIDER, 10)])), "ALLOW", null, { enabled: false }),
-  T("a native transfer cannot move the project token", intent(RECIPIENT, ""), tenv(null), "ALLOW", null),
+  T("a call without a selector is still simulated: no simulation, denied", intent(RECIPIENT, ""), tenv(null), "DENY", "PS_SIM_002"),
+  T("a call without a selector that moves nothing is allowed", intent(RECIPIENT, ""), tenv(moveSim([])), "ALLOW", null),
+  T("a call without a selector whose fallback moves the project token is judged by the move", intent(RECIPIENT, ""), tenv(moveSim([out(INSIDER, 1)])), "DENY", "PS_TREASURY_001"),
 ];
 
 export { ACCOUNT };

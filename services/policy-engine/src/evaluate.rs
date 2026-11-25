@@ -447,7 +447,7 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
     })?;
 
     r.run("treasury", "Treasury guard (project-token destinations, daily sell cap, approvals, liquidity)", || {
-        Ok(match crate::treasury::check(policy, env, now, selector.as_deref())? {
+        Ok(match crate::treasury::check(policy, env, now)? {
             crate::asset::Asset::Pass(d) => Pass(d),
             crate::asset::Asset::Fail(c, d) => Fail(c, d),
             crate::asset::Asset::Review(c, d) => Review(c, d),
