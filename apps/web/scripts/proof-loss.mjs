@@ -158,6 +158,7 @@ if (stage === "keys") {
   const doc = {
     ...p.body.draft,
     schema_version: "1.3",
+    token_spend: undefined, // new drafts carry token spend (schema 1.5); this test pins an older version
     limits: { ...p.body.draft.limits, max_transaction_value_wei: "500000000000000", hourly_budget_usd_micros: "5000000", max_price_age_seconds: 120, max_pending_operations: 3 },
     cooldowns: { identical_calldata_seconds: 0, identical_intent_seconds: 0 },
     contracts: {

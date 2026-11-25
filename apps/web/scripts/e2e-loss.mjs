@@ -58,6 +58,7 @@ const LIMIT = {
 const base = {
   ...p.body.draft,
   schema_version: "1.3",
+  token_spend: undefined, // new drafts carry token spend (schema 1.5); this test pins an older version
   asset_safety: { ...p.body.draft.asset_safety, enabled: false },
   limits: { ...p.body.draft.limits, max_transaction_value_wei: "1000000000000000", max_price_age_seconds: 600, hourly_budget_usd_micros: "100000000" },
   cooldowns: { identical_calldata_seconds: 0, identical_intent_seconds: 0 },
@@ -160,7 +161,7 @@ check("raising the limit waits (loosening)", r.body.state === "pending_activatio
 await call("POST", `/policies/${p.body.id}/pending/cancel`, { cookie, body: { confirm: true } });
 
 // 6) Schema: a loss limit needs 1.3 and at least one limit.
-r = await activate({ ...base, schema_version: "1.2" });
+r = await activate({ ...base, schema_version: "1.2", token_spend: undefined });
 check("loss_limit on schema 1.2 is rejected", r.status === 422, r.body);
 r = await activate({ ...base, loss_limit: { ...LIMIT, max_loss_usd_micros: "0" } });
 check("a loss limit with no limit set is rejected", r.status === 422, r.body);

@@ -66,6 +66,7 @@ const p = await call("POST", "/policies", { cookie, body: { name: "spike", polic
 const doc = {
   ...p.body.draft,
   schema_version: "1.3",
+  token_spend: undefined, // new drafts carry token spend (schema 1.5); this test pins an older version
   asset_safety: { ...p.body.draft.asset_safety, enabled: false },
   limits: { ...p.body.draft.limits, max_transaction_value_wei: "1000000000000000", max_price_age_seconds: 600, hourly_budget_usd_micros: "100000000" },
   cooldowns: { identical_calldata_seconds: 0, identical_intent_seconds: 0 },

@@ -44,6 +44,7 @@ async function org(label, { guardianMember = false } = {}) {
   const base = {
     ...p.body.draft,
     schema_version: "1.2",
+    token_spend: undefined, // new drafts carry token spend (schema 1.5); this test pins an older version
     asset_safety: { ...p.body.draft.asset_safety, enabled: false },
     limits: { ...p.body.draft.limits, max_price_age_seconds: 600 },
     cooldowns: { identical_calldata_seconds: 0, identical_intent_seconds: 0 },
