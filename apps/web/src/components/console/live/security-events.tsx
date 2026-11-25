@@ -64,7 +64,7 @@ export function LiveSecurityEvents() {
         {!list.data ? (
           <Loading what="findings" />
         ) : list.data.findings.length === 0 ? (
-          <Empty title={`No ${status} findings`}>Detection runs when you open this page, when the PALISEC Agent investigates, and after denied operations.</Empty>
+          <Empty title={`No ${status} findings`}>Detection runs when you open this page, when the Palisec Agent investigates, and after denied operations.</Empty>
         ) : (
           <ul className="divide-y divide-line">
             {list.data.findings.map((f) => (

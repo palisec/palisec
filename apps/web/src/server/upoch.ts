@@ -9,7 +9,7 @@ import { MAINNET, TESTNET } from "@/lib/networks";
 /*
  * Read-only Upoch integration. The agent's Upoch workflow is read from Upoch's public ledger
  * contract (addresses from @upoch/sdk's published deployments) before evaluation and passed to both
- * engines as `env.upoch`. Nothing here signs or writes; Upoch never touches PALISEC's signing. Any failed
+ * engines as `env.upoch`. Nothing here signs or writes; Upoch never touches Palisec's signing. Any failed
  * read returns null, which the engines treat as unavailable (deny or human review, never allow).
  */
 

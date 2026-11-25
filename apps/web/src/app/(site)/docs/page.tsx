@@ -10,7 +10,7 @@ import { CAPABILITIES } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
   title: "Documentation",
-  description: "Guides and reference for the PALISEC policy schema, authorization API, SDKs, MCP server, webhooks, the PALISEC Agent and the security model.",
+  description: "Guides and reference for the Palisec policy schema, authorization API, SDKs, MCP server, webhooks, the Palisec Agent and the security model.",
   alternates: { canonical: "/docs" }, openGraph: pageOpenGraph("/docs"),
 };
 
@@ -50,7 +50,7 @@ const TOPICS: { title: string; links: { href: string; label: string; icon: React
   },
   {
     title: "Operate",
-    links: [{ href: "/docs/agent", label: "PALISEC Agent", icon: <AgentIcon size={18} />, note: "Tools and autonomy" }],
+    links: [{ href: "/docs/agent", label: "Palisec Agent", icon: <AgentIcon size={18} />, note: "Tools and autonomy" }],
   },
 ];
 

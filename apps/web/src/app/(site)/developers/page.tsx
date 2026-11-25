@@ -7,7 +7,7 @@ import { ButtonLink, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Developers",
-  description: "Start building with PALISEC: install the SDK, authenticate, configure the account and policy, evaluate transactions, handle approvals, and connect over MCP or Python.",
+  description: "Start building with Palisec: install the SDK, authenticate, configure the account and policy, evaluate transactions, handle approvals, and connect over MCP or Python.",
   alternates: { canonical: "/developers" }, openGraph: pageOpenGraph("/developers"),
 };
 
@@ -80,7 +80,7 @@ export default function DevelopersPage() {
             ["Policy schema", "/docs/policies"],
             ["Errors and reason codes", "/docs/errors"],
             ["Account abstraction", "/docs/account-abstraction"],
-            ["PALISEC Agent", "/docs/agent"],
+            ["Palisec Agent", "/docs/agent"],
           ].map(([t, h]) => (
             <li key={h} className="bg-ink">
               <Link href={h} className="flex items-center justify-between p-5 text-[15px] text-mist transition-colors hover:bg-raised/60 hover:text-aqua">

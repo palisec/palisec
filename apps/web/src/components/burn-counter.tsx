@@ -46,7 +46,7 @@ export function BurnCounter() {
           {data.rows.map((r) => (
             <li key={r.tx_hash} className="flex flex-wrap justify-between gap-2 px-4 py-2">
               <a className="font-mono text-[12px] underline" href={`${data.explorer}/tx/${r.tx_hash}`} target="_blank" rel="noreferrer">{shortHex(r.tx_hash)}</a>
-              <span className="text-soft">{fmt(r.burned)} PALISEC for {Number(r.credits).toLocaleString("en-US")} credits</span>
+              <span className="text-soft">{fmt(r.burned)} Palisec for {Number(r.credits).toLocaleString("en-US")} credits</span>
             </li>
           ))}
         </ul>

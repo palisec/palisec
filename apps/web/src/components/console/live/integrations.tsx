@@ -93,7 +93,7 @@ function KeyRow({ c, onChange }: { c: Credential; onChange: () => void }) {
               <Confirm
                 label="Rotate"
                 variant="quiet"
-                prompt="Issues a new secret with the same scopes and revokes this key at once. Update your agent before it next calls PALISEC."
+                prompt="Issues a new secret with the same scopes and revokes this key at once. Update your agent before it next calls Palisec."
                 confirmLabel="Rotate key"
                 onConfirm={() => run(() => api<{ secret: string }>(`/credentials/${c.id}/rotate`, { method: "POST" })).then((r) => r && (setSecret(r.secret), onChange()))}
               />
@@ -248,7 +248,7 @@ export function LiveIntegrations() {
     <>
       <PageTitle
         title="Integrations"
-        description="Independent agents connect through the SDKs, the REST API or MCP. Each is a registered agent with scoped, revocable keys; PALISEC evaluates every proposal the same way, whatever the interface."
+        description="Independent agents connect through the SDKs, the REST API or MCP. Each is a registered agent with scoped, revocable keys; Palisec evaluates every proposal the same way, whatever the interface."
       />
       <LoadError error={list.error} />
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">

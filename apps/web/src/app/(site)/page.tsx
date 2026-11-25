@@ -40,8 +40,8 @@ import { Workbench } from "@/components/workbench";
 import { capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
-  title: { absolute: "PALISEC · Security infrastructure for the autonomous agent economy" },
-  description: "PALISEC secures autonomous on-chain execution through deterministic transaction authorization, protected signing and intelligent security operations.",
+  title: { absolute: "Palisec · Security infrastructure for the autonomous agent economy" },
+  description: "Palisec secures autonomous on-chain execution through deterministic transaction authorization, protected signing and intelligent security operations.",
   alternates: { canonical: "/" }, openGraph: pageOpenGraph("/"),
 };
 
@@ -169,7 +169,7 @@ export default function Home() {
               ))}
             </h1>
             <p className="mt-6 max-w-[42ch] text-[clamp(19px,1.45vw,22px)] leading-relaxed text-foam animate-[fade-up_.9s_var(--ease-out-quint)_.6s_both]">
-              Agents decide. PALISEC authorizes every transaction they propose, before anything is signed.
+              Agents decide. Palisec authorizes every transaction they propose, before anything is signed.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3 animate-[fade-up_.9s_var(--ease-out-quint)_.75s_both]">
               <ButtonLink href="/developers">Start building</ButtonLink>
@@ -200,7 +200,7 @@ export default function Home() {
           <SectionHead
             id="problem-title"
             title={<>A valid transaction is not an <span className="text-aqua">authorized</span> one.</>}
-            lede="A signature proves who sent it. It says nothing about limits, recipients or approvals. PALISEC checks those first."
+            lede="A signature proves who sent it. It says nothing about limits, recipients or approvals. Palisec checks those first."
           />
           <ol className="mt-12 grid grid-cols-2 overflow-hidden rounded-[14px] border border-line bg-deep/50 sm:grid-cols-4">
             {[
@@ -230,7 +230,7 @@ export default function Home() {
                   <div className="flex items-center gap-4">
                     <Tile tone={i === 2 ? "text-aqua" : "text-mist"}>{l.icon}</Tile>
                     <div>
-                      <p className="text-[22px] font-medium tracking-[-0.01em] text-mist">PALISEC {l.name}</p>
+                      <p className="text-[22px] font-medium tracking-[-0.01em] text-mist">Palisec {l.name}</p>
                       <p className="mt-0.5 text-[14px] text-muted">{l.who}</p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* ───────── PALISEC Agent ───────── */}
+      {/* ───────── Palisec Agent ───────── */}
       <section aria-labelledby="agent-title" className="border-y border-line bg-deep/60">
         <Container className={SECTION}>
           <SectionHead id="agent-title" title="Security intelligence, built into the execution layer." lede="Ask in plain language. Every answer links the records it used." />
@@ -313,7 +313,7 @@ export default function Home() {
       {/* ───────── Integrations ───────── */}
       <section aria-labelledby="integrations-title">
         <Container className={SECTION}>
-          <SectionHead id="integrations-title" title="Bring your own agent. Keep the boundary." lede="Whichever interface your agent uses, PALISEC authorizes it the same way." />
+          <SectionHead id="integrations-title" title="Bring your own agent. Keep the boundary." lede="Whichever interface your agent uses, Palisec authorizes it the same way." />
           <ul className="mt-12 grid gap-px overflow-hidden rounded-[16px] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
             {SURFACES.map((s, i) => (
               <Reveal as="li" key={s.name} delay={i * 50} className="bg-abyss">

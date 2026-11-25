@@ -59,7 +59,7 @@ function EnforcedPill({ r }: { r: Report | null }) {
   return r.enforced ? <Pill tone="allow">Enforced on chain</Pill> : <Pill tone="review">Not enforced</Pill>;
 }
 
-/** Smart accounts: create a Safe PALISEC co-signs for, and see which agents are enforced on chain. */
+/** Smart accounts: create a Safe Palisec co-signs for, and see which agents are enforced on chain. */
 export function LiveSmartAccounts() {
   const { me, org, network } = useConsoleSession();
   const chain = (networkOf(network)?.chainId ?? 46630) as NetworkId;
@@ -78,11 +78,11 @@ export function LiveSmartAccounts() {
   const signer = cfg.data?.palisec_signer ?? null;
 
   function owners(): Address[] {
-    if (!signer) throw new Error("PALISEC's co-signer is not configured on this deployment.");
+    if (!signer) throw new Error("Palisec's co-signer is not configured on this deployment.");
     if (!isAddress(agentKey.trim(), { strict: false })) throw new Error("Enter the agent's signing address (0x followed by 40 hex characters).");
     if (!isAddress(recovery.trim(), { strict: false })) throw new Error("Enter a recovery owner, or use your wallet's address.");
     const list = [getAddress(agentKey.trim()), signer, getAddress(recovery.trim())];
-    if (new Set(list).size !== 3) throw new Error("The agent key, PALISEC's co-signer and the recovery owner must be three different addresses.");
+    if (new Set(list).size !== 3) throw new Error("The agent key, Palisec's co-signer and the recovery owner must be three different addresses.");
     return list;
   }
 
@@ -129,7 +129,7 @@ export function LiveSmartAccounts() {
     <>
       <PageTitle
         title="Smart accounts"
-        description="A PALISEC smart account is a Safe that needs two signatures: the agent's key and PALISEC's co-signer, which signs only operations PALISEC allowed. Your recovery owner can move funds with either of them."
+        description="A Palisec smart account is a Safe that needs two signatures: the agent's key and Palisec's co-signer, which signs only operations Palisec allowed. Your recovery owner can move funds with either of them."
       />
       <div className="mb-4 empty:hidden"><ExecutionDownNotice h={health} chainId={chain} /></div>
       <LoadError error={cfg.error} />
@@ -172,7 +172,7 @@ export function LiveSmartAccounts() {
               {!operate ? (
                 <p className="text-[13px] text-muted">Creating accounts needs the operator, admin or owner role.</p>
               ) : !signer ? (
-                <Notice tone="review">{`PALISEC's co-signer for ${networkLabel(chain)} is not configured on this deployment, so accounts cannot be created there yet.`}</Notice>
+                <Notice tone="review">{`Palisec's co-signer for ${networkLabel(chain)} is not configured on this deployment, so accounts cannot be created there yet.`}</Notice>
               ) : (
                 <>
                   {live && <Notice tone="review">Mainnet: this account will hold real funds. Use a recovery owner your organization controls, and start with a small amount.</Notice>}
@@ -189,7 +189,7 @@ export function LiveSmartAccounts() {
                   </div>
                   <KV
                     rows={[
-                      ["PALISEC co-signer", <Mono key="s">{signer}</Mono>],
+                      ["Palisec co-signer", <Mono key="s">{signer}</Mono>],
                       ["Threshold", "2 of 3"],
                       ["Network", networkLabel(chain)],
                       ["Predicted address", predicted ? <Mono key="p" className="text-aqua">{predicted}</Mono> : "—"],
@@ -216,7 +216,7 @@ export function LiveSmartAccounts() {
           </div>
 
           <div className="min-w-0 space-y-4">
-            <Panel title={`PALISEC co-signing · ${networkOf(chain)?.short}`} bodyClassName="p-4">
+            <Panel title={`Palisec co-signing · ${networkOf(chain)?.short}`} bodyClassName="p-4">
               <KV
                 rows={[
                   ["Submission", cfg.data.submission === "available" ? <Pill key="s" tone="allow">Available</Pill> : <Pill key="s" tone="review">Not configured</Pill>],
@@ -227,8 +227,8 @@ export function LiveSmartAccounts() {
               />
               <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
                 {live
-                  ? "Mainnet co-signer: its own key, held by the PALISEC server and never shared with testnet. It holds no funds and cannot move funds alone."
-                  : "Testnet co-signer: a key held by the PALISEC server, separate from the mainnet key."}
+                  ? "Mainnet co-signer: its own key, held by the Palisec server and never shared with testnet. It holds no funds and cannot move funds alone."
+                  : "Testnet co-signer: a key held by the Palisec server, separate from the mainnet key."}
               </p>
             </Panel>
             <Panel title="Check an account" bodyClassName="space-y-3 p-4">
@@ -245,7 +245,7 @@ export function LiveSmartAccounts() {
                       rows={[
                         ["Threshold", `${report.threshold} of ${report.owners.length}`],
                         ["4337 module", report.module_enabled ? "Enabled" : "Not enabled"],
-                        ...report.owners.map((o, i) => [`Owner ${i + 1}`, <Mono key={o}>{o === report.palisec_signer ? `${shortHex(o)} (PALISEC)` : shortHex(o)}</Mono>] as [string, React.ReactNode]),
+                        ...report.owners.map((o, i) => [`Owner ${i + 1}`, <Mono key={o}>{o === report.palisec_signer ? `${shortHex(o)} (Palisec)` : shortHex(o)}</Mono>] as [string, React.ReactNode]),
                       ]}
                     />
                   )}

@@ -20,7 +20,7 @@ import { MAINNET } from "@/lib/networks";
  *   Zolva agent names the Palisec account back. Only both together, on an account Palisec enforces, count.
  * - The API key (ZOLVA_API_KEY) is sent only to the fixed Zolva URL below, never returned, logged or stored.
  * - Everything a Zolva user typed is plain text: control characters stripped, length capped, rendered as
- *   text, and never given to the PALISEC Agent.
+ *   text, and never given to the Palisec Agent.
  */
 
 const ZOLVA_API = "https://zolvaagent.app/api/public/v1";

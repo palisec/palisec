@@ -8,7 +8,7 @@ import { decryptSecret, encryptSecret, hmacHex } from "./secrets";
 import { randomHex } from "./tokens";
 
 /*
- * Webhooks (PALISEC Connect). An event is written once per subscribed webhook (UNIQUE event_id per
+ * Webhooks (Palisec Connect). An event is written once per subscribed webhook (UNIQUE event_id per
  * webhook), then delivered with an HMAC-SHA256 signature. Retries reuse the same event ID, so a
  * receiver that deduplicates on Palisec-Event-Id never acts twice. Delivery happens after the
  * response; a webhook can never delay or change an authorization decision.

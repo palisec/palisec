@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AlertIcon, CheckIcon, CopyIcon } from "./icons";
 
-/** The one official PALISEC contract address. */
+/** The one official $PALISEC token contract address. */
 export const PALISEC_CA = "0x1b4d04c8a67bf98bdf791ef928482bcb225d71ab";
 const SHORT = `${PALISEC_CA.slice(0, 6)}…${PALISEC_CA.slice(-4)}`;
 
@@ -27,7 +27,7 @@ export function CaChip({ className = "" }: { className?: string }) {
     <button
       type="button"
       onClick={copy}
-      aria-label={`Copy the PALISEC contract address ${PALISEC_CA}`}
+      aria-label={`Copy the $PALISEC contract address ${PALISEC_CA}`}
       title={state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : `Copy CA: ${PALISEC_CA}`}
       className={`group inline-flex h-10 shrink-0 items-center gap-2 rounded-[10px] px-3 transition-[color,box-shadow,background-color] duration-300 hover:bg-raised/60 hover:text-aqua hover:shadow-[inset_0_0_0_1px_rgb(156_246_238/0.5)] focus-visible:text-aqua active:scale-[0.97] ${tone} ${className}`}
     >

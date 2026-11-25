@@ -41,7 +41,7 @@ export interface Meter {
 /**
  * Meters one mainnet decision before it is evaluated. Testnet, dry runs and a switched-off meter are free.
  * With no allowance and no credits the request is refused: 402 PS_CREDIT_001, nothing evaluated or recorded
- * (fail closed: without an authorization a PALISEC smart account cannot move anything).
+ * (fail closed: without an authorization a Palisec smart account cannot move anything).
  */
 export async function meterDecision(agent: AgentContext, ref: string): Promise<Meter | null> {
   const s = billingSettings();
@@ -185,11 +185,11 @@ export async function planLimits(orgId: string): Promise<{ pro: boolean; limits:
 export const planLimitError = (what: string, limit: number) =>
   new HttpError(403, "PS_PLAN_001", `This organization's plan allows ${limit} ${what}. Pro raises the limit: hold ${(Number(BILLING.proHoldingTokens / 10n ** 18n)).toLocaleString("en-US")} $PALISEC in an owner wallet.`);
 
-/** Counts one PALISEC Agent request against the plan's daily limit; refuses past it. */
+/** Counts one Palisec Agent request against the plan's daily limit; refuses past it. */
 export async function countAgentRequest(orgId: string) {
   const { limits } = await planLimits(orgId);
   const [{ ok }] = await db()`SELECT ps_count_agent_request(${orgId}::uuid, ${limits.agentRequestsPerDay}::int) AS ok`;
-  if (!ok) throw new HttpError(429, "PS_PLAN_001", `This organization's plan allows ${limits.agentRequestsPerDay} PALISEC Agent requests per day (UTC). Direct tools still work.`, true);
+  if (!ok) throw new HttpError(429, "PS_PLAN_001", `This organization's plan allows ${limits.agentRequestsPerDay} Palisec Agent requests per day (UTC). Direct tools still work.`, true);
 }
 
 /* ───────── Console summary ───────── */
@@ -245,7 +245,7 @@ export async function burnStats() {
   const head = await c.getBlockNumber();
   const rows: BurnRow[] = [];
   let total = 0n;
-  // Only the PALISEC asset (topic 3 = 2); the contract is the only source counted.
+  // Only the Palisec asset (topic 3 = 2); the contract is the only source counted.
   for (let from = s.deployBlock; from <= head; from += SCAN_CHUNK * 4n) {
     const to = from + SCAN_CHUNK * 4n - 1n < head ? from + SCAN_CHUNK * 4n - 1n : head;
     const logs = await c.getLogs({ address: s.contract, event: PURCHASED, args: { asset: 2 }, fromBlock: from, toBlock: to });

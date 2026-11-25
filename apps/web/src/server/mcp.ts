@@ -10,7 +10,7 @@ import { boundPolicy, ownAuditEvents, whoAmI } from "./integrations";
 import { createOperation, dryRun, getOperation, parseIntent, testDraft } from "./operations";
 
 /*
- * The official PALISEC MCP server (spec 2.0 §18). MCP is only an interface: every tool calls the
+ * The official Palisec MCP server (spec 2.0 §18). MCP is only an interface: every tool calls the
  * same server functions as the REST API, under the same API key, scopes, tenant boundary, rate
  * limits and audit. There is no policy activation, no approval and no signing tool. A model that
  * reads a decision cannot turn it into an authorization; only the recorded operation can.

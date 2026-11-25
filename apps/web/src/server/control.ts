@@ -469,7 +469,7 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
   const [{ n: agentCount }] = await db()`SELECT count(*)::int AS n FROM agents WHERE org_id = ${ctx.orgId}::uuid AND status <> 'revoked'`;
   if (agentCount >= plan.limits.agents) throw planLimitError("agents", plan.limits.agents);
   await checkPolicyBinding(ctx, policyId, chain, account);
-  // Loosening delay: a second agent on an account that PALISEC already protects would be a way around the
+  // Loosening delay: a second agent on an account that Palisec already protects would be a way around the
   // delay (its policy could be looser), so it starts paused and resumes after the loosening delay.
   const guarded = policyId !== null && (await accountProtected(ctx.orgId, chain, account, null));
   const a = audit("agent.created", { name, chain_id: chain, account, policy_id: policyId, framework, starts_paused: guarded });
@@ -487,7 +487,7 @@ export async function createAgent(ctx: MemberContext, body: Record<string, unkno
     const delays = await orgDelays(ctx.orgId);
     await requestPending(ctx, "agent_resume", {
       agentId: row.id,
-      diff: [{ path: "$.agents", kind: "loosening", from: null, to: { agent_id: row.id, policy_id: policyId }, note: "another agent added on an account PALISEC already protects" }],
+      diff: [{ path: "$.agents", kind: "loosening", from: null, to: { agent_id: row.id, policy_id: policyId }, note: "another agent added on an account Palisec already protects" }],
       delaySeconds: delays.loosening,
     });
   }

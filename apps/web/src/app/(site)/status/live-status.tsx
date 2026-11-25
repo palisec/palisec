@@ -27,7 +27,7 @@ const SERVICES: Service[] = [
   { name: "Console and sign-in", note: "Wallet sign-in, agents, policies, approvals, audit", ids: ["database", "auth"] },
   { name: "Smart-account execution · mainnet", note: "Co-signer and bundler (Safe 4337 module, EntryPoint v0.7)", ids: ["mainnet_cosigner", "mainnet_bundler"], mainnet: true },
   { name: "Smart-account execution · testnet", note: "Co-signer and bundler on chain 46630", ids: ["testnet_cosigner", "testnet_bundler"] },
-  { name: "PALISEC Agent", note: "Model key configured; answers are not probed", ids: ["agent_model"] },
+  { name: "Palisec Agent", note: "Model key configured; answers are not probed", ids: ["agent_model"] },
   { name: "Webhooks and security events", note: "Signing key configured; deliveries are not probed", ids: ["webhooks"] },
   { name: "MCP server", note: "Streamable HTTP at /api/mcp, on the same authorization path", ids: [], unchecked: true },
   { name: "Signing enclave", note: "AWS Nitro, specified", ids: [], roadmap: true },

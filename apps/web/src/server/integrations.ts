@@ -5,7 +5,7 @@ import { BadRequest, HttpError } from "./http";
 import { toDecision } from "./operations";
 
 /*
- * PALISEC Connect. An integration is a registered agent: its API keys are the integration's
+ * Palisec Connect. An integration is a registered agent: its API keys are the integration's
  * credentials (scoped, revocable, rotatable). These views add activity and health; they never
  * change authorization.
  */

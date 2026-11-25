@@ -135,7 +135,7 @@ export function LiveBilling() {
           <p className="text-[13px] text-soft">
             Pro when an owner wallet holds at least <Mono>{tokens(data.pro.required)}</Mono> $PALISEC. Nothing is locked or sent; the balance is read from the chain.
           </p>
-          <KV rows={[["Owner balance", `${tokens(data.pro.balance)} PALISEC`], ["Checked", data.pro.checked_at ? utc(data.pro.checked_at) : "—"]]} />
+          <KV rows={[["Owner balance", `${tokens(data.pro.balance)} Palisec`], ["Checked", data.pro.checked_at ? utc(data.pro.checked_at) : "—"]]} />
         </Panel>
       </div>
 
@@ -173,7 +173,7 @@ export function LiveBilling() {
               ["Active policies", "policies"],
               ["Audit history (days)", "auditDays"],
               ["API requests per minute, per key", "apiRequestsPerMinute"],
-              ["PALISEC Agent requests per day", "agentRequestsPerDay"],
+              ["Palisec Agent requests per day", "agentRequestsPerDay"],
             ] as const).map(([label, k]) => (
               <tr key={k} className="border-b border-line last:border-b-0">
                 <td className="px-4 py-2 text-soft">{label}</td>
@@ -200,7 +200,7 @@ export function LiveBilling() {
                   <td className="px-4 py-2 font-mono text-[11.5px] text-muted">{utc(h.created_at).slice(0, 19)}</td>
                   <td className="px-4 py-2 text-soft">+{Number(h.credits).toLocaleString("en-US")}</td>
                   <td className="px-4 py-2 text-soft">{h.usd_micros ? `${usdE6(Number(h.usd_micros))} in ${h.asset}` : h.kind}</td>
-                  <td className="px-4 py-2 text-soft">{h.burned && h.burned !== "0" ? `${tokens(h.burned)} PALISEC` : "—"}</td>
+                  <td className="px-4 py-2 text-soft">{h.burned && h.burned !== "0" ? `${tokens(h.burned)} Palisec` : "—"}</td>
                   <td className="px-4 py-2">{h.tx_hash ? <a className="font-mono text-[12px] underline" href={`${data.contract.explorer}/tx/${h.tx_hash}`} target="_blank" rel="noreferrer">{shortHex(h.tx_hash)}</a> : "—"}</td>
                 </tr>
               ))}

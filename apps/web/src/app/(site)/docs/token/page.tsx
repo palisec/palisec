@@ -24,7 +24,7 @@ export default function TokenDocs() {
       <ul>
         <li>{BILLING.freeDecisionsPerMonth.toLocaleString("en-US")} mainnet decisions per organization per month are included. Testnet and dry runs (<code>/v1/authorizations/evaluate</code>) are free and never metered.</li>
         <li>Past the allowance, each mainnet decision uses one prepaid credit: {usdE6(BILLING.priceUsdE6PerThousand)} per 1,000, bought in the console (Billing) with USDG or ETH. ETH is priced with Chainlink ETH/USD.</li>
-        <li>With no allowance and no credits left, a mainnet request is refused with <code>402 PS_CREDIT_001</code> before it is evaluated. Nothing is authorized, so a PALISEC smart account cannot move anything. Requests are never allowed unchecked. The API sends <code>X-Palisec-Usage</code> on every metered decision and <code>X-Palisec-Usage-Warning</code> at 80% and 95% of the allowance.</li>
+        <li>With no allowance and no credits left, a mainnet request is refused with <code>402 PS_CREDIT_001</code> before it is evaluated. Nothing is authorized, so a Palisec smart account cannot move anything. Requests are never allowed unchecked. The API sends <code>X-Palisec-Usage</code> on every metered decision and <code>X-Palisec-Usage-Warning</code> at 80% and 95% of the allowance.</li>
       </ul>
 
       <h2 id="pay-in-palisec">Paying in $PALISEC</h2>
@@ -35,7 +35,7 @@ export default function TokenDocs() {
 
       <h2 id="pro">Pro by holding</h2>
       <p>
-        When an owner wallet of the organization holds at least {proTokens} $PALISEC, the organization gets Pro limits: 5× agents and policies, a year of audit history, 5× API rate limit and 10× PALISEC Agent requests. The balance is read from the chain at sign-in and every few minutes while the console is used; nothing is locked or sent. Below the amount, the standard limits apply again and nothing is deleted.
+        When an owner wallet of the organization holds at least {proTokens} $PALISEC, the organization gets Pro limits: 5× agents and policies, a year of audit history, 5× API rate limit and 10× Palisec Agent requests. The balance is read from the chain at sign-in and every few minutes while the console is used; nothing is locked or sent. Below the amount, the standard limits apply again and nothing is deleted.
       </p>
 
       <h2 id="burns">Burned so far</h2>

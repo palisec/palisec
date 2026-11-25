@@ -79,10 +79,10 @@ export default function Quickstart() {
       maturity="service"
     >
       <h2 id="hosted">1 · Your first authorized operation</h2>
-      <Note kind="warning" title="What PALISEC enforces">
+      <Note kind="warning" title="What Palisec enforces">
         Palisec records each decision and enforces budgets, cooldowns, replay protection and approvals for agents that ask it. An agent
         that sends from a plain key is enforced only in its own process; for on-chain enforcement, give it a{" "}
-        <Link href="/docs/account-abstraction">PALISEC smart account</Link>. Try it on testnet first (chain 46630, switch in the console&apos;s top bar), then use mainnet (4663) with a PALISEC smart account and a tested policy. Mainnet · real funds · start with small balances.
+        <Link href="/docs/account-abstraction">Palisec smart account</Link>. Try it on testnet first (chain 46630, switch in the console&apos;s top bar), then use mainnet (4663) with a Palisec smart account and a tested policy. Mainnet · real funds · start with small balances.
       </Note>
       <ol>
         <li><strong>Sign in.</strong> Open <Link href="/login">/login</Link> and sign the message with your wallet. Your first sign-in creates an organization with you as owner.</li>
@@ -96,7 +96,7 @@ export default function Quickstart() {
       <p>Try a request without reserving anything: the dry run returns the same decision and evaluation sequence, and consumes no request ID or budget.</p>
       <CodeBlock code={DRY_RUN} title="terminal" />
       <ul>
-        <li><strong>Authorization is not execution.</strong> For an agent that sends from its own key, <code>transaction_hash</code> stays <code>null</code>: Palisec did not broadcast anything. Agents with a <Link href="/docs/account-abstraction">PALISEC smart account</Link> execute through PALISEC, and the hash is recorded.</li>
+        <li><strong>Authorization is not execution.</strong> For an agent that sends from its own key, <code>transaction_hash</code> stays <code>null</code>: Palisec did not broadcast anything. Agents with a <Link href="/docs/account-abstraction">Palisec smart account</Link> execute through Palisec, and the hash is recorded.</li>
         <li><strong>Budget is held until it expires.</strong> An allowed amount counts against the hourly budget even if you never send, because nobody can prove you did not. Only a console operator can release it.</li>
         <li><strong>Approvals bind the exact operation.</strong> An approver signs the request hash, target, value, calldata hash, policy version and expiry. Changing any of them needs a new approval.</li>
       </ul>

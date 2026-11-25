@@ -220,8 +220,8 @@ export function LiveAgentWorkspace() {
   return (
     <>
       <PageTitle
-        title="PALISEC Agent"
-        description="Security intelligence, policy engineering and operations assistance over your real PALISEC records. The agent cannot authorize, approve, sign or activate anything: the policy engine decides, and actions need your confirmation."
+        title="Palisec Agent"
+        description="Security intelligence, policy engineering and operations assistance over your real Palisec records. The agent cannot authorize, approve, sign or activate anything: the policy engine decides, and actions need your confirmation."
       />
       <LoadError error={tools.error} />
       {t && !t.model.configured && (
@@ -233,7 +233,7 @@ export function LiveAgentWorkspace() {
       )}
       {t && !t.config.enabled && (
         <div className="mb-4">
-          <Notice tone="deny">The PALISEC Agent is disabled for this organization. An admin can enable it below.</Notice>
+          <Notice tone="deny">The Palisec Agent is disabled for this organization. An admin can enable it below.</Notice>
         </div>
       )}
       {notice && <div className="mb-4">{notice}</div>}
@@ -278,7 +278,7 @@ export function LiveAgentWorkspace() {
         </div>
 
         {/* ---------------------------------------------------------------- center */}
-        <Panel title={direct ? `Tool · ${direct.tool}` : (run?.title ?? "Ask the PALISEC Agent")} bodyClassName="flex min-h-[420px] flex-col">
+        <Panel title={direct ? `Tool · ${direct.tool}` : (run?.title ?? "Ask the Palisec Agent")} bodyClassName="flex min-h-[420px] flex-col">
           <div className="flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
             {direct ? (
               <div className="space-y-2">
@@ -308,7 +308,7 @@ export function LiveAgentWorkspace() {
                     </div>
                   ) : (
                     <div key={i} className="max-w-[95%] border-l-2 border-aqua/50 pl-3.5">
-                      <p className="label mb-1 !text-[9.5px]">PALISEC Agent</p>
+                      <p className="label mb-1 !text-[9.5px]">Palisec Agent</p>
                       <Answer text={m.content} evidence={run.evidence} />
                     </div>
                   ),
@@ -377,7 +377,7 @@ export function LiveAgentWorkspace() {
               void send();
             }}
           >
-            <label htmlFor="agent-input" className="sr-only">Message to the PALISEC Agent</label>
+            <label htmlFor="agent-input" className="sr-only">Message to the Palisec Agent</label>
             <textarea
               id="agent-input"
               rows={2}

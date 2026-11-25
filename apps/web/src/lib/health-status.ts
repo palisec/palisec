@@ -1,12 +1,12 @@
 /**
- * How PALISEC decides whether it is healthy. Pure functions, shared by GET /api/v1/health, the
+ * How Palisec decides whether it is healthy. Pure functions, shared by GET /api/v1/health, the
  * /status page and the console, and unit-tested.
  *
  * - "decisions" checks are what authorization needs (database, sign-in, policy engine). If one fails,
  *   decisions are refused (fail closed) and the overall status is "down".
  * - "execution" checks are what mainnet smart-account execution needs (co-signer, bundler). If one
  *   fails, decisions still work but transactions cannot be executed: "degraded".
- * - Non-critical checks (testnet execution, PALISEC Agent model, webhook signing) failing: "degraded".
+ * - Non-critical checks (testnet execution, Palisec Agent model, webhook signing) failing: "degraded".
  * Overall "ok" (HTTP 200) only when every check passes; "degraded" and "down" answer HTTP 503.
  */
 
@@ -27,7 +27,7 @@ export interface HealthCheck {
   state: string;
   /** One line in plain words when it is not ok. */
   reason: string | null;
-  /** Co-signers only: the UTC day (YYYY-MM-DD) PALISEC last co-signed a transaction that succeeded on chain. */
+  /** Co-signers only: the UTC day (YYYY-MM-DD) Palisec last co-signed a transaction that succeeded on chain. */
   last_success_on?: string | null;
 }
 

@@ -116,7 +116,7 @@ export default function TypeScriptSdk() {
       <Note kind="warning" title="What the SDK enforces">
         <code>sendTransaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can
         still transact. <code>executeWithSmartAccount</code> is enforced on chain: the agent&apos;s 
-        <Link href="/docs/account-abstraction">PALISEC smart account</Link> moves nothing without PALISEC&apos;s co-signature.
+        <Link href="/docs/account-abstraction">Palisec smart account</Link> moves nothing without Palisec&apos;s co-signature.
       </Note>
 
       <h2 id="install">Install</h2>

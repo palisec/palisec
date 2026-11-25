@@ -63,11 +63,11 @@ const GATES: [string, boolean][] = [
 ];
 
 const BOUNDARIES: [string, string][] = [
-  ["A · External agent → PALISEC", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
-  ["B · Model → PALISEC tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
+  ["A · External agent → Palisec", "External agents are untrusted callers. Every request is validated and authenticated with a scoped key; organization and account boundaries are enforced on the server. Claims in prompts or tool arguments are never trusted."],
+  ["B · Model → Palisec tools", "The model is not an authorization principal. Tool availability is not permission: the server independently checks the signed-in member's role and organization for every call, and verifies every identifier."],
   ["C · Native agent → control plane", "The agent has no administrator rights. Sensitive actions become requests a member confirms; they run through the existing control-plane functions under that member's identity."],
-  ["D · Agent → signing", "No path exists. The agent never receives PALISEC's co-signing key or enclave secrets; PALISEC co-signs only after its own decision. The co-signer is a server-held key, one per network; enclave signing is on the roadmap."],
-  ["E · PALISEC API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and PALISEC's co-signer as an owner rejects anything PALISEC did not co-sign. Deployed on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
+  ["D · Agent → signing", "No path exists. The agent never receives Palisec's co-signing key or enclave secrets; Palisec co-signs only after its own decision. The co-signer is a server-held key, one per network; enclave signing is on the roadmap."],
+  ["E · Palisec API → smart account", "The account enforces the authorization independently: a Safe with threshold 2 and Palisec's co-signer as an owner rejects anything Palisec did not co-sign. Deployed on mainnet and testnet. A compromised server could co-sign, but never alone: the agent's key is also needed, and the enclave is the planned hardening."],
 ];
 
 export default function SecurityPage() {
@@ -93,13 +93,13 @@ export default function SecurityPage() {
         <div className="max-w-[72ch] space-y-4 text-[15px] leading-relaxed text-muted">
           <p>
             If an owner&apos;s session or wallet is taken over, the first move is usually to loosen the rules: raise a budget,
-            allowlist an address, lift the emergency stop. In PALISEC every change that weakens the rules waits out a delay (60
+            allowlist an address, lift the emergency stop. In Palisec every change that weakens the rules waits out a delay (60
             minutes by default, 15 minutes for lifting the stop) while the current rules keep deciding, and it raises an alert,
             a webhook and a countdown in the console. Any owner, admin or operator can cancel it at once. Tightening and engaging
             the stop are always instant.
           </p>
           <p>
-            Before co-signing a token buy, swap, transfer or approval, PALISEC also simulates it on current chain state and
+            Before co-signing a token buy, swap, transfer or approval, Palisec also simulates it on current chain state and
             refuses honeypots, high transfer taxes, unlimited approvals to unknown contracts and balance changes that do not
             match what the agent declared. If the simulation is unavailable the request is denied, or held for a person, never
             allowed.
@@ -181,7 +181,7 @@ export default function SecurityPage() {
       <Section label="Prompt injection and untrusted data" id="injection">
         <div className="grid gap-8 lg:grid-cols-2">
           <p className="text-[15.5px] leading-relaxed text-silver">
-            The PALISEC Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.
+            The Palisec Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.
           </p>
           <ul className="space-y-2.5 text-[14.5px] text-silver">
             {["Strict tool schemas and server-side input validation", "Least-privilege tools per role and autonomy level, re-checked on every call", "No tool that signs, approves, activates or changes permissions", "Sensitive actions only as requests a person confirms", "Context minimization and secret redaction before the model", "Every tool call recorded and audited; rate limits per member", "Tested: an injected instruction cannot call a refused tool or escalate"].map((x) => (

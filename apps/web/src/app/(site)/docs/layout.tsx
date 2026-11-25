@@ -37,7 +37,7 @@ const DOCS_NAV = [
     ],
   },
   {
-    title: "PALISEC Agent",
+    title: "Palisec Agent",
     items: [{ href: "/docs/agent", label: "Agent" }],
   },
   {

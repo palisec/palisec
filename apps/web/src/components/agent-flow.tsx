@@ -4,8 +4,8 @@ import { Fragment, useEffect, useState, useSyncExternalStore, type ReactNode } f
 import { AgentIcon, ChainIcon, CheckIcon, CloseIcon, CodeIcon, HandIcon, ShieldIcon } from "./icons";
 
 /*
- * The execution boundary as a horizontal pipeline: an agent proposes, PALISEC decides, only an
- * authorized operation reaches execution, and the PALISEC Agent explains what happened. It cycles
+ * The execution boundary as a horizontal pipeline: an agent proposes, Palisec decides, only an
+ * authorized operation reaches execution, and the Palisec Agent explains what happened. It cycles
  * through the three real outcomes with their real reason codes. An illustration, never telemetry.
  */
 
@@ -136,7 +136,7 @@ export function AgentFlow() {
       <p className="font-mono text-[13px] text-mist">{scene.intent}</p>
       <p className="mt-1 font-mono text-[12px] text-muted">{scene.value}</p>
     </Stage>,
-    <Stage key="auth" title="PALISEC checks" icon={<ShieldIcon size={16} />} active={s >= 2}>
+    <Stage key="auth" title="Palisec checks" icon={<ShieldIcon size={16} />} active={s >= 2}>
       <ul className="space-y-1.5">
         {scene.checks.map(([name, st], k) => {
           const shown = s >= 3 || (s === 2 && k < 2);
@@ -160,7 +160,7 @@ export function AgentFlow() {
   ];
 
   return (
-    <figure aria-label="Illustration: a proposed transaction passing through PALISEC authorization" className="relative">
+    <figure aria-label="Illustration: a proposed transaction passing through Palisec authorization" className="relative">
       <div className="grid gap-0 lg:grid-cols-[minmax(0,0.85fr)_32px_minmax(0,1fr)_32px_minmax(0,1.35fr)_32px_minmax(0,0.95fr)_32px_minmax(0,0.9fr)] lg:items-stretch">
         {stages.map((el, k) => (
           <Fragment key={k}>
@@ -174,7 +174,7 @@ export function AgentFlow() {
           <AgentIcon size={18} />
         </span>
         <p className={`min-w-0 flex-1 text-[14px] leading-relaxed text-soft transition-opacity duration-500 ${s >= 4 ? "opacity-100" : "opacity-70"}`}>
-          <span className="sr-only">PALISEC Agent: </span>
+          <span className="sr-only">Palisec Agent: </span>
           {scene.agent}
         </p>
         <div className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line-strong p-1" role="group" aria-label="Show an outcome">

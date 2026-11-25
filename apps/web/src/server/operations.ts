@@ -91,7 +91,7 @@ interface Prepared {
 const reportEngine = (d: Disagreement) => logEvent("error", "policy_engine.fail_closed", d);
 
 const LIVE_DETAIL =
-  "Performed at execution, not at decision: when the agent executes through a PALISEC smart account (POST /v1/operations/{id}/user-operation, then /submit), PALISEC co-signs this exact payload and the Safe validates both signatures on chain. An agent that sends from a plain key is not enforced on chain.";
+  "Performed at execution, not at decision: when the agent executes through a Palisec smart account (POST /v1/operations/{id}/user-operation, then /submit), Palisec co-signs this exact payload and the Safe validates both signatures on chain. An agent that sends from a plain key is not enforced on chain.";
 
 /**
  * Fee bound, price and code check for one request, and the asset simulation when the policy

@@ -27,7 +27,7 @@ import { effectiveState } from "./operations";
 /* ───────── Configuration (values never leave the server) ───────── */
 
 /**
- * PALISEC's co-signer for each network, a server-held key in an environment variable. Mainnet has its
+ * Palisec's co-signer for each network, a server-held key in an environment variable. Mainnet has its
  * own key: the testnet key is never used for real funds, even if the same value is put in both variables.
  * The co-signer needs no ETH (each Safe pays its own gas) and cannot move funds alone (threshold 2).
  */
@@ -121,7 +121,7 @@ export async function bundlerState(chainId: number): Promise<BundlerState> {
 function signerProblem(chainId: number): string {
   if (chainId === MAINNET && KEY_RE.test(readKey(SIGNER_ENV[MAINNET])) && sharesTestnetKey())
     return "The mainnet co-signer key is the same as the testnet key. Give mainnet its own key.";
-  return `PALISEC's co-signer for ${networkLabel(chainId)} is not configured on this deployment.`;
+  return `Palisec's co-signer for ${networkLabel(chainId)} is not configured on this deployment.`;
 }
 
 /** Bundler endpoint. A local test bundler may be named outside Vercel only, never in a deployment. */
@@ -203,7 +203,7 @@ export async function inspectAccount(chainId: number, raw: string): Promise<Acco
   if (!c) return { ...base, reason: `${networkLabel(chainId)} is not enabled on this deployment.` };
   const code = await c.getCode({ address }).catch(() => null);
   if (code === null) throw new HttpError(503, "PS_CHAIN_001", "The chain RPC did not respond.", true);
-  if (!code || code === "0x") return { ...base, reason: "No contract at this address. It is a plain key account, which PALISEC cannot enforce." };
+  if (!code || code === "0x") return { ...base, reason: "No contract at this address. It is a plain key account, which Palisec cannot enforce." };
   try {
     const [owners, threshold, moduleEnabled] = await Promise.all([
       c.readContract({ address, abi: SAFE_ABI, functionName: "getOwners" }),
@@ -221,7 +221,7 @@ export async function inspectAccount(chainId: number, raw: string): Promise<Acco
         : signer === null
           ? signerProblem(chainId)
           : !isOwner
-            ? "PALISEC's co-signer is not an owner of this account."
+            ? "Palisec's co-signer is not an owner of this account."
             : "The threshold is 1, so a single key can still move funds.";
     return { ...base, deployed: true, owners: list, threshold: t, module_enabled: moduleEnabled, palisec_is_owner: isOwner, enforced, reason };
   } catch {
@@ -256,7 +256,7 @@ const hex = (n: bigint): Hex => `0x${n.toString(16)}`;
 const withMargin = (n: bigint, pct: bigint) => (n * (100n + pct)) / 100n;
 /** `pct` percent of `n`, rounded up. */
 const scaled = (n: bigint, pct: bigint) => (n * pct + 99n) / 100n;
-/** The share of the bundler's verification-gas estimate PALISEC signs for when nothing better is known. */
+/** The share of the bundler's verification-gas estimate Palisec signs for when nothing better is known. */
 const VERIFICATION_GAS_PERCENT = 60n;
 /** With a measured value: sign for used / 60%, i.e. ~1.67x real use, comfortably above the bundler's 40% floor. */
 const TARGET_EFFICIENCY_PERCENT = 60n;
@@ -264,7 +264,7 @@ const TARGET_EFFICIENCY_PERCENT = 60n;
 /**
  * Alchemy's bundler (Rundler) refuses an operation whose gas limits are too generous for what it really
  * uses: "Verification gas limit efficiency too low. Required: 0.4, Actual: 0.35" (and the same for the
- * call gas limit). The refusal tells us real use = Actual x the limit that was sent, so PALISEC records it
+ * call gas limit). The refusal tells us real use = Actual x the limit that was sent, so Palisec records it
  * and signs for a limit that fits on the next attempt.
  */
 export function parseEfficiencyRefusal(message: string, op: Pick<SafeUserOp, "verificationGasLimit" | "callGasLimit">) {
@@ -315,7 +315,7 @@ export interface PreparedExecution {
 }
 
 /**
- * Builds the one user operation PALISEC will co-sign for this decision: the Safe calls exactly the
+ * Builds the one user operation Palisec will co-sign for this decision: the Safe calls exactly the
  * evaluated target with the evaluated value and calldata (operation 0, never a delegate call), valid
  * only until the authorization expires. The agent signs the returned typed data.
  */
@@ -324,7 +324,7 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
   const chainId = requireUsable(row);
   if (!palisecSigner(chainId)) throw new HttpError(503, "PS_CHAIN_001", signerProblem(chainId), true);
   const report = await inspectAccount(chainId, row.account);
-  if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a PALISEC smart account: ${report.reason}`);
+  if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a Palisec smart account: ${report.reason}`);
 
   const c = chainClient(chainId)!;
   const sender = getAddress(row.account);
@@ -407,7 +407,7 @@ export async function prepareExecution(agent: AgentContext, id: string): Promise
 
 /**
  * Takes the agent's signature over the prepared operation, checks it comes from an owner other than
- * PALISEC, claims the operation once (with its audit event, in one statement), co-signs, and submits.
+ * Palisec, claims the operation once (with its audit event, in one statement), co-signs, and submits.
  */
 export async function submitExecution(agent: AgentContext, id: string, body: Record<string, unknown>) {
   for (const k of Object.keys(body)) if (k !== "signature") throw new BadRequest(`Unknown field: ${k}`);
@@ -430,10 +430,10 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
   const hash = safeOpHash(op, chainId);
   const agentSigner = await recoverAddress({ hash, signature: agentSig }).catch(() => null);
   const report = await inspectAccount(chainId, op.sender);
-  if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a PALISEC smart account: ${report.reason}`);
+  if (!report.enforced) throw new HttpError(409, "PS_ACCOUNT_001", `The agent's account is not a Palisec smart account: ${report.reason}`);
   if (!agentSigner || agentSigner === signer.address || !report.owners.includes(agentSigner))
     throw new HttpError(403, "PS_AUTH_003", "The signature is not from an owner of this smart account. Sign typed_data with the agent's key.");
-  if (report.threshold !== 2) throw new HttpError(409, "PS_ACCOUNT_001", "PALISEC co-signs accounts with a threshold of exactly 2.");
+  if (report.threshold !== 2) throw new HttpError(409, "PS_ACCOUNT_001", "Palisec co-signs accounts with a threshold of exactly 2.");
 
   const claimed = await db()`
     WITH c AS (
@@ -459,11 +459,11 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
   } catch (e) {
     if (!REFUSED.has(e as object)) {
       // No definite answer (timeout, gateway error): the bundler may have accepted the operation, so the
-      // claim stays and PALISEC never co-signs this authorization again (no second execution). Fail closed.
+      // claim stays and Palisec never co-signs this authorization again (no second execution). Fail closed.
       await db()`
         INSERT INTO audit_events (org_id, type, detail)
         VALUES (${row.org_id}::uuid, 'operation.submit_unknown', jsonb_build_object('operation_id', ${row.id}::text, 'safe_op_hash', ${hash}::text, 'chain_id', ${chainId}::int))`;
-      throw new HttpError(503, "PS_CHAIN_001", `The bundler did not confirm the submission, so it may still execute. PALISEC will not co-sign this authorization again. Check the smart account on the explorer before proposing a new operation.`, false);
+      throw new HttpError(503, "PS_CHAIN_001", `The bundler did not confirm the submission, so it may still execute. Palisec will not co-sign this authorization again. Check the smart account on the explorer before proposing a new operation.`, false);
     }
     // The bundler refused it, so nothing reached the chain: release the claim so it can be retried. A
     // gas-efficiency refusal carries real gas use; it is recorded so the next prepare signs a limit that fits.
@@ -480,7 +480,7 @@ export async function submitExecution(agent: AgentContext, id: string, body: Rec
       throw new HttpError(
         502,
         "PS_CHAIN_001",
-        `${message} Nothing reached the chain. PALISEC recorded the measured ${measured.kind} gas (${measured.used}); prepare and sign the operation again (POST /v1/operations/{id}/user-operation, then submit) and it will fit.`,
+        `${message} Nothing reached the chain. Palisec recorded the measured ${measured.kind} gas (${measured.used}); prepare and sign the operation again (POST /v1/operations/{id}/user-operation, then submit) and it will fit.`,
         true,
       );
     throw e;

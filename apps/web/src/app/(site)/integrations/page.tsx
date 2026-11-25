@@ -7,7 +7,7 @@ import { capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
   title: "Integrations",
-  description: "PALISEC Connect: integrate independently built agents through the TypeScript and Python SDKs, the REST API, the MCP server and signed webhooks, with scoped, revocable credentials.",
+  description: "Palisec Connect: integrate independently built agents through the TypeScript and Python SDKs, the REST API, the MCP server and signed webhooks, with scoped, revocable credentials.",
   alternates: { canonical: "/integrations" }, openGraph: pageOpenGraph("/integrations"),
 };
 
@@ -39,7 +39,7 @@ const CANNOT = [
 const TOOL = `import { createPalisec, createPalisecTools } from "@palisec/sdk";
 
 // Framework-neutral tools: name, description, JSON Schema, execute.
-// The framework decides what to try; PALISEC decides whether it may be sent.
+// The framework decides what to try; Palisec decides whether it may be sent.
 const tools = createPalisecTools(createPalisec({ apiKey: process.env.PALISEC_API_KEY! }), { wallet });
 
 // OpenAI Agents SDK
@@ -53,9 +53,9 @@ export default function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="PALISEC Connect"
+        eyebrow="Palisec Connect"
         title="Bring your own agent. Keep the security boundary."
-        lede="Your agent keeps its reasoning and workflow. PALISEC provides the authorization and protected-execution layer, the same way through every interface. Independent agents never need the native PALISEC Agent."
+        lede="Your agent keeps its reasoning and workflow. Palisec provides the authorization and protected-execution layer, the same way through every interface. Independent agents never need the native Palisec Agent."
       />
 
       <Section label="External agent architecture">
@@ -65,7 +65,7 @@ export default function IntegrationsPage() {
 TypeScript SDK │ Python SDK │ REST API │ MCP server     ← authenticated integration principal (scoped API key)
    │
    ▼
-PALISEC authorization: deterministic engine · atomic reservation · replay · approvals
+Palisec authorization: deterministic engine · atomic reservation · replay · approvals
    │                                  └─ webhooks: signed events to your systems
    ▼
 ALLOW → your agent sends exactly that transaction · DENY → nothing is sent · REVIEW → a human signs first`}</pre>
@@ -135,7 +135,7 @@ ALLOW → your agent sends exactly that transaction · DENY → nothing is sent 
             ["Quickstart: first authorized operation", "/docs/quickstart"],
             ["TypeScript: send only on ALLOW with viem or ethers", "/docs/sdk/typescript"],
             ["Python: async client with web3.py", "/docs/sdk/python"],
-            ["MCP: connect an MCP client to PALISEC", "/docs/mcp"],
+            ["MCP: connect an MCP client to Palisec", "/docs/mcp"],
             ["Webhooks: verify signatures and deduplicate", "/docs/webhooks"],
             ["Integrations: scopes, rotation and the agent's own endpoints", "/docs/integrations"],
           ].map(([t, h]) => (

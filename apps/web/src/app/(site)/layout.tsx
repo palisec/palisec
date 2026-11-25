@@ -1,13 +1,17 @@
-import { PointerLight } from "@/components/pointer-light";
-import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { LineFooter } from "@/components/line/site-footer";
+import { SiteNav } from "@/components/line/site-nav";
+import { SideLabels, TheLine } from "@/components/line/line";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <SiteHeader />
-      <main id="main">{children}</main>
-      <SiteFooter />
-      <PointerLight />
-    </>
+    <div className="line-site relative min-h-dvh">
+      <TheLine />
+      <SiteNav />
+      <main id="main" className="relative z-[1]">
+        <SideLabels />
+        {children}
+      </main>
+      <LineFooter />
+    </div>
   );
 }

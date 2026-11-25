@@ -124,7 +124,7 @@ export default function PoliciesPage() {
 
       <h2 id="token-spend">Token spend (schema 1.5)</h2>
       <p>
-        With <code>token_spend.enabled</code>, the spending limits count tokens, not only ETH. Before each decision PALISEC simulates the
+        With <code>token_spend.enabled</code>, the spending limits count tokens, not only ETH. Before each decision Palisec simulates the
         exact call (the same simulation asset safety uses) and prices what it spends with the Chainlink feeds on Robinhood Chain.
       </p>
       <ul>
@@ -198,7 +198,7 @@ export default function PoliciesPage() {
 
       <h2 id="asset-safety">Asset safety (schema 1.1)</h2>
       <p>
-        Before PALISEC allows (and co-signs) a contract call, it simulates the exact operation from the account on current
+        Before Palisec allows (and co-signs) a contract call, it simulates the exact operation from the account on current
         Robinhood Chain state. The simulation records every token and ETH balance change, every approval, and whether the
         call reverts. When the account receives a token, a second step sends it back to the pool it came from, which is the
         first leg of any sell: a token that blocks that transfer is a likely honeypot, and a shortfall is a transfer tax. The
@@ -225,7 +225,7 @@ export default function PoliciesPage() {
         An optional rule that an agent must be recoverable on <a href="https://upoch.tech">Upoch</a>, which keeps verifiable
         checkpoints of an agent&apos;s state on Robinhood Chain. Off by default; add the <code>upoch_recovery</code> section (and{" "}
         <code>schema_version</code> &quot;1.2&quot;) and set the agent&apos;s Upoch workflow on its page. Before each decision
-        PALISEC reads the workflow from Upoch&apos;s contract (read-only) and both engines apply:
+        Palisec reads the workflow from Upoch&apos;s contract (read-only) and both engines apply:
       </p>
       <ul>
         <li><code>require_upoch_recoverable</code>: the workflow must be set, active, linked to the account (its owner or a guardian is an owner of the account) and have a checkpoint, or the request is <code>PS_RECOVERY_001</code>.</li>
@@ -268,7 +268,7 @@ export default function PoliciesPage() {
         The delay is 60 minutes by default (15 minutes to 72 hours, set by an owner); lifting the emergency stop waits 15
         minutes by default. Engaging the stop is always instant and cancels a pending lift. Any owner, admin or operator can
         cancel a pending change at once, from the banner in the console or through the API. When a change enters the delay,
-        PALISEC sends the <code>policy.loosening_pending</code> webhook with the diff and <code>effective_at</code>, raises a
+        Palisec sends the <code>policy.loosening_pending</code> webhook with the diff and <code>effective_at</code>, raises a
         security event, and shows a countdown in the console; it also sends <code>policy.loosening_applied</code> and{" "}
         <code>policy.loosening_cancelled</code>. Every step is in the audit log with who did it and the exact diff.
       </p>

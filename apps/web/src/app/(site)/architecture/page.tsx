@@ -35,7 +35,7 @@ import { MaturityBadge, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Architecture",
-  description: "How PALISEC is built: the system map, a request's path in order, the data model, trust boundaries, failure handling and the stack.",
+  description: "How Palisec is built: the system map, a request's path in order, the data model, trust boundaries, failure handling and the stack.",
   alternates: { canonical: "/architecture" }, openGraph: pageOpenGraph("/architecture"),
 };
 
@@ -85,7 +85,7 @@ function SystemMap() {
 
         <div className="relative rounded-[14px] border border-aqua/30 bg-abyss/60 p-4 sm:p-5">
           <p className="label mb-3 flex items-center gap-2">
-            <BrandMark brand="vercel" size={14} /> PALISEC on Vercel
+            <BrandMark brand="vercel" size={14} /> Palisec on Vercel
           </p>
           <div className="grid gap-2.5">
             <Node icon={<GlobeIcon size={18} />} title="Proxy" sub="Host allowlist, security headers, sessions" />
@@ -119,7 +119,7 @@ function SystemMap() {
           <Node brand="ethereum" title="Robinhood Chain RPC" sub="Fee estimates, contract code checks" />
           <Node icon={<GaugeIcon size={18} />} title="Price feed" sub="Coinbase, Kraken fallback, 15 s cache" />
           <Node icon={<ZapIcon size={18} />} title="Bundler" sub="Alchemy, ERC-4337 (EntryPoint v0.7)" />
-          <Node icon={<WalletIcon size={18} />} title="Safe smart accounts" sub="Threshold 2; PALISEC co-signs, the Safe checks" accent />
+          <Node icon={<WalletIcon size={18} />} title="Safe smart accounts" sub="Threshold 2; Palisec co-signs, the Safe checks" accent />
           <Node icon={<KeyIcon size={18} />} title="Co-signers" sub="Server-held, one key per network" />
           <Node icon={<LockIcon size={18} />} title="Nitro enclave signer" sub="Mainnet co-signing" planned />
         </Column>
@@ -143,7 +143,7 @@ const LIFECYCLE: { icon: ReactNode; title: string; body: string; where: string; 
   { icon: <HandIcon size={17} />, title: "Hold for approval", body: "Above the threshold, the operation waits for an EIP-712 signature on the exact payload.", where: "approvals.ts", tone: "review" },
   { icon: <FileCheckIcon size={17} />, title: "Answer and record", body: "Decision, reason code, policy version and authorization ID; an audit event in the same statement.", where: "audit_events", tone: "allow" },
   { icon: <BellIcon size={17} />, title: "Notify", body: "Webhooks and security detectors run after the response is sent, never before it.", where: "after()" },
-  { icon: <WalletIcon size={17} />, title: "Execute on chain", body: "The agent signs the prepared Safe operation; PALISEC co-signs once and the bundler submits it. The Safe checks both.", where: "/submit", tone: "allow" },
+  { icon: <WalletIcon size={17} />, title: "Execute on chain", body: "The agent signs the prepared Safe operation; Palisec co-signs once and the bundler submits it. The Safe checks both.", where: "/submit", tone: "allow" },
 ];
 
 function Lifecycle() {
@@ -234,7 +234,7 @@ const TRUST: { c: string; level: "hostile" | "untrusted" | "fallible" | "critica
   { c: "Database", level: "fallible", s: "Atomic functions; unavailable means deny", icon: <DatabaseIcon size={16} /> },
   { c: "RPC and price feed", level: "untrusted", s: "Timeouts, fallbacks, fail closed", icon: <GaugeIcon size={16} /> },
   { c: "Human approver", level: "fallible", s: "Signs the exact payload and version", icon: <HandIcon size={16} /> },
-  { c: "Smart account", level: "enforced", s: "Threshold 2: rejects anything PALISEC did not co-sign", icon: <WalletIcon size={16} /> },
+  { c: "Smart account", level: "enforced", s: "Threshold 2: rejects anything Palisec did not co-sign", icon: <WalletIcon size={16} /> },
 ];
 const LEVEL: Record<(typeof TRUST)[number]["level"], { text: string; cls: string }> = {
   hostile: { text: "Hostile", cls: "text-deny ring-deny/45" },
@@ -251,7 +251,7 @@ const FAILURES: { icon: ReactNode; k: string; v: string }[] = [
   { icon: <BanIcon size={17} />, k: "Invalid tool input from the model", v: "The call is refused and recorded as an error. Nothing is authorized or changed." },
   { icon: <BellIcon size={17} />, k: "Webhook receiver failing", v: "Three attempts with the same event ID, then marked failed for manual redelivery. Decisions are never delayed." },
   { icon: <ClockIcon size={17} />, k: "Approval expired or policy changed", v: "The approval is refused. The agent must propose again and a person must sign again." },
-  { icon: <StopIcon size={17} />, k: "Emergency stop while agents are active", v: "Every new operation is denied at once. The PALISEC Agent can explain the stop but cannot lift it." },
+  { icon: <StopIcon size={17} />, k: "Emergency stop while agents are active", v: "Every new operation is denied at once. The Palisec Agent can explain the stop but cannot lift it." },
   { icon: <RepeatIcon size={17} />, k: "Duplicate or replayed request", v: "Same request ID returns the original decision; a replayed payload inside the window is denied." },
 ];
 
@@ -263,7 +263,7 @@ const STACK: { brand?: Brand; icon?: ReactNode; name: string; role: string; live
   { brand: "typescript", name: "TypeScript reference", role: "Second evaluator, SDK", live: true },
   { brand: "python", name: "Python SDK", role: "async client, web3.py sender", live: true },
   { brand: "modelcontextprotocol", name: "MCP SDK", role: "Streamable HTTP server", live: true },
-  { icon: <CpuIcon size={20} />, name: "Groq", role: "Model for the PALISEC Agent", live: true },
+  { icon: <CpuIcon size={20} />, name: "Groq", role: "Model for the Palisec Agent", live: true },
   { brand: "ethereum", name: "Safe 1.4.1 + 4337 module", role: "Smart accounts, mainnet and testnet", live: true },
   { icon: <ZapIcon size={20} />, name: "Alchemy bundler", role: "ERC-4337 submission", live: true },
   { icon: <LockIcon size={20} />, name: "AWS Nitro Enclaves", role: "Protected signing", live: false },

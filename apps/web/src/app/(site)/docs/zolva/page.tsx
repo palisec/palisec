@@ -77,7 +77,7 @@ export default function ZolvaDocsPage() {
       <p>
         The console shows it to the organization at once. The agent&apos;s public page (for example a <Link href="/docs/mandates">holder
         mandate</Link> page) shows it only once the link is verified both ways. Text written by Zolva users (agent names, reasons) is shown as
-        plain text and is never given to the PALISEC Agent.
+        plain text and is never given to the Palisec Agent.
       </p>
       <p>
         Palisec reads Zolva&apos;s public API at most once every 5 minutes per Zolva agent, and its replay check at most hourly. If Zolva is

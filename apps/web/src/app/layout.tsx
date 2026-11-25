@@ -20,18 +20,22 @@ const FONT_VARS = [heading, ui, body, mono, kinetic].map((f) => f.variable).join
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Palisec — Deterministic transaction security",
+    default: "Palisec · Limits AI agents can't override",
     template: "%s · Palisec",
   },
   description:
-    "A deterministic authorization boundary for autonomous on-chain agents on Robinhood Chain. Policies, spending limits and human approvals are enforced before execution.",
+    "Smart accounts for AI agents on Robinhood Chain. Spend caps, loss limits and holder-voted rules, enforced on chain and verifiable by anyone.",
   openGraph: {
     type: "website",
     siteName: "Palisec",
-    title: "Palisec — Deterministic transaction security",
-    description: "The deterministic boundary between AI intent and on-chain execution.",
+    title: "Palisec · Limits AI agents can't override",
+    description: "Agents decide. Palisec enforces the limits, on chain.",
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: "Palisec · Limits AI agents can't override",
+    description: "Agents decide. Palisec enforces the limits, on chain.",
+  },
 };
 
 export const viewport: Viewport = {

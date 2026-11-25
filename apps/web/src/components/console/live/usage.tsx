@@ -44,7 +44,7 @@ export function LiveUsage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               ["Authorization requests · 7d", total],
-              ["PALISEC Agent tool calls · 7d", d.agent_tool_calls_7d],
+              ["Palisec Agent tool calls · 7d", d.agent_tool_calls_7d],
               ["Webhook deliveries · 7d", d.webhook_deliveries_7d],
             ].map(([k, v]) => (
               <Panel key={k as string} bodyClassName="p-4">

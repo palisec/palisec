@@ -3,7 +3,7 @@ import { handle, ok, rateLimited, tooManyRequests } from "@/server/http";
 import { prepareExecution } from "@/server/smart-accounts";
 
 /**
- * Builds the exact user operation PALISEC will co-sign for an allowed or approved operation, and returns
+ * Builds the exact user operation Palisec will co-sign for an allowed or approved operation, and returns
  * the typed data the agent signs with its own key. Nothing is signed or sent here.
  */
 export const POST = handle<RouteContext<"/api/v1/operations/[id]/user-operation">>(async (req, ctx) => {

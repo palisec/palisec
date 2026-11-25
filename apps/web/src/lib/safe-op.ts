@@ -3,10 +3,10 @@
  * same code, are deployed at the same addresses on Robinhood Chain (4663) and its testnet (46630); checked
  * on 2026-11-18. Pure functions only: shared by the API, the console and the tests.
  *
- * Enforcement model: a Safe whose threshold is 2 and whose owners include PALISEC's co-signer. The agent's
- * key is one owner; PALISEC adds the second signature only for an operation it allowed (or a person
+ * Enforcement model: a Safe whose threshold is 2 and whose owners include Palisec's co-signer. The agent's
+ * key is one owner; Palisec adds the second signature only for an operation it allowed (or a person
  * approved), for exactly that payload and until its authorization expires. An organization-held recovery
- * owner keeps funds recoverable without PALISEC.
+ * owner keeps funds recoverable without Palisec.
  */
 import {
   concat,
@@ -52,7 +52,7 @@ export const ENTRYPOINT_ABI = parseAbi([
 
 /** The parameters of a Safe the console creates: owners, a threshold of 2, and the 4337 module enabled at setup. */
 export function safeInitializer(owners: Address[], threshold = 2): Hex {
-  if (owners.length < 2 || threshold < 2 || threshold > owners.length) throw new Error("A PALISEC smart account needs at least two owners and a threshold of 2 or more.");
+  if (owners.length < 2 || threshold < 2 || threshold > owners.length) throw new Error("A Palisec smart account needs at least two owners and a threshold of 2 or more.");
   const unique = new Set(owners.map((o) => o.toLowerCase()));
   if (unique.size !== owners.length) throw new Error("Owners must be distinct.");
   return encodeFunctionData({

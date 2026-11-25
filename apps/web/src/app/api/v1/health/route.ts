@@ -40,9 +40,9 @@ export const GET = handle(async (req: Request) => {
         await applyDue(null);
         // Holder mandates: close mandate votes whose period ended, even when nobody is looking.
         await closeDue(null).catch(() => {});
-        // Proof that each co-signer really signs: the time of the last operation PALISEC co-signed that
+        // Proof that each co-signer really signs: the time of the last operation Palisec co-signed that
         // then succeeded on chain. Only the UTC day is public: an exact time could be matched to a block and
-        // reveal which account uses PALISEC.
+        // reveal which account uses Palisec.
         // A failure here only loses the proof; it never marks the database down.
         const signed: Record<number, string> = {};
         try {
@@ -98,8 +98,8 @@ export const GET = handle(async (req: Request) => {
       reason: cosignerReason(testSigner, "Testnet") },
     { id: "testnet_bundler", label: "Testnet bundler", critical: "none", configured: testnetBundler !== "not_configured", ok: testnetBundler === "reachable", verified: true, state: testnetBundler,
       reason: bundlerReason(testnetBundler, "Testnet") },
-    { id: "agent_model", label: "PALISEC Agent model", critical: "none", configured: agentModel, ok: agentModel, verified: false, state: agentModel ? "configured" : "not_configured",
-      reason: agentModel ? null : "The PALISEC Agent is off: no model key is configured." },
+    { id: "agent_model", label: "Palisec Agent model", critical: "none", configured: agentModel, ok: agentModel, verified: false, state: agentModel ? "configured" : "not_configured",
+      reason: agentModel ? null : "The Palisec Agent is off: no model key is configured." },
     { id: "webhooks", label: "Webhook signing", critical: "none", configured: webhooks, ok: webhooks, verified: false, state: webhooks ? "configured" : "not_configured",
       reason: webhooks ? null : "Webhooks cannot be created: the secrets key is not configured." },
     // Zolva: the read key only raises the rate limit; without it Zolva is read keyless. Never the value.

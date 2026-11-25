@@ -103,7 +103,7 @@ export function LiveOperations() {
   );
 }
 
-/** On-chain execution through the PALISEC smart account: co-signature, bundler hash and the transaction. */
+/** On-chain execution through the Palisec smart account: co-signature, bundler hash and the transaction. */
 function ExecutionRows({ op }: { op: LiveOperation }) {
   const x = op.details.execution!;
   const tx = op.transaction_hash ?? null;
@@ -114,7 +114,7 @@ function ExecutionRows({ op }: { op: LiveOperation }) {
       <p className="label mb-1">Execution</p>
       <KV
         rows={[
-          ["Co-signed by PALISEC", x.user_op_hash ? `yes · ${utc(x.submitted_at)}` : "claimed, bundler did not confirm"],
+          ["Co-signed by Palisec", x.user_op_hash ? `yes · ${utc(x.submitted_at)}` : "claimed, bundler did not confirm"],
           ["Result", result],
           ["User operation", x.user_op_hash ? <Mono key="u" className="break-all text-[11px]">{x.user_op_hash}</Mono> : "—"],
           ["Transaction", tx ? (

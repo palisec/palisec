@@ -66,7 +66,7 @@ export function provider(): Provider {
     model,
     configured: key !== "",
     async complete(messages, tools, signal) {
-      if (!key) throw new HttpError(503, "PS_STATE_001", "The PALISEC Agent model is not configured on this deployment (PALISEC_AGENT_API_KEY)", false);
+      if (!key) throw new HttpError(503, "PS_STATE_001", "The Palisec Agent model is not configured on this deployment (PALISEC_AGENT_API_KEY)", false);
       const body = JSON.stringify({
           model,
           messages: messages.map((m) => ({

@@ -9,7 +9,7 @@ import { SAFE_4337 } from "@/lib/safe-op";
 
 export const metadata: Metadata = {
   title: "Smart accounts",
-  description: "On-chain enforcement with a PALISEC smart account: a Safe with the 4337 module whose threshold is 2 and whose owners include PALISEC's co-signer.",
+  description: "On-chain enforcement with a Palisec smart account: a Safe with the 4337 module whose threshold is 2 and whose owners include Palisec's co-signer.",
   alternates: { canonical: "/docs/account-abstraction" }, openGraph: pageOpenGraph("/docs/account-abstraction"),
 };
 
@@ -44,16 +44,16 @@ GET  /v1/operations/{id}/execution       → { status: "executed", transaction_h
 
 const OWNERS = [
   { icon: <AgentIcon size={18} />, who: "Agent key", why: "Signs every operation the agent wants. Alone it moves nothing." },
-  { icon: <ShieldIcon size={18} />, who: "PALISEC co-signer", why: "Signs only an operation PALISEC allowed or a person approved, once, for that payload, until it expires." },
-  { icon: <UserCheckIcon size={18} />, who: "Recovery owner", why: "Your organization's wallet. With either other key it can move funds, so nothing is stuck if PALISEC is unavailable." },
+  { icon: <ShieldIcon size={18} />, who: "Palisec co-signer", why: "Signs only an operation Palisec allowed or a person approved, once, for that payload, until it expires." },
+  { icon: <UserCheckIcon size={18} />, who: "Recovery owner", why: "Your organization's wallet. With either other key it can move funds, so nothing is stuck if Palisec is unavailable." },
 ];
 
 const GUARANTEES = [
-  "The Safe executes exactly the evaluated target, value and calldata, as a plain call. PALISEC never builds a delegate call.",
+  "The Safe executes exactly the evaluated target, value and calldata, as a plain call. Palisec never builds a delegate call.",
   "The co-signature is bound to the Safe, nonce, call, gas limits, fees, EntryPoint and chain. Change any of them and it is invalid.",
   "validUntil is the authorization's expiry. After it, the Safe rejects the operation on chain.",
   "Each operation is co-signed at most once. The claim and its audit event are one database statement.",
-  "The agent's signature must recover to an owner other than PALISEC, and the account is read from chain before co-signing.",
+  "The agent's signature must recover to an owner other than Palisec, and the account is read from chain before co-signing.",
   "The bundler key and the co-signing key stay on the server. Health reports only whether they are configured.",
 ];
 
@@ -61,13 +61,13 @@ export default function SmartAccounts() {
   return (
     <DocArticle
       title="Smart accounts"
-      lede="On-chain enforcement: the agent's funds live in a Safe that needs PALISEC's co-signature, so a stolen agent key cannot move them."
+      lede="On-chain enforcement: the agent's funds live in a Safe that needs Palisec's co-signature, so a stolen agent key cannot move them."
       maturity="service"
       compat={`Mainnet 4663 · Testnet 46630 · Safe 1.4.1 · Safe 4337 module v0.3.0 · EntryPoint v0.7`}
     >
       <h2 id="model">How it works</h2>
       <p>
-        A PALISEC smart account is a standard, audited <strong>Safe</strong> with the <strong>Safe 4337 module</strong>. It has three
+        A Palisec smart account is a standard, audited <strong>Safe</strong> with the <strong>Safe 4337 module</strong>. It has three
         owners and needs two signatures:
       </p>
       <ul className="not-prose my-6 space-y-3">
@@ -82,7 +82,7 @@ export default function SmartAccounts() {
         ))}
       </ul>
       <p>
-        No new contract is involved: the Safe&apos;s own threshold is the enforcement. PALISEC adds its signature after its
+        No new contract is involved: the Safe&apos;s own threshold is the enforcement. Palisec adds its signature after its
         deterministic decision; the Safe checks both signatures on chain.
       </p>
 
@@ -124,7 +124,7 @@ export default function SmartAccounts() {
       <h2 id="contracts">Contracts on Robinhood Chain</h2>
       <p>
         The same contracts, with byte-for-byte identical code, are deployed at the same addresses on mainnet (4663) and
-        testnet (46630). PALISEC co-signs with a different key on each network, and the signed data names the network, so a
+        testnet (46630). Palisec co-signs with a different key on each network, and the signed data names the network, so a
         signature made for one can never be used on the other.
       </p>
       <table>
@@ -143,7 +143,7 @@ export default function SmartAccounts() {
         <span className="inline-flex items-start gap-2">
           <KeyIcon size={16} className="mt-0.5 shrink-0" />
           <span>
-            PALISEC&apos;s co-signing keys (one per network) are held by the server. The co-signer cannot move funds alone, but a
+            Palisec&apos;s co-signing keys (one per network) are held by the server. The co-signer cannot move funds alone, but a
             compromise of the server together with an agent&apos;s key could co-sign outside policy, so keep mainnet balances
             modest until signing moves into the attested enclave (<Link href="/attestation">attestation</Link>). Agents that send
             from a plain key are not enforced on chain; only smart accounts are.

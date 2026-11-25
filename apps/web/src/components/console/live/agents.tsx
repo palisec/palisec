@@ -155,7 +155,7 @@ function RegisterAgent({ policies: all, onCreated }: { policies: PolicyRow[]; on
 
   return (
     <Panel title={`Register an agent · ${networkOf(network)?.short ?? network}`} bodyClassName="space-y-3 p-4">
-      {live && <Notice tone="review">Mainnet: this agent will act on real funds. Give it a PALISEC smart account and a policy before you issue a key.</Notice>}
+      {live && <Notice tone="review">Mainnet: this agent will act on real funds. Give it a Palisec smart account and a policy before you issue a key.</Notice>}
       <Field id={`${uid}-name`} label="Name">
         <input id={`${uid}-name`} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Treasury rebalancer" maxLength={80} />
       </Field>
@@ -222,7 +222,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
             ["Policy", a.policy_key ? <Link key="p" href="/console/policies" className="hover:text-aqua"><Mono>{a.policy_key}{a.policy_version ? ` v${a.policy_version}` : " (no active version)"}{a.policy_disabled ? " · disabled" : ""}</Mono></Link> : "None: every request is denied"],
             ["Last hour", `${a.last_hour.allowed} allowed · ${a.last_hour.denied} denied · ${a.last_hour.reviewed} review · ${usd(a.last_hour.reserved_usd_micros)} reserved`],
             ["Status changed", a.status_changed_at ? `${utc(a.status_changed_at)}${a.status_changed_by ? ` by ${shortHex(a.status_changed_by)}` : ""}` : "—"],
-            ["Signers", <span key="sig" className="text-muted">The agent&apos;s key and PALISEC&apos;s co-signer, when its account is a PALISEC smart account</span>],
+            ["Signers", <span key="sig" className="text-muted">The agent&apos;s key and Palisec&apos;s co-signer, when its account is a Palisec smart account</span>],
           ]}
         />
         {a.status !== "revoked" && (

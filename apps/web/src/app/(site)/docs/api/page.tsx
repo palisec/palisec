@@ -24,7 +24,7 @@ export default function ApiReference() {
         Robinhood Chain mainnet (4663, real funds) and Robinhood Chain Testnet (46630) are both supported;{" "}
         <code>GET /v1/health</code> lists which are enabled. Mainnet agents get <code>ps_live_</code> keys and testnet agents
         <code>ps_test_</code> keys. Decisions are recorded and enforced for every agent that calls the API; agents with a
-        PALISEC smart account are also enforced on chain, and PALISEC co-signs and submits their allowed operations.
+        Palisec smart account are also enforced on chain, and Palisec co-signs and submits their allowed operations.
       </Note>
 
       <h2 id="auth">Authentication</h2>
@@ -47,7 +47,7 @@ export default function ApiReference() {
       <ul>
         <li><code>authorized</code>: ALLOW. Usable until <code>expires_at</code> (5 minutes); its amount stays reserved for the rolling hour.</li>
         <li><code>pending_approval</code>: waiting up to 15 minutes for an approver; then <code>approved</code> (a fresh 5-minute authorization), <code>rejected</code> or <code>expired</code>.</li>
-        <li><code>denied</code>, <code>cancelled</code>, <code>authorization_expired</code>: terminal. An allowed or approved operation executed through a PALISEC smart account records its user operation hash, transaction hash and outcome (<code>GET /v1/operations/{"{id}"}/execution</code>).</li>
+        <li><code>denied</code>, <code>cancelled</code>, <code>authorization_expired</code>: terminal. An allowed or approved operation executed through a Palisec smart account records its user operation hash, transaction hash and outcome (<code>GET /v1/operations/{"{id}"}/execution</code>).</li>
       </ul>
 
       {ENDPOINTS.map((g) => (

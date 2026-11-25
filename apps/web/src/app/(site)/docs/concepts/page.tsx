@@ -25,12 +25,12 @@ import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Concepts",
-  description: "The core ideas in PALISEC: agents, policies, operations, decisions, reservations, approvals, authorizations and audit events.",
+  description: "The core ideas in Palisec: agents, policies, operations, decisions, reservations, approvals, authorizations and audit events.",
   alternates: { canonical: "/docs/concepts" }, openGraph: pageOpenGraph("/docs/concepts"),
 };
 
 const TERMS: { icon: ReactNode; term: string; def: string; see: [string, string] }[] = [
-  { icon: <WalletIcon size={18} />, term: "Protected account", def: "The address whose transactions PALISEC governs. Today it is the agent's own account; with enforcement it becomes a smart account.", see: ["/docs/account-abstraction", "Smart accounts"] },
+  { icon: <WalletIcon size={18} />, term: "Protected account", def: "The address whose transactions Palisec governs. Today it is the agent's own account; with enforcement it becomes a smart account.", see: ["/docs/account-abstraction", "Smart accounts"] },
   { icon: <AgentIcon size={18} />, term: "Agent", def: "A registered caller bound to one account, one chain and one policy. It can be paused or revoked without touching the policy.", see: ["/docs/integrations", "Keys"] },
   { icon: <KeyIcon size={18} />, term: "Scoped key", def: "An API key for one agent, limited to named scopes such as operations:write or mcp. Shown once, stored only as a hash.", see: ["/docs/integrations", "Keys"] },
   { icon: <SlidersIcon size={18} />, term: "Policy", def: "One JSON document per account: limits, cooldowns, allowed contracts and methods, deny rules and the approval threshold.", see: ["/docs/policies", "Policy schema"] },
@@ -39,7 +39,7 @@ const TERMS: { icon: ReactNode; term: string; def: string; see: [string, string]
   { icon: <ShieldCheckIcon size={18} />, term: "Decision", def: "ALLOW, DENY or REQUIRES_HUMAN_SIGNATURE, with a stable reason code and the result of every check.", see: ["/docs/errors", "Errors"] },
   { icon: <GaugeIcon size={18} />, term: "Reservation", def: "The budget an allowed or pending operation holds. Taken atomically, so two requests at once can never overspend.", see: ["/architecture#engine", "Architecture"] },
   { icon: <HandIcon size={18} />, term: "Approval", def: "An EIP-712 signature by a member's own wallet over the exact operation and policy version. It expires.", see: ["/docs/account-abstraction", "Smart accounts"] },
-  { icon: <CheckCircleIcon size={18} />, term: "Authorization", def: "Proof that PALISEC allowed one exact payload on one chain under one policy version, valid for a short window.", see: ["/docs/account-abstraction", "Smart accounts"] },
+  { icon: <CheckCircleIcon size={18} />, term: "Authorization", def: "Proof that Palisec allowed one exact payload on one chain under one policy version, valid for a short window.", see: ["/docs/account-abstraction", "Smart accounts"] },
   { icon: <ActivityIcon size={18} />, term: "Audit event", def: "An append-only record of every decision and change, written in the same statement as the change itself.", see: ["/security", "Security model"] },
   { icon: <StopIcon size={18} />, term: "Emergency stop", def: "One switch that denies every new operation in the organization until a member lifts it.", see: ["/docs/errors", "Errors"] },
 ];
@@ -122,7 +122,7 @@ export default function ConceptsPage() {
         {[
           [<BanIcon key="i" size={18} />, "Unknown means deny.", "A missing price, fee, policy or state is never treated as zero."],
           [<RepeatIcon key="i" size={18} />, "Same request, same answer.", "A repeated request ID returns the original decision; it is never evaluated twice."],
-          [<AgentIcon key="i" size={18} />, "No model decides.", "The PALISEC Agent explains decisions. Only the deterministic engines make them."],
+          [<AgentIcon key="i" size={18} />, "No model decides.", "The Palisec Agent explains decisions. Only the deterministic engines make them."],
         ].map(([icon, t, b]) => (
           <li key={t as string} className="flex gap-3 rounded-[12px] border border-line-strong bg-deep/60 p-4">
             <span aria-hidden className="mt-0.5 text-aqua">{icon}</span>

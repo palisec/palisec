@@ -6,14 +6,14 @@ import { CAPABILITIES, capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
   title: "Infrastructure",
-  description: "PALISEC Core: deterministic authorization, policy model, spending controls, human approvals, protected signing, smart-account enforcement, execution lifecycle and audit.",
+  description: "Palisec Core: deterministic authorization, policy model, spending controls, human approvals, protected signing, smart-account enforcement, execution lifecycle and audit.",
   alternates: { canonical: "/infrastructure" }, openGraph: pageOpenGraph("/infrastructure"),
 };
 
 const PRODUCTS = [
   { n: "01", name: "Authorization engine", body: "Deterministic policy evaluation of every proposed transaction: account, target, method, value, fee, budget, loops and approvals.", cap: "engine" },
   { n: "02", name: "Protected signing service", body: "Policy-bound signing inside a TEE. The parent host cannot request a signature that skips evaluation.", cap: "enclave" },
-  { n: "03", name: "On-chain account enforcement", body: "Smart-account validation that rejects operations without a valid PALISEC authorization.", cap: "account" },
+  { n: "03", name: "On-chain account enforcement", body: "Smart-account validation that rejects operations without a valid Palisec authorization.", cap: "account" },
   { n: "04", name: "Developer SDKs", body: "Typed clients for TypeScript (viem or ethers) and Python (web3.py), with no security logic of their own.", cap: "sdk-ts" },
   { n: "05", name: "Security control plane", body: "Policies, approvals, credentials, emergency stops and audit, enforced server-side for every role.", cap: "api" },
   { n: "06", name: "Developer platform", body: "This site and its documentation, the policy workbench, and the wallet-authenticated console.", cap: "console" },
@@ -65,7 +65,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     title: "Protected signing",
     body: [
       "Specified: a signer in an AWS Nitro Enclave whose key is released only to the measured image, signing only payloads bound to a recorded authorization, with no arbitrary-signing interface.",
-      "On the roadmap. Today PALISEC co-signs allowed operations for smart accounts with a server-held key per network (a separate key for mainnet). The co-signer cannot move funds alone; the enclave will also protect it from anyone with server access.",
+      "On the roadmap. Today Palisec co-signs allowed operations for smart accounts with a server-held key per network (a separate key for mainnet). The co-signer cannot move funds alone; the enclave will also protect it from anyone with server access.",
     ],
     link: ["/attestation", "Attestation"],
   },
@@ -74,8 +74,8 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     cap: "account",
     title: "Smart-account enforcement",
     body: [
-      "A gateway cannot guard a key it does not hold. The protected path is a Safe smart account (ERC-4337) whose threshold is 2 and whose owners include PALISEC's co-signer, so an agent that skips PALISEC cannot execute.",
-      "Deployed on Robinhood Chain mainnet and testnet: PALISEC co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
+      "A gateway cannot guard a key it does not hold. The protected path is a Safe smart account (ERC-4337) whose threshold is 2 and whose owners include Palisec's co-signer, so an agent that skips Palisec cannot execute.",
+      "Deployed on Robinhood Chain mainnet and testnet: Palisec co-signs only an allowed or approved operation, for that exact payload and until its authorization expires, and submits it through a bundler. Agents that send from a plain key are still not enforced on chain.",
     ],
     link: ["/docs/account-abstraction", "Account abstraction"],
   },
@@ -94,7 +94,7 @@ const SECTIONS: { id: string; cap: string; title: string; body: string[]; link?:
     cap: "api",
     title: "Auditability",
     body: [
-      "Every decision, policy activation, approval, pause, stop, key change and PALISEC Agent action is an append-only audit event, written in the same statement as the change it records.",
+      "Every decision, policy activation, approval, pause, stop, key change and Palisec Agent action is an append-only audit event, written in the same statement as the change it records.",
       "Agent actions carry their run and tool-call IDs, so a recommendation can be traced to the operational action it led to.",
     ],
   },
@@ -112,9 +112,9 @@ export default function InfrastructurePage() {
   return (
     <>
       <PageHeader
-        eyebrow="PALISEC Core"
+        eyebrow="Palisec Core"
         title="The deterministic security infrastructure."
-        lede="An agent may propose an action. PALISEC evaluates it against explicit policies, authoritative state and spending limits before anything executes. This is the layer every agent, including PALISEC's own, must pass through."
+        lede="An agent may propose an action. Palisec evaluates it against explicit policies, authoritative state and spending limits before anything executes. This is the layer every agent, including Palisec's own, must pass through."
       />
       <Section label="Components" intro="Six parts, one boundary. Status comes from the live capability list, so nothing unbuilt is presented as shipped.">
         <ul className="border-t border-line">

@@ -7,7 +7,7 @@ import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "MCP server",
-  description: "Connect MCP-compatible agents to PALISEC over Streamable HTTP with a scoped API key. Tools for evaluation, proposals, status, explanations and policy validation.",
+  description: "Connect MCP-compatible agents to Palisec over Streamable HTTP with a scoped API key. Tools for evaluation, proposals, status, explanations and policy validation.",
   alternates: { canonical: "/docs/mcp" }, openGraph: pageOpenGraph("/docs/mcp"),
 };
 
@@ -54,7 +54,7 @@ export default function McpDocs() {
   return (
     <DocArticle
       title="MCP server"
-      lede="An official PALISEC MCP server for MCP-compatible agents and applications. It is a standard interface to the same authorization path as the REST API, not a separate security mechanism."
+      lede="An official Palisec MCP server for MCP-compatible agents and applications. It is a standard interface to the same authorization path as the REST API, not a separate security mechanism."
       maturity="service"
       compat="MCP TypeScript SDK 2.4 · Streamable HTTP (stateless) · mainnet 4663 · testnet 46630"
     >

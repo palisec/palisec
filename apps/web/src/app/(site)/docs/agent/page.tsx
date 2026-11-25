@@ -5,21 +5,21 @@ import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "PALISEC Agent",
-  description: "How the native PALISEC Agent works: tools, autonomy levels, confirmed actions, model configuration, evidence and the API.",
+  title: "Palisec Agent",
+  description: "How the native Palisec Agent works: tools, autonomy levels, confirmed actions, model configuration, evidence and the API.",
   alternates: { canonical: "/docs/agent" }, openGraph: pageOpenGraph("/docs/agent"),
 };
 
 export default function AgentDocs() {
   return (
-    <DocArticle title="PALISEC Agent" lede="The native security operator in the console: investigation, policy engineering and operations assistance over your real records." maturity="service" compat="Instructions agent-2026-11-16.2 · OpenAI-compatible providers">
+    <DocArticle title="Palisec Agent" lede="The native security operator in the console: investigation, policy engineering and operations assistance over your real records." maturity="service" compat="Instructions agent-2026-11-16.2 · OpenAI-compatible providers">
       <Note kind="warning" title="The agent is not an authority">
         It cannot authorize, approve, sign, activate a policy or change its own permissions. The deterministic engine decides every transaction. Actions the agent prepares run only after a
         member with the right role confirms them.
       </Note>
       <h2 id="use">Use it</h2>
       <p>
-        Open <Link href="/console/agent">Console → PALISEC Agent</Link>. Ask in plain language, or run a quick investigation (security state, open findings, integration status, explain an
+        Open <Link href="/console/agent">Console → Palisec Agent</Link>. Ask in plain language, or run a quick investigation (security state, open findings, integration status, explain an
         operation or error code) that calls a tool directly without a model.
       </p>
       <h2 id="levels">Autonomy levels</h2>

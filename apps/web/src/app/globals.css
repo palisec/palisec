@@ -783,3 +783,158 @@
 @layer base {
   p, li, dd { text-wrap: pretty; }
 }
+
+/* ── The line: the site splits at --line-x; left is the agent side, right is the chain side. ── */
+:root {
+  --line-x: 39.583vw;
+  --gutter-l: 7.9vw;
+  --gutter-r: 150px;
+}
+@media (max-width: 1279px) {
+  :root { --line-x: 36vw; --gutter-l: 64px; --gutter-r: 64px; }
+}
+@media (max-width: 1023px) {
+  :root { --line-x: 20px; --gutter-l: 44px; --gutter-r: 20px; }
+}
+.site-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(700px 900px at var(--line-x) 0, rgb(156 246 238 / 0.06), transparent 70%),
+    radial-gradient(800px 600px at 100% 100%, rgb(250 209 255 / 0.035), transparent 70%),
+    linear-gradient(90deg, var(--color-deep) 0, var(--color-deep) var(--line-x), var(--color-abyss) var(--line-x));
+}
+.site-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+}
+.the-line {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--line-x) - 1px);
+  width: 2px;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--color-aqua-hi), var(--color-aqua) 40%, var(--color-aqua-lo));
+  box-shadow: 0 0 18px rgb(156 246 238 / 0.6), 0 0 60px rgb(156 246 238 / 0.2);
+  transform-origin: top;
+}
+.the-line::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -140px;
+  width: 8px;
+  height: 140px;
+  background: linear-gradient(transparent, var(--color-aqua-hi), transparent);
+  filter: blur(2px);
+  /* About 260 px/s down a 1080 px tall viewport. */
+  animation: line-pulse 4.7s linear infinite;
+}
+@keyframes line-pulse {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(100vh + 140px)); }
+}
+.side-label {
+  position: absolute;
+  top: 112px;
+  font-family: var(--font-martian), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--color-dim);
+  pointer-events: none;
+}
+.side-label.agent { right: calc(100% - var(--line-x) + 28px); }
+.side-label.chain { left: calc(var(--line-x) + 28px); }
+@media (max-width: 1023px) { .side-label { display: none; } }
+
+@layer components {
+/* Two columns split at the line. */
+.split {
+  display: grid;
+  grid-template-columns: calc(var(--line-x) - var(--gutter-l) - 88px) minmax(0, 1fr);
+  column-gap: calc(88px + 80px);
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+}
+.split > .split-r { max-width: 1100px; }
+@media (max-width: 1023px) {
+  .split { grid-template-columns: minmax(0, 1fr); row-gap: 28px; padding-left: var(--gutter-l); }
+}
+.split-section {
+  position: relative;
+  border-top: 1px solid var(--color-line);
+  padding-block: clamp(64px, 5.7vw, 110px);
+}
+.split-section:first-child { border-top: 0; }
+
+/* Type scale of the line pages. */
+.t-hero { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(44px, 4.6vw, 88px); line-height: 1; letter-spacing: -0.045em; color: var(--color-mist); }
+.t-h1 { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(42px, 4.4vw, 84px); line-height: 1; letter-spacing: -0.045em; color: var(--color-mist); }
+.t-h2 { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(34px, 3.2vw, 72px); line-height: 1.04; letter-spacing: -0.035em; color: var(--color-mist); }
+.t-h3 { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(22px, 1.6vw, 30px); line-height: 1.15; letter-spacing: -0.02em; color: var(--color-mist); }
+.t-statement { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(32px, 3.1vw, 60px); line-height: 1.12; letter-spacing: -0.03em; }
+.t-giant { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(56px, 5.4vw, 104px); line-height: 1; letter-spacing: -0.05em; }
+.t-closing { font-family: var(--font-funnel); font-weight: 500; font-size: clamp(44px, 5vw, 96px); line-height: 1; letter-spacing: -0.045em; }
+.t-lede { font-family: var(--font-hanken); font-size: clamp(17px, 1.1vw, 21px); line-height: 1.55; max-width: 50ch; color: var(--color-foam); }
+.t-body { font-family: var(--font-hanken); font-size: 18px; line-height: 1.6; max-width: 56ch; color: var(--color-foam); }
+.t-label { font-family: var(--font-martian); font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--color-dim); }
+.t-data { font-family: var(--font-martian); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.t-big { font-family: var(--font-martian); font-weight: 500; font-size: clamp(36px, 3.2vw, 64px); line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-mist); }
+
+/* Buttons of the line pages. */
+.lbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 50px;
+  padding: 0 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: var(--font-instrument);
+  font-weight: 500;
+  font-size: 16px;
+  white-space: nowrap;
+  transition: box-shadow 0.3s var(--ease-out-quint), color 0.3s;
+}
+.lbtn.sm { height: 40px; padding: 0 16px; font-size: 15.5px; }
+.lbtn-primary { background: var(--color-aqua); color: #011d1c; }
+.lbtn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.lbtn-primary:hover::after { transition: transform 0.6s var(--ease-out-quint); transform: translateX(120%); }
+.lbtn-ghost { color: var(--color-mist); box-shadow: inset 0 0 0 1px var(--color-line-strong); }
+.lbtn-ghost:hover { box-shadow: inset 0 0 0 1px rgb(156 246 238 / 0.5); }
+}
+
+/* Nav fade: content scrolls away under the navigation. */
+.nav-fade {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 150px;
+  z-index: 45;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-deep) 0, var(--color-deep) var(--line-x), var(--color-abyss) var(--line-x));
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 70px, transparent 150px);
+  mask-image: linear-gradient(180deg, #000 0, #000 70px, transparent 150px);
+}
+
+/* Visible focus everywhere on the line pages. */
+.line-site :focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .the-line::after { display: none; }
+}

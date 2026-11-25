@@ -38,11 +38,11 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
       { method: "POST", path: "/authorizations/evaluate", auth: "key", summary: "Dry run: the same evaluation against live state, reserving nothing and consuming no request_id. Scope operations:write, or authorizations:evaluate for a key that may only run dry runs.", body: { "…": "same fields as POST /operations" } },
       { method: "GET", path: "/operations/{id}", auth: "session or key", role: "viewer", summary: "One operation. An API key can read only its own agent's operations." },
       { method: "POST", path: "/operations/{id}/cancel", auth: "session or key", role: "operator", summary: "With an API key: withdraw a pending approval. In the console: release an unused, unexpired authorization's budget." },
-      { method: "POST", path: "/operations/{id}/user-operation", auth: "key", summary: "Smart accounts (scope operations:write): build the exact user operation PALISEC will co-sign for an allowed or approved operation. Returns EIP-712 typed_data for the agent to sign, safe_op_hash and max_cost_wei." },
-      { method: "POST", path: "/operations/{id}/submit", auth: "key", summary: "Smart accounts (scope operations:write): send the agent's signature over typed_data. PALISEC co-signs once and submits through the bundler. 202 with user_op_hash." },
+      { method: "POST", path: "/operations/{id}/user-operation", auth: "key", summary: "Smart accounts (scope operations:write): build the exact user operation Palisec will co-sign for an allowed or approved operation. Returns EIP-712 typed_data for the agent to sign, safe_op_hash and max_cost_wei." },
+      { method: "POST", path: "/operations/{id}/submit", auth: "key", summary: "Smart accounts (scope operations:write): send the agent's signature over typed_data. Palisec co-signs once and submits through the bundler. 202 with user_op_hash." },
       { method: "GET", path: "/operations/{id}/execution", auth: "session or key", role: "viewer", summary: "Execution status: not_prepared, prepared, submitted, executed or reverted, with the transaction hash once included." },
       { method: "GET", path: "/smart-accounts", auth: "session or key", role: "viewer", summary: "Co-signer address, contract addresses and whether submission is available. Members also get each agent's account, inspected on chain." },
-      { method: "GET", path: "/smart-accounts/{address}", auth: "session or key", role: "viewer", summary: "Reads an account on chain: Safe owners, threshold, 4337 module, and whether PALISEC enforces it." },
+      { method: "GET", path: "/smart-accounts/{address}", auth: "session or key", role: "viewer", summary: "Reads an account on chain: Safe owners, threshold, 4337 module, and whether Palisec enforces it." },
     ],
   },
   {
@@ -126,7 +126,7 @@ export const ENDPOINTS: { group: string; items: Endpoint[] }[] = [
     ],
   },
   {
-    group: "PALISEC Agent (console)",
+    group: "Palisec Agent (console)",
     items: [
       { method: "GET", path: "/agent/tools", auth: "session", role: "viewer", summary: "Every tool with risk, autonomy level, role and whether it is available to you; model status." },
       { method: "GET", path: "/agent/configuration", auth: "session", role: "viewer", summary: "Enabled, autonomy level (0-2) and disabled tools." },
@@ -196,7 +196,7 @@ export function openApiDocument(serverUrl: string) {
       title: "Palisec API",
       version: "0.6.0",
       description:
-        "Robinhood Chain mainnet (4663) and Robinhood Chain Testnet (46630); an agent's key says which (ps_live_ or ps_test_). Decisions are recorded and enforced for agents that call the API; agents with a PALISEC smart account are also enforced on chain.",
+        "Robinhood Chain mainnet (4663) and Robinhood Chain Testnet (46630); an agent's key says which (ps_live_ or ps_test_). Decisions are recorded and enforced for agents that call the API; agents with a Palisec smart account are also enforced on chain.",
     },
     servers: [{ url: `${serverUrl}/api/v1` }],
     components: {
@@ -229,7 +229,7 @@ export function openApiDocument(serverUrl: string) {
             state: { enum: ["denied", "authorized", "pending_approval", "approved", "rejected", "cancelled", "expired", "authorization_expired", "not_recorded"] },
             authorization_id: { type: ["string", "null"] },
             expires_at: { type: ["string", "null"], format: "date-time" },
-            transaction_hash: { type: ["string", "null"], description: "Set once the operation executed through a PALISEC smart account; otherwise null." },
+            transaction_hash: { type: ["string", "null"], description: "Set once the operation executed through a Palisec smart account; otherwise null." },
             retryable: { type: "boolean" },
             message: { type: "string" },
             checks: { type: "array", items: { type: "object" } },

@@ -60,7 +60,7 @@ export function LiveSecurity() {
             ]}
           />
           <p className="mt-3 text-[12.5px] leading-relaxed text-muted">
-            Agents with a PALISEC smart account cannot skip PALISEC: the account needs its co-signature. An agent that sends from a plain key is only gated if it calls PALISEC first. See{" "}
+            Agents with a Palisec smart account cannot skip Palisec: the account needs its co-signature. An agent that sends from a plain key is only gated if it calls Palisec first. See{" "}
             <Link href="/security" className="text-soft underline underline-offset-4 hover:text-aqua">security</Link> for the threat model.
           </p>
         </Panel>

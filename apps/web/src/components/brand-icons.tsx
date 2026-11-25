@@ -1,4 +1,4 @@
-// Brand marks from Simple Icons (CC0-1.0, https://simpleicons.org), used to name the tools PALISEC works with.
+// Brand marks from Simple Icons (CC0-1.0, https://simpleicons.org), used to name the tools Palisec works with.
 // Each is a single 24x24 path drawn in currentColor so it takes the theme's colour.
 
 export type Brand = "typescript" | "python" | "modelcontextprotocol" | "vercel" | "langchain" | "langgraph" | "ethereum" | "rust" | "webassembly" | "postgresql" | "openapiinitiative" | "npm" | "pypi" | "githubactions" | "json" | "nextdotjs" | "x";

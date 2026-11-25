@@ -1,5 +1,5 @@
 /**
- * The networks PALISEC knows, as published in Robinhood's "Connecting to Robinhood Chain" page.
+ * The networks Palisec knows, as published in Robinhood's "Connecting to Robinhood Chain" page.
  * Public facts only, safe for the browser. Which of them a deployment accepts is server configuration
  * (server/config.ts): testnet always, mainnet only when the operator turns it on.
  */
@@ -48,7 +48,7 @@ export function network(chainId: number): Network | null {
   return isNetworkId(chainId) ? NETWORKS[chainId] : null;
 }
 
-/** "Robinhood Chain · 4663", or the bare number for a chain PALISEC does not support. */
+/** "Robinhood Chain · 4663", or the bare number for a chain Palisec does not support. */
 export function networkLabel(chainId: number, style: "long" | "short" = "long"): string {
   const n = network(chainId);
   if (!n) return `Chain ${chainId}`;

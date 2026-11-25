@@ -60,7 +60,7 @@ const NAV: { href: string; label: string; group?: string }[] = [
   { href: "/console/audit", label: "Audit" },
   { href: "/console/security-events", label: "Security events" },
   { href: "/console/security", label: "Emergency stop" },
-  { href: "/console/agent", label: "PALISEC Agent", group: "Intelligence" },
+  { href: "/console/agent", label: "Palisec Agent", group: "Intelligence" },
   { href: "/console/integrations", label: "Integrations", group: "Connect" },
   { href: "/console/usage", label: "Usage" },
   { href: "/console/billing", label: "Billing" },
@@ -228,7 +228,7 @@ function Shell({ children }: { children: ReactNode }) {
             <>
               <p className="mb-6 animate-[c-fade_.5s_var(--ease-out-quint)] rounded-[6px] border border-line-strong px-3 py-2 text-[12.5px] leading-relaxed text-muted">
                 <span className={`font-utility text-[12px] ${live ? "text-review" : "text-aqua"}`}>{live ? "● Mainnet · real funds · start with small balances · " : "● Testnet · "}</span>
-                PALISEC records and enforces each authorization decision. Agents with a PALISEC smart account are enforced on chain: PALISEC
+                Palisec records and enforces each authorization decision. Agents with a Palisec smart account are enforced on chain: Palisec
                 co-signs only what it allowed. An agent that sends from a plain key is only as safe as its own code.{" "}
                 <Link href="/security" className="text-mist underline decoration-line-strong underline-offset-4 hover:text-aqua">What this protects</Link>
               </p>

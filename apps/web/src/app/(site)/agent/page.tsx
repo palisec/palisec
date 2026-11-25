@@ -6,8 +6,8 @@ import { ButtonLink, MaturityBadge, PageHeader, Section } from "@/components/ui"
 import { capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
-  title: "PALISEC Agent",
-  description: "The native PALISEC Agent: security intelligence, policy engineering and security operations over your real records, built on top of PALISEC's deterministic infrastructure.",
+  title: "Palisec Agent",
+  description: "The native Palisec Agent: security intelligence, policy engineering and security operations over your real records, built on top of Palisec's deterministic infrastructure.",
   alternates: { canonical: "/agent" }, openGraph: pageOpenGraph("/agent"),
 };
 
@@ -15,7 +15,7 @@ const DOMAINS = [
   {
     id: "intelligence",
     title: "Security intelligence",
-    lede: "Understand and investigate activity across PALISEC.",
+    lede: "Understand and investigate activity across Palisec.",
     items: ["Recent proposals and their decisions", "Repeated denials, replays, unapproved contracts and selectors", "Budget thresholds, unfamiliar targets, rejected approvals", "Pauses and emergency stops", "Evidence-backed alerts sent to your webhooks"],
     asks: ["What happened?", "Which agent proposed it, under which policy version?", "Why was it denied, and was approval requested?", "What should I investigate next?"],
   },
@@ -29,7 +29,7 @@ const DOMAINS = [
   {
     id: "operations",
     title: "Security operations and developer assistance",
-    lede: "Make PALISEC easier to operate, integrate and troubleshoot.",
+    lede: "Make Palisec easier to operate, integrate and troubleshoot.",
     items: ["Explain authorization responses and stable error codes", "Inspect integration health and denial patterns", "Prepare an emergency stop or an agent pause with its impact", "Generate integration examples (placeholders, never real keys)", "API and SDK reference on demand"],
     asks: ["“Why does my agent keep getting PS_LOOP_001?”", "“Show me the MCP configuration.”", "“Prepare a pause for the trading agent.”"],
   },
@@ -56,9 +56,9 @@ export default function AgentPage() {
   return (
     <>
       <PageHeader
-        eyebrow="PALISEC Agent"
+        eyebrow="Palisec Agent"
         title="An intelligent operator, built on the security infrastructure."
-        lede="One native agent with three capability domains. It understands PALISEC's records, tools and workflows, and it works for your operators. It is not an authority: the deterministic engine is."
+        lede="One native agent with three capability domains. It understands Palisec's records, tools and workflows, and it works for your operators. It is not an authority: the deterministic engine is."
       >
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <MaturityBadge maturity={capability("agent").maturity} />
@@ -70,7 +70,7 @@ export default function AgentPage() {
       <Section label="What it is">
         <div className="max-w-[68ch] space-y-4">
           <p className="text-[17px] leading-relaxed text-silver">
-            The PALISEC Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
+            The Palisec Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
             records, through 30 typed tools, and every answer cites the records it used. Citations that no tool returned are flagged as unverified.
           </p>
           <p className="text-[17px] leading-relaxed text-silver">
@@ -146,7 +146,7 @@ export default function AgentPage() {
       </Section>
 
       <Section label="Agent architecture">
-        <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`PALISEC AGENT RUNTIME (isolated module in the API, never inside the policy engine)
+        <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`Palisec Agent runtime (isolated module in the API, never inside the policy engine)
   ├─ Orchestrator        runs stored in Postgres; a few steps per request, within a time budget
   ├─ Provider adapter    OpenAI-compatible chat completions (Groq by default; swap by configuration)
   ├─ Context builder     only the records a question needs, minimized and redacted

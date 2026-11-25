@@ -14,7 +14,7 @@ import { dryRun, getOperation, parseIntent, testDraft } from "../operations";
 import { CATEGORIES, detect, listFindings, raiseFinding } from "../security-events";
 
 /*
- * The PALISEC Agent's tools (spec 2.0 §14). Each has a strict input schema, a risk class, a minimum
+ * The Palisec Agent's tools (spec 2.0 §14). Each has a strict input schema, a risk class, a minimum
  * autonomy level and a role. Availability is decided on the server for the signed-in member; a model
  * that names a tool it was not given is refused. Every query is scoped to the member's organization,
  * and identifiers from the model are checked against it. No tool signs, activates a policy, approves,
@@ -180,7 +180,7 @@ async function actionRequest(ctx: ToolContext, action: "emergency_stop" | "agent
     SELECT id, expires_at FROM a`;
   if (!r) throw new HttpError(404, "PS_REQUEST_001", "Run not found");
   return {
-    output: { action_request_id: r.id, status: "pending_confirmation", expires_at: r.expires_at, impact, note: "Nothing has changed. A member with the required role must confirm this request in the PALISEC Agent console." },
+    output: { action_request_id: r.id, status: "pending_confirmation", expires_at: r.expires_at, impact, note: "Nothing has changed. A member with the required role must confirm this request in the Palisec Agent console." },
     evidence: [{ type: "action_request" as const, id: r.id as string, label: action }],
     actionRequestId: r.id as string,
   };
@@ -299,7 +299,7 @@ export const TOOLS: Tool[] = [
   }),
   define({
     name: "get_execution_status",
-    description: "Authorization and on-chain execution state of an operation. Execution is observed only for agents that execute through a PALISEC smart account.",
+    description: "Authorization and on-chain execution state of an operation. Execution is observed only for agents that execute through a Palisec smart account.",
     risk: "read", minAutonomy: 0, permission: "read", schema: opRef,
     async run(ctx, { operation_id }) {
       const op = await operation(ctx, operation_id);
@@ -309,7 +309,7 @@ export const TOOLS: Tool[] = [
           authorization_state: op.state,
           authorization_id: op.authorization_id,
           expires_at: op.expires_at,
-          execution: (op.details as { execution?: unknown } | undefined)?.execution ?? "not_observed (not executed through a PALISEC smart account; a plain-key agent sends by itself)",
+          execution: (op.details as { execution?: unknown } | undefined)?.execution ?? "not_observed (not executed through a Palisec smart account; a plain-key agent sends by itself)",
           transaction_hash: op.transaction_hash ?? null,
         },
         evidence: [{ type: "operation", id: operation_id }],
@@ -552,7 +552,7 @@ export const TOOLS: Tool[] = [
   }),
   define({
     name: "create_security_alert",
-    description: "Raise a security finding with evidence (operation IDs from this organization). Recorded as created by the PALISEC Agent and sent to subscribed webhooks.",
+    description: "Raise a security finding with evidence (operation IDs from this organization). Recorded as created by the Palisec Agent and sent to subscribed webhooks.",
     risk: "action", minAutonomy: 2, permission: "operate",
     schema: z.object({ category: z.enum(CATEGORIES), severity: z.enum(["info", "warning", "critical"]), title: z.string().min(5).max(160), operation_ids: z.array(uuid).min(1).max(20) }),
     async run(ctx, i) {

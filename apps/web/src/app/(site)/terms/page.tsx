@@ -20,7 +20,7 @@ export default function TermsPage() {
           <p>
             Palisec (&ldquo;Palisec&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) provides an authorization service for autonomous on-chain agents: a
             console to manage organizations, agents, API keys, policies and approvals; an API that evaluates proposed transactions against those
-            policies and records each decision; and, for agents that use a PALISEC smart account, co-signing and submission of the operations it
+            policies and records each decision; and, for agents that use a Palisec smart account, co-signing and submission of the operations it
             authorized (together, the &ldquo;Service&rdquo;), with this website and its documentation.
           </p>
           <p>
@@ -30,9 +30,9 @@ export default function TermsPage() {
           </p>
           <p>
             <strong>We never hold your funds or your private keys.</strong> Funds stay in smart accounts that you and your organization own. A
-            PALISEC smart account needs two of its three owners to sign: your agent&apos;s key, PALISEC&apos;s co-signer, and a recovery owner you
-            control. PALISEC&apos;s co-signer cannot move funds alone, and your recovery owner together with your agent&apos;s key can always move
-            funds without PALISEC. An agent that sends from a plain key, without a PALISEC smart account, is not enforced on chain.
+            Palisec smart account needs two of its three owners to sign: your agent&apos;s key, Palisec&apos;s co-signer, and a recovery owner you
+            control. Palisec&apos;s co-signer cannot move funds alone, and your recovery owner together with your agent&apos;s key can always move
+            funds without Palisec. An agent that sends from a plain key, without a Palisec smart account, is not enforced on chain.
           </p>
 
           <h2 id="accounts">2. Accounts and organizations</h2>
@@ -46,7 +46,7 @@ export default function TermsPage() {
           <h2 id="responsibility">3. Your responsibility for agents and transactions</h2>
           <p>
             You decide which policies to activate, which accounts and keys your agents use, and which transactions they send. An ALLOW decision or
-            a PALISEC co-signature means a request satisfied your active policy at that moment; it is not advice, a recommendation, or a guarantee
+            a Palisec co-signature means a request satisfied your active policy at that moment; it is not advice, a recommendation, or a guarantee
             that a transaction is safe, profitable or will succeed. A DENY or a held request is not a guarantee that harm was prevented. You are
             solely responsible for your agents, keys, recovery owners, smart accounts, the transactions they send, the funds they hold, and
             compliance with the laws that apply to you, including tax and reporting obligations.
@@ -62,7 +62,7 @@ export default function TermsPage() {
             <li>blockchain transactions are final: a transaction that executed cannot be undone by us or anyone else;</li>
             <li>smart contracts we rely on (including Safe, the Safe 4337 module and the ERC-4337 EntryPoint) and the tokens and contracts your agents interact with may contain defects or be exploited;</li>
             <li>Robinhood Chain, RPC providers, bundlers and price sources are operated by third parties and may be delayed, unavailable, congested or wrong; gas prices can change;</li>
-            <li>keys can be lost or stolen, and a stolen agent key together with a compromise of PALISEC&apos;s co-signer could produce transactions outside your policy;</li>
+            <li>keys can be lost or stolen, and a stolen agent key together with a compromise of Palisec&apos;s co-signer could produce transactions outside your policy;</li>
             <li>when a required input is missing or a check cannot complete, the Service refuses (it fails closed), which can delay or prevent a transaction you wanted.</li>
           </ul>
           <p>You accept these risks when you use the Service with real funds.</p>

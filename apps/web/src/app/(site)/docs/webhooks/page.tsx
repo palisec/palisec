@@ -5,7 +5,7 @@ import { DocArticle } from "@/components/doc";
 
 export const metadata: Metadata = {
   title: "Webhooks",
-  description: "Signed PALISEC events for decisions, approvals, pauses, emergency stops and security findings, with stable event IDs, retries and verification helpers.",
+  description: "Signed Palisec events for decisions, approvals, pauses, emergency stops and security findings, with stable event IDs, retries and verification helpers.",
   alternates: { canonical: "/docs/webhooks" }, openGraph: pageOpenGraph("/docs/webhooks"),
 };
 
@@ -32,14 +32,14 @@ event = webhooks.verify(os.environ["PALISEC_WEBHOOK_SECRET"], raw_body, request.
 
 export default function WebhookDocs() {
   return (
-    <DocArticle title="Webhooks" lede="Signed events from PALISEC to your systems. Sent after the response, so a webhook can never delay or change a decision." maturity="service" compat="Events 1.0 · HMAC-SHA256 · mainnet 4663 · testnet 46630">
+    <DocArticle title="Webhooks" lede="Signed events from Palisec to your systems. Sent after the response, so a webhook can never delay or change a decision." maturity="service" compat="Events 1.0 · HMAC-SHA256 · mainnet 4663 · testnet 46630">
       <h2 id="events">Events</h2>
       <ul>
         <li><code>operation.allowed</code>, <code>operation.denied</code>, <code>operation.review_required</code>: a new recorded decision (idempotent replays send nothing).</li>
         <li><code>approval.approved</code>, <code>approval.rejected</code>: a human decision on a held operation.</li>
         <li><code>organization.emergency_stop</code>, <code>agent.status_changed</code>, <code>credential.revoked</code>.</li>
-        <li><code>security.finding</code>: a new finding from the detectors or the PALISEC Agent.</li>
-        <li><code>operation.submitted</code>: PALISEC co-signed an operation for a smart account and the bundler accepted it.</li>
+        <li><code>security.finding</code>: a new finding from the detectors or the Palisec Agent.</li>
+        <li><code>operation.submitted</code>: Palisec co-signed an operation for a smart account and the bundler accepted it.</li>
         <li><code>operation.executed</code>: the operation was included on chain, with its transaction hash and whether it succeeded.</li>
         <li><code>ping</code>: sent by Test in the console.</li>
       </ul>
