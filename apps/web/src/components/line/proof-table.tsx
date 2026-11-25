@@ -76,11 +76,11 @@ export function ProofTable({ initial }: { initial: Page | null }) {
               <tbody>
                 {data.rows.map((r, i) => (
                   <tr key={i} className="border-b border-line">
-                    <td className="whitespace-nowrap py-4 pr-4 text-dim">{r.time.replace("T", " ").slice(5, 19)}</td>
+                    <td className="whitespace-nowrap py-4 pr-4 text-dim"><span className="sm:hidden">{r.time.slice(11, 16)}</span><span className="hidden sm:inline">{r.time.replace("T", " ").slice(5, 19)}</span></td>
                     <td className="hidden py-4 pr-4 text-foam xl:table-cell" title={r.account}>{r.account_label}</td>
-                    <td className="py-4 pr-4 text-foam">{r.action}</td>
+                    <td className="py-4 pr-4 text-foam [overflow-wrap:anywhere]">{r.action}</td>
                     <td className="hidden py-4 pr-4 text-right text-foam sm:table-cell">{r.usd === null ? "—" : r.usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                    <td className="py-4 pr-4"><Result kind={r.result}>{r.result === "allowed" ? "Allowed" : r.result === "held" ? "Held" : r.reason_code ?? "Blocked"}</Result></td>
+                    <td className="py-4 pr-4 [&_span]:break-all"><Result kind={r.result}>{r.result === "allowed" ? "Allowed" : r.result === "held" ? "Held" : r.reason_code ?? "Blocked"}</Result></td>
                     <td className="hidden py-4 md:table-cell">{r.receipt_url && r.tx_hash ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-silver hover:text-aqua">{short(r.tx_hash)} ↗</a> : <span className="text-dim">—</span>}</td>
                   </tr>
                 ))}
