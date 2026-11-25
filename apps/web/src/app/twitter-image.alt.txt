@@ -1,1 +1,1 @@
-Palisec: security infrastructure for the autonomous agent economy, on Robinhood Chain.
+Palisec: Limits AI agents can't override. The line between the agent side and the chain side.

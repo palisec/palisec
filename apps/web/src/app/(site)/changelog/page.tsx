@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
-import { Codes, PageHeader, Section } from "@/components/ui";
+import { Codes } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -351,8 +352,8 @@ const ENTRIES = [
 export default function ChangelogPage() {
   return (
     <>
-      <PageHeader eyebrow="Changelog" title="Changes, by version." />
-      <Section>
+      <LinePageHeader eyebrow="Changelog" title="Changes, by version." />
+      <LineSection>
         <ol className="space-y-12">
           {ENTRIES.map((e) => (
             <li key={e.version} className="grid gap-4 md:grid-cols-[200px_1fr]">
@@ -366,7 +367,7 @@ export default function ChangelogPage() {
             </li>
           ))}
         </ol>
-      </Section>
+      </LineSection>
     </>
   );
 }

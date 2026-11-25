@@ -9,7 +9,7 @@ import { Codes, Note } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Policy schema",
-  description: "The canonical Palisec policy schema 1.0: fields, units, precedence, evaluation order and validation.",
+  description: "The canonical Palisec policy schema (versions 1.0 to 1.5): fields, units, precedence, evaluation order and validation.",
   alternates: { canonical: "/docs/policies" }, openGraph: pageOpenGraph("/docs/policies"),
 };
 

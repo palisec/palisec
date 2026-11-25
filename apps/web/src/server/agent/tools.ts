@@ -12,6 +12,7 @@ import { HttpError } from "../http";
 import { listIntegrations } from "../integrations";
 import { dryRun, getOperation, parseIntent, testDraft } from "../operations";
 import { CATEGORIES, detect, listFindings, raiseFinding } from "../security-events";
+import { PY_WHEEL, TS_TGZ } from "@/lib/versions";
 
 /*
  * The Palisec Agent's tools (spec 2.0 §14). Each has a strict input schema, a risk class, a minimum
@@ -117,7 +118,7 @@ export function explainPolicy(doc: Record<string, any>): string[] { // eslint-di
 
 const SDK_DOCS = {
   typescript: {
-    install: "npm install @palisec/sdk viem (or: npm install https://palisec.tech/sdk/palisec-sdk-0.6.2.tgz viem)",
+    install: `npm install @palisec/sdk viem (or: npm install ${TS_TGZ} viem)`,
     methods: [
       "createPalisec({ apiKey }) -> client",
       "authorize(intent) -> decision record (ALLOW | DENY | REQUIRES_HUMAN_SIGNATURE); retry-safe",
@@ -131,7 +132,7 @@ const SDK_DOCS = {
     docs: "https://palisec.tech/docs/sdk/typescript",
   },
   python: {
-    install: "pip install palisec (or: pip install https://palisec.tech/sdk/palisec-0.4.9-py3-none-any.whl)",
+    install: `pip install palisec (or: pip install ${PY_WHEEL})`,
     methods: [
       "Palisec(api_key) async client",
       "authorize(**intent), evaluate(**intent), send_transaction(sender, ...)",

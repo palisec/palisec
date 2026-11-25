@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
-import { Codes, Note, PageHeader, Section } from "@/components/ui";
+import { Codes, Note } from "@/components/ui";
+import { SCHEMA_LABEL } from "@/lib/versions";
 
 export const metadata: Metadata = {
   title: "Attestation",
@@ -20,13 +22,13 @@ const STEPS = [
 export default function AttestationPage() {
   return (
     <>
-      <PageHeader
-        compat="Schema 1.0 · enclave signing on the roadmap"
+      <LinePageHeader
+        compat={`${SCHEMA_LABEL} · enclave signing on the roadmap`}
         eyebrow="Attestation"
         title="Measurements, and what they do and do not prove."
         lede="This page will publish expected enclave measurements and the latest verification result, with its scope and timestamp."
       />
-      <Section label="Current measurements">
+      <LineSection label="Current measurements">
         <div className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="label">Enclave · production</p>
@@ -45,8 +47,8 @@ export default function AttestationPage() {
           Values appear only when a measured build is deployed and verified. Placeholder hashes would be indistinguishable from real
           ones, so none are shown.
         </Note>
-      </Section>
-      <Section label="Verification procedure">
+      </LineSection>
+      <LineSection label="Verification procedure">
         <ol className="divide-y divide-line border-y border-line">
           {STEPS.map(([k, v], i) => (
             <li key={k} className="grid gap-2 py-4 md:grid-cols-[3rem_220px_1fr]">
@@ -61,7 +63,7 @@ export default function AttestationPage() {
           prove that every transaction is enforced by that enclave. That guarantee comes from the smart account accepting only the
           bound signer.
         </Note>
-      </Section>
+      </LineSection>
     </>
   );
 }

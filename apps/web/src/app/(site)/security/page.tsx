@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
-import { Note, PageHeader, Section } from "@/components/ui";
+import { Note } from "@/components/ui";
 
 const INCIDENT: [string, string][] = [
   ["Contain", "Engage the global stop or pause the affected agent through the independent control path. New authorizations are denied immediately; nothing already denied can be signed."],
@@ -73,13 +74,13 @@ const BOUNDARIES: [string, string][] = [
 export default function SecurityPage() {
   return (
     <>
-      <PageHeader
+      <LinePageHeader
         compat="Schema 1.0 · Robinhood Chain mainnet and testnet"
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature. Mainnet · real funds · start with small balances."
       />
-      <Section label="Threats addressed">
+      <LineSection label="Threats addressed">
         <ol className="grid gap-px border border-line bg-line md:grid-cols-2">
           {THREATS.map((t, i) => (
             <li key={t} className="flex gap-4 bg-ink p-4 text-sm leading-relaxed text-soft">
@@ -88,8 +89,8 @@ export default function SecurityPage() {
             </li>
           ))}
         </ol>
-      </Section>
-      <Section label="Slower to loosen, faster to stop">
+      </LineSection>
+      <LineSection label="Slower to loosen, faster to stop">
         <div className="max-w-[72ch] space-y-4 text-[15px] leading-relaxed text-muted">
           <p>
             If an owner&apos;s session or wallet is taken over, the first move is usually to loosen the rules: raise a budget,
@@ -105,9 +106,9 @@ export default function SecurityPage() {
             allowed.
           </p>
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="TEE guarantees">
+      <LineSection label="TEE guarantees">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
           <div>
             <h3 className="text-2xl font-medium leading-tight text-fg">The enclave is a component, not a guarantee.</h3>
@@ -120,8 +121,8 @@ export default function SecurityPage() {
             {TEE.map((t) => <li key={t} className="py-4 text-sm leading-relaxed text-soft">{t}</li>)}
           </ul>
         </div>
-      </Section>
-      <Section label="Signing keys">
+      </LineSection>
+      <LineSection label="Signing keys">
         <dl className="divide-y divide-line border-y border-line">
           {KEYS.map(([k, v]) => (
             <div key={k} className="grid gap-1 py-4 md:grid-cols-[240px_1fr]">
@@ -130,8 +131,8 @@ export default function SecurityPage() {
             </div>
           ))}
         </dl>
-      </Section>
-      <Section label="Assurance">
+      </LineSection>
+      <LineSection label="Assurance">
         <p className="mb-6 max-w-[60ch] text-sm leading-relaxed text-muted">
           What is in place today, and the hardening that follows. Each item is marked only when it is true.
         </p>
@@ -143,8 +144,8 @@ export default function SecurityPage() {
             </li>
           ))}
         </ul>
-      </Section>
-      <Section label="Incident response">
+      </LineSection>
+      <LineSection label="Incident response">
         <ol className="grid gap-px border border-line bg-line md:grid-cols-2">
           {INCIDENT.map(([k, v], i) => (
             <li key={k} className="bg-ink p-5">
@@ -167,8 +168,12 @@ export default function SecurityPage() {
             <a href="/.well-known/security.txt" className="text-mist underline decoration-aqua/60 underline-offset-4 hover:text-aqua">security.txt</a>.
           </p>
         </div>
-      </Section>
-      <Section label="Agentic trust boundaries" id="agentic">
+      </LineSection>
+      <LineSection label="Two rules" intro="A valid transaction is not an authorized one. Intelligence is not the authority. Enforcement is.">
+        <span />
+      </LineSection>
+
+      <LineSection label="Agentic trust boundaries" id="agentic">
         <dl className="divide-y divide-line border-y border-line">
           {BOUNDARIES.map(([k, v]) => (
             <div key={k} className="grid gap-2 py-5 md:grid-cols-[300px_1fr]">
@@ -177,8 +182,8 @@ export default function SecurityPage() {
             </div>
           ))}
         </dl>
-      </Section>
-      <Section label="Prompt injection and untrusted data" id="injection">
+      </LineSection>
+      <LineSection label="Prompt injection and untrusted data" id="injection">
         <div className="grid gap-8 lg:grid-cols-2">
           <p className="text-[15.5px] leading-relaxed text-silver">
             The Palisec Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.
@@ -192,7 +197,7 @@ export default function SecurityPage() {
             ))}
           </ul>
         </div>
-      </Section>
+      </LineSection>
     </>
   );
 }

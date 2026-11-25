@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
-import { Container, PageHeader } from "@/components/ui";
+import { Container } from "@/components/ui";
 import { CONTACT_LABEL, CONTACT_URL, PRIVACY_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ const PROCESSORS: [string, string][] = [
 export default function PrivacyPage() {
   return (
     <>
-      <PageHeader eyebrow="Legal" title="Privacy Policy" lede={`Effective ${PRIVACY_VERSION}. Palisec collects as little as it can to authorize transactions for your agents, and nothing for advertising.`} />
+      <LinePageHeader eyebrow="Legal" title="Privacy Policy" lede={`Effective ${PRIVACY_VERSION}. Palisec collects as little as it can to authorize transactions for your agents, and nothing for advertising.`} />
       <Container className="py-16 sm:py-20">
         <article className="prose-ps max-w-[820px]">
           <h2 id="summary">In short</h2>

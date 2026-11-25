@@ -9,7 +9,7 @@ export const OG_IMAGE = {
   width: 1200,
   height: 630,
   type: "image/png",
-  alt: "Palisec: security infrastructure for the autonomous agent economy, on Robinhood Chain.",
+  alt: "Palisec: Limits AI agents can't override. The line between the agent side and the chain side.",
 };
 
 export const pageOpenGraph = (path: string) => ({ type: "website" as const, siteName: "Palisec", url: path, images: [OG_IMAGE] });

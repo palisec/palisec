@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CodeBlock } from "@/components/copy-button";
 import { DocArticle } from "@/components/doc";
 import { Note } from "@/components/ui";
+import { PY_WHEEL, SCHEMA_LABEL, VERSIONS } from "@/lib/versions";
 
 export const metadata: Metadata = {
   title: "Python SDK",
@@ -16,7 +17,7 @@ const INSTALL = `pip install palisec
 pip install web3
 
 # Alternative, straight from palisec.tech:
-# pip install https://palisec.tech/sdk/palisec-0.4.9-py3-none-any.whl`;
+# pip install ${PY_WHEEL}`;
 
 const SEND = `import os
 from web3 import AsyncWeb3, AsyncHTTPProvider
@@ -87,7 +88,7 @@ export default function PythonSdk() {
       title="Python SDK"
       lede="palisec asks Palisec before every transaction and sends with your account only on ALLOW. Async, typed, and no third-party dependencies. It holds no security logic of its own: every decision is made and recorded server-side."
       maturity="service"
-      compat="palisec 0.4.1 · Python 3.10+ · Schema 1.0 · mainnet 4663 · testnet 46630"
+      compat={`palisec ${VERSIONS.sdkPy} · Python 3.10+ · ${SCHEMA_LABEL} · mainnet 4663 · testnet 46630`}
     >
       <Note kind="warning" title="What the SDK enforces">
         <code>send_transaction</code> refuses to send a denied or unapproved transaction from your process, but a plain key used elsewhere can

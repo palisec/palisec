@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandMark, type Brand } from "@/components/brand-icons";
+import { SCHEMA_LABEL } from "@/lib/versions";
 import {
   ActivityIcon,
   AgentIcon,
@@ -31,7 +33,8 @@ import {
   WalletIcon,
   ZapIcon,
 } from "@/components/icons";
-import { MaturityBadge, PageHeader, Section } from "@/components/ui";
+import { MaturityBadge } from "@/components/ui";
+import { EMPTY_STATE, evaluate, type Environment, type Intent } from "@palisec/policy-schema";
 
 export const metadata: Metadata = {
   title: "Architecture",
@@ -275,24 +278,28 @@ const MYTHS: [string, string][] = [
   ["Contracts can verify enclave attestation.", "Contracts trust a registered signer. Attestation binds that signer to a measured build, off chain."],
 ];
 
+
+/** Every check, read from the reference evaluator (it lists them all even when the first one denies). */
+const ENGINE_CHECKS = evaluate(null, { value_wei: "0", data: "0x", request_id: "list" } as unknown as Intent, EMPTY_STATE, { now: 0 } as unknown as Environment).checks;
+
 export default function ArchitecturePage() {
   return (
     <>
-      <PageHeader
-        compat="Schema 1.0 · Robinhood Chain mainnet and testnet"
+      <LinePageHeader
+        compat={`${SCHEMA_LABEL} · Robinhood Chain mainnet and testnet`}
         title="Decide off chain. Enforce on chain. Fail closed everywhere."
         lede="What runs where, the path of one request, what is stored, and what happens when something breaks."
       />
 
-      <Section label="System map" intro="Everything that runs today, and the one piece still to come.">
+      <LineSection label="System map" intro="Everything that runs today, and the one piece still to come.">
         <SystemMap />
-      </Section>
+      </LineSection>
 
-      <Section label="One request, in order" intro="POST /v1/operations, from key to webhook." className="border-y border-line bg-deep/40">
+      <LineSection label="One request, in order" intro="POST /v1/operations, from key to webhook." className="border-y border-line bg-deep/40">
         <Lifecycle />
-      </Section>
+      </LineSection>
 
-      <Section label="Two engines, one answer" id="engine">
+      <LineSection label="Two engines, one answer" id="engine">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-center">
           <div className="space-y-4 text-[16px] leading-relaxed text-silver">
             <p>The Rust engine is compiled to WebAssembly and runs inside the API, next to the TypeScript reference evaluator. Both receive identical inputs.</p>
@@ -329,9 +336,9 @@ export default function ArchitecturePage() {
             </div>
           </figure>
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="Data model" intro="Postgres is the only source of truth. Five migrations, forward-only." className="border-y border-line bg-deep/40">
+      <LineSection label="Data model" intro="Postgres is the only source of truth. Five migrations, forward-only." className="border-y border-line bg-deep/40">
         <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-[repeat(5,minmax(0,1fr))]">
           {TABLES.map((g) => (
             <div key={g.group} className="rounded-[12px] border border-line-strong bg-abyss/70">
@@ -350,9 +357,9 @@ export default function ArchitecturePage() {
             </div>
           ))}
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="Trust boundaries" intro="What each part is assumed to be, and what keeps it in check.">
+      <LineSection label="Trust boundaries" intro="What each part is assumed to be, and what keeps it in check.">
         <ul className="grid gap-x-10 md:grid-cols-2">
           {TRUST.map((t) => (
             <li key={t.c} className="flex items-start gap-3 border-b border-line py-4">
@@ -367,9 +374,9 @@ export default function ArchitecturePage() {
             </li>
           ))}
         </ul>
-      </Section>
+      </LineSection>
 
-      <Section label="Native agent runtime" id="agent-runtime" className="border-y border-line bg-deep/40">
+      <LineSection label="Native agent runtime" id="agent-runtime" className="border-y border-line bg-deep/40">
         <div className="grid gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <ul className="grid gap-6 md:grid-cols-3 2xl:grid-cols-1">
             {[
@@ -400,9 +407,21 @@ export default function ArchitecturePage() {
                      ▼
             action request ─► member confirms ─► control plane ─► audit`}</pre>
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="When things break" id="failures" intro="Every failure ends in a denial or a pause, never a silent allow.">
+      <LineSection label="Every check, in order" id="checks" intro={`${ENGINE_CHECKS.filter((c) => c.enforcement === "local").length} checks run on every request in both engines, then ${ENGINE_CHECKS.filter((c) => c.enforcement === "live").length} on chain for a smart account. Any failure denies.`}>
+        <ol className="divide-y divide-line border-y border-line font-mono text-[14px]">
+          {ENGINE_CHECKS.map((c, i) => (
+            <li key={c.id} className="grid grid-cols-[40px_1fr_auto] gap-3 py-3">
+              <span className="text-dim">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-foam">{c.label}</span>
+              <span className={c.enforcement === "live" ? "text-aqua" : "text-dim"}>{c.enforcement === "live" ? "on chain" : "every request"}</span>
+            </li>
+          ))}
+        </ol>
+      </LineSection>
+
+      <LineSection label="When things break" id="failures" intro="Every failure ends in a denial or a pause, never a silent allow.">
         <div className="grid gap-3 lg:grid-cols-2">
           {FAILURES.map((f) => (
             <details key={f.k} className="group rounded-[12px] border border-line-strong bg-deep/60 open:border-aqua/35">
@@ -415,9 +434,9 @@ export default function ArchitecturePage() {
             </details>
           ))}
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="Stack" className="border-y border-line bg-deep/40">
+      <LineSection label="Stack" className="border-y border-line bg-deep/40">
         <ul className="grid gap-px overflow-hidden rounded-[14px] border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
           {STACK.map((s) => (
             <li key={s.name} className="flex items-center gap-4 bg-abyss px-5 py-4">
@@ -432,9 +451,13 @@ export default function ArchitecturePage() {
             </li>
           ))}
         </ul>
-      </Section>
+      </LineSection>
 
-      <Section label="Common misconceptions">
+      <LineSection label="Two rules" intro="A valid transaction is not an authorized one. Intelligence is not the authority. Enforcement is.">
+        <span />
+      </LineSection>
+
+      <LineSection label="Common misconceptions">
         <ul className="divide-y divide-line border-y border-line">
           {MYTHS.map(([a, b]) => (
             <li key={a} className="grid gap-3 py-5 md:grid-cols-2 md:gap-10">
@@ -452,7 +475,7 @@ export default function ArchitecturePage() {
         <p className="mt-8 text-[14.5px] text-muted">
           Next: the <Link href="/security" className="text-aqua underline-offset-4 hover:underline">security model</Link> covers threats and key lifecycle.
         </p>
-      </Section>
+      </LineSection>
     </>
   );
 }

@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import type { Maturity } from "@/lib/capabilities";
 import { MaturityBadge } from "./ui";
+import { SCHEMA_LABEL } from "@/lib/versions";
 
 /** Every guide states its compatibility version and maturity (spec §10). */
 export function DocArticle({
   title,
   lede,
   maturity,
-  compat = "Schema 1.0 · 1.1",
+  compat = SCHEMA_LABEL,
   children,
 }: {
   title: string;

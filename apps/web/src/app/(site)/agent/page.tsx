@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { ActivityIcon, AgentIcon, ArrowRightIcon, BookIcon, FileCheckIcon, SearchIcon, SlidersIcon, StopIcon, UserCheckIcon } from "@/components/icons";
-import { ButtonLink, MaturityBadge, PageHeader, Section } from "@/components/ui";
+import { ButtonLink, MaturityBadge } from "@/components/ui";
 import { capability } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ const DOMAINS = [
     id: "policy",
     title: "Policy engineering",
     lede: "Turn intent into a canonical, validated, simulated policy draft.",
-    items: ["Structured drafts in schema 1.0 (never a second schema)", "Validation with exact error paths", "Simulation against live fee and price inputs", "Replay against an agent's real recent operations", "Version comparison and plain-language explanation"],
+    items: ["Structured drafts in the canonical policy schema (never a second schema)", "Validation with exact error paths", "Simulation against live fee and price inputs", "Replay against an agent's real recent operations", "Version comparison and plain-language explanation"],
     asks: ["“$500 an hour on this token, approval above $100.”", "“What changed between version 3 and 4?”", "“Would last hour's operations pass this draft?”"],
   },
   {
@@ -55,7 +56,7 @@ const BOUNDARIES = [
 export default function AgentPage() {
   return (
     <>
-      <PageHeader
+      <LinePageHeader
         eyebrow="Palisec Agent"
         title="An intelligent operator, built on the security infrastructure."
         lede="One native agent with three capability domains. It understands Palisec's records, tools and workflows, and it works for your operators. It is not an authority: the deterministic engine is."
@@ -65,23 +66,23 @@ export default function AgentPage() {
           <ButtonLink href="/console/agent" icon={<AgentIcon size={17} />}>Open the agent</ButtonLink>
           <ButtonLink href="/docs/agent" variant="ghost" icon={<BookIcon size={17} />}>Docs</ButtonLink>
         </div>
-      </PageHeader>
+      </LinePageHeader>
 
-      <Section label="What it is">
+      <LineSection label="What it is">
         <div className="max-w-[68ch] space-y-4">
           <p className="text-[17px] leading-relaxed text-silver">
             The Palisec Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
             records, through 30 typed tools, and every answer cites the records it used. Citations that no tool returned are flagged as unverified.
           </p>
           <p className="text-[17px] leading-relaxed text-silver">
-            It runs in the console with any OpenAI-compatible model provider (the deployment uses Groq&apos;s free tier). Quick investigations run the same tools directly, without a model, so
+            It runs in the console with any OpenAI-compatible model provider. Quick investigations run the same tools directly, without a model, so
             the agent&apos;s view of your records is available even when the model is not.
           </p>
         </div>
-      </Section>
+      </LineSection>
 
       {DOMAINS.map((d, i) => (
-        <Section key={d.id} id={d.id} label={d.title} className={i % 2 ? "" : "border-y border-line bg-deep/40"}>
+        <LineSection key={d.id} id={d.id} label={d.title} className={i % 2 ? "" : "border-y border-line bg-deep/40"}>
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div>
               <p className="max-w-[48ch] text-[19px] leading-relaxed text-mist">{d.lede}</p>
@@ -103,10 +104,10 @@ export default function AgentPage() {
               </ul>
             </div>
           </div>
-        </Section>
+        </LineSection>
       ))}
 
-      <Section label="Tool permissions">
+      <LineSection label="Tool permissions">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <div className="space-y-4 text-[15.5px] leading-relaxed text-silver">
             <p>Every tool declares a strict input schema, a risk class (read, draft, action), the minimum autonomy level and the role it needs. The model is shown only the tools the signed-in member may use, and the server checks again on every call.</p>
@@ -121,9 +122,9 @@ export default function AgentPage() {
             ))}
           </dl>
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="Human confirmation">
+      <LineSection label="Human confirmation">
         <ol className="grid gap-y-6 md:grid-cols-4">
           {[
             [<AgentIcon key="i" size={20} />, "Agent prepares", "The action and its impact"],
@@ -143,20 +144,20 @@ export default function AgentPage() {
             </li>
           ))}
         </ol>
-      </Section>
+      </LineSection>
 
-      <Section label="Agent architecture">
+      <LineSection label="Agent architecture">
         <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`Palisec Agent runtime (isolated module in the API, never inside the policy engine)
   ├─ Orchestrator        runs stored in Postgres; a few steps per request, within a time budget
-  ├─ Provider adapter    OpenAI-compatible chat completions (Groq by default; swap by configuration)
+  ├─ Provider adapter    OpenAI-compatible chat completions (configurable)
   ├─ Context builder     only the records a question needs, minimized and redacted
   ├─ Tool registry       30 tools · schema · risk · autonomy level · role · timeout
   ├─ Permission resolver member role × organization autonomy × disabled tools, checked per call
   ├─ Confirmation        action requests → a member confirms → existing control-plane function
   └─ Audit and tracing   run → tool call → evidence → action → audit event`}</pre>
-      </Section>
+      </LineSection>
 
-      <Section label="Example workflows">
+      <LineSection label="Example workflows">
         <div className="space-y-4">
           {[
             ["Investigate a denial", "get_authorization_decision → the deciding check and reason code → links to the operation and policy version → a suggested next step."],
@@ -179,9 +180,9 @@ export default function AgentPage() {
             </div>
           ))}
         </div>
-      </Section>
+      </LineSection>
 
-      <Section label="Security boundaries">
+      <LineSection label="Security boundaries">
         <ul className="grid gap-px overflow-hidden rounded-[16px] border border-line bg-line md:grid-cols-2">
           {BOUNDARIES.map((b) => (
             <li key={b} className="bg-ink p-5 text-[14.5px] leading-relaxed text-silver">{b}</li>
@@ -190,7 +191,7 @@ export default function AgentPage() {
         <p className="mt-6 text-[14px] text-muted">
           Read the full model in <Link href="/security#agentic" className="text-aqua underline-offset-4 hover:underline">Security → agentic trust boundaries</Link>.
         </p>
-      </Section>
+      </LineSection>
     </>
   );
 }

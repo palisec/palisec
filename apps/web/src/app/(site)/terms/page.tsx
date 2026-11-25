@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
-import { Container, PageHeader } from "@/components/ui";
+import { Container } from "@/components/ui";
 import { CONTACT_LABEL, CONTACT_URL, TERMS_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <>
-      <PageHeader eyebrow="Legal" title="Terms of Service" lede={`Effective ${TERMS_VERSION}. These terms govern your use of Palisec. By signing in you accept them.`} />
+      <LinePageHeader eyebrow="Legal" title="Terms of Service" lede={`Effective ${TERMS_VERSION}. These terms govern your use of Palisec. By signing in you accept them.`} />
       <Container className="py-16 sm:py-20">
         <article className="prose-ps max-w-[760px]">
           <h2 id="service">1. The service</h2>

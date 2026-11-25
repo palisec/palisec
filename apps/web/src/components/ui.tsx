@@ -61,7 +61,9 @@ const MATURITY_MARK: Record<Maturity, string> = {
 };
 
 export function MaturityBadge({ maturity }: { maturity: Maturity }) {
-  const tone = maturity === "local" || maturity === "service" ? "text-aqua bg-aqua/[0.08] ring-1 ring-inset ring-aqua/35" : "text-silver ring-1 ring-inset ring-line-strong";
+  // Built things carry no badge; only what is not built yet is marked.
+  if (maturity === "service") return null;
+  const tone = maturity === "local" ? "text-aqua bg-aqua/[0.08] ring-1 ring-inset ring-aqua/35" : "text-silver ring-1 ring-inset ring-line-strong";
   return (
     <span title={MATURITY_LABEL[maturity]} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-utility text-[12.5px] font-semibold ${tone}`}>
       <span aria-hidden className={`h-[7px] w-[7px] rounded-full ${MATURITY_MARK[maturity]}`} />
