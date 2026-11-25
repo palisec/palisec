@@ -36,7 +36,7 @@ jobs:
             echo "::error::Vercel preview failed"; exit 1
           fi
           url=$(grep -oE 'https://[^ ]+\.vercel\.app' /tmp/vercel.out | tail -1)
-          npx --yes "$VERCEL_CLI" alias set "$url" "$ALIAS" --token="$VERCEL_TOKEN" > /dev/null 2> /tmp/alias.log || { sed -E 's#https?://[^ )]+#<url>#g' /tmp/alias.log | tail -3; exit 1; }
+          npx --yes "$VERCEL_CLI" alias set "$url" "$ALIAS" --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" > /dev/null 2> /tmp/alias.log || { sed -E 's#https?://[^ )]+#<url>#g' /tmp/alias.log | tail -3; exit 1; }
           echo "Preview: https://$ALIAS"
       - name: The preview answers and is not indexed
         run: |
