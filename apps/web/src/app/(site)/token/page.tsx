@@ -17,14 +17,13 @@ export const metadata: Metadata = {
 };
 
 /** The burn total is read from the chain at most every 5 minutes. */
-async function burned(): Promise<string | null> {
+async function burned(): Promise<{ total: string; pct: string; wallet: string; explorer: string } | null> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
   try {
     const s = await burnStats();
-    if (!s.configured) return null;
     const whole = BigInt(s.total_burned) / 10n ** 18n;
-    return whole.toLocaleString("en-US");
+    return { total: whole.toLocaleString("en-US"), pct: s.percent_of_supply.toFixed(2), wallet: s.burn_wallet, explorer: s.explorer };
   } catch {
     return null;
   }
@@ -37,7 +36,7 @@ export default async function TokenPage() {
   const pro = (BILLING.proHoldingTokens / 10n ** 18n).toLocaleString("en-US");
   const ROWS = [
     { k: "Credits", text: "Buy decision credits on chain through the credits contract.", live: creditsLive, href: "/docs/token" },
-    { k: "Burns", text: "The credits contract burns $PALISEC, visible on chain.", live: creditsLive, href: "/docs/token" },
+    { k: "Burns", text: "$PALISEC sent to the burn wallet, plus burns by the credits contract, counted from the chain.", live: mainnetEnabled(), href: "/docs/token" },
     { k: "Pro limits", text: `Hold ${pro} $PALISEC in the owner wallet for Pro limits.`, live: mainnetEnabled(), href: "/docs/token" },
     { k: "Holder votes", text: "Holders vote an agent's limits through mandates.", live: true, href: "/mandates" },
   ];
@@ -51,8 +50,9 @@ export default async function TokenPage() {
             <Label>Token</Label>
             {total !== null ? (
               <div>
-                <p className="t-big">{total}</p>
-                <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned</p>
+                <p className="t-big">{total.total}</p>
+                <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned · {total.pct}% of supply</p>
+                <a href={`${total.explorer}/address/${total.wallet}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-mono text-[0.8125rem] text-silver hover:text-aqua">Burn wallet {total.wallet.slice(0, 6)}…{total.wallet.slice(-4)} ↗</a>
               </div>
             ) : null}
             <AddressChip />

@@ -1067,3 +1067,14 @@ html:not(.js) .limit-row .lv { opacity: 1; }
   .js [data-statement] .sw { color: var(--color-mist); }
   .js [data-statement] .sw.end { color: var(--color-aqua); }
 }
+
+/* Code blocks on the site: long lines scroll sideways with a visible scrollbar and keep space on the right. */
+.line-site pre {
+  overflow-x: auto;
+  padding-right: max(1.75rem, 1rem) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-aqua-lo) transparent;
+}
+.line-site pre::-webkit-scrollbar { height: 0.5rem; }
+.line-site pre::-webkit-scrollbar-thumb { background: var(--color-aqua-lo); border-radius: 0.25rem; }
+.line-site pre > code { padding-right: 1.75rem; display: inline-block; }

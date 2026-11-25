@@ -1,3 +1,4 @@
+import { SCHEMA_LABEL } from "@/lib/versions";
 import type { Metadata } from "next";
 import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
@@ -75,7 +76,7 @@ export default function SecurityPage() {
   return (
     <>
       <LinePageHeader
-        compat="Schema 1.0 · Robinhood Chain mainnet and testnet"
+        compat={`${SCHEMA_LABEL} · Robinhood Chain mainnet and testnet`}
         eyebrow="Security model"
         title="What it protects, what it assumes, and where it stops."
         lede="Security decisions come from executable policies, never from a model's reading of a warning. Anything ambiguous, failed or unverifiable results in no signature. Mainnet · real funds · start with small balances."

@@ -118,7 +118,7 @@ function SystemMap() {
 
         <Column title="State and services">
           <Node brand="postgresql" title="Neon Postgres" sub="Authoritative ledger; one SQL function per decision" accent />
-          <Node icon={<CpuIcon size={18} />} title="Model provider" sub="Groq, OpenAI-compatible; agent only" />
+          <Node icon={<CpuIcon size={18} />} title="Model provider" sub="Any OpenAI-compatible provider; agent only" />
           <Node brand="ethereum" title="Robinhood Chain RPC" sub="Fee estimates, contract code checks" />
           <Node icon={<GaugeIcon size={18} />} title="Price feed" sub="Coinbase, Kraken fallback, 15 s cache" />
           <Node icon={<ZapIcon size={18} />} title="Bundler" sub="Alchemy, ERC-4337 (EntryPoint v0.7)" />
@@ -266,7 +266,7 @@ const STACK: { brand?: Brand; icon?: ReactNode; name: string; role: string; live
   { brand: "typescript", name: "TypeScript reference", role: "Second evaluator, SDK", live: true },
   { brand: "python", name: "Python SDK", role: "async client, web3.py sender", live: true },
   { brand: "modelcontextprotocol", name: "MCP SDK", role: "Streamable HTTP server", live: true },
-  { icon: <CpuIcon size={20} />, name: "Groq", role: "Model for the Palisec Agent", live: true },
+  { icon: <CpuIcon size={20} />, name: "Model provider", role: "Any OpenAI-compatible provider, configurable; the Palisec Agent only", live: true },
   { brand: "ethereum", name: "Safe 1.4.1 + 4337 module", role: "Smart accounts, mainnet and testnet", live: true },
   { icon: <ZapIcon size={20} />, name: "Alchemy bundler", role: "ERC-4337 submission", live: true },
   { icon: <LockIcon size={20} />, name: "AWS Nitro Enclaves", role: "Protected signing", live: false },
@@ -399,7 +399,7 @@ export default function ArchitecturePage() {
               </li>
             ))}
           </ul>
-          <pre className="panel overflow-x-auto p-5 font-mono text-[0.7812rem] leading-[1.9] text-soft">{`operator ─► run ─► model (Groq, OpenAI-compatible)
+          <pre className="panel overflow-x-auto p-5 font-mono text-[0.7812rem] leading-[1.9] text-soft">{`operator ─► run ─► model (any OpenAI-compatible provider)
                      │ tool call (name, JSON)
                      ▼
             permission resolver ── refused ──► recorded

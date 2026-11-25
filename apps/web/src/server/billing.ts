@@ -238,25 +238,63 @@ export async function billingSummary(ctx: MemberContext) {
 
 /* ───────── Public burn counter (reads the chain, not the database) ───────── */
 
+/** The burn wallet: $PALISEC sent here can never move again, so its balance counts as burned. */
+export const BURN_WALLET = "0x000000000000000000000000000000000000dEaD" as Address;
+const ERC20_READ = parseAbi(["function balanceOf(address) view returns (uint256)", "function totalSupply() view returns (uint256)"]);
+
+/**
+ * Burned so far: the burn wallet's balance plus every burnFrom made by the credits contract, read from the
+ * chain. The wallet is read first; if the contract's logs cannot be scanned the wallet still counts and the
+ * response says so.
+ */
 export async function burnStats() {
   const s = billingSettings();
-  if (!s.contract || !chainEnabled(MAINNET)) return { configured: false as const, total_burned: "0", purchases: 0, rows: [] as BurnRow[] };
+  if (!chainEnabled(MAINNET)) throw new Error("mainnet is not enabled on this deployment");
   const c = mainnetClient();
-  const head = await c.getBlockNumber();
+  const [wallet, supply] = await Promise.all([
+    c.readContract({ address: s.palisec, abi: ERC20_READ, functionName: "balanceOf", args: [BURN_WALLET] }),
+    c.readContract({ address: s.palisec, abi: ERC20_READ, functionName: "totalSupply" }),
+  ]);
   const rows: BurnRow[] = [];
-  let total = 0n;
-  // Only the Palisec asset (topic 3 = 2); the contract is the only source counted.
-  for (let from = s.deployBlock; from <= head; from += SCAN_CHUNK * 4n) {
-    const to = from + SCAN_CHUNK * 4n - 1n < head ? from + SCAN_CHUNK * 4n - 1n : head;
-    const logs = await c.getLogs({ address: s.contract, event: PURCHASED, args: { asset: 2 }, fromBlock: from, toBlock: to });
-    for (const l of logs) {
-      const burned = l.args.burned as bigint;
-      if (burned === 0n) continue;
-      total += burned;
-      rows.push({ tx_hash: l.transactionHash as Hex, block: String(l.blockNumber), burned: burned.toString(), credits: String(l.args.credits), usd_micros: String(l.args.usdValueE6) });
+  let contractBurned = 0n;
+  let contractComplete = !s.contract;
+  if (s.contract) {
+    try {
+      // A few blocks behind the head, so an RPC node that lags the one that answered does not refuse the range.
+      const head = (await c.getBlockNumber()) - 10n;
+      // Never earlier than the token itself, so a missing deploy block cannot mean a scan from genesis.
+      const start = s.deployBlock > 116_864_695n ? s.deployBlock : 116_864_695n;
+      for (let from = start; from <= head; from += SCAN_CHUNK) {
+        const to = from + SCAN_CHUNK - 1n < head ? from + SCAN_CHUNK - 1n : head;
+        const logs = await c.getLogs({ address: s.contract, event: PURCHASED, args: { asset: 2 }, fromBlock: from, toBlock: to });
+        for (const l of logs) {
+          const burned = l.args.burned as bigint;
+          if (burned === 0n) continue;
+          contractBurned += burned;
+          rows.push({ tx_hash: l.transactionHash as Hex, block: String(l.blockNumber), burned: burned.toString(), credits: String(l.args.credits), usd_micros: String(l.args.usdValueE6) });
+        }
+      }
+      contractComplete = true;
+    } catch (e) {
+      logEvent("warn", "token.burn_logs_unavailable", { error: e instanceof Error ? e.message.slice(0, 160) : "error" });
     }
   }
-  return { configured: true as const, contract: s.contract, total_burned: total.toString(), purchases: rows.length, rows: rows.reverse(), checked_at: new Date().toISOString(), explorer: TOKEN.explorer };
+  const total = wallet + contractBurned;
+  return {
+    configured: true as const,
+    contract: s.contract || null,
+    burn_wallet: BURN_WALLET,
+    burn_wallet_balance: wallet.toString(),
+    contract_burned: contractBurned.toString(),
+    contract_logs_complete: contractComplete,
+    total_burned: total.toString(),
+    total_supply: supply.toString(),
+    percent_of_supply: supply > 0n ? Number((total * 1_000_000n) / supply) / 10_000 : 0,
+    purchases: rows.length,
+    rows: rows.reverse(),
+    checked_at: new Date().toISOString(),
+    explorer: TOKEN.explorer,
+  };
 }
 
 export interface BurnRow {

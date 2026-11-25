@@ -36,7 +36,7 @@ export default function AgentDocs() {
       </p>
       <h2 id="model">Model provider</h2>
       <p>
-        Any OpenAI-compatible chat-completions API with tool calling. The deployment uses Groq&apos;s free tier (<code>openai/gpt-oss-120b</code>). Configuration is server-side only:{" "}
+        Any OpenAI-compatible chat-completions API with tool calling. The provider and model are configurable. Configuration is server-side only:{" "}
         <code>PALISEC_AGENT_API_KEY</code>, optional <code>PALISEC_AGENT_BASE_URL</code> and <code>PALISEC_AGENT_MODEL</code>. Without a key, conversation is off and direct tools still work.
       </p>
       <h2 id="api">API</h2>

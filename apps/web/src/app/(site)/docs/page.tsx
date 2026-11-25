@@ -1,3 +1,4 @@
+import { SCHEMA_LABEL, VERSIONS } from "@/lib/versions";
 import type { Metadata } from "next";
 import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
@@ -33,7 +34,7 @@ const TOPICS: { title: string; links: { href: string; label: string; icon: React
     title: "Reference",
     links: [
       { href: "/docs/api", label: "REST API", icon: <BrandMark brand="openapiinitiative" size={18} />, note: "Endpoints and schemas" },
-      { href: "/docs/policies", label: "Policy schema", icon: <FileCheckIcon size={18} />, note: "Every rule, version 1.0" },
+      { href: "/docs/policies", label: "Policy schema", icon: <FileCheckIcon size={18} />, note: `Every rule, version ${VERSIONS.schema}` },
       { href: "/docs/errors", label: "Errors", icon: <KeyIcon size={18} />, note: "Reason codes, retries" },
       { href: "/docs/account-abstraction", label: "Smart accounts", icon: <WalletIcon size={18} />, note: "ERC-4337 enforcement" },
     ],
@@ -56,7 +57,7 @@ const TOPICS: { title: string; links: { href: string; label: string; icon: React
 
 export default function DocsIndex() {
   return (
-    <DocArticle title="Documentation" lede="Each page marks what runs today and what is still specified." maturity="service" compat="Schema 1.0 · docs revision 2026-11">
+    <DocArticle title="Documentation" lede="Each page marks what runs today and what is still specified." maturity="service" compat={`${SCHEMA_LABEL} · docs revision 2026-11`}>
       <div className="not-prose">
         <p className="label mb-3">Start here</p>
         <ol className="grid gap-3 sm:grid-cols-3">
