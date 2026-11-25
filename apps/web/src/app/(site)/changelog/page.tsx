@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UPOCH } from "@/lib/features";
 import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import { Codes } from "@/components/ui";
@@ -140,6 +141,8 @@ const ENTRIES = [
       "Each mandate has a public page (/m/{slug}) with the envelope, the active limits, live counts, pending changes and the agent's latest decisions, and each proposal a vote file anyone can recount from a public RPC. New endpoints under /v1/mandates and /v1/public/mandates; webhooks mandate.proposal_created, mandate.vote_closed, mandate.applied and mandate.cancelled. Guide: /docs/mandates; demo: /m/palisec-demo.",
     ],
   },
+  ...(UPOCH
+    ? [
   {
     version: "1.3.0",
     date: "2026-11-20",
@@ -150,6 +153,17 @@ const ENTRIES = [
       "Agent pages show Upoch status (recoverable, last checkpoint in UTC, checkpoints, guardians, link to the agent on Upoch), read live; anything unreadable shows Unknown.",
     ],
   },
+      ]
+    : [
+  {
+    version: "1.3.0",
+    date: "2026-11-20",
+    tag: "Detect a Palisec agent",
+    changes: [
+      "Detect a Palisec agent: a public page with the co-signer addresses, the exact on-chain rule (a Safe with three owners including the Palisec co-signer, threshold 2, only the 4337 module, no guard) and a reference function, so anyone can show an \"Enforced by Palisec\" badge from chain data alone.",
+    ],
+  },
+      ]),
   {
     version: "1.2.0",
     date: "2026-11-19",

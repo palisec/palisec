@@ -19,6 +19,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // Build-time feature flags (lib/features.ts): constant in every bundle, so code behind an off flag is dropped.
+  env: { FEATURE_UPOCH: process.env.FEATURE_UPOCH === "true" ? "true" : "false" },
   partialPrefetching: true,
   transpilePackages: ["@palisec/policy-schema", "@palisec/policy-engine", "policy-enforced-accounts"],
   poweredByHeader: false,

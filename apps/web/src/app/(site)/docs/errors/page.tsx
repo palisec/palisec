@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UPOCH } from "@/lib/features";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { REASON_CODES, RETRYABLE, type ReasonCode } from "@palisec/policy-schema";
@@ -49,7 +50,7 @@ const DENIAL = `{
 }`;
 
 export default function ErrorsPage() {
-  const codes = Object.keys(REASON_CODES) as ReasonCode[];
+  const codes = (Object.keys(REASON_CODES) as ReasonCode[]).filter((c) => UPOCH || !c.startsWith("PS_RECOVERY_"));
   return (
     <DocArticle
       title="Errors and operations"

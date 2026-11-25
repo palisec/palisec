@@ -1,5 +1,5 @@
 import "server-only";
-import { classifyPolicyChange, SCHEMA_VERSION, summarizeChanges, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
+import { classifyPolicyChange, SCHEMA_VERSIONS, summarizeChanges, validatePolicy, type Policy, type ValidationError } from "@palisec/policy-schema";
 import { DEFAULT_SCOPES, SCOPES, type MemberContext, type Scope } from "./access";
 import { planLimitError, planLimits, refreshPro } from "./billing";
 import { chainEnabled, enabledChainIds } from "./config";
@@ -10,6 +10,7 @@ import type { Role } from "./session";
 import { parseAddress } from "./siwe";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { parseWorkflowId } from "./upoch";
+import { UPOCH } from "@/lib/features";
 import { queueSync } from "./peaa";
 import { announcePending, classifyRebind, decidingDocument, listPending, orgDelays, parseDelaySetting, requestPending } from "./pending";
 import { assertAccountGuards, assertLockKept } from "./treasury";
@@ -186,7 +187,8 @@ export async function removeMember(ctx: MemberContext, addressParam: string) {
 /** A conservative starting draft: tiny limits, nothing allowlisted, unknown methods go to a human. */
 export function starterPolicy(policyKey: string, chain: number, account: string): Policy {
   return {
-    schema_version: SCHEMA_VERSION,
+    // The latest schema, so every rule can be switched on in the rule builder without editing JSON.
+    schema_version: SCHEMA_VERSIONS[SCHEMA_VERSIONS.length - 1]!,
     policy_id: policyKey,
     version: 1,
     account: { chain_id: chain, address: account as `0x${string}` },
@@ -204,6 +206,8 @@ export function starterPolicy(policyKey: string, chain: number, account: string)
     failure_mode: "closed",
     // Loosening delay: on by default for new policies (existing ones keep it off until the owner adds it).
     asset_safety: { ...DEFAULT_ASSET_SAFETY },
+    // Present but off: the limits count ETH and the fee until an owner switches token spend on.
+    token_spend: { enabled: false, max_transaction_usd_micros: "50000000", on_price_unavailable: "deny", max_closed_market_price_age_seconds: 259200, require_output_to_account: true },
   };
 }
 
@@ -385,6 +389,34 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   };
 }
 
+/**
+ * Deletes a policy that was never activated: no versions, no agents bound, no operations, no mandate and
+ * nothing pending. One statement, so it cannot race an activation. Activated policies can only be disabled.
+ */
+export async function deleteDraftPolicy(ctx: MemberContext, id: string, body: Record<string, unknown>) {
+  requireConfirm(body);
+  const rows = await db()`
+    WITH p AS (
+      DELETE FROM policies x WHERE x.id = ${id}::uuid AND x.org_id = ${ctx.orgId}::uuid AND x.active_version IS NULL
+        AND NOT EXISTS (SELECT 1 FROM policy_versions v WHERE v.policy_id = x.id)
+        AND NOT EXISTS (SELECT 1 FROM agents a WHERE a.policy_id = x.id)
+        AND NOT EXISTS (SELECT 1 FROM operations o WHERE o.policy_id = x.id)
+        AND NOT EXISTS (SELECT 1 FROM mandates m WHERE m.policy_id = x.id)
+        AND NOT EXISTS (SELECT 1 FROM pending_changes c WHERE c.policy_id = x.id AND c.state = 'pending')
+      RETURNING x.id, x.org_id, x.policy_key, x.name
+    ), e AS (
+      INSERT INTO audit_events (org_id, actor_user_id, type, detail)
+      SELECT org_id, ${ctx.user.userId}::uuid, 'policy.draft_deleted', jsonb_build_object('policy_id', id, 'policy_key', policy_key, 'name', name) FROM p
+    )
+    SELECT id FROM p`;
+  if (rows.length === 0) {
+    const [exists] = await db()`SELECT active_version FROM policies WHERE id = ${id}::uuid AND org_id = ${ctx.orgId}::uuid`;
+    if (!exists) throw notFound("Policy");
+    throw conflict("Only a policy that was never activated, with no agents, operations or mandate, can be deleted. Disable it instead.");
+  }
+  return { deleted: true, id };
+}
+
 export async function disablePolicy(ctx: MemberContext, id: string, body: Record<string, unknown>) {
   requireConfirm(body);
   const a = audit("policy.disabled", { policy_id: id });
@@ -521,6 +553,7 @@ export async function updateAgent(ctx: MemberContext, id: string, body: Record<s
   const description = body.description === undefined ? agent.description : optionalText(body.description, "description", 280);
   // Upoch: the agent's Upoch workflow (read-only; linked to the account by its owner or guardians).
   let upochWorkflowId: string | null = agent.upoch_workflow_id ?? null;
+  if (body.upoch_workflow_id !== undefined && !UPOCH) throw new HttpError(404, "PS_REQUEST_001", "Not found");
   if (body.upoch_workflow_id !== undefined) {
     try {
       upochWorkflowId = parseWorkflowId(body.upoch_workflow_id);

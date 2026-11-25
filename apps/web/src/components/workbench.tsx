@@ -491,7 +491,8 @@ const STATUS_STYLE: Record<CheckResult["status"], { icon: ReactNode; cls: string
 
 export function ChecksView({ checks }: { checks: CheckResult[] | null }) {
   if (!checks) return <OrderPreview />;
-  const local = checks.filter((c) => c.enforcement === "local");
+  // Behind the Upoch flag: its check is not listed while the flag is off.
+  const local = checks.filter((c) => c.enforcement === "local" && (process.env.FEATURE_UPOCH === "true" || c.id !== "recovery"));
   const live = checks.filter((c) => c.enforcement === "live");
   return (
     <div>
@@ -527,7 +528,7 @@ function CheckRow({ check, index }: { check: CheckResult; index: number }) {
 }
 
 // The evaluation order, derived from the evaluator itself so it can never drift from what runs.
-const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "ps_req_preview", deadline: SIM_EPOCH + 120 }, EMPTY_STATE, EXAMPLE_ENV).checks;
+const ORDER = evaluate(EXAMPLE_POLICY, { ...SCENARIOS[1]!.intent, request_id: "ps_req_preview", deadline: SIM_EPOCH + 120 }, EMPTY_STATE, EXAMPLE_ENV).checks.filter((c) => process.env.FEATURE_UPOCH === "true" || c.id !== "recovery");
 
 function OrderPreview() {
   return (

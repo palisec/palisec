@@ -74,7 +74,15 @@ check("create policy draft", r.status === 201 && r.body.status === "draft", r.bo
 const policyId = r.body.id;
 check("duplicate policy key is refused", (await call("POST", "/policies", { cookie: o.cookie, body: { name: "x", policy_key: "treasury_bot", chain_id: CHAIN, account: ACCOUNT } })).status === 409);
 
-check("new policies start in schema 1.1 with asset safety on", r.body.draft?.schema_version === "1.1" && r.body.draft?.asset_safety?.enabled === true, r.body.draft);
+check("new policies start at the latest schema with asset safety on and token spend present but off", r.body.draft?.schema_version === "1.6" && r.body.draft?.asset_safety?.enabled === true && r.body.draft?.token_spend?.enabled === false, r.body.draft);
+{
+  // A policy that was never activated can be deleted (with confirm); the audit trail records it.
+  const d = await call("POST", "/policies", { cookie: o.cookie, body: { name: "Throwaway", policy_key: "throwaway_draft", chain_id: CHAIN, account: ACCOUNT } });
+  check("delete draft needs confirmation", (await call("DELETE", `/policies/${d.body.id}`, { cookie: o.cookie, body: {} })).status === 400);
+  const del = await call("DELETE", `/policies/${d.body.id}`, { cookie: o.cookie, body: { confirm: true } });
+  check("a never-activated draft is deleted", del.status === 200 && del.body.deleted === true, del.body);
+  check("the deleted draft is gone", (await call("GET", `/policies/${d.body.id}`, { cookie: o.cookie })).status === 404);
+}
 // This suite covers the core rules; asset safety (and its simulation) has its own suite, e2e-delay-assets.mjs.
 const draft = {
   ...r.body.draft,
@@ -238,6 +246,14 @@ const x = await signIn(outsider);
 check("another organization cannot see this agent", (await call("GET", `/agents/${agentId}`, { cookie: x.cookie })).status === 404);
 check("another organization cannot read this operation", (await call("GET", `/operations/${allowedOp}`, { cookie: x.cookie })).status === 404);
 check("another organization cannot select this organization", (await call("GET", "/agents", { cookie: x.cookie, headers: { "x-ps-org": viewerOrg } })).status === 403);
+
+// ---------------------------------------------------------------- activated policies cannot be deleted; Upoch is off
+r = await call("DELETE", `/policies/${policyId}`, { cookie: o.cookie, body: { confirm: true } });
+check("an activated policy cannot be deleted (only disabled)", r.status === 409, r.body);
+r = await call("GET", "/audit-events?limit=200", { cookie: o.cookie });
+check("audit records policy.draft_deleted", (r.body.events ?? []).some((e) => e.type === "policy.draft_deleted"), r.body.events?.length);
+check("Upoch status is not served while the flag is off", (await call("GET", `/agents/${agentId}/upoch`, { cookie: o.cookie })).status === 404);
+check("an Upoch workflow cannot be set while the flag is off", (await call("PATCH", `/agents/${agentId}`, { cookie: o.cookie, body: { upoch_workflow_id: "1" } })).status === 404);
 
 // ---------------------------------------------------------------- treasury guard lock (schema 1.6)
 {

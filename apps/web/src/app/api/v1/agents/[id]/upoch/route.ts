@@ -1,6 +1,7 @@
 import { idParam, requireMember } from "@/server/access";
 import { getAgent } from "@/server/control";
-import { handle, ok } from "@/server/http";
+import { HttpError, handle, ok } from "@/server/http";
+import { UPOCH } from "@/lib/features";
 import { memberAddresses, readUpoch, upochScore } from "@/server/upoch";
 
 /**
@@ -8,6 +9,7 @@ import { memberAddresses, readUpoch, upochScore } from "@/server/upoch";
  * false` means it could not be read: the console then shows "Unknown", never a guess.
  */
 export const GET = handle<RouteContext<"/api/v1/agents/[id]/upoch">>(async (req, ctx) => {
+  if (!UPOCH) throw new HttpError(404, "PS_REQUEST_001", "Not found");
   const m = await requireMember(req, "read");
   const agent = (await getAgent(m, await idParam(ctx))) as Record<string, unknown>;
   const workflowId = (agent.upoch_workflow_id as string | null) ?? null;

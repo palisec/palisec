@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UPOCH } from "@/lib/features";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
 import { EXAMPLE_POLICY } from "@palisec/policy-schema";
@@ -45,7 +46,10 @@ function rows(node: Node, path: string, required: boolean, out: { path: string; 
       n.maxItems !== undefined ? `≤ ${n.maxItems} items` : "",
       n.pattern && !node.$ref ? `/${n.pattern}/` : "",
     ].filter(Boolean).join(" · ");
-    out.push({ path, type, rule, desc: n.description ?? ref?.description ?? "", required });
+    const desc = n.description ?? ref?.description ?? "";
+    // Behind the Upoch flag: the rule's rows, and its mention in the version list, only when it is on.
+    if (!UPOCH && path.startsWith("upoch_recovery")) return out;
+    out.push({ path, type, rule, desc: UPOCH ? desc : desc.replace(/;? ?1\.2 (adds )?upoch_recovery/g, ""), required });
   }
   if (n.properties) for (const [k, v] of Object.entries(n.properties)) rows(v, path ? `${path}.${k}` : k, n.required?.includes(k) ?? false, out);
   if (n.type === "array" && n.items?.properties) rows(n.items, `${path}[]`, true, out);
@@ -220,6 +224,8 @@ export default function PoliciesPage() {
         the tax, the round-trip loss (when the pool quotes it) and the approvals.
       </p>
 
+      {UPOCH ? (
+        <>
       <h2 id="upoch-recovery">Recoverable on Upoch (schema 1.2)</h2>
       <p>
         An optional rule that an agent must be recoverable on <a href="https://upoch.tech">Upoch</a>, which keeps verifiable
@@ -234,6 +240,8 @@ export default function PoliciesPage() {
         <li><code>on_unavailable</code> (<code>deny</code> or <code>review</code>): Upoch cannot be read, so <code>PS_RECOVERY_003</code> denies or holds for a person, never allows.</li>
       </ul>
       <p>Turning the rule off, allowing older checkpoints or switching to review are loosening changes, so they wait out the delay below.</p>
+        </>
+      ) : null}
 
       <h2 id="loss-limit">Loss limit (schema 1.3)</h2>
       <p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { VERSIONS } from "@/lib/versions";
-import { EXAMPLE_POLICY, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
+import { EXAMPLE_POLICY, SCHEMA_VERSIONS, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { networkLabel } from "@/lib/networks";
@@ -51,7 +51,7 @@ export function LivePolicies() {
     <>
       <PageTitle
         title="Policies"
-        description="Edit a draft, validate it against the policy schema (1.0 or 1.1), review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with PS_POLICY_001."
+        description={`Edit a draft, validate it against the policy schema (${SCHEMA_VERSIONS[0]} to ${SCHEMA_VERSIONS[SCHEMA_VERSIONS.length - 1]}), review the difference, then activate it as an immutable version. Agents are evaluated against the active version only; a missing or disabled policy denies with PS_POLICY_001.`}
       />
       <LoadError error={list.error} />
       <div className="space-y-4">
@@ -87,7 +87,7 @@ export function LivePolicies() {
           )}
         </Panel>
         {can.manage(org?.role) && <CreatePolicy onCreated={(id) => { setSelected(id); list.reload(); }} />}
-        {current && <PolicyEditor key={current} id={current} onChange={list.reload} />}
+        {current && <PolicyEditor key={current} id={current} onChange={list.reload} onDeleted={() => { setSelected(null); list.reload(); }} />}
       </div>
     </>
   );
@@ -97,17 +97,20 @@ function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
   const uid = useId();
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
+  // Once the ID field is typed in, it is the member's own value and no longer follows the name.
+  const [keyTouched, setKeyTouched] = useState(false);
   const [account, setAccount] = useState("");
   const { run, busy, notice } = useAction();
   const { network } = useConsoleSession();
-  const derivedKey = key || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 64);
+  const derivedKey = keyTouched ? key : name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 64);
   return (
     <Panel title="Create a policy" bodyClassName="grid gap-3 p-4 md:grid-cols-3">
       <Field id={`${uid}-n`} label="Name">
         <input id={`${uid}-n`} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Treasury bot limits" maxLength={80} />
       </Field>
       <Field id={`${uid}-k`} label="Policy ID" hint="a-z, 0-9 and _; cannot change later.">
-        <input id={`${uid}-k`} className={inputCls} value={derivedKey} onChange={(e) => setKey(e.target.value)} placeholder="treasury_bot" spellCheck={false} />
+        <input id={`${uid}-k`} className={inputCls} value={derivedKey} onChange={(e) => { setKeyTouched(true); setKey(e.target.value); }} placeholder="treasury_bot" spellCheck={false} />
+        <p className="mt-1.5 font-mono text-[11.5px] text-dim">Policy ID: <span className={/^[a-z0-9_]{3,64}$/.test(derivedKey) ? "text-soft" : "text-deny"}>{derivedKey || "…"}</span></p>
       </Field>
       <Field id={`${uid}-a`} label={`Smart account (${networkLabel(network, "short")})`}>
         <input id={`${uid}-a`} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value.trim())} placeholder="0x…" spellCheck={false} />
@@ -121,6 +124,7 @@ function CreatePolicy({ onCreated }: { onCreated: (id: string) => void }) {
             if (r) {
               setName("");
               setKey("");
+              setKeyTouched(false);
               setAccount("");
               onCreated(r.id);
             }
@@ -159,7 +163,7 @@ function ordered(value: unknown, template: unknown): unknown {
 }
 const pretty = (doc: unknown) => JSON.stringify(ordered(doc, EXAMPLE_POLICY), null, 2);
 
-function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
+function PolicyEditor({ id, onChange, onDeleted }: { id: string; onChange: () => void; onDeleted: () => void }) {
   const uid = useId();
   const { org } = useConsoleSession();
   const detail = useLive<PolicyDetail>(`/policies/${id}`);
@@ -233,6 +237,14 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
                 confirmLabel="Activate"
                 onConfirm={() => run(() => api(`/policies/${id}/activate`, { method: "POST", body: { confirm: true, draft_hash: p.draft_hash } }), "Activated. The version and its hash are in the audit trail.").then(after)}
               />
+              {!p.active_version && (
+                <Confirm
+                  label="Delete draft"
+                  prompt={`Deletes ${p.policy_key} and its draft. It was never activated, so nothing has run under it. This cannot be undone; the audit trail keeps a record.`}
+                  confirmLabel="Delete draft"
+                  onConfirm={() => run(() => api(`/policies/${id}`, { method: "DELETE", body: { confirm: true } }), "Draft deleted.").then((r) => { if (r) onDeleted(); })}
+                />
+              )}
               {p.status === "active" && (
                 <Confirm
                   label="Disable policy"

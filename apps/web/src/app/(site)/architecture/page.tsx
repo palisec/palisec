@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UPOCH } from "@/lib/features";
 import { LinePageHeader, LineSection } from "@/components/line/compat";
 import { pageOpenGraph } from "@/lib/seo";
 import type { ReactNode } from "react";
@@ -286,7 +287,7 @@ const ENGINE_CHECKS = evaluate(
   { request_id: "list", agent_id: "list", chain_id: 4663, from: ZERO, to: ZERO, value_wei: "0", data: "0x" } as unknown as Intent,
   EMPTY_STATE,
   { now: 0 } as unknown as Environment,
-).checks;
+).checks.filter((c) => UPOCH || c.id !== "recovery");
 
 export default function ArchitecturePage() {
   return (

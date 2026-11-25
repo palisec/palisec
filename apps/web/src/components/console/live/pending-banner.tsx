@@ -30,7 +30,8 @@ const LABEL: Record<string, string> = {
   agent_resume: "Agent resume",
   emergency_lift: "Emergency stop lift",
   delay_change: "Shorter delay",
-  agent_upoch: "Agent's Upoch workflow change",
+  // Read here, not through lib/features, so the bundler folds it and the label is not shipped while off.
+  agent_upoch: process.env.FEATURE_UPOCH === "true" ? "Agent's Upoch workflow change" : "Agent workflow change",
   mandate_envelope: "Mandate envelope loosening",
   proven_unlock: "Bigger limits: proven on Zolva (paper trading)",
 };
