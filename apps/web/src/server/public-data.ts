@@ -1,5 +1,6 @@
 import "server-only";
 import { REASON_CODES } from "@palisec/policy-schema";
+import { createHash } from "node:crypto";
 import { createPublicClient, getAddress, type Address } from "viem";
 import { readAccount, REGISTRY_ADDRESSES } from "policy-enforced-accounts";
 import { PUBLIC_DEMO_ACCOUNTS, PUBLIC_DEMO_CHAIN, demoLabel } from "@/lib/public-demo-accounts";
@@ -153,7 +154,8 @@ export function publicProof(opts: { limit: number; page: number; result: string 
           result: RESULT[r.decision as string] ?? "blocked",
           reason_code: code,
           reason: code && code in REASON_CODES ? REASON_CODES[code as keyof typeof REASON_CODES] : null,
-          decision_id: (r.authorization_id as string | null) ?? null,
+          // A derived reference, never the authorization itself: an unspent authorization must not be public.
+          decision_id: r.authorization_id ? `dec_${createHash("sha256").update(String(r.authorization_id)).digest("hex").slice(0, 16)}` : null,
           tx_hash: tx,
           receipt_url: tx ? `${explorer}/tx/${tx}` : null,
         };
