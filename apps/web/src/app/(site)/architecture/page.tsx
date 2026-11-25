@@ -279,8 +279,14 @@ const MYTHS: [string, string][] = [
 ];
 
 
+const ZERO = "0x0000000000000000000000000000000000000001";
 /** Every check, read from the reference evaluator (it lists them all even when the first one denies). */
-const ENGINE_CHECKS = evaluate(null, { value_wei: "0", data: "0x", request_id: "list" } as unknown as Intent, EMPTY_STATE, { now: 0 } as unknown as Environment).checks;
+const ENGINE_CHECKS = evaluate(
+  null,
+  { request_id: "list", agent_id: "list", chain_id: 4663, from: ZERO, to: ZERO, value_wei: "0", data: "0x" } as unknown as Intent,
+  EMPTY_STATE,
+  { now: 0 } as unknown as Environment,
+).checks;
 
 export default function ArchitecturePage() {
   return (
