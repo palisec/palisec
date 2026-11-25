@@ -1055,3 +1055,9 @@ html:not(.js) .limit-row .lv { opacity: 1; }
 }
 .console .panel::before, .console .panel::after { display: none; }
 .console :focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 2px; }
+
+/* Under 1024 px the statement is shown lit: no scroll effect there. */
+@media (max-width: 1023px) {
+  .js [data-statement] .sw { color: var(--color-mist); }
+  .js [data-statement] .sw.end { color: var(--color-aqua); }
+}

@@ -9,11 +9,11 @@ import { SITE_URL } from "@/lib/site";
 //   Hanken Grotesk  body copy
 //   Martian Mono    codes, figures, addresses and data
 //   Anybody         the wordmark and oversized kinetic type (its width axis animates)
-const heading = Funnel_Display({ variable: "--font-funnel", subsets: ["latin"], weight: "variable" });
-const ui = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
-const body = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], weight: "variable" });
-const mono = Martian_Mono({ variable: "--font-martian", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
-const kinetic = Anybody({ variable: "--font-anybody", subsets: ["latin"], weight: "variable", axes: ["wdth"] });
+const heading = Funnel_Display({ variable: "--font-funnel", subsets: ["latin"], weight: "variable", display: "swap" });
+const ui = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"], weight: "variable", axes: ["wdth"], display: "swap", preload: false });
+const body = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], weight: "variable", display: "swap" });
+const mono = Martian_Mono({ variable: "--font-martian", subsets: ["latin"], weight: "variable", axes: ["wdth"], display: "swap", preload: false });
+const kinetic = Anybody({ variable: "--font-anybody", subsets: ["latin"], weight: "variable", axes: ["wdth"], display: "swap", preload: false });
 const FONT_VARS = [heading, ui, body, mono, kinetic].map((f) => f.variable).join(" ");
 
 
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var h=document.documentElement;if(location.pathname==='/'){if(sessionStorage.getItem('palisec-intro')){h.setAttribute('data-intro','done')}else{sessionStorage.setItem('palisec-intro','1');if(!matchMedia('(prefers-reduced-motion: reduce)').matches){h.classList.add('intro-page');setTimeout(function(){h.classList.remove('intro-page')},5200)}}}}catch(e){}",
+              "try{var h=document.documentElement;if(location.pathname==='/'){if(sessionStorage.getItem('palisec-intro')){h.setAttribute('data-intro','done')}else{sessionStorage.setItem('palisec-intro','1');if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&matchMedia('(min-width: 1024px)').matches){h.classList.add('intro-page');setTimeout(function(){h.classList.remove('intro-page')},5200)}}}}catch(e){}",
           }}
         />
       </head>
