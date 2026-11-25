@@ -239,8 +239,9 @@ export async function billingSummary(ctx: MemberContext) {
 /* ───────── Public burn counter (reads the chain, not the database) ───────── */
 
 /** The burn wallet: $PALISEC sent here can never move again, so its balance counts as burned. */
-// Counted only once the address is confirmed (expected: 0x000000000000000000000000000000000000dEaD).
-export const BURN_WALLET: Address | null = null;
+export const BURN_WALLET: Address | null = "0x000000000000000000000000000000000000dEaD";
+/** Every $PALISEC ever minted (fixed at launch); burnFrom burns show as the drop in totalSupply below it. */
+export const PALISEC_MINTED = 1_000_000_000n * 10n ** 18n;
 const ERC20_READ = parseAbi(["function balanceOf(address) view returns (uint256)", "function totalSupply() view returns (uint256)"]);
 
 /**
@@ -280,17 +281,21 @@ export async function burnStats() {
       logEvent("warn", "token.burn_logs_unavailable", { error: e instanceof Error ? e.message.slice(0, 160) : "error" });
     }
   }
-  const total = wallet + contractBurned;
+  // burnFrom (the credits contract's burns among them) lowers totalSupply; the contract's rows below are already in it.
+  const supplyBurned = PALISEC_MINTED > supply ? PALISEC_MINTED - supply : 0n;
+  const total = wallet + supplyBurned;
   return {
     configured: true as const,
     contract: s.contract || null,
     burn_wallet: BURN_WALLET,
     burn_wallet_balance: wallet.toString(),
     contract_burned: contractBurned.toString(),
+    burnfrom_burned: supplyBurned.toString(),
+    minted_supply: PALISEC_MINTED.toString(),
     contract_logs_complete: contractComplete,
     total_burned: total.toString(),
     total_supply: supply.toString(),
-    percent_of_supply: supply > 0n ? Number((total * 1_000_000n) / supply) / 10_000 : 0,
+    percent_of_supply: Number((total * 1_000_000n) / PALISEC_MINTED) / 10_000,
     purchases: rows.length,
     rows: rows.reverse(),
     checked_at: new Date().toISOString(),

@@ -10,6 +10,7 @@ interface Burns {
   burn_wallet?: string | null;
   burn_wallet_balance?: string;
   contract_burned?: string;
+  burnfrom_burned?: string;
   contract_logs_complete?: boolean;
   total_burned?: string;
   percent_of_supply?: number;
@@ -42,12 +43,12 @@ export function BurnCounter() {
           <p className="mt-2 font-heading text-[1.75rem] font-bold leading-none text-phosphor">{fmt(data.total_burned ?? "0")}</p>
         </div>
         <div className="bg-ink p-4">
-          <p className="label">Share of supply</p>
+          <p className="label">Share of minted supply</p>
           <p className="mt-2 font-heading text-[1.75rem] font-bold leading-none text-phosphor">{(data.percent_of_supply ?? 0).toFixed(2)}%</p>
         </div>
         <div className="bg-ink p-4">
-          <p className="label">Burned by credit purchases</p>
-          <p className="mt-2 font-heading text-[1.75rem] font-bold leading-none text-phosphor">{fmt(data.contract_burned ?? "0")}</p>
+          <p className="label">Burned with burnFrom</p>
+          <p className="mt-2 font-heading text-[1.75rem] font-bold leading-none text-phosphor">{fmt(data.burnfrom_burned ?? "0")}</p>
         </div>
       </div>
       <ul className="divide-y divide-line border border-line text-[0.8125rem]">
@@ -65,7 +66,7 @@ export function BurnCounter() {
         ))}
       </ul>
       <p className="text-[0.75rem] text-muted">
-        Read from the chain{data.checked_at ? ` at ${data.checked_at.replace("T", " ").slice(0, 16)} UTC` : ""}: {data.burn_wallet ? "the burn wallet’s balance plus " : ""}burns made by the credits contract
+        Read from the chain{data.checked_at ? ` at ${data.checked_at.replace("T", " ").slice(0, 16)} UTC` : ""}: {data.burn_wallet ? "the burn wallet’s balance plus " : ""}burnFrom burns (the drop in total supply below the 1,000,000,000 minted), including the credits contract
         {data.contract ? <> (<a className="underline" href={`${ex}/address/${data.contract}`} target="_blank" rel="noreferrer">{shortHex(data.contract)}</a>)</> : null}.
         {data.contract && data.contract_logs_complete === false ? " The contract's burns could not be read this time, so only the wallet is counted." : ""}
       </p>

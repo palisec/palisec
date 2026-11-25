@@ -51,7 +51,7 @@ export default async function TokenPage() {
             {total !== null ? (
               <div>
                 <p className="t-big">{total.total}</p>
-                <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned · {total.pct}% of supply</p>
+                <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned · {total.pct}% of minted supply</p>
                 {total.wallet ? <a href={`${total.explorer}/address/${total.wallet}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-mono text-[0.8125rem] text-silver hover:text-aqua">Burn wallet {total.wallet.slice(0, 6)}…{total.wallet.slice(-4)} ↗</a> : null}
               </div>
             ) : null}
