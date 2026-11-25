@@ -9,6 +9,7 @@ import { db } from "@/server/db";
 import { applyDue } from "@/server/pending";
 import { closeDue } from "@/server/mandates";
 import { handle, ok } from "@/server/http";
+import { publicStatusChecks } from "@/server/public-status";
 import { connection } from "next/server";
 
 const CACHE_MS = 30_000;
@@ -107,7 +108,10 @@ export const GET = handle(async (req: Request) => {
       reason: zolvaKeyState() === "refused" ? "Zolva refused the read key; Zolva is read keyless until it is replaced." : zolvaConfigured() ? null : "Zolva is read without a key, at the lower keyless rate limit." },
   );
 
+  // The overall status covers decisions and execution only. The public site's parts (registry, price feeds,
+  // loss measurements, Zolva, credits, proof data) are listed after it and never turn the status degraded.
   const status = overallStatus(checks);
+  checks.push(...(await publicStatusChecks()));
   return ok(
     {
       status,

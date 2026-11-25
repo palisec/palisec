@@ -40,7 +40,7 @@ for (const file of ["robinhood-mainnet.json", "robinhood-testnet.json"]) {
   const chainId = await client.getChainId();
   check(`${file}: RPC reports chain ${m.chain_id}`, chainId === m.chain_id, chainId);
 
-  for (const c of m.contracts) {
+  for (const c of [...m.contracts, ...(m.palisec_deployed_contracts ?? [])]) {
     const appAddress = SAFE_4337[c.app_key];
     if (c.app_key) check(`${file}: ${c.name} address equals the app's`, appAddress?.toLowerCase() === c.address.toLowerCase(), `${c.address} vs ${appAddress}`);
     const code = await client.getCode({ address: c.address });

@@ -6,8 +6,44 @@
   "rpc_provider": "alchemy:robinhood-mainnet with fallback to the public RPC",
   "explorer": "https://robinhoodchain.blockscout.com",
   "bundler": "alchemy:robinhood-mainnet (ERC-4337, EntryPoint v0.7)",
-  "palisec_deployed_contracts": [],
-  "palisec_deployed_contracts_note": "PALISEC deploys no contracts of its own. It uses the canonical Safe and ERC-4337 deployments below, which were already on this chain; their deployment transactions were made by third parties and are not recorded here. Each customer's smart account is a Safe proxy created by the customer's own wallet from the console.",
+  "palisec_deployed_contracts": [
+    {
+      "name": "Policy registry v3 (ERC-8511)",
+      "address": "0x4d37D0aD95593b2C65A0c2A98D5676D51DF3FDAB",
+      "role": "Current registry: each opted-in account's active policy, loosening delay and stop state; a stop the account engaged can only be lifted by the account. ERC-165 interface 0xf594edcd.",
+      "code_hash": "0x4111503543a9797401cbffe5af332b8bae8e82781fa77347285a04180b5a7cdb",
+      "source_verification": "Source verified on the explorer"
+    },
+    {
+      "name": "Policy registry v2 (ERC-8511)",
+      "address": "0xCa3bAE26d29a3A2cED7B87Fa996ca4C44367448d",
+      "role": "Superseded by v3; still readable.",
+      "code_hash": "0xd2dc54dc630154fa16aa5351445cf57f959bd03d785c5956c76e819264b07536",
+      "source_verification": "Sourcify exact match"
+    },
+    {
+      "name": "Policy registry v1 (ERC-8511 first draft)",
+      "address": "0x20D6B38B47F7cb765A2318a1f318ed54a6f87e92",
+      "role": "Superseded by v2 and v3; still readable.",
+      "code_hash": "0xc0538892fe12732cf3611480aab5f2670291548f2b8ea3fc7714698a3c4559cc",
+      "source_verification": "Source verified on the explorer"
+    },
+    {
+      "name": "AgentLinks",
+      "address": "0x737f1AcF46acE6d403977eB4944845fD251fC8C6",
+      "role": "Links a Palisec agent to its Zolva agent on chain, so a track record is proven from both sides.",
+      "code_hash": "0xfd3c8ad28d35f93af26e83cc4edae582d7f529300bff46b4af6744fb72a41cc9",
+      "source_verification": "Runtime code hash checked against the chain by verify-manifest.mjs"
+    },
+    {
+      "name": "PalisecCredits",
+      "address": "0xd5f516d43450293ac9a77bb53e40e2d8be2f5c3a",
+      "role": "Sells decision credits for USDG or ETH and burns $PALISEC, visible on chain.",
+      "code_hash": "0xdacf378e291f1c957a6b4fd7afb80710ee55ffb206eedf07ca98f71a27804bb2",
+      "source_verification": "Runtime code hash checked against the chain by verify-manifest.mjs"
+    }
+  ],
+  "palisec_deployed_contracts_note": "Palisec's own contracts are listed in palisec_deployed_contracts. Smart accounts use the canonical Safe and ERC-4337 deployments in contracts, which were already on this chain; their deployment transactions were made by third parties and are not recorded here. Each customer's smart account is a Safe proxy created by the customer's own wallet from the console.",
   "contracts": [
     {
       "name": "Safe 1.4.1 singleton",
@@ -64,5 +100,5 @@
       "source_verification": "not checked by PALISEC"
     }
   ],
-  "verified_at": "2026-11-17T23:03:23.913Z"
+  "verified_at": "2026-11-25T10:15:08.044Z"
 }

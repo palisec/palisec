@@ -30,6 +30,12 @@ const SERVICES: Service[] = [
   { name: "Palisec Agent", note: "Model key configured; answers are not probed", ids: ["agent_model"] },
   { name: "Webhooks and security events", note: "Signing key configured; deliveries are not probed", ids: ["webhooks"] },
   { name: "MCP server", note: "Streamable HTTP at /api/mcp, on the same authorization path", ids: [], unchecked: true },
+  { name: "Policy registry (ERC-8511)", note: "A read of registry v3 on chain 4663 succeeds", ids: ["registry"], mainnet: true },
+  { name: "Price feeds", note: "Every Chainlink feed Palisec uses updated within its heartbeat", ids: ["price_feeds"], mainnet: true },
+  { name: "Loss limit measurements", note: "The hourly measurement ran within the last 2 hours", ids: ["loss_measurements"] },
+  { name: "Zolva feed", note: "Zolva was read successfully within the last 2 hours", ids: ["zolva_feed"] },
+  { name: "Credits and burns", note: "The credits contract has code at its address", ids: ["credits"], mainnet: true },
+  { name: "Public proof data", note: "The public demo accounts' decisions were read within the last 5 minutes", ids: ["public_proof"] },
   { name: "Signing enclave", note: "AWS Nitro, specified", ids: [], roadmap: true },
   { name: "Telemetry ingestion", note: "", ids: [], roadmap: true },
 ];
