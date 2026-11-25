@@ -72,7 +72,7 @@ export function OnThisPage() {
       <ul className="text-[0.8438rem]">
         {heads.map((h) => (
           <li key={h.id} className={h.level === 3 ? "pl-3" : ""}>
-            <a href={`#${h.id}`} className={`block py-1.5 transition-colors ${current === h.id ? "text-aqua" : "text-silver hover:text-mist"}`}>{h.text}</a>
+            <a href={`#${h.id}`} className={`flex min-h-[24px] items-center py-1 transition-colors ${current === h.id ? "text-aqua" : "text-silver hover:text-mist"}`}>{h.text}</a>
           </li>
         ))}
       </ul>
