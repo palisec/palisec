@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cacheLife } from "next/cache";
 import { pageOpenGraph } from "@/lib/seo";
 import { BILLING } from "@/lib/billing-config";
-import { billingSettings, burnStats } from "@/server/billing";
+import { BURN_WALLET, billingSettings, burnStats } from "@/server/billing";
 import { mainnetEnabled } from "@/server/config";
 import { AddressChip } from "@/components/line/address-chip";
 import { Accent, Label, Result, Rows } from "@/components/line/parts";
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 /** The burn total is read from the chain at most every 5 minutes. */
-async function burned(): Promise<{ total: string; pct: string; wallet: string; explorer: string } | null> {
+async function burned(): Promise<{ total: string; pct: string; wallet: string | null; explorer: string } | null> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
   try {
@@ -36,7 +36,7 @@ export default async function TokenPage() {
   const pro = (BILLING.proHoldingTokens / 10n ** 18n).toLocaleString("en-US");
   const ROWS = [
     { k: "Credits", text: "Buy decision credits on chain through the credits contract.", live: creditsLive, href: "/docs/token" },
-    { k: "Burns", text: "$PALISEC sent to the burn wallet, plus burns by the credits contract, counted from the chain.", live: mainnetEnabled(), href: "/docs/token" },
+    { k: "Burns", text: BURN_WALLET ? "$PALISEC sent to the burn wallet, plus burns by the credits contract, counted from the chain." : "The credits contract burns $PALISEC, counted from the chain.", live: mainnetEnabled(), href: "/docs/token" },
     { k: "Pro limits", text: `Hold ${pro} $PALISEC in the owner wallet for Pro limits.`, live: mainnetEnabled(), href: "/docs/token" },
     { k: "Holder votes", text: "Holders vote an agent's limits through mandates.", live: true, href: "/mandates" },
   ];
@@ -52,7 +52,7 @@ export default async function TokenPage() {
               <div>
                 <p className="t-big">{total.total}</p>
                 <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned · {total.pct}% of supply</p>
-                <a href={`${total.explorer}/address/${total.wallet}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-mono text-[0.8125rem] text-silver hover:text-aqua">Burn wallet {total.wallet.slice(0, 6)}…{total.wallet.slice(-4)} ↗</a>
+                {total.wallet ? <a href={`${total.explorer}/address/${total.wallet}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-mono text-[0.8125rem] text-silver hover:text-aqua">Burn wallet {total.wallet.slice(0, 6)}…{total.wallet.slice(-4)} ↗</a> : null}
               </div>
             ) : null}
             <AddressChip />

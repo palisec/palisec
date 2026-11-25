@@ -7,7 +7,7 @@ import { shortHex } from "@/lib/units";
 interface Burns {
   configured: boolean;
   contract?: string | null;
-  burn_wallet?: string;
+  burn_wallet?: string | null;
   burn_wallet_balance?: string;
   contract_burned?: string;
   contract_logs_complete?: boolean;
@@ -65,7 +65,7 @@ export function BurnCounter() {
         ))}
       </ul>
       <p className="text-[0.75rem] text-muted">
-        Read from the chain{data.checked_at ? ` at ${data.checked_at.replace("T", " ").slice(0, 16)} UTC` : ""}: the burn wallet&apos;s balance plus burns made by the credits contract
+        Read from the chain{data.checked_at ? ` at ${data.checked_at.replace("T", " ").slice(0, 16)} UTC` : ""}: {data.burn_wallet ? "the burn wallet’s balance plus " : ""}burns made by the credits contract
         {data.contract ? <> (<a className="underline" href={`${ex}/address/${data.contract}`} target="_blank" rel="noreferrer">{shortHex(data.contract)}</a>)</> : null}.
         {data.contract && data.contract_logs_complete === false ? " The contract's burns could not be read this time, so only the wallet is counted." : ""}
       </p>

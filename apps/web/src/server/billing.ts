@@ -239,7 +239,8 @@ export async function billingSummary(ctx: MemberContext) {
 /* ───────── Public burn counter (reads the chain, not the database) ───────── */
 
 /** The burn wallet: $PALISEC sent here can never move again, so its balance counts as burned. */
-export const BURN_WALLET = "0x000000000000000000000000000000000000dEaD" as Address;
+// Counted only once the address is confirmed (expected: 0x000000000000000000000000000000000000dEaD).
+export const BURN_WALLET: Address | null = null;
 const ERC20_READ = parseAbi(["function balanceOf(address) view returns (uint256)", "function totalSupply() view returns (uint256)"]);
 
 /**
@@ -252,7 +253,7 @@ export async function burnStats() {
   if (!chainEnabled(MAINNET)) throw new Error("mainnet is not enabled on this deployment");
   const c = mainnetClient();
   const [wallet, supply] = await Promise.all([
-    c.readContract({ address: s.palisec, abi: ERC20_READ, functionName: "balanceOf", args: [BURN_WALLET] }),
+    BURN_WALLET ? c.readContract({ address: s.palisec, abi: ERC20_READ, functionName: "balanceOf", args: [BURN_WALLET] }) : Promise.resolve(0n),
     c.readContract({ address: s.palisec, abi: ERC20_READ, functionName: "totalSupply" }),
   ]);
   const rows: BurnRow[] = [];
