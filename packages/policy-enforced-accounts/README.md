@@ -51,7 +51,7 @@ Registry v2, `0xCa3bAE26d29a3A2cED7B87Fa996ca4C44367448d`, stays as it is and re
 
 - `REGISTRY_ADDRESSES` points to v3. Pass `REGISTRY_V2_ADDRESSES[4663]` as `registry` to read or audit v2.
 - `standardOf` and `readAccount` return `"v3"` for the new registry; `readAccount` adds `stopHeldByAccount`.
-- `PALISEC_REASON_MAP` maps `PS_PRICE_001` (no reliable price for a spent token) to `DEPENDENCY_UNAVAILABLE` and `PS_SIM_002` (outflows unknown) to `SIMULATION_UNAVAILABLE`.
+- `PALISEC_REASON_MAP` maps `PS_PRICE_001` (no reliable price for a spent token) to `DEPENDENCY_UNAVAILABLE` and `PS_SIM_002` (outflows unknown) to `SIMULATION_UNAVAILABLE`. The treasury guard codes map as `PS_TREASURY_001` (destination) and `PS_TREASURY_004` (liquidity) to `DENY_RULE`, `PS_TREASURY_002` (daily sell cap) to `OVER_BUDGET`, `PS_TREASURY_003` (approval) to `APPROVAL_RISK`, and `PS_TREASURY_005` (locked guard, a rejected policy change) to `DENY_RULE`; the detail code carries `palisec:PS_TREASURY_00x`.
 
 ## Upgrading from 0.1
 
