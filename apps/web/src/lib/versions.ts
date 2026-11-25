@@ -9,7 +9,7 @@ import peaa from "../../../../packages/policy-enforced-accounts/package.json";
  */
 export const VERSIONS = {
   sdkTs: sdk.version,
-  sdkPy: "0.4.9",
+  sdkPy: "0.4.10",
   peaa: peaa.version,
   schema: SCHEMA_VERSIONS[SCHEMA_VERSIONS.length - 1],
 } as const;
