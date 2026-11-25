@@ -15,7 +15,7 @@ const ENTRIES = [
     tag: "SDKs",
     changes: [
       "Python SDK 0.4.9: the PyPI project page links to its repository (palisec/sdk-python) and its issues.",
-      "The policy-enforced-accounts library ships the full CC0 1.0 license text, and the main repository is MIT licensed.",
+      "The policy-enforced-accounts library and the main repository carry a standard MIT license file; the ERC-8511 contracts and specification stay CC0-1.0, as marked in each file.",
     ],
   },
   {
