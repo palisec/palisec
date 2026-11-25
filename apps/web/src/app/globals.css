@@ -1040,3 +1040,18 @@ html:not(.js) .limit-row .lv { opacity: 1; }
   .js .type-caption, .js .closing-l, .js .closing-r, .js .closing-f { opacity: 1; transform: none; }
   .caret { display: none; }
 }
+
+/* ── Console: the sidebar's right edge is the line; panels in the line style. ── */
+.console-line {
+  position: absolute; top: 0; right: -1px; bottom: 0; width: 2px; pointer-events: none;
+  background: linear-gradient(180deg, var(--color-aqua-hi), var(--color-aqua) 40%, var(--color-aqua-lo));
+  box-shadow: 0 0 18px rgb(156 246 238 / 0.6), 0 0 60px rgb(156 246 238 / 0.2);
+}
+.console .panel {
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgb(10 69 65 / 0.35), rgb(1 29 28 / 0.35));
+  box-shadow: inset 0 1px 0 rgb(203 255 252 / 0.06);
+}
+.console .panel::before, .console .panel::after { display: none; }
+.console :focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 2px; }

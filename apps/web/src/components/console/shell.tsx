@@ -6,9 +6,8 @@ import type { ReactNode } from "react";
 import { network as networkOf, networkLabel } from "@/lib/networks";
 import { shortHex } from "@/lib/units";
 import { BrandMark } from "../brand-mark";
-import { PointerLight } from "../pointer-light";
+import { CommandMenu } from "../command-menu";
 import { SignOutIcon } from "../icons";
-import { IconBtn } from "./kit";
 import { executionState, findCheck, useHealth } from "./live/health";
 import { api, ConsoleSessionProvider, useConsoleSession, useLive } from "./live/session";
 import { PendingBanner } from "./live/pending-banner";
@@ -50,22 +49,32 @@ function NetworkSwitch() {
 
 /** Grouped as in the 2.0 console; each entry is an existing or additive route. */
 const NAV: { href: string; label: string; group?: string }[] = [
-  { href: "/console", label: "Dashboard", group: "Overview" },
-  { href: "/console/agents", label: "Agents", group: "Security" },
+  { href: "/console", label: "Overview", group: "Control" },
+  { href: "/console/agents", label: "Agents" },
   { href: "/console/smart-accounts", label: "Smart accounts" },
   { href: "/console/policies", label: "Policies" },
-  { href: "/console/mandates", label: "Mandates" },
-  { href: "/console/operations", label: "Operations" },
   { href: "/console/approvals", label: "Approvals" },
+  { href: "/console/mandates", label: "Mandates" },
+  { href: "/console/security", label: "Emergency stop" },
+  { href: "/console/operations", label: "Operations", group: "Activity" },
   { href: "/console/audit", label: "Audit" },
   { href: "/console/security-events", label: "Security events" },
-  { href: "/console/security", label: "Emergency stop" },
-  { href: "/console/agent", label: "Palisec Agent", group: "Intelligence" },
-  { href: "/console/integrations", label: "Integrations", group: "Connect" },
-  { href: "/console/usage", label: "Usage" },
+  { href: "/console/agent", label: "Palisec Agent" },
+  { href: "/console/usage", label: "Usage", group: "Account" },
   { href: "/console/billing", label: "Billing" },
-  { href: "/console/settings", label: "Settings", group: "Settings" },
+  { href: "/console/integrations", label: "Integrations" },
+  { href: "/console/settings", label: "Settings" },
 ];
+
+/** The page title for the top bar: the menu label, or "Section / item" on detail pages. */
+function titleFor(pathname: string): string {
+  const exact = NAV.find((n) => n.href === pathname);
+  if (exact) return exact.label;
+  const parent = NAV.filter((n) => n.href !== "/console" && pathname.startsWith(`${n.href}/`)).sort((x, y) => y.href.length - x.href.length)[0];
+  if (!parent) return "Console";
+  const rest = decodeURIComponent(pathname.slice(parent.href.length + 1).split("/")[0] ?? "");
+  return rest ? `${parent.label} / ${rest.length > 18 ? `${rest.slice(0, 8)}…` : rest}` : parent.label;
+}
 
 export function ConsoleShell({ children }: { children: ReactNode }) {
   return (
@@ -102,26 +111,101 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="console min-h-dvh bg-abyss">
-      <PointerLight />
+    <div className="console min-h-dvh bg-abyss lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
+      <CommandMenu />
       <a href="#console-main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
         Skip to content
       </a>
 
-      {/* Top bar: environment, network, account, system health (spec §11.1) */}
-      <header className="sticky top-0 z-40 animate-[c-drop_.5s_var(--ease-out-quint)] border-b border-line bg-[linear-gradient(180deg,rgb(0_55_52/0.92),rgb(1_38_36/0.92))] backdrop-blur-xl">
-        <div className="flex h-12 items-center gap-4 px-4">
-          <Link href="/" className="flex items-center gap-2" aria-label="Palisec overview">
-            <BrandMark size={20} />
-            <span className="font-brand text-[15px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
+      {/* Sidebar: its right edge is the line. */}
+      <aside className="relative border-b border-line bg-deep lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-b-0">
+        <div aria-hidden className="console-line hidden lg:block" />
+        <div className="flex items-center justify-between gap-3 px-6 pb-4 pt-6">
+          <Link href="/" className="flex items-center gap-3" aria-label="Palisec home">
+            <BrandMark size={28} />
+            <span className="font-brand text-[20px] font-medium tracking-[-0.02em] text-mist">Palisec</span>
           </Link>
-          <span className="hidden h-5 w-px bg-line-strong sm:block" />
-          <NetworkSwitch />
-          <dl className="hidden items-center gap-4 font-utility text-[12.5px] md:flex">
-            <div className="flex gap-1.5"><dt className="text-dim">Network</dt><dd className="text-soft">{networkLabel(session.network)}</dd></div>
-            <div className="flex gap-1.5"><dt className="text-dim">Signed in</dt><dd className="font-mono normal-case text-soft">{session.me ? shortHex(session.me.address) : "…"}</dd></div>
-          </dl>
-          <ul aria-label="System health" className="ml-auto hidden items-center gap-3 font-utility text-[12.5px] xl:flex">
+        </div>
+        {ready && (
+          <div className="px-6 pb-4">
+            {session.me && session.me.organizations.length > 1 ? (
+              <select
+                aria-label="Organization"
+                value={session.org?.id ?? ""}
+                onChange={(e) => session.setOrgId(e.target.value)}
+                className="w-full rounded-[8px] border border-line-strong bg-deep px-3 py-2.5 text-[14px] text-mist"
+              >
+                {session.me.organizations.map((o) => (
+                  <option key={o.id} value={o.id}>{o.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="rounded-[8px] border border-line-strong px-3 py-2.5">
+                <p className="truncate text-[14px] text-mist">{org.data?.name ?? session.org?.name}</p>
+                <p className="font-mono text-[11.5px] text-dim">{session.org?.role}</p>
+              </div>
+            )}
+          </div>
+        )}
+        <nav aria-label="Console" className="min-h-0 flex-1 overflow-y-auto">
+          <ul className="flex gap-1 overflow-x-auto px-4 pb-3 lg:flex-col lg:gap-0.5 lg:overflow-visible">
+            {NAV.map((n) => {
+              const active = n.href === "/console" ? pathname === "/console" : pathname === n.href || pathname.startsWith(`${n.href}/`);
+              return (
+                <li key={n.href} className="shrink-0">
+                  {n.group && <p className="hidden px-3 pb-2 pt-5 font-mono text-[11px] uppercase tracking-[0.18em] text-dim lg:block">{n.group}</p>}
+                  <Link
+                    href={n.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center justify-between gap-3 rounded-[6px] px-3 py-2 font-utility text-[14.5px] font-medium transition-colors ${
+                      active ? "bg-aqua/[0.09] text-aqua" : "text-silver hover:bg-raised/50 hover:text-mist"
+                    }`}
+                  >
+                    {n.label}
+                    {n.href === "/console/approvals" && pending > 0 && (
+                      <span key={pending} className="rounded-full bg-review/15 px-2 font-mono text-[11px] text-review" aria-label={`${pending} pending`}>{pending}</span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        {ready && (
+          <div className="hidden items-center justify-between gap-3 border-t border-line px-6 py-4 lg:flex">
+            <span className="font-mono text-[13px] text-silver">{session.me ? shortHex(session.me.address) : "…"}</span>
+            <button type="button" onClick={signOut} className="inline-flex items-center gap-2 font-utility text-[13.5px] text-silver hover:text-aqua">
+              <SignOutIcon size={15} /> Sign out
+            </button>
+          </div>
+        )}
+      </aside>
+
+      <div className="min-w-0">
+        {/* Top bar: page title, network, search, system health. */}
+        <header className="sticky top-0 z-40 border-b border-line bg-abyss/90 backdrop-blur-xl">
+          <div className="flex min-h-[84px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-8">
+            <p className="mr-auto font-heading text-[24px] font-medium tracking-[-0.02em] text-mist">{titleFor(pathname)}</p>
+            {live ? (
+              <span className="rounded-full border border-review/50 bg-review/10 px-3 py-1 font-mono text-[12px] text-review">● Mainnet · real funds</span>
+            ) : (
+              <span className="rounded-full border border-line-strong px-3 py-1 font-mono text-[12px] text-silver">{networkLabel(session.network, "short")}</span>
+            )}
+            <NetworkSwitch />
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("palisec:search"))}
+              className="hidden items-center gap-6 rounded-[6px] border border-line-strong px-3 py-2 font-utility text-[13.5px] text-dim hover:border-aqua/50 hover:text-silver md:inline-flex"
+            >
+              Search <kbd className="rounded-[4px] border border-line-strong px-1.5 font-mono text-[11px]">⌘K</kbd>
+            </button>
+            {ready && (
+              <button type="button" onClick={signOut} aria-label="Sign out" className="text-silver hover:text-aqua lg:hidden">
+                <SignOutIcon size={16} />
+              </button>
+            )}
+          </div>
+          <ul aria-label="System health" className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line px-4 py-2 font-utility text-[12.5px] sm:px-8">
             {HEALTH.map((h) => (
               <li key={h.label} className="flex items-center gap-1.5">
                 <span aria-hidden className={h.ok ? "text-aqua" : "text-silver"}>{h.ok ? "●" : "○"}</span>
@@ -129,84 +213,19 @@ function Shell({ children }: { children: ReactNode }) {
                 <span className={h.ok ? "text-soft" : "text-silver"}>{h.value}</span>
               </li>
             ))}
+            <li className="ml-auto"><Link href="/docs" className="text-silver hover:text-aqua">Docs</Link></li>
           </ul>
-          <Link href="/docs" className="ml-auto whitespace-nowrap font-utility text-[12.5px] text-silver transition-colors hover:text-aqua xl:ml-4">Docs</Link>
-        </div>
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap border-t border-line px-4 py-1.5 font-utility text-[12px] xl:hidden">
-          <div className="flex gap-1.5 md:hidden"><dt className="text-dim">Network</dt><dd className="text-soft">{networkLabel(session.network, "short")}</dd></div>
-          {HEALTH.map((h) => (
-            <div key={h.label} className="flex items-center gap-1.5">
-              <dt className="text-dim">{h.label}</dt>
-              <dd className={h.ok ? "text-aqua" : "text-silver"}>{h.ok ? "● " : "○ "}{h.value}</dd>
-            </div>
-          ))}
-        </dl>
-        <div aria-hidden className="c-progress absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#9cf6ee_40%,#cbfffc)]" />
-      </header>
+        </header>
 
-      {org.data?.emergency_stop && (
-        <div role="alert" className="c-alarm border-b border-deny/50 bg-deny/[0.08] px-4 py-2 text-[13px] text-soft">
-          <span className="font-utility text-[12.5px] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
-          <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>.</span>
-          <Link href="/console/security" className="ml-3 text-mist underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
-        </div>
-      )}
+        {org.data?.emergency_stop && (
+          <div role="alert" className="c-alarm border-b border-deny/50 bg-deny/[0.08] px-4 py-2 text-[13px] text-soft sm:px-8">
+            <span className="font-utility text-[12.5px] text-deny"><span aria-hidden className="inline-block animate-pulse">■</span> Emergency stop engaged</span>
+            <span className="ml-3">Every new operation in this organization is denied with <code className="font-mono text-[0.9em]">PS_PAUSED_001</code>.</span>
+            <Link href="/console/security" className="ml-3 text-mist underline decoration-deny/60 underline-offset-4">Review the emergency stop</Link>
+          </div>
+        )}
 
-      <div className="lg:grid lg:grid-cols-[208px_minmax(0,1fr)]">
-        <nav aria-label="Console" className="border-b border-line lg:sticky lg:top-12 lg:h-[calc(100dvh-3rem)] lg:border-b-0 lg:border-r">
-          <ul className="flex gap-1 overflow-x-auto px-3 py-2 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:py-4">
-            {NAV.map((n, i) => {
-              const active = n.href === "/console" ? pathname === "/console" : pathname === n.href || pathname.startsWith(`${n.href}/`);
-              return (
-                <li key={n.href} className="shrink-0 animate-[c-fade_.45s_var(--ease-out-quint)_both]" style={{ animationDelay: `${80 + i * 40}ms` }}>
-                  {n.group && <p className="label hidden px-3 pb-1 pt-3 !text-[9.5px] first:pt-0 lg:block">{n.group}</p>}
-                  <Link
-                    href={n.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`group flex items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-[13.5px] transition-[background-color,color,transform] duration-300 hover:translate-x-0.5 ${
-                      active ? "bg-raised text-mist shadow-[inset_0_1px_0_rgb(237_255_254/0.06)]" : "text-silver hover:bg-raised/60 hover:text-mist"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <span aria-hidden className={`h-1.5 w-1.5 transition-all duration-500 ${active ? "scale-125 bg-aqua" : "bg-line-strong group-hover:bg-silver"}`} />
-                      {n.label}
-                    </span>
-                    {n.href === "/console/approvals" && pending > 0 && (
-                      <span key={pending} className="c-badge animate-[c-pop_.4s_var(--ease-out-quint)] rounded-[4px] border border-dashed border-review/60 px-1 font-mono text-[10px] text-review" aria-label={`${pending} pending`}>{pending}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          {ready && (
-            <div className="flex items-start justify-between gap-3 border-t border-line px-4 py-4">
-              <div className="min-w-0 flex-1">
-                <p className="label !text-[10px]">Organization</p>
-                {session.me && session.me.organizations.length > 1 ? (
-                  <select
-                    aria-label="Organization"
-                    value={session.org?.id ?? ""}
-                    onChange={(e) => session.setOrgId(e.target.value)}
-                    className="mt-1 w-full rounded-[4px] border border-reef bg-ink px-2 py-1 text-[12px] text-fg"
-                  >
-                    {session.me.organizations.map((o) => (
-                      <option key={o.id} value={o.id}>{o.name}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="mt-1 truncate text-[12.5px] text-soft">{org.data?.name ?? session.org?.name}</p>
-                )}
-                <p className="mt-1 font-utility text-[12px] text-dim">Role · {session.org?.role}</p>
-              </div>
-              <IconBtn label="Sign out" onClick={signOut} className="mt-3">
-                <SignOutIcon size={15} />
-              </IconBtn>
-            </div>
-          )}
-        </nav>
-
-        <main id="console-main" className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
+        <main id="console-main" className="min-w-0 px-4 py-8 sm:px-8">
           {session.status === "loading" && <p className="py-10 text-center font-utility text-[13px] text-dim">Checking your session…</p>}
           {session.status === "unavailable" && (
             <div role="alert" className="max-w-[60ch] py-10">
