@@ -71,11 +71,11 @@ export default async function HomePage() {
   return (
     <>
       {/* 1. Hero */}
-      <section className="relative min-h-[max(100dvh,760px)] overflow-hidden" aria-labelledby="hero-title">
-        <div className="split pt-[clamp(110px,9vw,170px)]">
-          <div className="split-l min-w-0 space-y-10 lg:pt-[44px]">
+      <section className="relative min-h-[max(100dvh,47.5rem)] overflow-hidden" aria-labelledby="hero-title">
+        <div className="split pt-[clamp(6.875rem,9vw,10.625rem)]">
+          <div className="split-l order-2 min-w-0 space-y-10 lg:order-none lg:pt-[2.75rem]">
             {counts ? (
-              <dl data-intro-counters className="grid grid-cols-[auto_1fr] gap-x-12 gap-y-1 font-mono text-[15px] leading-[2.1] text-silver">
+              <dl data-intro-counters className="grid grid-cols-[auto_1fr] gap-x-12 gap-y-1 font-mono text-[0.9375rem] leading-[2.1] text-silver">
                 <dt className="sr-only">Proposed, last 24 h</dt>
                 <dd data-counter className="font-medium tabular-nums text-mist">{counts.proposed.toLocaleString("en-US")}</dd>
                 <dd>proposed</dd>
@@ -92,7 +92,7 @@ export default async function HomePage() {
               <LineButton href="/proof" variant="ghost">See it live</LineButton>
             </div>
           </div>
-          <div className="split-r min-w-0">
+          <div className="split-r order-1 min-w-0 lg:order-none">
             <h1 id="hero-title" className="t-hero">
               <span className="hero-ln"><span>Smart accounts</span></span>
               <span className="hero-ln"><span>with limits AI agents</span></span>
@@ -109,7 +109,7 @@ export default async function HomePage() {
             <Stream items={stream} counts={counts} />
             <div className="stream-static split mt-16 pb-16">
               <div className="split-l" />
-              <ul className="split-r divide-y divide-line border-y border-line font-mono text-[14px]">
+              <ul className="split-r divide-y divide-line border-y border-line font-mono text-[0.875rem]">
                 {rows.slice(0, 5).map((r, i) => (
                   <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
                     <Result kind={r.result}>{resultText(r)}</Result>
@@ -119,7 +119,7 @@ export default async function HomePage() {
                 ))}
               </ul>
             </div>
-            <p className="absolute bottom-6 hidden font-mono text-[12px] text-dim lg:block" style={{ left: "calc(var(--line-x) + 80px)" }}>
+            <p className="absolute bottom-6 hidden font-mono text-[0.75rem] text-dim lg:block" style={{ left: "calc(var(--line-x) + 5rem)" }}>
               Replaying the latest decisions from our public demo accounts
             </p>
             <div className="sr-only">
@@ -155,7 +155,7 @@ export default async function HomePage() {
                 t.value !== null ? (
                   <div key={t.id}>
                     <p className="t-big" data-total={t.id}>{t.value.toLocaleString("en-US")}</p>
-                    <p className={`mt-3 font-mono text-[13px] uppercase tracking-[0.14em] ${t.cls}`}>{t.label}</p>
+                    <p className={`mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] ${t.cls}`}>{t.label}</p>
                   </div>
                 ) : null,
               )}
@@ -166,31 +166,31 @@ export default async function HomePage() {
               <h2 className="t-h2">Every decision, <Accent>on the record.</Accent></h2>
               {latest.length ? (
                 <div className="proof-rows mt-12 overflow-x-auto">
-                  <table className="w-full min-w-[720px] font-mono text-[14.5px] tabular-nums">
+                  <table className="w-full font-mono text-[0.9062rem] tabular-nums">
                     <thead>
-                      <tr className="border-b border-line text-left text-[11.5px] uppercase tracking-[0.14em] text-dim">
+                      <tr className="border-b border-line text-left text-[0.7188rem] uppercase tracking-[0.14em] text-dim">
                         <th className="py-3 pr-4 font-normal">Time (UTC)</th>
-                        <th className="py-3 pr-4 font-normal">Account</th>
+                        <th className="hidden py-3 pr-4 font-normal xl:table-cell">Account</th>
                         <th className="py-3 pr-4 font-normal">Action</th>
-                        <th className="py-3 pr-4 text-right font-normal">USD</th>
+                        <th className="hidden py-3 pr-4 text-right font-normal sm:table-cell">USD</th>
                         <th className="py-3 font-normal">Result</th>
                       </tr>
                     </thead>
                     <tbody>
                       {latest.map((r, i) => (
                         <tr key={i} className="proof-row border-b border-line" style={{ ["--i" as string]: i }}>
-                          <td className="py-4 pr-4 text-dim">{r.time.slice(11, 19)}</td>
-                          <td className="py-4 pr-4 text-foam">{short(r.account)}</td>
+                          <td className="whitespace-nowrap py-4 pr-4 text-dim">{r.time.slice(11, 19)}</td>
+                          <td className="hidden py-4 pr-4 text-foam xl:table-cell">{short(r.account)}</td>
                           <td className="py-4 pr-4 text-foam">
                             {r.receipt_url ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="hover:text-aqua">{r.action}</a> : r.action}
                           </td>
-                          <td className="py-4 pr-4 text-right text-foam">{usd(r.usd)}</td>
+                          <td className="hidden py-4 pr-4 text-right text-foam sm:table-cell">{usd(r.usd)}</td>
                           <td className="py-4"><Result kind={r.result}>{resultText(r)}</Result></td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {proof?.stale ? <p className="mt-4 font-mono text-[12px] text-dim">Updated {proof.as_of.slice(11, 16)} UTC</p> : null}
+                  {proof?.stale ? <p className="mt-4 font-mono text-[0.75rem] text-dim">Updated {proof.as_of.slice(11, 16)} UTC</p> : null}
                 </div>
               ) : null}
               <div className="mt-10"><LineButton href="/proof" variant="ghost" small>Every decision →</LineButton></div>
@@ -211,7 +211,7 @@ export default async function HomePage() {
             <p className="t-lede">Any account&apos;s active policy and stop state, read straight from the chain. No API, no trust in Palisec.</p>
           </div>
         </div>
-        <div className="mt-[clamp(56px,6vw,120px)]">
+        <div className="mt-[clamp(3.5rem,6vw,7.5rem)]">
           <TypedAddress address={REGISTRY_V3} href={`${EXPLORER}/address/${REGISTRY_V3}`} caption="Policy registry v3 · Robinhood Chain 4663 · interface 0xf594edcd" />
         </div>
       </section>
@@ -224,7 +224,7 @@ export default async function HomePage() {
               <p className="closing-l t-closing">Agents decide.</p>
               <div className="closing-f late space-y-3 lg:flex lg:flex-col lg:items-end">
                 <AddressChip />
-                <p className="font-mono text-[13px] text-dim">Free to start on mainnet</p>
+                <p className="font-mono text-[0.8125rem] text-dim">Free to start on mainnet</p>
               </div>
             </div>
             <div className="split-r min-w-0 space-y-8">

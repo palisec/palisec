@@ -62,13 +62,13 @@ export function ProofTable({ initial }: { initial: Page | null }) {
       {data ? (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] font-mono text-[14.5px] tabular-nums">
+            <table className="w-full font-mono text-[0.9062rem] tabular-nums">
               <thead>
-                <tr className="border-b border-line text-left text-[11.5px] uppercase tracking-[0.14em] text-dim">
+                <tr className="border-b border-line text-left text-[0.7188rem] uppercase tracking-[0.14em] text-dim">
                   <th className="py-3 pr-4 font-normal">Time (UTC)</th>
-                  <th className="py-3 pr-4 font-normal">Account</th>
+                  <th className="hidden py-3 pr-4 font-normal xl:table-cell">Account</th>
                   <th className="py-3 pr-4 font-normal">Action</th>
-                  <th className="py-3 pr-4 text-right font-normal">USD</th>
+                  <th className="hidden py-3 pr-4 text-right font-normal sm:table-cell">USD</th>
                   <th className="py-3 pr-4 font-normal">Result</th>
                   <th className="py-3 font-normal">Link</th>
                 </tr>
@@ -76,10 +76,10 @@ export function ProofTable({ initial }: { initial: Page | null }) {
               <tbody>
                 {data.rows.map((r, i) => (
                   <tr key={i} className="border-b border-line">
-                    <td className="py-4 pr-4 text-dim">{r.time.replace("T", " ").slice(5, 19)}</td>
-                    <td className="py-4 pr-4 text-foam" title={r.account}>{r.account_label}</td>
+                    <td className="whitespace-nowrap py-4 pr-4 text-dim">{r.time.replace("T", " ").slice(5, 19)}</td>
+                    <td className="hidden py-4 pr-4 text-foam xl:table-cell" title={r.account}>{r.account_label}</td>
                     <td className="py-4 pr-4 text-foam">{r.action}</td>
-                    <td className="py-4 pr-4 text-right text-foam">{r.usd === null ? "—" : r.usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                    <td className="hidden py-4 pr-4 text-right text-foam sm:table-cell">{r.usd === null ? "—" : r.usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
                     <td className="py-4 pr-4"><Result kind={r.result}>{r.result === "allowed" ? "Allowed" : r.result === "held" ? "Held" : r.reason_code ?? "Blocked"}</Result></td>
                     <td className="py-4">{r.receipt_url && r.tx_hash ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-silver hover:text-aqua">{short(r.tx_hash)} ↗</a> : <span className="text-dim">—</span>}</td>
                   </tr>
@@ -87,7 +87,7 @@ export function ProofTable({ initial }: { initial: Page | null }) {
               </tbody>
             </table>
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 font-mono text-[13px] text-dim">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 font-mono text-[0.8125rem] text-dim">
             <span>Showing {data.rows.length} of {data.total}{data.stale ? ` · Updated ${data.as_of.slice(11, 16)} UTC` : ""}</span>
             <span className="flex items-center gap-3">
               <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="lbtn lbtn-ghost sm disabled:opacity-40"><span className="relative">← Newer</span></button>

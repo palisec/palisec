@@ -67,8 +67,8 @@ export default function DetectPage() {
       <table>
         <thead><tr><th>Network</th><th>Co-signer address</th></tr></thead>
         <tbody>
-          <tr><td>Robinhood Chain mainnet (4663)</td><td className="font-mono text-[12px] text-fg">{COSIGNER_MAINNET}</td></tr>
-          <tr><td>Robinhood Chain testnet (46630)</td><td className="font-mono text-[12px] text-fg">{COSIGNER_TESTNET}</td></tr>
+          <tr><td>Robinhood Chain mainnet (4663)</td><td className="font-mono text-[0.75rem] text-fg">{COSIGNER_MAINNET}</td></tr>
+          <tr><td>Robinhood Chain testnet (46630)</td><td className="font-mono text-[0.75rem] text-fg">{COSIGNER_TESTNET}</td></tr>
         </tbody>
       </table>
       <p>

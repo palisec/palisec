@@ -93,7 +93,7 @@ export default function PoliciesPage() {
 
       <h2 id="fields">Field reference</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-[760px] table-fixed [&_th]:whitespace-nowrap">
+        <table className="min-w-[47.5rem] table-fixed [&_th]:whitespace-nowrap">
           <colgroup><col className="w-[30%]" /><col className="w-[12%]" /><col className="w-[26%]" /><col /></colgroup>
           <thead>
             <tr><th>Field</th><th>Type</th><th>Constraint</th><th>Notes</th></tr>
@@ -101,10 +101,10 @@ export default function PoliciesPage() {
           <tbody>
             {fieldRows.map((r) => (
               <tr key={r.path}>
-                <td className="font-mono text-[12px] text-fg">{r.path.split(/(?<=[._])/).map((seg, k) => <span key={k}>{seg}<wbr /></span>)}{!r.required && <span className="text-dim">?</span>}</td>
-                <td className="font-mono text-[12px] text-soft">{r.type}</td>
-                <td className="whitespace-pre-wrap break-words font-mono text-[11px] text-muted [overflow-wrap:anywhere]">{r.rule}</td>
-                <td className="text-[13px] text-muted"><Codes text={r.desc} /></td>
+                <td className="font-mono text-[0.75rem] text-fg">{r.path.split(/(?<=[._])/).map((seg, k) => <span key={k}>{seg}<wbr /></span>)}{!r.required && <span className="text-dim">?</span>}</td>
+                <td className="font-mono text-[0.75rem] text-soft">{r.type}</td>
+                <td className="whitespace-pre-wrap break-words font-mono text-[0.6875rem] text-muted [overflow-wrap:anywhere]">{r.rule}</td>
+                <td className="text-[0.8125rem] text-muted"><Codes text={r.desc} /></td>
               </tr>
             ))}
           </tbody>
@@ -165,15 +165,15 @@ export default function PoliciesPage() {
         Read-only checks may be reordered for performance; budget reservation and replay protection stay atomic.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-[600px]">
+        <table className="min-w-[37.5rem]">
           <thead><tr><th>#</th><th>Check</th><th>Passes when</th><th>Fails with</th></tr></thead>
           <tbody>
             {ORDER.map(([name, rule, code], i) => (
               <tr key={name}>
-                <td className="font-mono text-[12px] text-dim">{String(i + 1).padStart(2, "0")}</td>
+                <td className="font-mono text-[0.75rem] text-dim">{String(i + 1).padStart(2, "0")}</td>
                 <td className="text-fg">{name}</td>
-                <td className="text-[13px] text-muted"><Codes text={rule} /></td>
-                <td className="font-mono text-[11px] text-soft">{code}</td>
+                <td className="text-[0.8125rem] text-muted"><Codes text={rule} /></td>
+                <td className="font-mono text-[0.6875rem] text-soft">{code}</td>
               </tr>
             ))}
           </tbody>

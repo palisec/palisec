@@ -356,7 +356,7 @@ export default function ChangelogPage() {
       <LineSection>
         <ol className="space-y-12">
           {ENTRIES.map((e) => (
-            <li key={e.version} className="grid gap-4 md:grid-cols-[200px_1fr]">
+            <li key={e.version} className="grid gap-4 md:grid-cols-[12.5rem_1fr]">
               <div>
                 <p className="font-mono text-lg text-fg">{e.version}</p>
                 <p className="label mt-1">{e.date} · {e.tag}</p>

@@ -63,12 +63,12 @@ export default async function MandatesPage() {
                 <div className="space-y-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-3">
                     <p className="t-h3">#{p.number} · {p.title}</p>
-                    <span className="font-mono text-[13px] text-silver">{p.state}</span>
+                    <span className="font-mono text-[0.8125rem] text-silver">{p.state}</span>
                   </div>
-                  {change?.action ? <p className="font-mono text-[14px] text-aqua">{change.action}</p> : null}
+                  {change?.action ? <p className="font-mono text-[0.875rem] text-aqua">{change.action}</p> : null}
                   {totalW > 0 ? (
                     <div>
-                      <div className="mb-3 flex justify-between font-mono text-[12.5px] text-silver">
+                      <div className="mb-3 flex justify-between font-mono text-[0.7812rem] text-silver">
                         <span>for {Math.round((forW / totalW) * 100)}%</span>
                         <span>against {Math.round((againstW / totalW) * 100)}%</span>
                       </div>
@@ -78,9 +78,9 @@ export default async function MandatesPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="font-mono text-[13px] text-dim">No votes counted.</p>
+                    <p className="font-mono text-[0.8125rem] text-dim">No votes counted.</p>
                   )}
-                  <Rows className="font-mono text-[13.5px]">
+                  <Rows className="font-mono text-[0.8438rem]">
                     <li className="flex justify-between py-3"><span className="text-dim">Proposed</span><span className="text-foam">{utc(p.opens_at)}</span></li>
                     <li className="flex justify-between py-3"><span className="text-dim">Voting closes</span><span className="text-foam">{utc(p.closes_at)}</span></li>
                     {p.pending ? (
@@ -90,7 +90,7 @@ export default async function MandatesPage() {
                   </Rows>
                 </div>
               ) : (
-                <div className="space-y-4 font-mono text-[14px]">
+                <div className="space-y-4 font-mono text-[0.875rem]">
                   <p className="text-silver">No proposal yet. Current mandate state:</p>
                   {m.active ? (
                     <Rows>
@@ -120,8 +120,8 @@ export default async function MandatesPage() {
           <div className="space-y-6">
             <Rows>
               {ACTIONS.map(([k, v]) => (
-                <li key={k} className="grid gap-1 py-4 sm:grid-cols-[300px_1fr] sm:gap-6">
-                  <span className="font-mono text-[14px] text-aqua">{k}</span>
+                <li key={k} className="grid gap-1 py-4 sm:grid-cols-[18.75rem_1fr] sm:gap-6">
+                  <span className="font-mono text-[0.875rem] text-aqua">{k}</span>
                   <span className="t-body">{v}</span>
                 </li>
               ))}

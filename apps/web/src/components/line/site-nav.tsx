@@ -98,16 +98,16 @@ export function SiteNav() {
   return (
     <>
       <div aria-hidden className="nav-fade" data-intro-nav />
-      <header className="fixed inset-x-0 top-0 z-50 h-[84px]" data-intro-nav>
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[4px] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
+      <header className="fixed inset-x-0 top-0 z-50 h-[5.25rem]" data-intro-nav>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-[0.25rem] focus:bg-aqua focus:px-3 focus:py-1 focus:text-abyss">
           Skip to content
         </a>
-        <Link href="/" aria-label="Palisec home" className="absolute left-[20px] top-1/2 flex -translate-y-1/2 items-center gap-3 lg:left-[72px]">
+        <Link href="/" aria-label="Palisec home" className="absolute left-[1.25rem] top-1/2 flex -translate-y-1/2 items-center gap-3 lg:left-[4.5rem]">
           <BrandMark size={30} />
-          <span className="font-brand text-[22px] font-medium tracking-[-0.02em] text-mist">Palisec</span>
+          <span className="font-brand text-[1.375rem] font-medium tracking-[-0.02em] text-mist">Palisec</span>
         </Link>
 
-        <nav aria-label="Primary" className="absolute top-0 hidden h-full items-center gap-8 lg:flex" style={{ left: "calc(var(--line-x) + 80px)" }}>
+        <nav aria-label="Primary" className="absolute top-0 hidden h-full items-center gap-8 xl:flex" style={{ left: "calc(var(--line-x) + 5rem)" }}>
           <div onMouseEnter={hoverOpen} onMouseLeave={hoverClose} className="relative flex h-full items-center">
             <button
               ref={productBtn}
@@ -119,7 +119,7 @@ export function SiteNav() {
                 const sinceHover = Date.now() - hoverAt.current;
                 setProduct((v) => (v && sinceHover > 400 ? false : true));
               }}
-              className={`relative py-2 font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${productActive || product ? "text-mist" : "text-silver"}`}
+              className={`relative py-2 font-utility text-[0.9688rem] font-medium transition-colors hover:text-mist ${productActive || product ? "text-mist" : "text-silver"}`}
             >
               Product
               {productActive ? <span aria-hidden className="absolute bottom-0 left-0 h-[2px] w-full bg-aqua" /> : null}
@@ -128,7 +128,7 @@ export function SiteNav() {
           {NAV_LINKS.map((l) => {
             const active = isActive(path, l.href);
             return (
-              <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`relative py-2 font-utility text-[15.5px] font-medium transition-colors hover:text-mist ${active ? "text-mist" : "text-silver"}`}>
+              <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`relative py-2 font-utility text-[0.9688rem] font-medium transition-colors hover:text-mist ${active ? "text-mist" : "text-silver"}`}>
                 {l.label}
                 {active ? <span aria-hidden className="absolute bottom-0 left-0 h-[2px] w-full bg-aqua" /> : null}
               </Link>
@@ -136,19 +136,19 @@ export function SiteNav() {
           })}
         </nav>
 
-        <div className="absolute right-[20px] top-1/2 flex -translate-y-1/2 items-center gap-5 lg:right-[72px]">
-          <button type="button" onClick={openSearch} className="hidden items-center gap-2 font-utility text-[15.5px] font-medium text-silver transition-colors hover:text-mist lg:inline-flex">
-            Search <kbd className="rounded-[4px] border border-line-strong px-1.5 font-mono text-[11px] text-dim">⌘K</kbd>
+        <div className="absolute right-[1.25rem] top-1/2 flex -translate-y-1/2 items-center gap-5 lg:right-[4.5rem]">
+          <button type="button" onClick={openSearch} className="hidden items-center gap-2 font-utility text-[0.9688rem] font-medium text-silver transition-colors hover:text-mist xl:inline-flex">
+            Search <kbd className="rounded-[0.25rem] border border-line-strong px-1.5 font-mono text-[0.6875rem] text-dim">⌘K</kbd>
           </button>
           <Link href="/console" className="lbtn lbtn-primary sm hidden sm:inline-flex">
             <span className="relative">Console</span>
           </Link>
-          <button type="button" aria-expanded={mobile} aria-controls="mobile-menu" onClick={() => setMobile((v) => !v)} className="lbtn lbtn-ghost sm !px-3 lg:hidden">
+          <button type="button" aria-expanded={mobile} aria-controls="mobile-menu" onClick={() => setMobile((v) => !v)} className="lbtn lbtn-ghost sm !px-3 xl:hidden">
             <span className="sr-only">{mobile ? "Close menu" : "Open menu"}</span>
             <span aria-hidden className="relative block h-3 w-4">
-              <span className={`absolute left-0 top-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ${mobile ? "translate-y-[5.25px] rotate-45" : ""}`} />
-              <span className={`absolute left-0 top-[5.25px] h-[1.5px] w-full rounded-full bg-current transition-opacity duration-200 ${mobile ? "opacity-0" : ""}`} />
-              <span className={`absolute bottom-0 left-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ${mobile ? "-translate-y-[5.25px] -rotate-45" : ""}`} />
+              <span className={`absolute left-0 top-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ${mobile ? "translate-y-[0.3281rem] rotate-45" : ""}`} />
+              <span className={`absolute left-0 top-[0.3281rem] h-[1.5px] w-full rounded-full bg-current transition-opacity duration-200 ${mobile ? "opacity-0" : ""}`} />
+              <span className={`absolute bottom-0 left-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ${mobile ? "-translate-y-[0.3281rem] -rotate-45" : ""}`} />
             </span>
           </button>
         </div>
@@ -160,15 +160,15 @@ export function SiteNav() {
           ref={panelRef}
           onMouseEnter={hoverOpen}
           onMouseLeave={hoverClose}
-          className="fixed right-0 top-[84px] z-50 hidden max-h-[calc(100dvh-84px)] overflow-y-auto border-y border-line bg-abyss/95 backdrop-blur-md lg:block"
+          className="fixed right-0 top-[5.25rem] z-50 hidden max-h-[calc(100dvh-5.25rem)] overflow-y-auto border-y border-line bg-abyss/95 backdrop-blur-md xl:block"
           style={{ left: "var(--line-x)" }}
         >
-          <ul className="divide-y divide-line pl-[80px] pr-[150px]">
+          <ul className="divide-y divide-line pl-[5rem] pr-[9.375rem]">
             {PRODUCT_LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="group grid grid-cols-[220px_1fr] items-baseline gap-6 py-4 outline-none">
-                  <span className="font-utility text-[16px] font-medium text-mist group-hover:text-aqua group-focus-visible:text-aqua">{l.label}</span>
-                  <span className="text-[15px] text-silver">{l.text}</span>
+                <Link href={l.href} className="group grid grid-cols-[13.75rem_1fr] items-baseline gap-6 py-4 outline-none">
+                  <span className="font-utility text-[1rem] font-medium text-mist group-hover:text-aqua group-focus-visible:text-aqua">{l.label}</span>
+                  <span className="text-[0.9375rem] text-silver">{l.text}</span>
                 </Link>
               </li>
             ))}
@@ -177,15 +177,15 @@ export function SiteNav() {
       ) : null}
 
       {mobile ? (
-        <div id="mobile-menu" className="fixed inset-0 top-[84px] z-50 overflow-y-auto bg-abyss lg:hidden">
-          <nav aria-label="Mobile" className="pl-[44px] pr-5 pb-12">
+        <div id="mobile-menu" className="fixed inset-0 top-[5.25rem] z-50 overflow-y-auto bg-abyss xl:hidden">
+          <nav aria-label="Mobile" className="pl-[2.75rem] pr-5 pb-12">
             <p className="t-label pt-6 pb-3">Product</p>
             <ul className="divide-y divide-line border-y border-line">
               {PRODUCT_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="block py-4">
-                    <span className="block font-utility text-[17px] font-medium text-mist">{l.label}</span>
-                    <span className="block text-[14.5px] text-silver">{l.text}</span>
+                    <span className="block font-utility text-[1.0625rem] font-medium text-mist">{l.label}</span>
+                    <span className="block text-[0.9062rem] text-silver">{l.text}</span>
                   </Link>
                 </li>
               ))}
@@ -193,7 +193,7 @@ export function SiteNav() {
             <ul className="mt-8 divide-y divide-line border-y border-line">
               {[...NAV_LINKS, { href: "/console", label: "Console" }].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="block py-4 font-utility text-[17px] font-medium text-mist">{l.label}</Link>
+                  <Link href={l.href} className="block py-4 font-utility text-[1.0625rem] font-medium text-mist">{l.label}</Link>
                 </li>
               ))}
             </ul>

@@ -39,8 +39,8 @@ export default function EcosystemPage() {
           <Rows>
             {FRAMEWORKS.map((f) => (
               <li key={f.name}>
-                <Link href={f.href} className="group grid gap-1 py-5 sm:grid-cols-[240px_1fr_auto] sm:items-baseline sm:gap-6">
-                  <span className="font-utility text-[17px] font-medium text-mist group-hover:text-aqua">{f.name}</span>
+                <Link href={f.href} className="group grid gap-1 py-5 sm:grid-cols-[15rem_1fr_auto] sm:items-baseline sm:gap-6">
+                  <span className="font-utility text-[1.0625rem] font-medium text-mist group-hover:text-aqua">{f.name}</span>
                   <span className="t-body">{f.text}</span>
                   <span aria-hidden className="text-dim group-hover:text-aqua">→</span>
                 </Link>
@@ -58,14 +58,14 @@ export default function EcosystemPage() {
               Zolva agents linked to a Palisec account show a verified track record. The link is proven from both sides: the Palisec agent names its Zolva agent, and the
               Zolva agent names its Palisec account.
             </p>
-            <p className="font-mono text-[13.5px] text-silver">
+            <p className="font-mono text-[0.8438rem] text-silver">
               AgentLinks{" "}
               <a href={`${EXPLORER}/address/${AGENT_LINKS}`} target="_blank" rel="noopener noreferrer" className="text-aqua hover:underline">
                 {AGENT_LINKS.slice(0, 6)}…{AGENT_LINKS.slice(-4)} ↗
               </a>{" "}
               · linked on chain
             </p>
-            <Link href="/docs/zolva" className="inline-block font-mono text-[13px] text-silver hover:text-aqua">How the link works →</Link>
+            <Link href="/docs/zolva" className="inline-block font-mono text-[0.8125rem] text-silver hover:text-aqua">How the link works →</Link>
           </Framed>
         }
       />

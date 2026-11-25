@@ -57,9 +57,9 @@ export function LineFooter() {
           <div className="space-y-5">
             <Link href="/" aria-label="Palisec home" className="inline-flex items-center gap-3">
               <BrandMark size={30} />
-              <span className="font-brand text-[22px] font-medium tracking-[-0.02em] text-mist">Palisec</span>
+              <span className="font-brand text-[1.375rem] font-medium tracking-[-0.02em] text-mist">Palisec</span>
             </Link>
-            <p className="max-w-[34ch] text-[15px] leading-relaxed text-silver">Agents decide. Palisec enforces the limits, on chain.</p>
+            <p className="max-w-[34ch] text-[0.9375rem] leading-relaxed text-silver">Agents decide. Palisec enforces the limits, on chain.</p>
             <p className="t-label">Robinhood Chain 4663</p>
           </div>
         }
@@ -72,9 +72,9 @@ export function LineFooter() {
                   {col.links.map((l) => (
                     <li key={l.href}>
                       {l.href.startsWith("http") ? (
-                        <a href={l.href} target="_blank" rel="noopener noreferrer" className="text-[15px] text-foam transition-colors hover:text-aqua">{l.label}</a>
+                        <a href={l.href} target="_blank" rel="noopener noreferrer" className="text-[0.9375rem] text-foam transition-colors hover:text-aqua">{l.label}</a>
                       ) : (
-                        <Link href={l.href} className="text-[15px] text-foam transition-colors hover:text-aqua">{l.label}</Link>
+                        <Link href={l.href} className="text-[0.9375rem] text-foam transition-colors hover:text-aqua">{l.label}</Link>
                       )}
                     </li>
                   ))}

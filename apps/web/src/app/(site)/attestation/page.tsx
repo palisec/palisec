@@ -32,7 +32,7 @@ export default function AttestationPage() {
         <div className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="label">Enclave · production</p>
-            <p className="font-utility text-[13px] font-semibold text-review">No enclave deployed yet</p>
+            <p className="font-utility text-[0.8125rem] font-semibold text-review">No enclave deployed yet</p>
           </div>
           <dl className="grid grid-cols-[auto_1fr] font-mono text-xs">
             {["PCR0 · image", "PCR1 · kernel", "PCR2 · application", "Signer public key", "Last verified"].map((k) => (
@@ -51,7 +51,7 @@ export default function AttestationPage() {
       <LineSection label="Verification procedure">
         <ol className="divide-y divide-line border-y border-line">
           {STEPS.map(([k, v], i) => (
-            <li key={k} className="grid gap-2 py-4 md:grid-cols-[3rem_220px_1fr]">
+            <li key={k} className="grid gap-2 py-4 md:grid-cols-[3rem_13.75rem_1fr]">
               <span className="font-mono text-xs text-dim">{String(i + 1).padStart(2, "0")}</span>
               <span className="text-fg">{k}</span>
               <span className="text-sm text-muted"><Codes text={v} /></span>

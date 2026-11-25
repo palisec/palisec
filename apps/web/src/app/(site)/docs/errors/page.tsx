@@ -62,9 +62,9 @@ export default function ErrorsPage() {
         <tbody>
           {codes.map((c) => (
             <tr key={c} id={c}>
-              <td className="font-mono text-[12px] text-fg">{c}</td>
+              <td className="font-mono text-[0.75rem] text-fg">{c}</td>
               <td>{REASON_CODES[c]}</td>
-              <td className="font-mono text-[11px] text-muted">{RETRYABLE[c] ? "after condition clears" : "no"}</td>
+              <td className="font-mono text-[0.6875rem] text-muted">{RETRYABLE[c] ? "after condition clears" : "no"}</td>
             </tr>
           ))}
         </tbody>
@@ -78,14 +78,14 @@ export default function ErrorsPage() {
       <table>
         <thead><tr><th>Code</th><th>When</th><th>Retry</th></tr></thead>
         <tbody>
-          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_001</td><td>Missing or invalid credentials, or a scope the key does not hold.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_002</td><td>Smart accounts: the operation is not allowed or approved, or its authorization expired.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_AUTH_003</td><td>Smart accounts: the signature is not from an owner of the account (or is Palisec&apos;s own).</td><td className="font-mono text-[11px] text-muted">no</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_ACCOUNT_001</td><td>Smart accounts: the agent&apos;s account is not a Safe with the 4337 module, Palisec as an owner and a threshold of 2.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_CHAIN_001</td><td>The chain RPC or the bundler is unavailable, or the bundler refused the operation (its message is included).</td><td className="font-mono text-[11px] text-muted">after condition clears</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_REPLAY_001</td><td>A request ID reused, or an operation already submitted.</td><td className="font-mono text-[11px] text-muted">no</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_RATE_001</td><td>Too many requests from one address in a minute.</td><td className="font-mono text-[11px] text-muted">after a minute</td></tr>
-          <tr><td className="font-mono text-[12px] text-fg">PS_CREDIT_001</td><td>HTTP 402. Mainnet only: the organization has used its monthly allowance and has no credits left. Nothing is evaluated or authorized; buy credits in the console (Billing). Testnet and dry runs are never metered.</td><td className="font-mono text-[11px] text-muted">after buying credits</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_AUTH_001</td><td>Missing or invalid credentials, or a scope the key does not hold.</td><td className="font-mono text-[0.6875rem] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_AUTH_002</td><td>Smart accounts: the operation is not allowed or approved, or its authorization expired.</td><td className="font-mono text-[0.6875rem] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_AUTH_003</td><td>Smart accounts: the signature is not from an owner of the account (or is Palisec&apos;s own).</td><td className="font-mono text-[0.6875rem] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_ACCOUNT_001</td><td>Smart accounts: the agent&apos;s account is not a Safe with the 4337 module, Palisec as an owner and a threshold of 2.</td><td className="font-mono text-[0.6875rem] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_CHAIN_001</td><td>The chain RPC or the bundler is unavailable, or the bundler refused the operation (its message is included).</td><td className="font-mono text-[0.6875rem] text-muted">after condition clears</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_REPLAY_001</td><td>A request ID reused, or an operation already submitted.</td><td className="font-mono text-[0.6875rem] text-muted">no</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_RATE_001</td><td>Too many requests from one address in a minute.</td><td className="font-mono text-[0.6875rem] text-muted">after a minute</td></tr>
+          <tr><td className="font-mono text-[0.75rem] text-fg">PS_CREDIT_001</td><td>HTTP 402. Mainnet only: the organization has used its monthly allowance and has no credits left. Nothing is evaluated or authorized; buy credits in the console (Billing). Testnet and dry runs are never metered.</td><td className="font-mono text-[0.6875rem] text-muted">after buying credits</td></tr>
         </tbody>
       </table>
 
@@ -109,7 +109,7 @@ export default function ErrorsPage() {
         <thead><tr><th>State</th><th>Meaning</th></tr></thead>
         <tbody>
           {STATES.map(([s, m]) => (
-            <tr key={s}><td className="font-mono text-[12px] text-fg">{s}</td><td>{m}</td></tr>
+            <tr key={s}><td className="font-mono text-[0.75rem] text-fg">{s}</td><td>{m}</td></tr>
           ))}
         </tbody>
       </table>

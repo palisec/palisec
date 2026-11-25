@@ -47,16 +47,16 @@ export const metadata: Metadata = {
 function Node({ icon, brand, title, sub, planned = false, accent = false }: { icon?: ReactNode; brand?: Brand; title: string; sub: string; planned?: boolean; accent?: boolean }) {
   return (
     <div
-      className={`flex items-start gap-3 rounded-[10px] px-3 py-2.5 ${accent ? "bg-aqua/[0.07]" : ""}`}
+      className={`flex items-start gap-3 rounded-[0.625rem] px-3 py-2.5 ${accent ? "bg-aqua/[0.07]" : ""}`}
     >
       <span aria-hidden className={`mt-0.5 shrink-0 ${planned ? "text-dim" : accent ? "text-aqua" : "text-silver"}`}>
         {brand ? <BrandMark brand={brand} size={18} /> : icon}
       </span>
       <span className="min-w-0">
-        <span className={`block text-[14.5px] font-medium ${planned ? "text-muted" : "text-mist"}`}>{title}</span>
-        <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{sub}</span>
+        <span className={`block text-[0.9062rem] font-medium ${planned ? "text-muted" : "text-mist"}`}>{title}</span>
+        <span className="mt-0.5 block text-[0.7812rem] leading-snug text-muted">{sub}</span>
       </span>
-      {planned && <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 font-utility text-[11px] font-semibold text-muted ring-1 ring-inset ring-line-strong">Planned</span>}
+      {planned && <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 font-utility text-[0.6875rem] font-semibold text-muted ring-1 ring-inset ring-line-strong">Planned</span>}
     </div>
   );
 }
@@ -72,7 +72,7 @@ function Column({ title, children, className = "" }: { title: ReactNode; childre
 
 function SystemMap() {
   return (
-    <figure className="overflow-hidden rounded-[16px] border border-line-strong bg-deep/50" aria-labelledby="map-cap">
+    <figure className="overflow-hidden rounded-[1rem] border border-line-strong bg-deep/50" aria-labelledby="map-cap">
       <div className="grid gap-8 p-5 sm:p-7 2xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.5fr)_minmax(0,1fr)] 2xl:gap-6">
         <Column title="Callers">
           <Node icon={<AgentIcon size={18} />} title="Your agents" sub="SDK, REST or MCP with a scoped key" />
@@ -86,7 +86,7 @@ function SystemMap() {
           <Node icon={<HandIcon size={18} />} title="Approvers" sub="EIP-712 signature in their own wallet" />
         </Column>
 
-        <div className="relative rounded-[14px] border border-aqua/30 bg-abyss/60 p-4 sm:p-5">
+        <div className="relative rounded-[0.875rem] border border-aqua/30 bg-abyss/60 p-4 sm:p-5">
           <p className="label mb-3 flex items-center gap-2">
             <BrandMark brand="vercel" size={14} /> Palisec on Vercel
           </p>
@@ -98,19 +98,19 @@ function SystemMap() {
               <Node icon={<AgentIcon size={18} />} title="Agent runtime" sub="Runs, 30 typed tools, action requests" />
               <Node icon={<PlugIcon size={18} />} title="MCP server" sub="/api/mcp, stateless Streamable HTTP" />
             </div>
-            <div className="rounded-[10px] bg-aqua/[0.07] p-3">
-              <p className="flex items-center gap-2 text-[14.5px] font-medium text-mist">
+            <div className="rounded-[0.625rem] bg-aqua/[0.07] p-3">
+              <p className="flex items-center gap-2 text-[0.9062rem] font-medium text-mist">
                 <CpuIcon size={18} className="text-aqua" /> Policy engine, twice
               </p>
-              <div className="mt-2.5 grid grid-cols-2 gap-2 text-[12.5px]">
-                <span className="flex items-center gap-2 rounded-[8px] bg-deep px-2.5 py-2 text-soft">
+              <div className="mt-2.5 grid grid-cols-2 gap-2 text-[0.7812rem]">
+                <span className="flex items-center gap-2 rounded-[0.5rem] bg-deep px-2.5 py-2 text-soft">
                   <BrandMark brand="rust" size={15} /> Rust → <BrandMark brand="webassembly" size={15} />
                 </span>
-                <span className="flex items-center gap-2 rounded-[8px] bg-deep px-2.5 py-2 text-soft">
+                <span className="flex items-center gap-2 rounded-[0.5rem] bg-deep px-2.5 py-2 text-soft">
                   <BrandMark brand="typescript" size={15} /> Reference
                 </span>
               </div>
-              <p className="mt-2 text-[12.5px] text-muted">Every field must match, or the request is denied.</p>
+              <p className="mt-2 text-[0.7812rem] text-muted">Every field must match, or the request is denied.</p>
             </div>
             <Node icon={<BellIcon size={18} />} title="Webhook dispatcher" sub="After the response; HMAC-signed, 3 attempts" />
           </div>
@@ -127,9 +127,9 @@ function SystemMap() {
           <Node icon={<LockIcon size={18} />} title="Nitro enclave signer" sub="Mainnet co-signing" planned />
         </Column>
       </div>
-      <figcaption id="map-cap" className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line px-5 py-3 text-[12.5px] text-muted sm:px-7">
-        <span className="flex items-center gap-2"><span aria-hidden className="h-3 w-5 rounded-[3px] bg-aqua/[0.15]" />On the decision path</span>
-        <span className="flex items-center gap-2"><span aria-hidden className="rounded-full px-1.5 font-utility text-[11px] font-semibold ring-1 ring-inset ring-line-strong">Planned</span>Not built yet</span>
+      <figcaption id="map-cap" className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line px-5 py-3 text-[0.7812rem] text-muted sm:px-7">
+        <span className="flex items-center gap-2"><span aria-hidden className="h-3 w-5 rounded-[0.1875rem] bg-aqua/[0.15]" />On the decision path</span>
+        <span className="flex items-center gap-2"><span aria-hidden className="rounded-full px-1.5 font-utility text-[0.6875rem] font-semibold ring-1 ring-inset ring-line-strong">Planned</span>Not built yet</span>
       </figcaption>
     </figure>
   );
@@ -159,13 +159,13 @@ function Lifecycle() {
             <span aria-hidden className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-abyss ring-1 ${ring}`}>{s.icon}</span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <h3 className="text-[16.5px] font-medium text-mist">
-                  <span className="mr-2 font-mono text-[12px] text-dim">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="text-[1.0312rem] font-medium text-mist">
+                  <span className="mr-2 font-mono text-[0.75rem] text-dim">{String(i + 1).padStart(2, "0")}</span>
                   {s.title}
                 </h3>
-                <code className="font-mono text-[12px] text-muted">{s.where}</code>
+                <code className="font-mono text-[0.75rem] text-muted">{s.where}</code>
               </div>
-              <p className="mt-1.5 text-[14.5px] leading-relaxed text-silver">{s.body}</p>
+              <p className="mt-1.5 text-[0.9062rem] leading-relaxed text-silver">{s.body}</p>
             </div>
           </li>
         );
@@ -307,10 +307,10 @@ export default function ArchitecturePage() {
 
       <LineSection label="Two engines, one answer" id="engine">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-center">
-          <div className="space-y-4 text-[16px] leading-relaxed text-silver">
+          <div className="space-y-4 text-[1rem] leading-relaxed text-silver">
             <p>The Rust engine is compiled to WebAssembly and runs inside the API, next to the TypeScript reference evaluator. Both receive identical inputs.</p>
             <p>The decision counts only if they agree on every field: decision, reason code, every check and every reservation amount. A bug in either can only ever cause a denial.</p>
-            <p className="flex items-center gap-2 text-[14px] text-muted">
+            <p className="flex items-center gap-2 text-[0.875rem] text-muted">
               <CheckCircleIcon size={16} className="text-allow" /> Parity tested on shared fixtures and 6,000 random cases on every change.
             </p>
           </div>
@@ -320,23 +320,23 @@ export default function ArchitecturePage() {
                 ["rust", "Rust engine", "WASM"],
                 ["typescript", "Reference", "TypeScript"],
               ].map(([b, t, s]) => (
-                <div key={t} className="rounded-[10px] border border-line-strong bg-deep p-4 text-center">
+                <div key={t} className="rounded-[0.625rem] border border-line-strong bg-deep p-4 text-center">
                   <BrandMark brand={b as Brand} size={26} className="mx-auto text-mist" />
-                  <p className="mt-2.5 text-[14.5px] font-medium text-mist">{t}</p>
-                  <p className="text-[12.5px] text-muted">{s}</p>
+                  <p className="mt-2.5 text-[0.9062rem] font-medium text-mist">{t}</p>
+                  <p className="text-[0.7812rem] text-muted">{s}</p>
                 </div>
               ))}
             </div>
             <div aria-hidden className="mx-auto my-3 grid h-8 w-px bg-line-strong" />
-            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-aqua/45 bg-aqua/[0.06] px-4 py-1.5 text-[13.5px] font-medium text-mist">
+            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-aqua/45 bg-aqua/[0.06] px-4 py-1.5 text-[0.8438rem] font-medium text-mist">
               <RepeatIcon size={15} className="text-aqua" /> Compare every field
             </div>
             <div aria-hidden className="mx-auto my-3 grid h-8 w-px bg-line-strong" />
-            <div className="grid grid-cols-2 gap-3 text-[13.5px]">
-              <p className="flex items-center justify-center gap-2 rounded-[10px] border border-allow/40 bg-allow/[0.06] px-3 py-2.5 text-allow">
+            <div className="grid grid-cols-2 gap-3 text-[0.8438rem]">
+              <p className="flex items-center justify-center gap-2 rounded-[0.625rem] border border-allow/40 bg-allow/[0.06] px-3 py-2.5 text-allow">
                 <CheckCircleIcon size={16} /> Match: their decision
               </p>
-              <p className="flex items-center justify-center gap-2 rounded-[10px] border border-deny/40 bg-deny/[0.06] px-3 py-2.5 text-deny">
+              <p className="flex items-center justify-center gap-2 rounded-[0.625rem] border border-deny/40 bg-deny/[0.06] px-3 py-2.5 text-deny">
                 <BanIcon size={16} /> Differ: PS_STATE_001
               </p>
             </div>
@@ -347,16 +347,16 @@ export default function ArchitecturePage() {
       <LineSection label="Data model" intro="Postgres is the only source of truth. Five migrations, forward-only." className="border-y border-line bg-deep/40">
         <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-[repeat(5,minmax(0,1fr))]">
           {TABLES.map((g) => (
-            <div key={g.group} className="rounded-[12px] border border-line-strong bg-abyss/70">
-              <p className="flex items-center gap-2 border-b border-line px-4 py-3 text-[14.5px] font-medium text-mist">
+            <div key={g.group} className="rounded-[0.75rem] border border-line-strong bg-abyss/70">
+              <p className="flex items-center gap-2 border-b border-line px-4 py-3 text-[0.9062rem] font-medium text-mist">
                 <span aria-hidden className="text-aqua">{g.icon}</span>
                 {g.group}
               </p>
               <ul className="divide-y divide-line">
                 {g.tables.map(([t, d]) => (
                   <li key={t} className="px-4 py-2.5">
-                    <code className="font-mono text-[12.5px] text-mist">{t}</code>
-                    <p className="mt-0.5 text-[12.5px] leading-snug text-muted">{d}</p>
+                    <code className="font-mono text-[0.7812rem] text-mist">{t}</code>
+                    <p className="mt-0.5 text-[0.7812rem] leading-snug text-muted">{d}</p>
                   </li>
                 ))}
               </ul>
@@ -371,11 +371,11 @@ export default function ArchitecturePage() {
             <li key={t.c} className="flex items-start gap-3 border-b border-line py-4">
               <span aria-hidden className="mt-0.5 text-silver">{t.icon}</span>
               <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15.5px] font-medium text-mist">
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.9688rem] font-medium text-mist">
                   {t.c}
-                  <span className={`rounded-full px-2 py-0.5 font-utility text-[11.5px] font-semibold ring-1 ring-inset ${LEVEL[t.level].cls}`}>{LEVEL[t.level].text}</span>
+                  <span className={`rounded-full px-2 py-0.5 font-utility text-[0.7188rem] font-semibold ring-1 ring-inset ${LEVEL[t.level].cls}`}>{LEVEL[t.level].text}</span>
                 </p>
-                <p className="mt-1 text-[14px] text-silver">{t.s}</p>
+                <p className="mt-1 text-[0.875rem] text-silver">{t.s}</p>
               </div>
             </li>
           ))}
@@ -391,15 +391,15 @@ export default function ArchitecturePage() {
               [<HandIcon key="i" size={18} />, "Confirmed actions", "Actions become requests. A member confirms and they run through the console's own functions."],
             ].map(([icon, t, b]) => (
               <li key={t as string} className="flex gap-4">
-                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-raised/70 text-aqua ring-1 ring-inset ring-line-strong">{icon}</span>
+                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.625rem] bg-raised/70 text-aqua ring-1 ring-inset ring-line-strong">{icon}</span>
                 <div>
-                  <p className="text-[16.5px] font-medium text-mist">{t}</p>
-                  <p className="mt-1 text-[14.5px] leading-relaxed text-silver">{b}</p>
+                  <p className="text-[1.0312rem] font-medium text-mist">{t}</p>
+                  <p className="mt-1 text-[0.9062rem] leading-relaxed text-silver">{b}</p>
                 </div>
               </li>
             ))}
           </ul>
-          <pre className="panel overflow-x-auto p-5 font-mono text-[12.5px] leading-[1.9] text-soft">{`operator ─► run ─► model (Groq, OpenAI-compatible)
+          <pre className="panel overflow-x-auto p-5 font-mono text-[0.7812rem] leading-[1.9] text-soft">{`operator ─► run ─► model (Groq, OpenAI-compatible)
                      │ tool call (name, JSON)
                      ▼
             permission resolver ── refused ──► recorded
@@ -416,9 +416,9 @@ export default function ArchitecturePage() {
       </LineSection>
 
       <LineSection label="Every check, in order" id="checks" intro={`${ENGINE_CHECKS.filter((c) => c.enforcement === "local").length} checks run on every request in both engines, then ${ENGINE_CHECKS.filter((c) => c.enforcement === "live").length} on chain for a smart account. Any failure denies.`}>
-        <ol className="divide-y divide-line border-y border-line font-mono text-[14px]">
+        <ol className="divide-y divide-line border-y border-line font-mono text-[0.875rem]">
           {ENGINE_CHECKS.map((c, i) => (
-            <li key={c.id} className="grid grid-cols-[40px_1fr_auto] gap-3 py-3">
+            <li key={c.id} className="grid grid-cols-[2.5rem_1fr_auto] gap-3 py-3">
               <span className="text-dim">{String(i + 1).padStart(2, "0")}</span>
               <span className="text-foam">{c.label}</span>
               <span className={c.enforcement === "live" ? "text-aqua" : "text-dim"}>{c.enforcement === "live" ? "on chain" : "every request"}</span>
@@ -430,28 +430,28 @@ export default function ArchitecturePage() {
       <LineSection label="When things break" id="failures" intro="Every failure ends in a denial or a pause, never a silent allow.">
         <div className="grid gap-3 lg:grid-cols-2">
           {FAILURES.map((f) => (
-            <details key={f.k} className="group rounded-[12px] border border-line-strong bg-deep/60 open:border-aqua/35">
+            <details key={f.k} className="group rounded-[0.75rem] border border-line-strong bg-deep/60 open:border-aqua/35">
               <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
                 <span aria-hidden className="text-silver group-open:text-aqua">{f.icon}</span>
-                <span className="flex-1 text-[15px] font-medium text-mist">{f.k}</span>
+                <span className="flex-1 text-[0.9375rem] font-medium text-mist">{f.k}</span>
                 <ChevronDownIcon size={16} className="text-dim transition-transform duration-300 group-open:rotate-180" />
               </summary>
-              <p className="border-t border-line px-4 py-3.5 pl-12 text-[14.5px] leading-relaxed text-silver">{f.v}</p>
+              <p className="border-t border-line px-4 py-3.5 pl-12 text-[0.9062rem] leading-relaxed text-silver">{f.v}</p>
             </details>
           ))}
         </div>
       </LineSection>
 
       <LineSection label="Stack" className="border-y border-line bg-deep/40">
-        <ul className="grid gap-px overflow-hidden rounded-[14px] border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-px overflow-hidden rounded-[0.875rem] border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
           {STACK.map((s) => (
             <li key={s.name} className="flex items-center gap-4 bg-abyss px-5 py-4">
               <span aria-hidden className={s.live ? "text-mist" : "text-dim"}>
                 {s.brand ? <BrandMark brand={s.brand} size={22} /> : s.icon}
               </span>
               <span className="min-w-0 flex-1">
-                <span className={`block text-[15px] font-medium ${s.live ? "text-mist" : "text-muted"}`}>{s.name}</span>
-                <span className="block text-[13px] text-muted">{s.role}</span>
+                <span className={`block text-[0.9375rem] font-medium ${s.live ? "text-mist" : "text-muted"}`}>{s.name}</span>
+                <span className="block text-[0.8125rem] text-muted">{s.role}</span>
               </span>
               <MaturityBadge maturity={s.live ? "service" : "specified"} />
             </li>
@@ -467,18 +467,18 @@ export default function ArchitecturePage() {
         <ul className="divide-y divide-line border-y border-line">
           {MYTHS.map(([a, b]) => (
             <li key={a} className="grid gap-3 py-5 md:grid-cols-2 md:gap-10">
-              <p className="flex items-start gap-3 text-[15.5px] text-silver line-through decoration-deny/60">
+              <p className="flex items-start gap-3 text-[0.9688rem] text-silver line-through decoration-deny/60">
                 <BanIcon size={17} className="mt-0.5 shrink-0 text-deny" />
                 {a}
               </p>
-              <p className="flex items-start gap-3 text-[15.5px] leading-relaxed text-mist">
+              <p className="flex items-start gap-3 text-[0.9688rem] leading-relaxed text-mist">
                 <CheckCircleIcon size={17} className="mt-0.5 shrink-0 text-allow" />
                 {b}
               </p>
             </li>
           ))}
         </ul>
-        <p className="mt-8 text-[14.5px] text-muted">
+        <p className="mt-8 text-[0.9062rem] text-muted">
           Next: the <Link href="/security" className="text-aqua underline-offset-4 hover:underline">security model</Link> covers threats and key lifecycle.
         </p>
       </LineSection>

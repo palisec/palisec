@@ -100,13 +100,13 @@ export function LiveStatus() {
     <div>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4" aria-live="polite">
         <div>
-          <p className={`font-heading text-[clamp(22px,2.2vw,30px)] font-medium leading-tight ${headline.cls}`}>{headline.text}</p>
-          <p className="mt-2 font-mono text-[12px] text-dim">
+          <p className={`font-heading text-[clamp(1.375rem,2.2vw,1.875rem)] font-medium leading-tight ${headline.cls}`}>{headline.text}</p>
+          <p className="mt-2 font-mono text-[0.75rem] text-dim">
             {at ? `Last checked ${utc(at)}` : "Not checked yet"}
             {h?.schema_migration ? ` · schema ${h.schema_migration}` : ""}
           </p>
         </div>
-        <button type="button" onClick={check} disabled={phase === "checking"} className="rounded-[6px] border border-line-strong px-4 py-2 text-sm text-fg hover:border-aqua/60 disabled:opacity-50">
+        <button type="button" onClick={check} disabled={phase === "checking"} className="rounded-[0.375rem] border border-line-strong px-4 py-2 text-sm text-fg hover:border-aqua/60 disabled:opacity-50">
           {phase === "checking" ? "Checking…" : "Check again"}
         </button>
       </div>
@@ -119,9 +119,9 @@ export function LiveStatus() {
               <span className="min-w-0 flex-1">
                 <span className="text-fg">{s.name}</span>
                 {s.note && <span className="ml-3 text-sm text-muted">{s.note}</span>}
-                {reason && state !== "operational" && <span className={`mt-1 block text-[13.5px] ${state === "not_running" ? "text-deny" : "text-silver"}`}>{reason}</span>}
+                {reason && state !== "operational" && <span className={`mt-1 block text-[0.8438rem] ${state === "not_running" ? "text-deny" : "text-silver"}`}>{reason}</span>}
               </span>
-              <span className={`shrink-0 font-mono text-[11px] tracking-[0.08em] ${badge.cls}`}>{badge.text}</span>
+              <span className={`shrink-0 font-mono text-[0.6875rem] tracking-[0.08em] ${badge.cls}`}>{badge.text}</span>
             </li>
           );
         })}

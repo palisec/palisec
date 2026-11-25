@@ -16,7 +16,7 @@ export default function TermsPage() {
     <>
       <LinePageHeader eyebrow="Legal" title="Terms of Service" lede={`Effective ${TERMS_VERSION}. These terms govern your use of Palisec. By signing in you accept them.`} />
       <Container className="py-16 sm:py-20">
-        <article className="prose-ps max-w-[760px]">
+        <article className="prose-ps max-w-[47.5rem]">
           <h2 id="service">1. The service</h2>
           <p>
             Palisec (&ldquo;Palisec&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) provides an authorization service for autonomous on-chain agents: a

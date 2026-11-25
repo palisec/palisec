@@ -35,7 +35,7 @@ export default function PrivacyPage() {
     <>
       <LinePageHeader eyebrow="Legal" title="Privacy Policy" lede={`Effective ${PRIVACY_VERSION}. Palisec collects as little as it can to authorize transactions for your agents, and nothing for advertising.`} />
       <Container className="py-16 sm:py-20">
-        <article className="prose-ps max-w-[820px]">
+        <article className="prose-ps max-w-[51.25rem]">
           <h2 id="summary">In short</h2>
           <ul>
             <li>No analytics, no advertising, no third-party trackers, and no cookies besides the one that keeps you signed in.</li>
@@ -46,11 +46,11 @@ export default function PrivacyPage() {
 
           <h2 id="collect">What we collect and why</h2>
           <div className="not-prose overflow-x-auto">
-            <table className="w-full min-w-[620px] text-left text-sm">
+            <table className="w-full break-words text-left text-sm">
               <thead>
                 <tr className="text-dim">
                   {["Data", "Purpose", "Kept"].map((h) => (
-                    <th key={h} className="label border-b border-line-strong px-3 py-2 !text-[10px]">{h}</th>
+                    <th key={h} className="label border-b border-line-strong px-3 py-2 !text-[0.625rem]">{h}</th>
                   ))}
                 </tr>
               </thead>

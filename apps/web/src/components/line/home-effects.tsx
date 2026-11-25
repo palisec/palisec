@@ -83,7 +83,7 @@ export interface LimitRowData {
 
 /** An illustration of how a rule looks: never live data, never a time like "today". */
 function Viz({ kind, p }: { kind: LimitRowData["viz"]; p: number }) {
-  const lab = "mb-3 flex justify-between font-mono text-[12.5px] text-silver";
+  const lab = "mb-3 flex justify-between font-mono text-[0.7812rem] text-silver";
   const meter = (pct: number, deny: boolean) => (
     <div className="h-2 overflow-hidden rounded-full bg-line">
       <div className={`h-full origin-left rounded-full ${deny ? "bg-deny" : "bg-aqua"}`} style={{ transform: `scaleX(${clamp(pct / 100)})` }} />
@@ -118,7 +118,7 @@ function Viz({ kind, p }: { kind: LimitRowData["viz"]; p: number }) {
     const hh = String(Math.floor(s / 3600)).padStart(2, "0");
     const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
     const ss = String(s % 60).padStart(2, "0");
-    return <div><div className={lab}><span>$500 → $2,000 / hour</span></div><div className="font-mono text-[30px] tabular-nums text-review">{hh}:{mm}:{ss}</div></div>;
+    return <div><div className={lab}><span>$500 → $2,000 / hour</span></div><div className="font-mono text-[1.875rem] tabular-nums text-review">{hh}:{mm}:{ss}</div></div>;
   }
   return <div><div className={lab}><span>sell leg simulated</span></div><div className={`${lab} ${p > 0.4 ? "!text-deny" : ""}`}><span>{p > 0.4 ? "● 20% sell tax · blocked" : "checking…"}</span></div></div>;
 }
@@ -176,10 +176,10 @@ export function LimitsList({ rows, wordClass = "t-giant" }: { rows: LimitRowData
         <div key={r.id} id={r.id} className="limit-row" data-on={i === active ? "" : undefined}>
           <div className="split py-8">
             <div className="split-l min-w-0 space-y-3 pt-2">
-              <p className="ld text-[clamp(17px,1.1vw,21px)] leading-[1.45]">{r.text}</p>
-              <p className="lc font-mono text-[13px]">{r.code}</p>
+              <p className="ld text-[clamp(1.0625rem,1.1vw,1.3125rem)] leading-[1.45]">{r.text}</p>
+              <p className="lc font-mono text-[0.8125rem]">{r.code}</p>
             </div>
-            <div className="split-r grid min-w-0 items-start gap-6 lg:grid-cols-[1fr_340px]">
+            <div className="split-r grid min-w-0 items-start gap-6 lg:grid-cols-[1fr_21.25rem]">
               <p className={`lw ${wordClass}`}>{r.word}</p>
               <div className="lv pt-3" aria-hidden>
                 <VizPlayer kind={r.viz} play={i === active} />
@@ -242,7 +242,7 @@ export function TypedAddress({ address, caption, href }: { address: string; capt
   }, []);
   return (
     <div ref={ref} className="px-5 text-center">
-      <a ref={wrap as never} href={href} target="_blank" rel="noopener noreferrer" className="inline-block whitespace-nowrap font-mono text-[clamp(13px,2.9vw,56px)] tracking-[-0.02em]" aria-label={`Policy registry v3 ${address} on the explorer`}>
+      <a ref={wrap as never} href={href} target="_blank" rel="noopener noreferrer" className="inline-block whitespace-nowrap font-mono text-[clamp(0.8125rem,2.9vw,3.5rem)] tracking-[-0.02em]" aria-label={`Policy registry v3 ${address} on the explorer`}>
         {chars.map((c, i) => <span key={i} className="type-ch">{c}</span>)}
         <span aria-hidden className="caret">▍</span>
       </a>

@@ -70,11 +70,11 @@ export default function AgentPage() {
 
       <LineSection label="What it is">
         <div className="max-w-[68ch] space-y-4">
-          <p className="text-[17px] leading-relaxed text-silver">
+          <p className="text-[1.0625rem] leading-relaxed text-silver">
             The Palisec Agent is a controlled application principal with explicit capabilities, not a super-administrator. It retrieves only what a question needs from the authoritative
             records, through 30 typed tools, and every answer cites the records it used. Citations that no tool returned are flagged as unverified.
           </p>
-          <p className="text-[17px] leading-relaxed text-silver">
+          <p className="text-[1.0625rem] leading-relaxed text-silver">
             It runs in the console with any OpenAI-compatible model provider. Quick investigations run the same tools directly, without a model, so
             the agent&apos;s view of your records is available even when the model is not.
           </p>
@@ -85,8 +85,8 @@ export default function AgentPage() {
         <LineSection key={d.id} id={d.id} label={d.title} className={i % 2 ? "" : "border-y border-line bg-deep/40"}>
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div>
-              <p className="max-w-[48ch] text-[19px] leading-relaxed text-mist">{d.lede}</p>
-              <ul className="mt-8 space-y-2.5 text-[15px] text-silver">
+              <p className="max-w-[48ch] text-[1.1875rem] leading-relaxed text-mist">{d.lede}</p>
+              <ul className="mt-8 space-y-2.5 text-[0.9375rem] text-silver">
                 {d.items.map((x) => (
                   <li key={x} className="flex gap-3">
                     <span aria-hidden className="mt-2 h-1 w-1 shrink-0 bg-aqua" />
@@ -99,7 +99,7 @@ export default function AgentPage() {
               <p className="label mb-3">Questions it answers</p>
               <ul className="space-y-2">
                 {d.asks.map((q) => (
-                  <li key={q} className="rounded-[8px] border border-line-strong bg-raised/50 px-3.5 py-2.5 text-[14px] text-mist">{q}</li>
+                  <li key={q} className="rounded-[0.5rem] border border-line-strong bg-raised/50 px-3.5 py-2.5 text-[0.875rem] text-mist">{q}</li>
                 ))}
               </ul>
             </div>
@@ -109,15 +109,15 @@ export default function AgentPage() {
 
       <LineSection label="Tool permissions">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-          <div className="space-y-4 text-[15.5px] leading-relaxed text-silver">
+          <div className="space-y-4 text-[0.9688rem] leading-relaxed text-silver">
             <p>Every tool declares a strict input schema, a risk class (read, draft, action), the minimum autonomy level and the role it needs. The model is shown only the tools the signed-in member may use, and the server checks again on every call.</p>
             <p>Read tools retrieve real records: security state, agents, policies and versions, operations and decisions, approvals, audit events, security findings and integration status. Draft tools build and simulate policies. Action tools only create requests.</p>
           </div>
           <dl className="divide-y divide-line border-y border-line">
             {LEVELS.map(([k, v]) => (
-              <div key={k} className="grid gap-1 py-4 sm:grid-cols-[190px_1fr]">
-                <dt className="font-mono text-[13px] text-mist">{k}</dt>
-                <dd className="text-[14px] leading-relaxed text-silver">{v}</dd>
+              <div key={k} className="grid gap-1 py-4 sm:grid-cols-[11.875rem_1fr]">
+                <dt className="font-mono text-[0.8125rem] text-mist">{k}</dt>
+                <dd className="text-[0.875rem] leading-relaxed text-silver">{v}</dd>
               </div>
             ))}
           </dl>
@@ -138,8 +138,8 @@ export default function AgentPage() {
                 {i < 3 && <span aria-hidden className="hidden h-px flex-1 bg-line-strong md:block" />}
               </span>
               <span>
-                <span className="block text-[16px] font-medium text-mist">{t}</span>
-                <span className="mt-1 block text-[14px] text-silver">{b}</span>
+                <span className="block text-[1rem] font-medium text-mist">{t}</span>
+                <span className="mt-1 block text-[0.875rem] text-silver">{b}</span>
               </span>
             </li>
           ))}
@@ -147,7 +147,7 @@ export default function AgentPage() {
       </LineSection>
 
       <LineSection label="Agent architecture">
-        <pre className="panel overflow-x-auto p-6 font-mono text-[12.5px] leading-[1.9] text-soft">{`Palisec Agent runtime (isolated module in the API, never inside the policy engine)
+        <pre className="panel overflow-x-auto p-6 font-mono text-[0.7812rem] leading-[1.9] text-soft">{`Palisec Agent runtime (isolated module in the API, never inside the policy engine)
   ├─ Orchestrator        runs stored in Postgres; a few steps per request, within a time budget
   ├─ Provider adapter    OpenAI-compatible chat completions (configurable)
   ├─ Context builder     only the records a question needs, minimized and redacted
@@ -164,15 +164,15 @@ export default function AgentPage() {
             ["Draft and adopt a policy", "draft_policy → validate_policy → simulate_policy (live and history replay) → submit_policy_draft (level 2) → a member confirms → the operator reviews and activates in the policy editor."],
             ["Respond to unusual activity", "get_security_events → evidence → create_security_alert → prepare_account_pause → request_account_pause → an operator confirms."],
           ].map(([t, b], k) => (
-            <div key={t} className="grid gap-4 rounded-[14px] border border-line-strong bg-deep/60 p-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:items-center">
-              <h3 className="flex items-center gap-3 text-[17px] font-medium text-mist">
+            <div key={t} className="grid gap-4 rounded-[0.875rem] border border-line-strong bg-deep/60 p-5 xl:grid-cols-[15rem_minmax(0,1fr)] xl:items-center">
+              <h3 className="flex items-center gap-3 text-[1.0625rem] font-medium text-mist">
                 <span aria-hidden className="text-aqua">{[<SearchIcon key="i" size={19} />, <SlidersIcon key="i" size={19} />, <StopIcon key="i" size={19} />][k]}</span>
                 {t}
               </h3>
               <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
                 {b.split(" → ").map((step, j, all) => (
                   <li key={step} className="flex items-center gap-1.5">
-                    <span className={`rounded-[7px] px-2.5 py-1 text-[12.5px] ${/^[a-z_]+( \(.*\))?$/.test(step) ? "bg-raised font-mono text-mist" : step.includes("confirm") ? "bg-review/10 text-review" : "text-silver"}`}>{step}</span>
+                    <span className={`rounded-[0.4375rem] px-2.5 py-1 text-[0.7812rem] ${/^[a-z_]+( \(.*\))?$/.test(step) ? "bg-raised font-mono text-mist" : step.includes("confirm") ? "bg-review/10 text-review" : "text-silver"}`}>{step}</span>
                     {j < all.length - 1 && <ArrowRightIcon size={13} className="text-dim" />}
                   </li>
                 ))}
@@ -183,12 +183,12 @@ export default function AgentPage() {
       </LineSection>
 
       <LineSection label="Security boundaries">
-        <ul className="grid gap-px overflow-hidden rounded-[16px] border border-line bg-line md:grid-cols-2">
+        <ul className="grid gap-px overflow-hidden rounded-[1rem] border border-line bg-line md:grid-cols-2">
           {BOUNDARIES.map((b) => (
-            <li key={b} className="bg-ink p-5 text-[14.5px] leading-relaxed text-silver">{b}</li>
+            <li key={b} className="bg-ink p-5 text-[0.9062rem] leading-relaxed text-silver">{b}</li>
           ))}
         </ul>
-        <p className="mt-6 text-[14px] text-muted">
+        <p className="mt-6 text-[0.875rem] text-muted">
           Read the full model in <Link href="/security#agentic" className="text-aqua underline-offset-4 hover:underline">Security → agentic trust boundaries</Link>.
         </p>
       </LineSection>

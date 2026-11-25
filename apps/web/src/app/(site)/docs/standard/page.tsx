@@ -89,12 +89,12 @@ export default function StandardPage() {
       <table>
         <tbody>
           <tr><td>Specification</td><td>ERC-8511 (draft): <a href="https://github.com/ethereum/ERCs/pull/2196">ethereum/ERCs #2196</a> · discussion on <a href="https://ethereum-magicians.org/t/erc-8511-policy-enforced-agent-accounts/30467">Ethereum Magicians</a></td></tr>
-          <tr><td>Registry v3 (mainnet 4663)</td><td><a href={`${EXPLORER}/address/${REGISTRY}?tab=contract`} className="font-mono text-[12px]">{REGISTRY}</a> · source verified, no owner, no upgrade path, holds no funds</td></tr>
+          <tr><td>Registry v3 (mainnet 4663)</td><td><a href={`${EXPLORER}/address/${REGISTRY}?tab=contract`} className="font-mono text-[0.75rem]">{REGISTRY}</a> · source verified, no owner, no upgrade path, holds no funds</td></tr>
           <tr><td>ERC-165 interface id</td><td><code>0xf594edcd</code></td></tr>
           <tr><td>Deployment</td><td>Deterministic deployer <code>0x4e59b448…956C</code>, salt <code>keccak256(&quot;policy-enforced-accounts registry v3&quot;)</code></td></tr>
-          <tr><td>Registry v2</td><td><a href={`${EXPLORER}/address/${REGISTRY_V2}?tab=contract`} className="font-mono text-[12px]">{REGISTRY_V2}</a> · interface <code>0x7e0f19f9</code>; kept as it is and readable, and its receipts verify like v3&apos;s (domain version &quot;2&quot;). There a publisher can lift a stop the account engaged.</td></tr>
-          <tr><td>First draft (v1)</td><td><a href={`${EXPLORER}/address/${REGISTRY_V1}?tab=contract`} className="font-mono text-[12px]">{REGISTRY_V1}</a> · interface <code>0xcc16d336</code>; kept as it is, readable, and its receipts still verify (domain version &quot;1&quot;)</td></tr>
-          <tr><td>Demo account</td><td><a href={`${EXPLORER}/address/${DEMO}`} className="font-mono text-[12px]">{DEMO}</a> (Palisec smart account, holder mandate)</td></tr>
+          <tr><td>Registry v2</td><td><a href={`${EXPLORER}/address/${REGISTRY_V2}?tab=contract`} className="font-mono text-[0.75rem]">{REGISTRY_V2}</a> · interface <code>0x7e0f19f9</code>; kept as it is and readable, and its receipts verify like v3&apos;s (domain version &quot;2&quot;). There a publisher can lift a stop the account engaged.</td></tr>
+          <tr><td>First draft (v1)</td><td><a href={`${EXPLORER}/address/${REGISTRY_V1}?tab=contract`} className="font-mono text-[0.75rem]">{REGISTRY_V1}</a> · interface <code>0xcc16d336</code>; kept as it is, readable, and its receipts still verify (domain version &quot;1&quot;)</td></tr>
+          <tr><td>Demo account</td><td><a href={`${EXPLORER}/address/${DEMO}`} className="font-mono text-[0.75rem]">{DEMO}</a> (Palisec smart account, holder mandate)</td></tr>
           <tr><td>Client library</td><td><code>policy-enforced-accounts</code> (TypeScript, viem; CC0)</td></tr>
           <tr><td>Test vectors</td><td><a href="/standard/vectors.json">vectors.json</a> (v3; receipts as in v2) and <a href="/standard/vectors-v1.json">vectors-v1.json</a>, checked in TypeScript and Solidity</td></tr>
           <tr><td>Independent read test</td><td><a href="/standard/independent-read.mjs">independent-read.mjs</a>: no Palisec API, no keys</td></tr>

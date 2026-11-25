@@ -46,32 +46,32 @@ const TERMS: { icon: ReactNode; term: string; def: string; see: [string, string]
 
 /** Operation states as stored in the ledger (operations.state). */
 function StateChart() {
-  const pill = "inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[12.5px] ring-1 ring-inset";
+  const pill = "inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[0.7812rem] ring-1 ring-inset";
   const arrow = <span aria-hidden className="h-px w-6 shrink-0 bg-line-strong sm:w-10" />;
   return (
-    <figure className="not-prose my-8 rounded-[14px] border border-line-strong bg-deep/60 p-5" aria-label="Operation states">
+    <figure className="not-prose my-8 rounded-[0.875rem] border border-line-strong bg-deep/60 p-5" aria-label="Operation states">
       <div className="flex flex-col gap-5">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`${pill} text-mist ring-line-strong`}><CodeIcon size={14} />request</span>
           {arrow}
           <span className={`${pill} text-allow ring-allow/45`}><CheckCircleIcon size={14} />authorized</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:pl-[118px]">
+        <div className="flex flex-wrap items-center gap-2 sm:pl-[7.375rem]">
           {arrow}
           <span className={`${pill} text-deny ring-deny/45`}><BanIcon size={14} />denied</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:pl-[118px]">
+        <div className="flex flex-wrap items-center gap-2 sm:pl-[7.375rem]">
           {arrow}
           <span className={`${pill} text-review ring-review/45`}><HandIcon size={14} />pending_approval</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-l border-line-strong sm:ml-[200px] sm:pl-4">
+        <div className="flex flex-wrap items-center gap-2 border-l border-line-strong sm:ml-[12.5rem] sm:pl-4">
           <span className={`${pill} text-allow ring-allow/45`}><UserCheckIcon size={14} />approved</span>
           <span className={`${pill} text-deny ring-deny/45`}><BanIcon size={14} />rejected</span>
           <span className={`${pill} text-muted ring-line-strong`}>cancelled</span>
           <span className={`${pill} text-muted ring-line-strong`}><ClockIcon size={14} />expired</span>
         </div>
       </div>
-      <figcaption className="mt-5 border-t border-line pt-3 text-[13px] text-muted">
+      <figcaption className="mt-5 border-t border-line pt-3 text-[0.8125rem] text-muted">
         Authorized, approved and unexpired pending operations hold budget. Denied, rejected, cancelled and expired ones release it.
       </figcaption>
     </figure>
@@ -81,16 +81,16 @@ function StateChart() {
 export default function ConceptsPage() {
   return (
     <DocArticle title="Concepts" lede="Twelve terms that explain everything else in these docs." maturity="service">
-      <dl className="not-prose grid gap-px overflow-hidden rounded-[14px] border border-line bg-line sm:grid-cols-2">
+      <dl className="not-prose grid gap-px overflow-hidden rounded-[0.875rem] border border-line bg-line sm:grid-cols-2">
         {TERMS.map((t) => (
           <div key={t.term} className="flex flex-col bg-abyss p-5">
-            <dt className="flex items-center gap-2.5 text-[15.5px] font-medium text-mist">
+            <dt className="flex items-center gap-2.5 text-[0.9688rem] font-medium text-mist">
               <span aria-hidden className="text-aqua">{t.icon}</span>
               {t.term}
             </dt>
-            <dd className="mt-2 flex-1 text-[14px] leading-relaxed text-silver">{t.def}</dd>
+            <dd className="mt-2 flex-1 text-[0.875rem] leading-relaxed text-silver">{t.def}</dd>
             <dd className="mt-3">
-              <Link href={t.see[0]} className="text-[13px] font-medium text-aqua underline-offset-4 hover:underline">{t.see[1]}</Link>
+              <Link href={t.see[0]} className="text-[0.8125rem] font-medium text-aqua underline-offset-4 hover:underline">{t.see[1]}</Link>
             </dd>
           </div>
         ))}
@@ -124,11 +124,11 @@ export default function ConceptsPage() {
           [<RepeatIcon key="i" size={18} />, "Same request, same answer.", "A repeated request ID returns the original decision; it is never evaluated twice."],
           [<AgentIcon key="i" size={18} />, "No model decides.", "The Palisec Agent explains decisions. Only the deterministic engines make them."],
         ].map(([icon, t, b]) => (
-          <li key={t as string} className="flex gap-3 rounded-[12px] border border-line-strong bg-deep/60 p-4">
+          <li key={t as string} className="flex gap-3 rounded-[0.75rem] border border-line-strong bg-deep/60 p-4">
             <span aria-hidden className="mt-0.5 text-aqua">{icon}</span>
             <span>
-              <span className="block text-[15px] font-medium text-mist">{t}</span>
-              <span className="mt-0.5 block text-[14px] text-silver">{b}</span>
+              <span className="block text-[0.9375rem] font-medium text-mist">{t}</span>
+              <span className="mt-0.5 block text-[0.875rem] text-silver">{b}</span>
             </span>
           </li>
         ))}

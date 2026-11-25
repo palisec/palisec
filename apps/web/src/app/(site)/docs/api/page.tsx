@@ -56,17 +56,17 @@ export default function ApiReference() {
           <div className="not-prose space-y-4">
             {g.items.map((e) => (
               <div key={`${e.method} ${e.path}`} className="border border-line p-4">
-                <p className="font-mono text-[13px] text-fg">
+                <p className="font-mono text-[0.8125rem] text-fg">
                   <span className="mr-2 text-aqua">{e.method}</span>
                   {e.path}
                 </p>
                 <p className="mt-1 text-sm text-soft">{e.summary}</p>
-                <p className="mt-1 font-mono text-[13px] text-dim">
+                <p className="mt-1 font-mono text-[0.8125rem] text-dim">
                   {AUTH_TEXT[e.auth]}
                   {e.role ? ` · ${e.role} or above` : ""}
                 </p>
                 {e.body && (
-                  <dl className="mt-3 grid grid-cols-[minmax(7rem,auto)_minmax(0,1fr)] gap-x-4 gap-y-1 text-[12.5px]">
+                  <dl className="mt-3 grid grid-cols-[minmax(7rem,auto)_minmax(0,1fr)] gap-x-4 gap-y-1 text-[0.7812rem]">
                     {Object.entries(e.body).map(([k, v]) => (
                       <div key={k} className="contents">
                         <dt className="font-mono text-fg">{k}</dt>
@@ -75,7 +75,7 @@ export default function ApiReference() {
                     ))}
                   </dl>
                 )}
-                {e.notes && <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{e.notes}</p>}
+                {e.notes && <p className="mt-2 text-[0.7812rem] leading-relaxed text-muted">{e.notes}</p>}
               </div>
             ))}
           </div>

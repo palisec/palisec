@@ -42,18 +42,18 @@ export default function DevelopersPage() {
     <>
       <Split
         as="header"
-        className="!pt-[150px]"
+        className="!pt-[10.625rem]"
         left={
           <div className="space-y-6">
             <Label>Developers</Label>
             <ol className="divide-y divide-line border-y border-line">
               {STEPS.map((s, i) => (
                 <li key={s.title}>
-                  <Link href={s.href} className="group grid grid-cols-[36px_1fr] gap-3 py-4">
-                    <span className="font-mono text-[13px] text-dim">{String(i + 1).padStart(2, "0")}</span>
+                  <Link href={s.href} className="group grid grid-cols-[2.25rem_1fr] gap-3 py-4">
+                    <span className="font-mono text-[0.8125rem] text-dim">{String(i + 1).padStart(2, "0")}</span>
                     <span>
-                      <span className="block font-utility text-[16px] font-medium text-mist group-hover:text-aqua">{s.title}</span>
-                      <span className="mt-1 block text-[14.5px] leading-relaxed text-silver">{s.body}</span>
+                      <span className="block font-utility text-[1rem] font-medium text-mist group-hover:text-aqua">{s.title}</span>
+                      <span className="mt-1 block text-[0.9062rem] leading-relaxed text-silver">{s.body}</span>
                     </span>
                   </Link>
                 </li>

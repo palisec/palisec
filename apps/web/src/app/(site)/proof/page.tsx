@@ -35,7 +35,7 @@ export default async function ProofPage() {
     <>
       <Split
         as="header"
-        className="!pt-[150px]"
+        className="!pt-[10.625rem]"
         left={
           <div className="space-y-11">
             <Label>Proof · last 24 h</Label>
@@ -43,7 +43,7 @@ export default async function ProofPage() {
               t.v !== null ? (
                 <div key={t.label}>
                   <p className="t-big">{t.v.toLocaleString("en-US")}</p>
-                  <p className={`mt-3 font-mono text-[13px] uppercase tracking-[0.14em] ${t.cls}`}>{t.label}</p>
+                  <p className={`mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] ${t.cls}`}>{t.label}</p>
                 </div>
               ) : null,
             )}
@@ -66,13 +66,13 @@ export default async function ProofPage() {
             <Rows>
               {registry.accounts.map((a) => (
                 <li key={a.account} className="grid gap-3 py-5 md:grid-cols-[1fr_auto] md:items-center">
-                  <div className="space-y-1 font-mono text-[13.5px]">
+                  <div className="space-y-1 font-mono text-[0.8438rem]">
                     <p className="text-mist">{a.label}</p>
                     <p className="break-all text-dim">policy {a.policy_hash ? `${a.policy_hash.slice(0, 18)}…` : "none"} · version {a.version ?? "—"}</p>
                   </div>
                   <div className="flex items-center gap-5">
                     <Result kind={a.stopped ? "blocked" : "allowed"}>{a.stopped ? (a.stop_held_by_account ? "Stopped · held by the account" : "Stopped") : "Running"}</Result>
-                    <a href={`${EXPLORER}/address/${a.registry}?tab=read_contract`} target="_blank" rel="noopener noreferrer" className="font-mono text-[13px] text-silver hover:text-aqua">verify ↗</a>
+                    <a href={`${EXPLORER}/address/${a.registry}?tab=read_contract`} target="_blank" rel="noopener noreferrer" className="font-mono text-[0.8125rem] text-silver hover:text-aqua">verify ↗</a>
                   </div>
                 </li>
               ))}

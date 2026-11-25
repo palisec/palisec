@@ -11,10 +11,10 @@ export function DocsSearchBox() {
     <button
       type="button"
       onClick={openSearch}
-      className="flex w-full items-center justify-between rounded-[6px] border border-line-strong px-3 py-2.5 text-left font-utility text-[14.5px] text-dim transition-colors hover:border-aqua/50 hover:text-silver"
+      className="flex w-full items-center justify-between rounded-[0.375rem] border border-line-strong px-3 py-2.5 text-left font-utility text-[0.9062rem] text-dim transition-colors hover:border-aqua/50 hover:text-silver"
     >
       Search the docs
-      <kbd className="rounded-[4px] border border-line-strong px-1.5 font-mono text-[11px]">⌘K</kbd>
+      <kbd className="rounded-[0.25rem] border border-line-strong px-1.5 font-mono text-[0.6875rem]">⌘K</kbd>
     </button>
   );
 }
@@ -26,7 +26,7 @@ export function DocsBreadcrumb({ nav }: { nav: Nav }) {
   const group = nav.find((g) => g.items.some((i) => i.href === path));
   const item = group?.items.find((i) => i.href === path);
   return (
-    <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[12.5px] text-dim">
+    <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[0.7812rem] text-dim">
       <Link href="/docs" className="hover:text-aqua">Docs</Link>
       {group ? <span> / {group.title}</span> : null}
       {item && item.href !== "/docs" ? <span className="text-silver"> / {item.label}</span> : null}
@@ -67,9 +67,9 @@ export function OnThisPage() {
 
   if (heads.length < 2) return <div className="hidden xl:block" />;
   return (
-    <nav aria-label="On this page" className="hidden xl:block xl:sticky xl:top-[110px] xl:self-start">
+    <nav aria-label="On this page" className="hidden xl:block xl:sticky xl:top-[6.875rem] xl:self-start">
       <p className="t-label mb-3">On this page</p>
-      <ul className="space-y-1.5 text-[13.5px]">
+      <ul className="space-y-1.5 text-[0.8438rem]">
         {heads.map((h) => (
           <li key={h.id} className={h.level === 3 ? "pl-3" : ""}>
             <a href={`#${h.id}`} className={`block transition-colors ${current === h.id ? "text-aqua" : "text-silver hover:text-mist"}`}>{h.text}</a>

@@ -37,7 +37,7 @@ const RESULT_TONE: Record<ResultKind, string> = { allowed: "text-allow bg-allow"
 export function Result({ kind, children }: { kind: ResultKind; children: ReactNode }) {
   const [text, dot] = RESULT_TONE[kind].split(" ");
   return (
-    <span className={`inline-flex items-center gap-2 font-mono text-[14px] ${text}`}>
+    <span className={`inline-flex items-center gap-2 font-mono text-[0.875rem] ${text}`}>
       <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
       {children}
     </span>
@@ -49,7 +49,7 @@ export function Meter({ name, value, pct }: { name: ReactNode; value: ReactNode;
   const p = Math.max(0, Math.min(100, pct));
   return (
     <div>
-      <div className="mb-2 flex justify-between font-mono text-[12.5px] text-silver">
+      <div className="mb-2 flex justify-between font-mono text-[0.7812rem] text-silver">
         <span>{name}</span>
         <span className="tabular-nums">{value}</span>
       </div>
@@ -67,5 +67,5 @@ export function Rows({ children, className = "" }: { children: ReactNode; classN
 
 /** Framed block: only for the mandate vote, the Zolva card and console panels. */
 export function Framed({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[14px] border border-line bg-[rgb(1_29_28/0.45)] ${className}`}>{children}</div>;
+  return <div className={`rounded-[0.875rem] border border-line bg-[rgb(1_29_28/0.45)] ${className}`}>{children}</div>;
 }

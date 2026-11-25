@@ -34,7 +34,7 @@ export function PageHead({ label, title, lede, left }: { label?: string; title: 
   return (
     <Split
       as="header"
-      className="!pt-[150px]"
+      className="!pt-[10.625rem]"
       left={
         <div className="space-y-8">
           {label ? <p className="t-label">{label}</p> : null}

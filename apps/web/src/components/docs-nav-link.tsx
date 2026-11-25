@@ -11,7 +11,7 @@ export function DocsNavLink({ href, children }: { href: string; children: ReactN
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`block border-l-2 py-1.5 pl-3 text-[14.5px] transition-colors ${
+      className={`block border-l-2 py-1.5 pl-3 text-[0.9062rem] transition-colors ${
         active ? "border-aqua text-aqua" : "border-transparent text-silver hover:text-mist"
       }`}
     >

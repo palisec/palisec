@@ -9,13 +9,13 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
  */
 export function LinePageHeader({ eyebrow, title, lede, compat, children }: { eyebrow?: string; title: string; lede?: ReactNode; compat?: string; children?: ReactNode }) {
   return (
-    <header className="split-section !pt-[150px]">
+    <header className="split-section !pt-[10.625rem]">
       <div className="split">
         <div className="split-l min-w-0">{eyebrow ? <p className="t-label">{eyebrow}</p> : null}</div>
         <div className="split-r min-w-0 space-y-6">
           <h1 className="t-h1 text-balance">{title}</h1>
           {lede ? <p className="t-lede">{lede}</p> : null}
-          {compat ? <p className="font-mono text-[12.5px] text-dim">{compat}</p> : null}
+          {compat ? <p className="font-mono text-[0.7812rem] text-dim">{compat}</p> : null}
           {children}
         </div>
       </div>

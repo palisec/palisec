@@ -41,14 +41,14 @@ export default function AccountsPage() {
           <div>
             <Rows>
               {OWNERS.map((o) => (
-                <li key={o.who} className="grid gap-2 py-6 sm:grid-cols-[220px_1fr_auto] sm:items-baseline sm:gap-6">
-                  <span className={`font-utility text-[17px] font-medium ${o.accent ? "text-aqua" : "text-mist"}`}>{o.who}</span>
+                <li key={o.who} className="grid gap-2 py-6 sm:grid-cols-[13.75rem_1fr_auto] sm:items-baseline sm:gap-6">
+                  <span className={`font-utility text-[1.0625rem] font-medium ${o.accent ? "text-aqua" : "text-mist"}`}>{o.who}</span>
                   <span className="t-body">{o.what}</span>
-                  <span className="font-mono text-[13px] text-dim">→ {o.when}</span>
+                  <span className="font-mono text-[0.8125rem] text-dim">→ {o.when}</span>
                 </li>
               ))}
             </Rows>
-            <p className="mt-6 font-mono text-[13px] text-dim">Threshold 2 of 3 · Safe smart account · ERC-4337</p>
+            <p className="mt-6 font-mono text-[0.8125rem] text-dim">Threshold 2 of 3 · Safe smart account · ERC-4337</p>
           </div>
         }
       />
@@ -104,8 +104,8 @@ export default function AccountsPage() {
             <Rows>
               {DEPLOYED.map((c) => (
                 <li key={c.address} className="grid gap-1 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-6">
-                  <span className="text-[16px] text-mist">{c.name}</span>
-                  <a href={`${EXPLORER}/address/${c.address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-[14px] text-silver hover:text-aqua">
+                  <span className="text-[1rem] text-mist">{c.name}</span>
+                  <a href={`${EXPLORER}/address/${c.address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-[0.875rem] text-silver hover:text-aqua">
                     {short(c.address)} ↗
                   </a>
                 </li>

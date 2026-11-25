@@ -46,7 +46,7 @@ export default function StandardLinePage() {
           <div className="grid gap-10 md:grid-cols-3">
             {DEFINES.map(([n, t, b]) => (
               <div key={n} className="space-y-3 border-t border-line pt-5">
-                <p className="font-mono text-[13px] text-dim">{n}</p>
+                <p className="font-mono text-[0.8125rem] text-dim">{n}</p>
                 <p className="t-h3">{t}</p>
                 <p className="t-body text-silver">{b}</p>
               </div>
@@ -60,9 +60,9 @@ export default function StandardLinePage() {
         right={
           <div className="space-y-5">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] font-mono text-[14.5px]">
+              <table className="w-full break-all font-mono text-[0.9062rem]">
                 <thead>
-                  <tr className="border-b border-line text-left text-[11.5px] uppercase tracking-[0.14em] text-dim">
+                  <tr className="border-b border-line text-left text-[0.7188rem] uppercase tracking-[0.14em] text-dim">
                     <th className="py-3 pr-4 font-normal">Version</th>
                     <th className="py-3 pr-4 font-normal">Address</th>
                     <th className="py-3 font-normal">State</th>
@@ -83,7 +83,7 @@ export default function StandardLinePage() {
                 </tbody>
               </table>
             </div>
-            <p className="font-mono text-[13px] text-dim">ERC-165 interface 0xf594edcd · Robinhood Chain 4663</p>
+            <p className="font-mono text-[0.8125rem] text-dim">ERC-165 interface 0xf594edcd · Robinhood Chain 4663</p>
           </div>
         }
       />

@@ -60,13 +60,13 @@ export default function PricingPage() {
       <Split
         left={<Label>Plans</Label>}
         right={
-          <div className="grid gap-px overflow-hidden rounded-[14px] border border-line bg-line lg:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-[0.875rem] border border-line bg-line lg:grid-cols-3">
             {PLANS.map((p) => (
               <div key={p.name} className={`flex flex-col gap-5 p-7 ${p.highlight ? "bg-[rgb(10_69_65/0.35)]" : "bg-abyss"}`}>
                 <p className="t-label">{p.name}</p>
                 <p className={`t-h3 ${p.highlight ? "text-aqua" : ""}`}>{p.price}</p>
-                <p className="text-[15.5px] leading-relaxed text-foam">{p.body}</p>
-                <ul className="space-y-2 border-t border-line pt-5 text-[14.5px] text-silver">
+                <p className="text-[0.9688rem] leading-relaxed text-foam">{p.body}</p>
+                <ul className="space-y-2 border-t border-line pt-5 text-[0.9062rem] text-silver">
                   {p.items.map((i) => <li key={i}>· {i}</li>)}
                 </ul>
                 <div className="mt-auto pt-2">

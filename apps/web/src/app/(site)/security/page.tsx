@@ -91,7 +91,7 @@ export default function SecurityPage() {
         </ol>
       </LineSection>
       <LineSection label="Slower to loosen, faster to stop">
-        <div className="max-w-[72ch] space-y-4 text-[15px] leading-relaxed text-muted">
+        <div className="max-w-[72ch] space-y-4 text-[0.9375rem] leading-relaxed text-muted">
           <p>
             If an owner&apos;s session or wallet is taken over, the first move is usually to loosen the rules: raise a budget,
             allowlist an address, lift the emergency stop. In Palisec every change that weakens the rules waits out a delay (60
@@ -125,7 +125,7 @@ export default function SecurityPage() {
       <LineSection label="Signing keys">
         <dl className="divide-y divide-line border-y border-line">
           {KEYS.map(([k, v]) => (
-            <div key={k} className="grid gap-1 py-4 md:grid-cols-[240px_1fr]">
+            <div key={k} className="grid gap-1 py-4 md:grid-cols-[15rem_1fr]">
               <dt className="text-fg">{k}</dt>
               <dd className="text-sm text-muted">{v}</dd>
             </div>
@@ -140,7 +140,7 @@ export default function SecurityPage() {
           {GATES.map(([g, done]) => (
             <li key={g} className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-soft lg:last:[&:nth-child(3n+2)]:col-span-2 sm:max-lg:last:[&:nth-child(odd)]:col-span-2">
               {g}
-              <span className={`shrink-0 font-mono text-[10px] tracking-[0.08em] ${done ? "text-allow" : "text-muted"}`}>{done ? "● IN PLACE" : "○ ROADMAP"}</span>
+              <span className={`shrink-0 font-mono text-[0.625rem] tracking-[0.08em] ${done ? "text-allow" : "text-muted"}`}>{done ? "● IN PLACE" : "○ ROADMAP"}</span>
             </li>
           ))}
         </ul>
@@ -176,7 +176,7 @@ export default function SecurityPage() {
       <LineSection label="Agentic trust boundaries" id="agentic">
         <dl className="divide-y divide-line border-y border-line">
           {BOUNDARIES.map(([k, v]) => (
-            <div key={k} className="grid gap-2 py-5 md:grid-cols-[300px_1fr]">
+            <div key={k} className="grid gap-2 py-5 md:grid-cols-[18.75rem_1fr]">
               <dt className="text-fg">{k}</dt>
               <dd className="text-sm leading-relaxed text-muted">{v}</dd>
             </div>
@@ -185,10 +185,10 @@ export default function SecurityPage() {
       </LineSection>
       <LineSection label="Prompt injection and untrusted data" id="injection">
         <div className="grid gap-8 lg:grid-cols-2">
-          <p className="text-[15.5px] leading-relaxed text-silver">
+          <p className="text-[0.9688rem] leading-relaxed text-silver">
             The Palisec Agent reads agent names, transaction metadata, audit details and documentation, any of which may contain hostile text. That content reaches the model only inside tool results, marked as untrusted data. The system prompt is not the defence: the tools are.
           </p>
-          <ul className="space-y-2.5 text-[14.5px] text-silver">
+          <ul className="space-y-2.5 text-[0.9062rem] text-silver">
             {["Strict tool schemas and server-side input validation", "Least-privilege tools per role and autonomy level, re-checked on every call", "No tool that signs, approves, activates or changes permissions", "Sensitive actions only as requests a person confirms", "Context minimization and secret redaction before the model", "Every tool call recorded and audited; rate limits per member", "Tested: an injected instruction cannot call a refused tool or escalate"].map((x) => (
               <li key={x} className="flex gap-3">
                 <span aria-hidden className="mt-2 h-1 w-1 shrink-0 bg-aqua" />

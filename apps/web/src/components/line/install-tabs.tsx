@@ -15,7 +15,7 @@ export function InstallTabs() {
   const [tab, setTab] = useState(0);
   const t = TABS[tab];
   return (
-    <div className="rounded-[10px] border border-line bg-[rgb(1_20_19/0.6)]">
+    <div className="rounded-[0.625rem] border border-line bg-[rgb(1_20_19/0.6)]">
       <div role="tablist" aria-label="Install" className="flex flex-wrap gap-1 border-b border-line px-3 pt-2">
         {TABS.map((x, i) => (
           <button
@@ -23,14 +23,14 @@ export function InstallTabs() {
             role="tab"
             aria-selected={i === tab}
             onClick={() => setTab(i)}
-            className={`-mb-px border-b-2 px-3 py-2 font-utility text-[14.5px] font-medium ${i === tab ? "border-aqua text-mist" : "border-transparent text-silver hover:text-mist"}`}
+            className={`-mb-px border-b-2 px-3 py-2 font-utility text-[0.9062rem] font-medium ${i === tab ? "border-aqua text-mist" : "border-transparent text-silver hover:text-mist"}`}
           >
             {x.k}
           </button>
         ))}
       </div>
       <div className="flex items-center justify-between gap-4 px-4 py-4">
-        <code className="min-w-0 overflow-x-auto whitespace-nowrap font-mono text-[14.5px] text-aqua">{t.line}</code>
+        <code className="min-w-0 overflow-x-auto whitespace-nowrap font-mono text-[0.9062rem] text-aqua">{t.line}</code>
         <CopyButton text={t.line} />
       </div>
     </div>

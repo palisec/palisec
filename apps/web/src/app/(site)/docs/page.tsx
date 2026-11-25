@@ -62,14 +62,14 @@ export default function DocsIndex() {
         <ol className="grid gap-3 sm:grid-cols-3">
           {PATH.map((p, i) => (
             <li key={p.href}>
-              <Link href={p.href} className="group flex h-full flex-col gap-6 rounded-[12px] border border-line-strong bg-deep/70 p-4 transition-colors hover:border-aqua/45 hover:bg-raised/60">
+              <Link href={p.href} className="group flex h-full flex-col gap-6 rounded-[0.75rem] border border-line-strong bg-deep/70 p-4 transition-colors hover:border-aqua/45 hover:bg-raised/60">
                 <span className="flex items-center justify-between">
                   <span aria-hidden className="text-aqua">{p.icon}</span>
-                  <span className="font-mono text-[12px] text-dim">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="font-mono text-[0.75rem] text-dim">{String(i + 1).padStart(2, "0")}</span>
                 </span>
                 <span>
-                  <span className="block text-[15.5px] font-medium text-mist">{p.title}</span>
-                  <span className="mt-0.5 block text-[13px] text-muted">{p.time}</span>
+                  <span className="block text-[0.9688rem] font-medium text-mist">{p.title}</span>
+                  <span className="mt-0.5 block text-[0.8125rem] text-muted">{p.time}</span>
                 </span>
               </Link>
             </li>
@@ -86,8 +86,8 @@ export default function DocsIndex() {
                     <Link href={l.href} className="group flex items-center gap-3 py-3">
                       <span aria-hidden className="text-silver transition-colors group-hover:text-aqua">{l.icon}</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[15px] font-medium text-mist transition-colors group-hover:text-aqua">{l.label}</span>
-                        <span className="block text-[13px] text-muted">{l.note}</span>
+                        <span className="block text-[0.9375rem] font-medium text-mist transition-colors group-hover:text-aqua">{l.label}</span>
+                        <span className="block text-[0.8125rem] text-muted">{l.note}</span>
                       </span>
                       <ArrowRightIcon size={16} className="text-dim transition-all group-hover:translate-x-1 group-hover:text-aqua" />
                     </Link>
@@ -104,11 +104,11 @@ export default function DocsIndex() {
         {CAPABILITIES.map((c) => (
           <details key={c.id} className="group">
             <summary className="flex cursor-pointer list-none items-center gap-4 py-3 [&::-webkit-details-marker]:hidden">
-              <span className="min-w-0 flex-1 text-[14.5px] text-mist">{c.name}</span>
+              <span className="min-w-0 flex-1 text-[0.9062rem] text-mist">{c.name}</span>
               <MaturityBadge maturity={c.maturity} />
               <ArrowRightIcon size={14} className="text-dim transition-transform group-open:rotate-90" />
             </summary>
-            <p className="pb-4 pr-10 text-[14px] leading-relaxed text-silver">{c.note}</p>
+            <p className="pb-4 pr-10 text-[0.875rem] leading-relaxed text-silver">{c.note}</p>
           </details>
         ))}
       </div>

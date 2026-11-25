@@ -35,7 +35,7 @@ export default function LimitsPage() {
             <div className="split py-10">
               <div className="split-l min-w-0 space-y-3">
                 <p className="t-body text-foam">{r.text}</p>
-                <p className="flex flex-wrap gap-x-3 font-mono text-[13px]">
+                <p className="flex flex-wrap gap-x-3 font-mono text-[0.8125rem]">
                   {r.codes.map((c) =>
                     c.startsWith("PS_") ? (
                       <Link key={c} href={`/docs/errors#${c}`} className="text-aqua hover:underline">{c}</Link>

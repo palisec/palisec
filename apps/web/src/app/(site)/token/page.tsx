@@ -45,14 +45,14 @@ export default async function TokenPage() {
     <>
       <Split
         as="header"
-        className="!pt-[150px]"
+        className="!pt-[10.625rem]"
         left={
           <div className="space-y-8">
             <Label>Token</Label>
             {total !== null ? (
               <div>
                 <p className="t-big">{total}</p>
-                <p className="mt-3 font-mono text-[13px] uppercase tracking-[0.14em] text-dim">$PALISEC burned</p>
+                <p className="mt-3 font-mono text-[0.8125rem] uppercase tracking-[0.14em] text-dim">$PALISEC burned</p>
               </div>
             ) : null}
             <AddressChip />
@@ -71,8 +71,8 @@ export default async function TokenPage() {
           <Rows>
             {ROWS.map((r) => (
               <li key={r.k}>
-                <Link href={r.href} className="group grid gap-2 py-6 sm:grid-cols-[200px_1fr_auto] sm:items-baseline sm:gap-6">
-                  <span className="font-utility text-[17px] font-medium text-mist group-hover:text-aqua">{r.k}</span>
+                <Link href={r.href} className="group grid gap-2 py-6 sm:grid-cols-[12.5rem_1fr_auto] sm:items-baseline sm:gap-6">
+                  <span className="font-utility text-[1.0625rem] font-medium text-mist group-hover:text-aqua">{r.k}</span>
                   <span className="t-body">{r.text}</span>
                   {r.live ? <Result kind="allowed">Live</Result> : <span />}
                 </Link>

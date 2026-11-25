@@ -72,11 +72,11 @@ export default function SmartAccounts() {
       </p>
       <ul className="not-prose my-6 space-y-3">
         {OWNERS.map((o) => (
-          <li key={o.who} className="flex gap-3 rounded-[12px] border border-line-strong bg-deep/60 p-4">
+          <li key={o.who} className="flex gap-3 rounded-[0.75rem] border border-line-strong bg-deep/60 p-4">
             <span aria-hidden className="mt-0.5 text-aqua">{o.icon}</span>
             <span>
-              <span className="block text-[15px] font-medium text-mist">{o.who}</span>
-              <span className="mt-0.5 block text-[14px] text-silver">{o.why}</span>
+              <span className="block text-[0.9375rem] font-medium text-mist">{o.who}</span>
+              <span className="mt-0.5 block text-[0.875rem] text-silver">{o.why}</span>
             </span>
           </li>
         ))}
@@ -105,7 +105,7 @@ export default function SmartAccounts() {
       <h2 id="guarantees">What is guaranteed</h2>
       <ul className="not-prose my-6 space-y-2.5">
         {GUARANTEES.map((g) => (
-          <li key={g} className="flex gap-3 text-[14.5px] leading-relaxed text-silver">
+          <li key={g} className="flex gap-3 text-[0.9062rem] leading-relaxed text-silver">
             <CheckCircleIcon size={17} className="mt-0.5 shrink-0 text-allow" />
             {g}
           </li>

@@ -48,8 +48,8 @@ const DOCS_NAV = [
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="split pb-20 pt-[120px]">
-      <nav aria-label="Documentation" className="split-l min-w-0 lg:sticky lg:top-[110px] lg:max-h-[calc(100dvh-130px)] lg:self-start lg:overflow-y-auto">
+    <div className="split pb-20 pt-[7.5rem]">
+      <nav aria-label="Documentation" className="split-l min-w-0 lg:sticky lg:top-[6.875rem] lg:max-h-[calc(100dvh-8.125rem)] lg:self-start lg:overflow-y-auto">
         <DocsSearchBox />
         <details className="group/docs mt-6 lg:mt-8" open>
           <summary className="t-label cursor-pointer list-none py-2 lg:hidden [&::-webkit-details-marker]:hidden">Documentation index</summary>
@@ -69,7 +69,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
         </details>
       </nav>
-      <div className="split-r grid min-w-0 gap-12 xl:grid-cols-[minmax(0,1fr)_200px]">
+      <div className="split-r grid min-w-0 gap-12 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
         <div className="min-w-0">
           <DocsBreadcrumb nav={DOCS_NAV} />
           <div data-docs-article>{children}</div>
