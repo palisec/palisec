@@ -22,6 +22,7 @@ import { createPublicClient, isAddress, parseAbi, parseAbiItem, recoverTypedData
 import type { MemberContext } from "./access";
 import { CHAINS, chainTransport, type ChainId } from "./config";
 import { db, type Row } from "./db";
+import { assertLockKept } from "./treasury";
 import { afterChange } from "./events";
 import { BadRequest, HttpError, logEvent } from "./http";
 import { applyDue, cancelPending, orgDelays, requestPending } from "./pending";
@@ -228,6 +229,8 @@ export async function createProposal(slug: string, body: Record<string, unknown>
   if (!current) throw new HttpError(409, "PS_POLICY_001", "The mandate's policy has no active version");
   const compiled = compileProposal(current.doc, change, m.envelope as MandateEnvelope);
   if (!compiled.ok) throw new HttpError(422, "PS_POLICY_001", compiled.reason);
+  // Treasury guard: a vote cannot loosen a locked guard, so such a proposal never opens.
+  assertLockKept(current.doc, compiled.document);
   if (typeof body.nonce !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(body.nonce)) throw new BadRequest("nonce must be 1-64 characters");
   if (typeof body.proposer !== "string" || !isAddress(body.proposer)) throw new BadRequest("proposer must be an address");
   if (typeof body.signature !== "string" || !/^0x[0-9a-fA-F]{130}$/.test(body.signature)) throw new BadRequest("signature must be a 65-byte hex signature");
@@ -377,6 +380,8 @@ async function applyPassed(orgId: string, policyId: string, change: MandateChang
     const next = Number(pol.next);
     const document = { ...compiled.document, version: next, status: "active" } as Policy;
     const hash = await sha256Hex(canonicalJson(document));
+    // Treasury guard: checked again when the vote passes (the lock may have been set while it ran).
+    assertLockKept(pol.document as Policy, document);
     const cls = classifyPolicyChange(pol.document as Policy, document);
     const changes: PolicyChange[] = [{ path: "$.mandate", kind: cls.loosening ? "loosening" : "tightening", from: null, to: `${slug} #${number}`, note: `holder vote ${slug} #${number}` }, ...cls.changes];
     const [{ r }] = await db()`

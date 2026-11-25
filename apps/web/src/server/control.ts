@@ -11,7 +11,8 @@ import { parseAddress } from "./siwe";
 import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { parseWorkflowId } from "./upoch";
 import { queueSync } from "./peaa";
-import { announcePending, classifyRebind, listPending, orgDelays, parseDelaySetting, requestPending } from "./pending";
+import { announcePending, classifyRebind, decidingDocument, listPending, orgDelays, parseDelaySetting, requestPending } from "./pending";
+import { assertAccountGuards, assertLockKept } from "./treasury";
 
 
 /*
@@ -345,6 +346,9 @@ export async function activatePolicy(ctx: MemberContext, id: string, body: Recor
   const hash = await sha256Hex(canonicalJson(document));
   const before = (current.active_document as Policy | null) ?? null;
   const cls = classifyPolicyChange(before, document, { disabled: current.status === "disabled" });
+  // Treasury guard: a locked guard is never loosened, here or by any other policy on the account.
+  assertLockKept(before, document);
+  await assertAccountGuards(ctx.orgId, document.account.chain_id, document.account.address, { replace: { policyId: id, document } });
   const summary = summarizeChanges(cls.changes);
   let r: Record<string, unknown>;
   try {
@@ -449,6 +453,8 @@ async function checkPolicyBinding(ctx: MemberContext, policyId: string | null, c
   const acct = p.account as { chain_id?: number; address?: string } | null;
   if (acct && (acct.chain_id !== chain || String(acct.address).toLowerCase() !== account.toLowerCase()))
     throw new BadRequest("The policy protects a different account or chain than this agent");
+  // Treasury guard: the policy the agent would run under keeps every locked guard on the account.
+  await assertAccountGuards(ctx.orgId, chain, account, { bind: await decidingDocument(ctx.orgId, policyId) });
 }
 
 function optionalPolicyId(v: unknown): string | null {

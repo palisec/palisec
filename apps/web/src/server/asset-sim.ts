@@ -125,6 +125,7 @@ async function simulateV1(chainId: number, blocks: unknown[]): Promise<RpcBlock[
 function analyse(account: string, logs: RpcLog[]) {
   const net = new Map<string, bigint>();
   const approvals: AssetSimulation["approvals"] = [];
+  const transfersOut: NonNullable<AssetSimulation["transfers_out"]> = [];
   const sources = new Map<string, Map<string, bigint>>(); // token -> sender -> amount sent to the account
   const sentBy = new Map<string, bigint>(); // `${token}|${sender}` -> everything that sender moved of the token
   for (const l of logs) {
@@ -135,7 +136,10 @@ function analyse(account: string, logs: RpcLog[]) {
     const amount = BigInt(l.data);
     if (l.topics[0] === TRANSFER) {
       sentBy.set(`${token}|${a}`, (sentBy.get(`${token}|${a}`) ?? 0n) + amount);
-      if (a === account) net.set(token, (net.get(token) ?? 0n) - amount);
+      if (a === account) {
+        net.set(token, (net.get(token) ?? 0n) - amount);
+        if (token !== NATIVE_TOKEN) transfersOut.push({ token: token as Address, to: b as Address, amount: amount.toString() });
+      }
       if (b === account) {
         net.set(token, (net.get(token) ?? 0n) + amount);
         const m = sources.get(token) ?? new Map<string, bigint>();
@@ -152,7 +156,7 @@ function analyse(account: string, logs: RpcLog[]) {
     if (d < 0n) outflows.push({ token: token as Address, amount: (-d).toString() });
     if (d > 0n) inflows.push({ token: token as Address, amount: d.toString() });
   }
-  return { outflows, inflows, approvals, sources, sentBy };
+  return { outflows, inflows, approvals, transfersOut, sources, sentBy };
 }
 
 const bps = (part: bigint, whole: bigint) => (whole <= 0n ? 0 : Number(((part < 0n ? 0n : part) * 10_000n) / whole));
@@ -259,6 +263,7 @@ export async function simulateOperation(input: SimulationInput): Promise<{ sim: 
       outflows: a.outflows,
       inflows: a.inflows,
       approvals: a.approvals,
+      transfers_out: a.transfersOut,
       ...(allowancesAfter ? { allowances_after: allowancesAfter } : {}),
       sell,
       tax_bps: tax,

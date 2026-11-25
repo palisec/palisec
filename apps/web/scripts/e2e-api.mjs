@@ -239,6 +239,51 @@ check("another organization cannot see this agent", (await call("GET", `/agents/
 check("another organization cannot read this operation", (await call("GET", `/operations/${allowedOp}`, { cookie: x.cookie })).status === 404);
 check("another organization cannot select this organization", (await call("GET", "/agents", { cookie: x.cookie, headers: { "x-ps-org": viewerOrg } })).status === 403);
 
+// ---------------------------------------------------------------- treasury guard lock (schema 1.6)
+{
+  const T_ACC = rand();
+  const locked = (code) => code === 422 ;
+  const has005 = (b) => JSON.stringify(b).includes("PS_TREASURY_005");
+  const tp = await call("POST", "/policies", { cookie: o.cookie, body: { name: "Treasury", policy_key: "treasury_guard_test", chain_id: CHAIN, account: T_ACC } });
+  const guard = {
+    enabled: true, project_token: TOKEN, allowed_destinations: [], allowed_sell_venues: [rand()],
+    daily_sell_cap: { amount: "2000", pct_of_holdings_bps: null }, approvals: "exact_to_venues", protect_liquidity: true, lp_tokens: [],
+    locked_until: Math.floor(Date.now() / 1000) + 30 * 86400,
+  };
+  const tdoc = { ...draft, policy_id: "treasury_guard_test", schema_version: "1.6", account: tp.body.draft.account, treasury_guard: guard };
+  const activate = async (doc) => {
+    const s1 = await call("PUT", `/policies/${tp.body.id}`, { cookie: o.cookie, body: { document: doc } });
+    return call("POST", `/policies/${tp.body.id}/activate`, { cookie: o.cookie, body: { confirm: true, draft_hash: s1.body.draft_hash } });
+  };
+  r = await activate(tdoc);
+  check("treasury guard: a locked guard activates", r.status === 200 && r.body.active_document?.treasury_guard?.locked_until === guard.locked_until, r.body);
+  const ta = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Treasury agent", chain_id: CHAIN, account: T_ACC, policy_id: tp.body.id } });
+  check("treasury guard: an agent runs under it", ta.status === 201 || ta.status === 200, ta.body);
+  for (const [what, g] of [
+    ["raising the cap", { ...guard, daily_sell_cap: { amount: "3000", pct_of_holdings_bps: null } }],
+    ["adding a destination", { ...guard, allowed_destinations: [rand()] }],
+    ["switching liquidity protection off", { ...guard, protect_liquidity: false }],
+    ["shortening the lock", { ...guard, locked_until: guard.locked_until - 86400 }],
+  ]) {
+    r = await activate({ ...tdoc, treasury_guard: g });
+    check(`treasury guard: ${what} while locked is rejected (PS_TREASURY_005)`, locked(r.status) && has005(r.body), r.body);
+  }
+  const noGuard = { ...tdoc };
+  delete noGuard.treasury_guard;
+  r = await activate(noGuard);
+  check("treasury guard: removing a locked guard is rejected (PS_TREASURY_005)", locked(r.status) && has005(r.body), r.body);
+  r = await activate({ ...tdoc, treasury_guard: { ...guard, daily_sell_cap: { amount: "1000", pct_of_holdings_bps: null }, locked_until: guard.locked_until + 86400 } });
+  check("treasury guard: tightening (lower cap, longer lock) applies at once", r.status === 200 && r.body.active_document?.treasury_guard?.daily_sell_cap?.amount === "1000" && !r.body.pending_change, r.body);
+  // A second policy on the same account without the guard cannot be used to route around it.
+  const tp2 = await call("POST", "/policies", { cookie: o.cookie, body: { name: "Open", policy_key: "treasury_open_test", chain_id: CHAIN, account: T_ACC } });
+  const s2 = await call("PUT", `/policies/${tp2.body.id}`, { cookie: o.cookie, body: { document: { ...draft, policy_id: "treasury_open_test", account: tp2.body.draft.account } } });
+  await call("POST", `/policies/${tp2.body.id}/activate`, { cookie: o.cookie, body: { confirm: true, draft_hash: s2.body.draft_hash } });
+  r = await call("POST", "/agents", { cookie: o.cookie, body: { name: "Side door", chain_id: CHAIN, account: T_ACC, policy_id: tp2.body.id } });
+  check("treasury guard: a second agent on the account under an unguarded policy is rejected", locked(r.status) && has005(r.body), r.body);
+  r = await call("PATCH", `/agents/${ta.body.id}`, { cookie: o.cookie, body: { policy_id: tp2.body.id } });
+  check("treasury guard: moving the agent to an unguarded policy is rejected", locked(r.status) && has005(r.body), r.body);
+}
+
 // ---------------------------------------------------------------- revocation and audit
 r = await call("POST", `/credentials/${credId}/revoke`, { cookie: o.cookie });
 check("revoke API key", r.status === 200, r.body);

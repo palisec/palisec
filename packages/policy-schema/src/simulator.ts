@@ -1,5 +1,6 @@
 import { REASON_CODES, RETRYABLE, type ReasonCode } from "./codes";
 import type {
+  AssetSimulation,
   CheckResult,
   Environment,
   EvaluationResult,
@@ -845,6 +846,15 @@ export function treasuryCap(cap: { amount: string | null; pct_of_holdings_bps: n
     c = c === null || p < c ? p : c;
   }
   return c;
+}
+
+/** Project token this simulation sends to the guard's sell venues (what counts toward the daily cap); 0 when the guard is off. */
+export function treasurySold(policy: Policy | null, sim: AssetSimulation | null | undefined): bigint {
+  const g = policy?.treasury_guard;
+  if (!g?.enabled || !sim?.transfers_out) return 0n;
+  const pt = g.project_token.toLowerCase();
+  const venues = new Set(g.allowed_sell_venues.map((a) => a.toLowerCase()));
+  return sim.transfers_out.reduce((s, t) => (t.token.toLowerCase() === pt && venues.has(t.to.toLowerCase()) ? s + BigInt(t.amount) : s), 0n);
 }
 
 function treasuryCheck(policy: Policy, env: Environment): Outcome {

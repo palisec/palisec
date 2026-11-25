@@ -6,6 +6,7 @@ import {
   fingerprint,
   RETRYABLE,
   selectorOf,
+  treasurySold,
   type CheckResult,
   type Decision,
   type AssetIntent,
@@ -29,6 +30,7 @@ import { canonicalJson, randomHex, sha256Hex } from "./tokens";
 import { registryStopInput, signReceipt } from "./peaa";
 import { latch, lossLimitOn, safeReason, takeSnapshot, type LossTarget } from "./loss-limits";
 import { spendPrices, tokenSpendOn } from "./valuation";
+import { treasuryCapFor, treasuryOn, treasuryWindow } from "./treasury";
 import type { ReceiptJson } from "policy-enforced-accounts";
 
 /** How long an ALLOW can be used, and how long a request may wait for a human approver. */
@@ -84,6 +86,9 @@ interface Prepared {
   intentFp: string;
   usdMicros: bigint;
   feeWei: bigint | null;
+  /** Treasury guard: project token this operation sells through a venue, and the cap the database rechecks. */
+  treasurySold: bigint;
+  treasuryCap: string | null;
   result: ReturnType<typeof evaluate>;
 }
 
@@ -141,7 +146,9 @@ async function liveEnvironment(
 /** Asset safety applies to this policy: the request's declared intent goes to the engines and the operation is simulated. */
 const assetSafetyOn = (p: Policy | null) => p?.asset_safety?.enabled === true;
 /** The operation is simulated when asset safety, a loss limit or the token spend rule needs its balance changes. */
-const simulationNeeded = (p: Policy | null) => assetSafetyOn(p) || lossLimitOn(p) || tokenSpendOn(p);
+const simulationNeeded = (p: Policy | null) => assetSafetyOn(p) || lossLimitOn(p) || tokenSpendOn(p) || treasuryOn(p);
+/** Calls without calldata are simulated too when token spend or the treasury guard needs every movement. */
+const simulateEveryCall = (p: Policy | null) => tokenSpendOn(p) || treasuryOn(p);
 /** Token spend: prices for the tokens a transaction may spend, read alongside the other inputs. */
 const spendPricesFor = (p: Policy | null, chainId: number) => (tokenSpendOn(p) ? spendPrices(chainId, p!.token_spend!.max_closed_market_price_age_seconds) : null);
 
@@ -179,8 +186,9 @@ export async function testDraft(doc: Record<string, unknown>, body: Record<strin
   // Loss limits: a draft with a loss limit is tested against the account's value now (read-only, nothing recorded).
   const lossTarget = lossLimitOn(policy) ? { orgId: "", policyUuid: "", chainId: input.chain_id, account: intent.from, policy } : null;
   const prices = spendPricesFor(policy, input.chain_id);
-  const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, tokenSpendOn(policy), null, lossTarget, false);
+  const { env } = await liveEnvironment(input, now, false, [], simulationNeeded(policy) ? intent.from : null, simulateEveryCall(policy), null, lossTarget, false);
   if (prices) env.spend_prices = await prices;
+  if (treasuryOn(policy)) env.treasury = await treasuryWindow(input.chain_id, intent.from, policy);
   const { result, checks } = finish(evaluateDual(policy, intent, { reservations: [], seen_request_ids: [], calldata_seen: {}, intent_seen: {} }, env, reportEngine), input.chain_id);
   return { decision: result.decision, reason_code: result.reason_code, message: result.message, checks, inputs: { fee_estimate_wei: env.fee_estimate_wei, eth_usd: env.eth_usd } };
 }
@@ -243,8 +251,10 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   const prices = spendPricesFor(policy, input.chain_id);
   // The account's own stop on the registry (ERC-8511): read alongside the other inputs.
   const accountStop = registryStopInput(input.chain_id, agent.account);
+  // Treasury guard: the 24-hour sell window, read alongside the other inputs.
+  const window = treasuryOn(policy) ? treasuryWindow(input.chain_id, agent.account, policy!) : null;
   const { env, feeWei } = await liveEnvironment(
-    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null, tokenSpendOn(policy),
+    input, now, agent.emergencyStop, agent.agentStatus === "active" ? [] : [agent.agentId], simulationNeeded(policy) ? agent.account : null, simulateEveryCall(policy),
     policy?.upoch_recovery?.require_upoch_recoverable === true ? { orgId: agent.orgId, account: agent.account, workflowId: agent.upochWorkflowId } : null,
     lossLimitOn(policy) && agent.policyId ? { orgId: agent.orgId, policyUuid: agent.policyId, chainId: input.chain_id, account: agent.account, policy: policy! } : null,
   );
@@ -255,6 +265,7 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
   if (prices) env.spend_prices = await prices;
   const stop = await accountStop;
   if (stop !== undefined) env.registry_stop = stop;
+  if (window) env.treasury = await window;
   const { result, checks } = finish(evaluateDual(policy, intent, state, env, reportEngine), input.chain_id);
   const reserved = result.next_state.reservations.find((r) => r.request_id === input.request_id && r.state !== "released");
   return {
@@ -267,6 +278,8 @@ async function prepare(agent: AgentContext, input: IntentInput): Promise<Prepare
     intentFp,
     usdMicros: reserved ? BigInt(reserved.amount_usd_micros) : 0n,
     feeWei,
+    treasurySold: result.decision === "DENY" ? 0n : treasurySold(policy, env.asset_simulation),
+    treasuryCap: treasuryCapFor(policy, env.treasury),
     result: { ...result, checks },
   };
 }
@@ -391,12 +404,14 @@ async function recordOperation(
     authorization_id: `ps_auth_${randomHex(16)}`,
     authorization_ttl: AUTHORIZATION_TTL_SECONDS,
     approval_ttl: APPROVAL_TTL_SECONDS,
+    treasury_sold: p.treasurySold.toString(),
   };
   const lim = {
     hourly_budget_usd_micros: limits?.hourly_budget_usd_micros ?? "0",
     max_pending_operations: limits?.max_pending_operations ?? 0,
     identical_calldata_seconds: cooldowns?.identical_calldata_seconds ?? 0,
     identical_intent_seconds: cooldowns?.identical_intent_seconds ?? 0,
+    treasury_cap: p.treasuryCap,
   };
   const [{ result }] = await db()`SELECT ps_record_operation(${JSON.stringify(op)}::text::jsonb, ${JSON.stringify(lim)}::text::jsonb) AS result`;
   const outcome = result.outcome as string;
