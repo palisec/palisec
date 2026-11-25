@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { rememberWallet } from "@/lib/browser-wallet";
 
@@ -70,10 +69,19 @@ function useWallets(): WalletInfo[] {
 }
 
 export function WalletSignIn() {
-  const router = useRouter();
   const wallets = useWallets();
   const [health, setHealth] = useState<Health>("loading");
   const [me, setMe] = useState<{ address: string } | null>(null);
+  // Set when the page has not moved 2 s after the session was created: show a link instead of waiting.
+  const [stuck, setStuck] = useState(false);
+  /**
+   * A full navigation, not the client router: a wallet extension reconnecting (or two extensions
+   * competing for window.ethereum) can interrupt a client-side transition and leave the page waiting.
+   */
+  function openConsole() {
+    window.location.assign(nextPath());
+    window.setTimeout(() => setStuck(true), 2000);
+  }
   const [step, setStep] = useState<Step>("idle");
   const [error, setError] = useState("");
 
@@ -91,14 +99,14 @@ export function WalletSignIn() {
         const m = await api<{ address: string }>("/api/v1/me").catch(() => null);
         if (live && m?.ok) {
           setMe(m.body);
-          router.replace(nextPath());
+          openConsole();
         }
       }
     })();
     return () => {
       live = false;
     };
-  }, [router]);
+  }, []);
 
   async function signIn(w: WalletInfo) {
     setError("");
@@ -133,7 +141,7 @@ export function WalletSignIn() {
       rememberWallet(w);
       setMe({ address: v.body.address });
       setStep("idle");
-      router.replace(nextPath());
+      openConsole();
     } catch (e) {
       const code = (e as { code?: number }).code;
       setError(code === 4001 ? "Request rejected in the wallet. Nothing was signed." : e instanceof Error ? e.message : "Sign-in failed.");
@@ -149,6 +157,9 @@ export function WalletSignIn() {
         <p className="font-mono text-[11px] tracking-[0.08em] text-allow">→ SIGNED IN</p>
         <p className="break-all font-mono text-xs text-soft">{me.address}</p>
         <p className="text-sm text-muted">Opening the console…</p>
+        {stuck ? (
+          <a href={nextPath()} className="inline-block text-sm text-aqua underline underline-offset-4">Open the console</a>
+        ) : null}
       </div>
     );
   }

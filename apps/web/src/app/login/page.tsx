@@ -19,10 +19,10 @@ export default function LoginPage() {
     <div className="flex min-h-dvh flex-col bg-abyss">
       <PointerLight />
       <header className="relative flex items-center justify-between px-6 py-5">
-        <span className="flex items-center gap-2.5">
+        <Link href="/" aria-label="Palisec home" className="flex items-center gap-2.5">
           <BrandMark size={22} />
           <span className="font-brand text-[17px] font-semibold tracking-[-0.03em] text-mist">Pali<span className="text-aqua">sec</span></span>
-        </span>
+        </Link>
         <span className="rounded-[4px] bg-aqua/[0.06] px-1.5 py-0.5 font-utility text-[11.5px] text-aqua shadow-[inset_0_0_0_1px_rgb(156_246_238/0.4)]">
           ● Robinhood Chain
         </span>
