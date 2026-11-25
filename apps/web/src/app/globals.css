@@ -1081,3 +1081,6 @@ html:not(.js) .limit-row .lv { opacity: 1; }
 
 /* Elements that slide in from the side never widen the page. */
 .line-site { overflow-x: clip; }
+
+/* The X link in the header: a square ghost button the height of Console, with a dark translucent fill. */
+.x-btn { width: 2.5rem; padding: 0; justify-content: center; background: rgb(1 20 19 / 0.55); }

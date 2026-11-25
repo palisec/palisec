@@ -1,3 +1,4 @@
+import { VERSIONS } from "@/lib/versions";
 import type { Metadata } from "next";
 import { pageOpenGraph } from "@/lib/seo";
 import Link from "next/link";
@@ -87,7 +88,7 @@ export default function Quickstart() {
       <ol>
         <li><strong>Sign in.</strong> Open <Link href="/login">/login</Link> and sign the message with your wallet. Your first sign-in creates an organization with you as owner.</li>
         <li><strong>Create a policy.</strong> In <Link href="/console/policies">Console → Policies</Link>, enter the smart account your agent acts for. The draft starts strict: tiny limits and nothing allowlisted.</li>
-        <li><strong>Allow what the agent needs.</strong> Add each contract and function selector, set the hourly budget and the approval threshold, then save. The editor validates against schema 1.0 as you type.</li>
+        <li><strong>Allow what the agent needs.</strong> Add each contract and function selector, set the hourly budget and the approval threshold, then save. The editor validates against schema {VERSIONS.schema} as you type.</li>
         <li><strong>Activate.</strong> Review the changes and activate. This creates an immutable version 1 and an audit event.</li>
         <li><strong>Register the agent and create a key.</strong> In <Link href="/console/agents">Console → Agents</Link>, bind the agent to the policy, then create an API key. Copy it: it is shown once.</li>
         <li><strong>Ask before every transaction.</strong> Your agent calls <code>POST /v1/operations</code> and only sends on <code>ALLOW</code>.</li>

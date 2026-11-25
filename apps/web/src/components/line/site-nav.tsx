@@ -140,6 +140,9 @@ export function SiteNav() {
           <button type="button" onClick={openSearch} className="hidden items-center gap-2 font-utility text-[0.9688rem] font-medium text-silver transition-colors hover:text-mist xl:inline-flex">
             Search <kbd className="rounded-[0.25rem] border border-line-strong px-1.5 font-mono text-[0.6875rem] text-dim">⌘K</kbd>
           </button>
+          <a href="https://x.com/palisecagents" target="_blank" rel="noopener noreferrer" aria-label="Palisec on X" className="lbtn lbtn-ghost sm x-btn">
+            <svg aria-hidden viewBox="0 0 24 24" className="relative h-[40%] w-[40%] fill-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+          </a>
           <Link href="/console" className="lbtn lbtn-primary sm hidden sm:inline-flex">
             <span className="relative">Console</span>
           </Link>
@@ -196,6 +199,9 @@ export function SiteNav() {
                   <Link href={l.href} className="block py-4 font-utility text-[1.0625rem] font-medium text-mist">{l.label}</Link>
                 </li>
               ))}
+              <li>
+                <a href="https://x.com/palisecagents" target="_blank" rel="noopener noreferrer" className="block py-4 font-utility text-[1.0625rem] font-medium text-mist">X <span className="sr-only">(Palisec on X, opens in a new tab)</span></a>
+              </li>
             </ul>
           </nav>
         </div>

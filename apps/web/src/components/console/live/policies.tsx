@@ -1,5 +1,6 @@
 "use client";
 
+import { VERSIONS } from "@/lib/versions";
 import { EXAMPLE_POLICY, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
@@ -300,7 +301,7 @@ function PolicyEditor({ id, onChange }: { id: string; onChange: () => void }) {
           {p.versions.length > 0 && <VersionCompare policyId={p.id} versions={p.versions.map((v) => v.version)} hasDraft={Boolean(p.draft)} />}
           <KV className="mt-3" rows={[["Draft saved", utc(p.draft_updated_at)]]} />
           <p className="mt-3 text-[12px] text-muted">
-            Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-aqua">policy schema 1.0</Link>.
+            Field reference: <Link href="/docs/policies" className="text-soft underline underline-offset-4 hover:text-aqua">policy schema {VERSIONS.schema}</Link>.
           </p>
         </Panel>
       </div>
