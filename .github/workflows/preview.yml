@@ -36,7 +36,10 @@ jobs:
             echo "::error::Vercel preview failed"; exit 1
           fi
           url=$(grep -oE 'https://[^ ]+\.vercel\.app' /tmp/vercel.out | tail -1)
-          npx --yes "$VERCEL_CLI" alias set "$url" "$ALIAS" --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" > /dev/null 2> /tmp/alias.log || { sed -E 's#https?://[^ )]+#<url>#g' /tmp/alias.log | tail -3; exit 1; }
+          # The CLI alias command needs a user lookup the token cannot do; the REST API does not.
+          host=${url#https://}
+          id=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v13/deployments/$host?teamId=$VERCEL_ORG_ID" | jq -r .id)
+          curl -sf -X POST -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" -d "{\"alias\":\"$ALIAS\"}" "https://api.vercel.com/v2/deployments/$id/aliases?teamId=$VERCEL_ORG_ID" > /dev/null || { echo "::error::Could not set the preview address"; exit 1; }
           echo "Preview: https://$ALIAS"
       - name: The preview answers and is not indexed
         run: |
