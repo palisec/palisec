@@ -70,7 +70,7 @@ export function ProofTable({ initial }: { initial: Page | null }) {
                   <th className="py-3 pr-4 font-normal">Action</th>
                   <th className="hidden py-3 pr-4 text-right font-normal sm:table-cell">USD</th>
                   <th className="py-3 pr-4 font-normal">Result</th>
-                  <th className="py-3 font-normal">Link</th>
+                  <th className="hidden py-3 font-normal md:table-cell">Link</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,7 +81,7 @@ export function ProofTable({ initial }: { initial: Page | null }) {
                     <td className="py-4 pr-4 text-foam">{r.action}</td>
                     <td className="hidden py-4 pr-4 text-right text-foam sm:table-cell">{r.usd === null ? "—" : r.usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
                     <td className="py-4 pr-4"><Result kind={r.result}>{r.result === "allowed" ? "Allowed" : r.result === "held" ? "Held" : r.reason_code ?? "Blocked"}</Result></td>
-                    <td className="py-4">{r.receipt_url && r.tx_hash ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-silver hover:text-aqua">{short(r.tx_hash)} ↗</a> : <span className="text-dim">—</span>}</td>
+                    <td className="hidden py-4 md:table-cell">{r.receipt_url && r.tx_hash ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-silver hover:text-aqua">{short(r.tx_hash)} ↗</a> : <span className="text-dim">—</span>}</td>
                   </tr>
                 ))}
               </tbody>
