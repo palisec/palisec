@@ -69,10 +69,10 @@ export function OnThisPage() {
   return (
     <nav aria-label="On this page" className="hidden xl:block xl:sticky xl:top-[6.875rem] xl:self-start">
       <p className="t-label mb-3">On this page</p>
-      <ul className="space-y-1.5 text-[0.8438rem]">
+      <ul className="text-[0.8438rem]">
         {heads.map((h) => (
           <li key={h.id} className={h.level === 3 ? "pl-3" : ""}>
-            <a href={`#${h.id}`} className={`block transition-colors ${current === h.id ? "text-aqua" : "text-silver hover:text-mist"}`}>{h.text}</a>
+            <a href={`#${h.id}`} className={`block py-1.5 transition-colors ${current === h.id ? "text-aqua" : "text-silver hover:text-mist"}`}>{h.text}</a>
           </li>
         ))}
       </ul>

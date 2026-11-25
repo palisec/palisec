@@ -21,7 +21,7 @@ export function AddressChip({ address = PALISEC_CA, tag = "$PALISEC" }: { addres
     <button
       type="button"
       onClick={copy}
-      aria-label={`Copy the ${tag} contract address ${address}`}
+      aria-label={`${tag} ${short}: copy the contract address ${address}`}
       className="inline-flex h-9 items-center gap-2.5 rounded-full border border-line-strong pl-1.5 pr-3 font-mono text-[0.8125rem] text-silver transition-colors hover:border-aqua/50 hover:text-mist"
     >
       <span className="rounded-full bg-aqua/10 px-2 py-0.5 text-[0.6875rem] text-aqua">{tag}</span>

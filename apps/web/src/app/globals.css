@@ -1002,9 +1002,9 @@ html.intro-page [data-intro-ctas] { animation: intro-up 0.9s var(--ease-out-quin
 
 /* ── Homepage: limits list (the row nearest 52% of the viewport is active). ── */
 .limit-row { border-top: 1px solid var(--color-line); min-height: 11.25rem; }
-.limit-row .lw { color: var(--color-line-strong); transition: color 0.35s var(--ease-out-quint); }
+.limit-row .lw { color: var(--color-dim); transition: color 0.35s var(--ease-out-quint); }
 .limit-row .ld { color: var(--color-dim); transition: color 0.35s var(--ease-out-quint); }
-.limit-row .lc { color: var(--color-dim); opacity: 0.6; transition: color 0.35s, opacity 0.35s; }
+.limit-row .lc { color: var(--color-silver); opacity: 1; transition: color 0.35s, opacity 0.35s; }
 .limit-row .lv { opacity: 0; transition: opacity 0.35s var(--ease-out-quint); }
 .limit-row[data-on] .lw { color: var(--color-mist); }
 .limit-row[data-on] .ld { color: var(--color-foam); }
