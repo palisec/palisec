@@ -53,7 +53,7 @@ export function Meter({ name, value, pct }: { name: ReactNode; value: ReactNode;
         <span>{name}</span>
         <span className="tabular-nums">{value}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-line" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p)}>
+      <div className="h-2 overflow-hidden rounded-full bg-line" role="meter" aria-label={typeof name === "string" ? name : undefined} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p)}>
         <div className={`h-full origin-left rounded-full ${p >= 100 ? "bg-deny" : "bg-aqua"}`} style={{ transform: `scaleX(${p / 100})` }} />
       </div>
     </div>

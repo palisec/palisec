@@ -54,7 +54,7 @@ async function TreasuryBody({ params }: { params: Promise<{ account: string }> }
   const bound = t.recovery.state === "timelock";
   const warn = t.recovery.state === "team_key" || t.recovery.state === "not_enforced";
   const link = (a: string) => (
-    <a href={`${t.explorer}/address/${a}`} target="_blank" rel="noopener noreferrer" className="font-mono text-silver hover:text-aqua">{short(a)} ↗</a>
+    <a href={`${t.explorer}/address/${a}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[24px] items-center font-mono text-silver hover:text-aqua">{short(a)} ↗</a>
   );
 
   return (
