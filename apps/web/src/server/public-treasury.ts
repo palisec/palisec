@@ -103,7 +103,7 @@ export async function recoveryOwner(account: Address, lockedUntil: number): Prom
       return { state: "timelock", owners: rows, threshold: t, explanation: `Fully bound: the only way to sign without Palisec goes through a timelock (${timelock.address}) whose ${Math.round((timelock.min_delay_seconds ?? 0) / 86400)}-day delay outlasts the lock, so any attempt is public on chain long before it can run.` };
     if (others.some((r) => r.role === "contract"))
       return { state: "contract", owners: rows, threshold: t, explanation: "One owner is a contract that is not a timelock with a long enough delay. Check what that contract allows before relying on these rules." };
-    return { state: "team_key", owners: rows, threshold: t, explanation: "The team can bypass these rules with its recovery key: the agent's key and the recovery owner's key together can sign without Palisec." };
+    return { state: "team_key", owners: rows, threshold: t, explanation: "The agent's key and the recovery owner's key are both ordinary keys, and together they can sign without Palisec." };
   } catch (e) {
     logEvent("warn", "treasury.owners_unavailable", { message: e instanceof Error ? e.message.slice(0, 160) : "error" });
     return { state: "unknown", owners: [], threshold: null, explanation: "The account's owners could not be read right now." };

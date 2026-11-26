@@ -86,7 +86,11 @@ export interface ProofRow {
   receipt_url: string | null;
 }
 
-const SYMBOLS = new Map<string, string>(ASSETS[PUBLIC_DEMO_CHAIN as keyof typeof ASSETS]?.map((a) => [a.contract.toLowerCase(), a.symbol]) ?? []);
+const SYMBOLS = new Map<string, string>([
+  ...(ASSETS[PUBLIC_DEMO_CHAIN as keyof typeof ASSETS]?.map((a) => [a.contract.toLowerCase(), a.symbol] as [string, string]) ?? []),
+  // The project token of the treasury guard demo accounts.
+  ["0x1b4d04c8a67bf98bdf791ef928482bcb225d71ab", "$PALISEC"],
+]);
 
 /** Palisec's own contracts on mainnet, named in public actions. */
 const NAMED_TARGETS = new Map<string, string>([
@@ -95,6 +99,7 @@ const NAMED_TARGETS = new Map<string, string>([
   ["0x20d6b38b47f7cb765a2318a1f318ed54a6f87e92", "Registry v1 update"],
   ["0x737f1acf46ace6d403977eb4944845fd251fc8c6", "Link Zolva agent"],
   ["0xd5f516d43450293ac9a77bb53e40e2d8be2f5c3a", "Buy decision credits"],
+  ["0x9f7383a2fcb30124a203d359e7a403f750a56501", "Sell $PALISEC on the Pons curve"],
 ]);
 
 /** A short readable action from the call: "Swap USDG → NVDA", "Transfer USDG", "Send ETH". */
