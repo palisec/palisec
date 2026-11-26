@@ -122,6 +122,20 @@ export default function TreasuryGuardDocsPage() {
         can still sign without Palisec. Holders who want the guard to bind the team as well should check who holds the
         recovery owner key; the owners are readable on chain.
       </p>
+      <p>Each protected agent&apos;s public page (<code>/r/&lt;account&gt;</code>) reads the owners from the chain and shows one of:</p>
+      <ul>
+        <li><strong>The team can bypass these rules with its recovery key</strong>: both non-Palisec owners are ordinary keys.</li>
+        <li><strong>Fully bound</strong>: the recovery owner is a timelock whose minimum delay is at least the time left on the lock, so any attempt to sign without Palisec is scheduled in public on chain and cannot run before the lock ends.</li>
+        <li><strong>Check the contract owner</strong>: the recovery owner is a contract that is not such a timelock.</li>
+      </ul>
+
+      <h2 id="fully-bound">Making it fully bound</h2>
+      <ol>
+        <li>Deploy a timelock (for example OpenZeppelin&apos;s <code>TimelockController</code>) with a minimum delay at least as long as the lock, the team&apos;s multisig as proposer and canceller, and anyone as executor.</li>
+        <li>Replace the recovery owner with the timelock: the Safe&apos;s <code>swapOwner(prevOwner, recoveryOwner, timelock)</code>, signed by two owners.</li>
+        <li>Check the account&apos;s public page: it should say <em>Fully bound</em>. From then on, anything the team wants to do without Palisec must first be scheduled through the timelock, in public, and waits out the delay.</li>
+      </ol>
+      <p>Recovery still works: the team can use the timelock to replace a lost agent key, only slowly and in the open.</p>
     </DocArticle>
   );
 }

@@ -11,9 +11,10 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph("/limits"),
 };
 
-const ROWS: { id: string; word: string; text: string; codes: string[]; doc: string }[] = [
+const ROWS: { id: string; word: string; text: string; codes: string[]; doc: string; example?: string }[] = [
   { id: "spend", word: "Spend", text: "Per-transaction cap and hourly budget, in USD. ETH and every token that leaves the account counts, priced through Chainlink.", codes: ["PS_BUDGET_001", "PS_PRICE_001"], doc: "/docs/policies" },
   { id: "loss", word: "Loss", text: "Stops the agent when the account falls past the drop you set, in percent or in dollars.", codes: ["PS_LOSS_001", "PS_LOSS_002", "PS_LOSS_003"], doc: "/docs/policies" },
+  { id: "treasury", word: "Treasury", text: "An agent's own token goes only where the rules allow, sells stay under a daily cap, and a lock keeps anyone from loosening it.", codes: ["PS_TREASURY_001", "PS_TREASURY_002", "PS_TREASURY_003", "PS_TREASURY_004", "PS_TREASURY_005"], doc: "/docs/treasury-guard", example: "sell 1,000 / 2,000 today · ● locked 30 days" },
   { id: "approve", word: "Approve", text: "Above your threshold, a person signs. The approval is bound to that exact payload.", codes: ["PS_HUMAN_001"], doc: "/docs/policies" },
   { id: "simulate", word: "Simulate", text: "Every transaction is simulated first. If Palisec can't see what leaves the account, it doesn't sign.", codes: ["PS_SIM_002"], doc: "/docs/policies" },
   { id: "assets", word: "Assets", text: "Sell taxes, honeypots and swaps whose output doesn't come back to the account are caught before signing.", codes: ["Asset safety"], doc: "/docs/policies" },
@@ -47,6 +48,7 @@ export default function LimitsPage() {
               </div>
               <div className="split-r min-w-0">
                 <Link href={r.doc} className="t-giant text-mist transition-colors hover:text-aqua">{r.word}</Link>
+                {r.example ? <p className="mt-3 font-mono text-[0.8125rem] text-silver">{r.example}</p> : null}
               </div>
             </div>
           </div>

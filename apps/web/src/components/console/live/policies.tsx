@@ -1,7 +1,7 @@
 "use client";
 
 import { VERSIONS } from "@/lib/versions";
-import { EXAMPLE_POLICY, SCHEMA_VERSIONS, validatePolicy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
+import { EXAMPLE_POLICY, SCHEMA_VERSIONS, treasuryLockViolation, validatePolicy, type Policy, type CheckResult, type ValidationError } from "@palisec/policy-schema";
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { networkLabel } from "@/lib/networks";
@@ -188,6 +188,12 @@ function PolicyEditor({ id, onChange, onDeleted }: { id: string; onChange: () =>
     if (p && parsed.doc.policy_id !== p.policy_key) errs.push({ path: "$.policy_id", message: `must stay "${p.policy_key}"` });
     return errs;
   }, [parsed, p]);
+  // Treasury guard: while the active version's guard is locked, a draft that loosens it cannot be activated.
+  const [now] = useState(() => Math.floor(Date.now() / 1000));
+  const lockBreaks = useMemo(
+    () => (parsed.doc && p?.active_document ? treasuryLockViolation(p.active_document as unknown as Policy, parsed.doc as unknown as Policy, now) : null),
+    [parsed, p, now],
+  );
   const changes = useMemo(() => (parsed.doc ? diff(p?.active_document ?? {}, parsed.doc).filter((c) => !IGNORED_IN_DIFF.has(c.path)) : []), [parsed, p]);
 
   if (detail.error) return <LoadError error={detail.error} />;
@@ -209,7 +215,7 @@ function PolicyEditor({ id, onChange, onDeleted }: { id: string; onChange: () =>
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(340px,460px)_minmax(0,1fr)]">
       <div className="space-y-4">
         <p className="label">Configuration</p>
-        {manage && parsed.doc && <QuickEdits doc={parsed.doc} edit={edit} />}
+        {manage && parsed.doc && <QuickEdits doc={parsed.doc} edit={edit} active={(p.active_document as Doc | null) ?? null} lockBreaks={lockBreaks} now={now} />}
         {parsed.doc && errors.length === 0 && <TestPanel doc={parsed.doc} />}
         <Panel title={p.active_version ? `Changes from v${p.active_version}` : "Changes (no active version)"} bodyClassName="p-4 space-y-3">
           {changes.length === 0 ? (
@@ -231,7 +237,7 @@ function PolicyEditor({ id, onChange, onDeleted }: { id: string; onChange: () =>
               <Confirm
                 variant="primary"
                 label={`Activate as v${(p.active_version ?? 0) + 1}`}
-                disabled={busy || dirty || errors.length > 0 || !p.draft_hash || changes.length === 0}
+                disabled={busy || dirty || errors.length > 0 || !p.draft_hash || changes.length === 0 || lockBreaks !== null}
                 disabledReason="Save a valid draft that differs from the active version"
                 prompt={`Agents bound to ${p.policy_key} will be evaluated against this version immediately. Pending approvals made under the old version can no longer be approved.`}
                 confirmLabel="Activate"
@@ -322,7 +328,16 @@ function PolicyEditor({ id, onChange, onDeleted }: { id: string; onChange: () =>
 }
 
 /** Rule builder (spec §11.4): edits in human units, written into the JSON so the editor stays the single source. */
-function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Record<string, any>) => void) => void }) { // eslint-disable-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Doc = Record<string, any>;
+
+/** Raises the draft's schema version to `v` if it is lower (never lowers it). */
+function raiseSchema(d: Doc, v: string) {
+  if (SCHEMA_VERSIONS.indexOf(d.schema_version) < SCHEMA_VERSIONS.indexOf(v as (typeof SCHEMA_VERSIONS)[number])) d.schema_version = v;
+}
+const addressList = (v: string) => v.split(/[\s,]+/).map((x) => x.trim()).filter((x) => /^0x[0-9a-fA-F]{40}$/.test(x));
+
+function QuickEdits({ doc, edit, active, lockBreaks, now }: { doc: Doc; edit: (fn: (d: Doc) => void) => void; active: Doc | null; lockBreaks: { note: string }[] | null; now: number }) {
   const uid = useId();
   const [contract, setContract] = useState("");
   const [selectors, setSelectors] = useState("0xa9059cbb");
@@ -397,7 +412,7 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
             onChange={(e) =>
               edit((d) => {
                 if (e.target.checked) {
-                  d.schema_version = "1.5";
+                  raiseSchema(d, "1.5");
                   d.token_spend = { enabled: true, max_transaction_usd_micros: "5000000", on_price_unavailable: "deny", max_closed_market_price_age_seconds: 259200, require_output_to_account: true, ...(d.token_spend ?? {}) };
                   d.token_spend.enabled = true;
                 } else if (d.token_spend) d.token_spend.enabled = false;
@@ -420,6 +435,73 @@ function QuickEdits({ doc, edit }: { doc: Record<string, any>; edit: (fn: (d: Re
               <input type="checkbox" checked={doc.token_spend?.require_output_to_account !== false} onChange={(e) => edit((d) => (d.token_spend.require_output_to_account = e.target.checked))} className="mt-0.5 accent-[#9cf6ee]" />
               <span>A swap&apos;s output must come back to the account.</span>
             </label>
+          </>
+        )}
+      </div>
+      <div className={section}>
+        <p className="label">Treasury guard · schema 1.6</p>
+        {active?.treasury_guard?.enabled && active.treasury_guard.locked_until > now ? (
+          <p className="rounded-[6px] border border-review/40 bg-review/[0.06] p-2 text-[12px] text-soft">
+            Locked until {new Date(active.treasury_guard.locked_until * 1000).toISOString().replace(".000Z", "Z").replace("T", " ")}. Changes that loosen it are rejected (PS_TREASURY_005); tightening applies at once.
+          </p>
+        ) : null}
+        {lockBreaks ? (
+          <ul className="space-y-1 rounded-[6px] border border-deny/50 bg-deny/[0.06] p-2 text-[12px] text-deny">
+            {lockBreaks.map((b, i) => <li key={i}>Not allowed while locked: {b.note}</li>)}
+          </ul>
+        ) : null}
+        <label className="flex items-start gap-2 text-[12px] text-soft">
+          <input
+            type="checkbox"
+            checked={doc.treasury_guard?.enabled === true}
+            onChange={(e) =>
+              edit((d) => {
+                if (e.target.checked) {
+                  raiseSchema(d, "1.6");
+                  d.treasury_guard = { enabled: true, project_token: "", allowed_destinations: [], allowed_sell_venues: [], daily_sell_cap: { amount: null, pct_of_holdings_bps: null }, approvals: "exact_to_venues", protect_liquidity: false, lp_tokens: [], locked_until: 0, ...(d.treasury_guard ?? {}) };
+                  d.treasury_guard.enabled = true;
+                } else if (d.treasury_guard) d.treasury_guard.enabled = false;
+              })
+            }
+            className="mt-0.5 accent-[#9cf6ee]"
+          />
+          <span>Anti-rug rules for the agent&apos;s own token: where it may go, a daily sell cap, exact approvals, protected liquidity and a lock date.</span>
+        </label>
+        {doc.treasury_guard?.enabled === true && (
+          <>
+            <Field id={`${uid}-tg-token`} label="Project token">
+              <input id={`${uid}-tg-token`} className={inputCls} defaultValue={doc.treasury_guard.project_token} key={`t${doc.treasury_guard.project_token}`} spellCheck={false} placeholder="0x…" onBlur={(e) => edit((d) => (d.treasury_guard.project_token = e.target.value.trim()))} />
+            </Field>
+            <Field id={`${uid}-tg-venues`} label="Sell venues" hint="Routers, pools or bonding curves; tokens sent there count as sells.">
+              <input id={`${uid}-tg-venues`} className={inputCls} defaultValue={doc.treasury_guard.allowed_sell_venues.join(", ")} key={`v${doc.treasury_guard.allowed_sell_venues.join()}`} spellCheck={false} placeholder="0x…, 0x…" onBlur={(e) => edit((d) => (d.treasury_guard.allowed_sell_venues = addressList(e.target.value)))} />
+            </Field>
+            <Field id={`${uid}-tg-dest`} label="Other allowed destinations" hint="For example a vesting contract. Everything else is denied.">
+              <input id={`${uid}-tg-dest`} className={inputCls} defaultValue={doc.treasury_guard.allowed_destinations.join(", ")} key={`d${doc.treasury_guard.allowed_destinations.join()}`} spellCheck={false} placeholder="none" onBlur={(e) => edit((d) => (d.treasury_guard.allowed_destinations = addressList(e.target.value)))} />
+            </Field>
+            {unitField("Daily sell cap (tokens, 18 decimals)", 18, doc.treasury_guard.daily_sell_cap?.amount ?? undefined, (d, v) => (d.treasury_guard.daily_sell_cap.amount = v === "0" ? null : v), "Per rolling 24 hours. Empty or 0: not used.")}
+            {intField("Daily sell cap (basis points of holdings)", doc.treasury_guard.daily_sell_cap?.pct_of_holdings_bps ?? undefined, (d, v) => (d.treasury_guard.daily_sell_cap.pct_of_holdings_bps = v === 0 ? null : Math.min(v, 10000)), "100 = 1%. With both set, the smaller applies.")}
+            <label className="flex items-start gap-2 text-[12px] text-soft">
+              <input type="checkbox" checked={doc.treasury_guard.protect_liquidity === true} onChange={(e) => edit((d) => (d.treasury_guard.protect_liquidity = e.target.checked))} className="mt-0.5 accent-[#9cf6ee]" />
+              <span>Protect liquidity: the LP tokens below never leave the account.</span>
+            </label>
+            {doc.treasury_guard.protect_liquidity === true && (
+              <Field id={`${uid}-tg-lp`} label="LP tokens">
+                <input id={`${uid}-tg-lp`} className={inputCls} defaultValue={doc.treasury_guard.lp_tokens.join(", ")} key={`l${doc.treasury_guard.lp_tokens.join()}`} spellCheck={false} placeholder="0x…" onBlur={(e) => edit((d) => (d.treasury_guard.lp_tokens = addressList(e.target.value)))} />
+              </Field>
+            )}
+            <Field id={`${uid}-tg-lock`} label="Locked until (UTC)" hint="Until then nobody can loosen these rules, not even a holder vote.">
+              <input
+                id={`${uid}-tg-lock`}
+                type="datetime-local"
+                className={inputCls}
+                defaultValue={doc.treasury_guard.locked_until > 0 ? new Date(doc.treasury_guard.locked_until * 1000).toISOString().slice(0, 16) : ""}
+                key={`k${doc.treasury_guard.locked_until}`}
+                onBlur={(e) => {
+                  const t = e.target.value ? Math.floor(Date.parse(`${e.target.value}:00Z`) / 1000) : 0;
+                  if (Number.isFinite(t)) edit((d) => (d.treasury_guard.locked_until = t));
+                }}
+              />
+            </Field>
           </>
         )}
       </div>

@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 const UpochPanel = process.env.FEATURE_UPOCH === "true" ? dynamic(() => import("./upoch-panel").then((m) => m.UpochPanel)) : null;
 import { ZolvaPanel } from "./zolva-panel";
 import { LossLimitPanel } from "./loss-limit-panel";
+import { TreasuryPanel } from "./treasury-panel";
 
 interface AgentRow {
   id: string;
@@ -264,6 +265,7 @@ function AgentPanel({ id, policies, onChange }: { id: string; policies: PolicyRo
       )}
 
       <LossLimitPanel agentId={id} canReset={a.status !== "revoked" && can.own(org?.role)} />
+      <TreasuryPanel account={a.account} chainId={a.chain_id} />
 
       {UpochPanel ? <UpochPanel agentId={id} canEdit={a.status !== "revoked" && can.manage(org?.role)} /> : null}
       <ZolvaPanel agentId={id} canEdit={a.status !== "revoked" && can.manage(org?.role)} />

@@ -845,6 +845,12 @@
   "parent": "Treasury guard"
  },
  {
+  "kind": "heading",
+  "title": "Making it fully bound",
+  "href": "/docs/treasury-guard#fully-bound",
+  "parent": "Treasury guard"
+ },
+ {
   "kind": "doc",
   "title": "Webhooks",
   "href": "/docs/webhooks"
