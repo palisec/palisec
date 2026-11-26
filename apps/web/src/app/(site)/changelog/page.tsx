@@ -12,6 +12,27 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.12.0",
+    date: "2026-11-26",
+    tag: "Treasury guard",
+    changes: [
+      "Policy schema 1.6: an optional treasury_guard puts anti-rug rules on an agent's treasury of its own token. The token goes only to allowed destinations and sell venues (PS_TREASURY_001), sells stay under a rolling 24-hour cap in tokens and/or a share of holdings (PS_TREASURY_002), approvals go only to a venue, never unlimited and never above the cap left (PS_TREASURY_003), and listed LP tokens never leave the account (PS_TREASURY_004). Every call is simulated and read from the account's actual transfers, in both engines; an unknown movement is denied (PS_SIM_002).",
+      "The lock: before locked_until, any change that loosens the guard is rejected with PS_TREASURY_005, never queued. It holds for the API, the console and holder votes (when proposed and when they pass), and across every agent and policy on the account, including changes already waiting in the loosening delay. Tightening applies at once.",
+      "Public page per protected account (/r/{account}) with the rules and the lock date, sells against the cap, the on-chain policy commitment, every blocked attempt and allowed sell with its signed receipt, and who could sign without Palisec: a warning when the team's recovery key can bypass the rules, \"Fully bound\" when the recovery owner is a timelock whose delay outlasts the lock. Limits has a Treasury row, the console rule builder a treasury section, and the agent page a guard card. Guide: /docs/treasury-guard.",
+      "Proven on Robinhood Chain mainnet with $PALISEC on two demo accounts, one held by a team key and one fully bound by a 31-day timelock.",
+    ],
+  },
+  {
+    version: "1.11.4",
+    date: "2026-11-26",
+    tag: "Console and SDKs",
+    changes: [
+      "Console: a policy that was never activated can be deleted (owners and admins, with confirm, recorded in the audit trail); the policy ID no longer follows the name once typed in; new drafts start at the latest schema with token spend present but off.",
+      "Sign-in opens the console with a full page load once signed in, with a link if it has not moved after 2 s, so a reconnecting wallet extension cannot leave it waiting. The logo on the sign-in page links home.",
+      "Python SDK 0.4.10 with the PS_TREASURY reason codes; the ERC-8511 library maps them to standard codes.",
+    ],
+  },
+  {
     version: "1.11.3",
     date: "2026-11-25",
     tag: "SDKs",

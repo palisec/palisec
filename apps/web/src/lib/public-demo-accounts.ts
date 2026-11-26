@@ -7,6 +7,7 @@
 export const PUBLIC_DEMO_ACCOUNTS = [
   { account: "0x667729a0E035332F63e69626CD7A97863C49fD77", label: "demo · loss and spend limits", key: "limits" },
   { account: "0x9aEC761B2F0FdA08C683e8388478C9A2F7C9170c", label: "demo · holder mandates", key: "mandates" },
+  { account: "0x42ed29379374567c3b540cC8f1C01E4FaE422522", label: "demo · treasury guard, fully bound", key: "treasury" },
 ] as const;
 
 export const PUBLIC_DEMO_CHAIN = 4663;
