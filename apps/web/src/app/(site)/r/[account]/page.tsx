@@ -9,6 +9,9 @@ import { Framed, Label, Meter, Result, Rows } from "@/components/line/parts";
 import { PageHead, Split } from "@/components/line/split";
 import { publicTreasury, type PublicTreasury, type RecoveryState } from "@/server/public-treasury";
 
+/** Rendered per request: the site header reads the path, and every account is a different page. */
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Treasury guard",
   description: "The anti-rug rules on an agent's treasury, the lock date, sells against the daily cap, every blocked attempt and who could sign without Palisec. Read from the chain and Palisec's records.",

@@ -21,7 +21,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { createPublicClient, encodeFunctionData, formatUnits, http, maxUint256, parseAbi, parseUnits } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { createPalisec } from "../../../packages/sdk/dist/index.js";
+import { createPalisec, safeOpTypedData } from "../../../packages/sdk/dist/index.js";
 
 const BASE = process.env.BASE_URL ?? "https://palisec.tech";
 const RPC = "https://rpc.mainnet.chain.robinhood.com";
@@ -89,10 +89,31 @@ async function execute(label, to, data, gasLimit = 300000) {
   saveProof();
 }
 
+/** A sell declares the $PALISEC it spends (asset safety compares it with the simulation), then executes co-signed. */
+async function executeSell(label, n) {
+  const p = palisec();
+  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `treasury-${label}-${Date.now()}`, chain_id: 4663, to: CURVE, value_wei: "0", data: encodeFunctionData({ abi: CURVE_ABI, functionName: "sell", args: [n, 1n, state.safe] }), asset_intent: { spend: [{ token: PALISEC, amount: n.toString() }], receive: [] }, gas_limit: 400000, deadline: Math.floor(Date.now() / 1000) + 300 } });
+  let ex = null;
+  if (r.body.decision === "ALLOW") {
+    const prepared = await p.prepareExecution(r.body.operation_id);
+    const signature = await agentKey.signTypedData(safeOpTypedData(prepared.userOperation, 4663));
+    ex = await p.submitExecution(r.body.operation_id, signature);
+    const until = Date.now() + 180_000;
+    while (ex?.status === "submitted" && Date.now() < until) {
+      await new Promise((res) => setTimeout(res, 3000));
+      ex = await p.getExecution(r.body.operation_id);
+    }
+  }
+  const tx = ex?.transactionHash ? `${EXPLORER}/tx/${ex.transactionHash}` : null;
+  console.log(`${utc()}  ${label}: decision ${r.body.operation_id} ${r.body.decision} ${r.body.reason_code ?? ""} ${r.body.decision === "ALLOW" ? "" : r.body.message} → ${ex?.status ?? "not executed"} ${tx ?? ""}`);
+  proof[label] = { at: utc(), operation_id: r.body.operation_id, decision: r.body.decision, reason_code: r.body.reason_code ?? null, status: ex?.status ?? null, tx };
+  saveProof();
+}
+
 /** A recorded request that is expected to be denied: shows the decision, the receipt, and that nothing reached the chain. */
-async function attempt(label, to, data) {
+async function attempt(label, to, data, assetIntent) {
   const before = await nonce();
-  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `treasury-${label}-${Date.now()}`, chain_id: 4663, to, value_wei: "0", data, gas_limit: 300000, deadline: Math.floor(Date.now() / 1000) + 300 } });
+  const r = await call("POST", "/operations", { key: state.api_key, body: { request_id: `treasury-${label}-${Date.now()}`, chain_id: 4663, to, value_wei: "0", data, ...(assetIntent ? { asset_intent: assetIntent } : {}), gas_limit: 300000, deadline: Math.floor(Date.now() / 1000) + 300 } });
   const after = await nonce();
   if (r.body.receipt) writeFileSync(`${dir}/receipt-treasury-${label}.json`, JSON.stringify(r.body.receipt, null, 2));
   proof[label] = { at: utc(), operation_id: r.body.operation_id, decision: r.body.decision, reason_code: r.body.reason_code ?? null, message: r.body.message, nonce_unchanged: before === after, receipt: Boolean(r.body.receipt) };
@@ -169,9 +190,9 @@ if (stage === "status") {
   await attempt("unlimited", PALISEC, encodeFunctionData({ abi: ERC20, functionName: "approve", args: [CURVE, maxUint256] }));
 } else if (stage === "sell") {
   if (!needSend(`sell ${arg} $PALISEC on the Pons curve`)) process.exit(0);
-  await execute(`sell_${arg}`, CURVE, encodeFunctionData({ abi: CURVE_ABI, functionName: "sell", args: [tokens(arg), 1n, state.safe] }), 400000);
+  await executeSell(`sell_${arg}`, tokens(arg));
 } else if (stage === "try-sell") {
-  await attempt(`sell_over_${arg}`, CURVE, encodeFunctionData({ abi: CURVE_ABI, functionName: "sell", args: [tokens(arg), 1n, state.safe] }));
+  await attempt(`sell_over_${arg}`, CURVE, encodeFunctionData({ abi: CURVE_ABI, functionName: "sell", args: [tokens(arg), 1n, state.safe] }), { spend: [{ token: PALISEC, amount: tokens(arg).toString() }], receive: [] });
 } else if (stage === "loosen") {
   const cookie = await signIn();
   const d = await activeDoc(cookie);
