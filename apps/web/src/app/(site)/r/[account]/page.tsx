@@ -161,7 +161,7 @@ async function TreasuryBody({ params }: { params: Promise<{ account: string }> }
                   <tr key={e.decision_id} className="border-b border-line align-top">
                     <td className="whitespace-nowrap py-3 pr-4 text-dim">{e.time.slice(5, 16).replace("T", " ")}</td>
                     <td className="py-3 pr-4 text-foam [overflow-wrap:anywhere]">{e.action}{e.sold ? ` · sold ${amount(e.sold)}` : ""}</td>
-                    <td className="py-3 pr-4"><Result kind={e.result}>{e.result === "allowed" ? "Allowed" : e.reason_code ?? "Blocked"}</Result>{e.reason ? <span className="mt-1 block text-[0.75rem] text-dim">{e.reason}</span> : null}</td>
+                    <td className="py-3 pr-4 [overflow-wrap:anywhere] [&_span]:break-all"><Result kind={e.result}>{e.result === "allowed" ? "Allowed" : e.reason_code ?? "Blocked"}</Result>{e.reason ? <span className="mt-1 block text-[0.75rem] text-dim">{e.reason}</span> : null}</td>
                     <td className="hidden py-3 sm:table-cell">
                       <span className="flex flex-col gap-1">
                         {e.tx_url ? <a href={e.tx_url} target="_blank" rel="noopener noreferrer" className="text-silver hover:text-aqua">Transaction ↗</a> : null}
