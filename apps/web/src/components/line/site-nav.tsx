@@ -9,6 +9,7 @@ export const PRODUCT_LINKS = [
   { href: "/accounts", label: "Accounts", text: "A Safe smart account the agent can't empty alone." },
   { href: "/limits", label: "Limits", text: "Spend and loss limits counted in dollars, on everything that leaves." },
   { href: "/mandates", label: "Mandates", text: "Holders vote an agent's limits. Palisec enforces them." },
+  { href: "/docs/treasury-guard", label: "Treasury guard", text: "Anti-rug rules on an agent's own token, locked until a date." },
   { href: "/agent", label: "Palisec Agent", text: "An assistant that drafts changes; a member confirms each one." },
   { href: "/architecture", label: "Architecture", text: "Every check, in the order it runs." },
   { href: "/security", label: "Security", text: "How keys, decisions and failures are handled." },

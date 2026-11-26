@@ -262,6 +262,14 @@ export default function PoliciesPage() {
         unclear keeps the policy&apos;s own limits. Details: <Link href="/docs/zolva#proven">Zolva</Link>.
       </p>
 
+      <h2 id="treasury-guard">Treasury guard (schema 1.6)</h2>
+      <p>
+        An optional <code>treasury_guard</code> section (and <code>schema_version</code> &quot;1.6&quot;) puts anti-rug rules on an
+        agent&apos;s treasury of its own token: allowed destinations, a rolling 24-hour sell cap, exact approvals to sell venues,
+        protected liquidity and a lock date before which no change can loosen it (<code>PS_TREASURY_001</code> to{" "}
+        <code>PS_TREASURY_005</code>). Fields, detection and the lock: <Link href="/docs/treasury-guard">Treasury guard</Link>.
+      </p>
+
       <h2 id="loosening-delay">Loosening delay</h2>
       <p>
         A change that makes the rules weaker waits before it takes effect; a change that makes them stronger applies at once.

@@ -570,6 +570,12 @@
  },
  {
   "kind": "heading",
+  "title": "Treasury guard (schema 1.6)",
+  "href": "/docs/policies#treasury-guard",
+  "parent": "Policy schema"
+ },
+ {
+  "kind": "heading",
   "title": "Loosening delay",
   "href": "/docs/policies#loosening-delay",
   "parent": "Policy schema"
@@ -790,6 +796,53 @@
   "title": "What the token is not",
   "href": "/docs/token#what-it-is-not",
   "parent": "Token"
+ },
+ {
+  "kind": "doc",
+  "title": "Treasury guard",
+  "href": "/docs/treasury-guard"
+ },
+ {
+  "kind": "heading",
+  "title": "What it does",
+  "href": "/docs/treasury-guard#what-it-does",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "The policy section",
+  "href": "/docs/treasury-guard#policy",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "How a transaction is read",
+  "href": "/docs/treasury-guard#detection",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "The lock and holder mandates",
+  "href": "/docs/treasury-guard#lock",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "Reason codes",
+  "href": "/docs/treasury-guard#codes",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "Verify from the chain",
+  "href": "/docs/treasury-guard#verify",
+  "parent": "Treasury guard"
+ },
+ {
+  "kind": "heading",
+  "title": "What it does not cover",
+  "href": "/docs/treasury-guard#limits",
+  "parent": "Treasury guard"
  },
  {
   "kind": "doc",
@@ -1028,6 +1081,36 @@
   "title": "PS_SIM_002",
   "href": "/docs/errors#PS_SIM_002",
   "detail": "The transaction's outflows could not be determined"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TREASURY_001",
+  "href": "/docs/errors#PS_TREASURY_001",
+  "detail": "Destination not allowed for the project token"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TREASURY_002",
+  "href": "/docs/errors#PS_TREASURY_002",
+  "detail": "Daily sell cap reached"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TREASURY_003",
+  "href": "/docs/errors#PS_TREASURY_003",
+  "detail": "Approval of the project token not allowed"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TREASURY_004",
+  "href": "/docs/errors#PS_TREASURY_004",
+  "detail": "Liquidity removal blocked"
+ },
+ {
+  "kind": "code",
+  "title": "PS_TREASURY_005",
+  "href": "/docs/errors#PS_TREASURY_005",
+  "detail": "The treasury guard is locked: loosening is rejected"
  },
  {
   "kind": "address",

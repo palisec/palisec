@@ -16,6 +16,7 @@ const DOCS_NAV = [
     items: [
       { href: "/docs/policies", label: "Policy schema" },
       { href: "/docs/loss-limits", label: "Loss limits" },
+      { href: "/docs/treasury-guard", label: "Treasury guard" },
       { href: "/docs/mandates", label: "Holder mandates" },
       { href: "/docs/errors", label: "Reason codes and operations" },
     ],
