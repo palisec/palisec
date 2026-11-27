@@ -50,6 +50,14 @@ const out = (to: string, n: number, token: string = PROJECT): Move => ({ token: 
 const moveSim = (transfers: Move[], over: Partial<AssetSimulation> = {}) =>
   sim({ outflows: transfers.map((t) => ({ token: t.token, amount: t.amount })), transfers_out: transfers, ...over });
 
+export const NFT = "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+function nftPolicy(): Policy {
+  const p = guardPolicy();
+  p.contracts.allowlist.push({ address: NFT as Move["to"], selectors: ["0xa22cb465"], require_verified_code: false });
+  return p;
+}
+const nftCall = (approved: boolean): Intent => ({ ...intent(NFT, ""), data: `0xa22cb465${"0".repeat(24)}${INSIDER.slice(2)}${approved ? "0".repeat(63) + "1" : "0".repeat(64)}` as Intent["data"] });
+
 export interface TreasuryCase {
   name: string;
   policy: Policy;
@@ -112,6 +120,9 @@ export const TREASURY_CASES: TreasuryCase[] = [
   T("a stale simulation is denied", sell, tenv(moveSim([out(CURVE, 1)], { observed_at: NOW - 121 })), "DENY", "PS_SIM_002"),
   T("no sell window: a sell is denied", sell, tenv(moveSim([out(CURVE, 1)]), null), "DENY", "PS_STATE_001"),
   T("a stale sell window is denied", sell, tenv(moveSim([out(CURVE, 1)]), window(0, 10000, { observed_at: NOW - 121 })), "DENY", "PS_STATE_001"),
+  // setApprovalForAll(operator, true) is an unlimited approval, denied even on an allowlisted NFT contract.
+  { ...T("setApprovalForAll(true) on an allowlisted NFT contract is denied", nftCall(true), tenv(moveSim([])), "DENY", "PS_APPROVAL_001"), policy: nftPolicy() },
+  { ...T("setApprovalForAll(false) revokes and is allowed", nftCall(false), tenv(moveSim([])), "ALLOW", null), policy: nftPolicy() },
   T("a guard that is switched off changes nothing", transfer, tenv(moveSim([out(INSIDER, 10)])), "ALLOW", null, { enabled: false }),
   T("a call without a selector is still simulated: no simulation, denied", intent(RECIPIENT, ""), tenv(null), "DENY", "PS_SIM_002"),
   T("a call without a selector that moves nothing is allowed", intent(RECIPIENT, ""), tenv(moveSim([])), "ALLOW", null),

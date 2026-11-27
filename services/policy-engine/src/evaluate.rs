@@ -315,6 +315,13 @@ pub fn evaluate(policy: &Value, intent: &Value, state: &Value, env: &Value) -> R
         let Some(sel) = &selector else {
             return Ok(Pass("Native transfer (no calldata).".into()));
         };
+        // setApprovalForAll(operator, true): an unlimited approval, denied even when allowlisted. Revoking stays allowed.
+        if sel == "0xa22cb465" {
+            let d = intent["data"].as_str().unwrap_or("").to_ascii_lowercase();
+            if d.get(74..138).is_some_and(|w| w.bytes().any(|c| c != b'0')) {
+                return Ok(Fail("PS_APPROVAL_001", "setApprovalForAll grants an operator every token of the collection; it is denied like an unlimited approval.".into()));
+            }
+        }
         let sels = entry.and_then(|e| e.get("selectors")).and_then(Value::as_array).ok_or("selectors must be an array")?;
         if sels.iter().any(|x| x.as_str() == Some(sel.as_str())) {
             return Ok(Pass(format!("Selector {sel} is allowed.")));

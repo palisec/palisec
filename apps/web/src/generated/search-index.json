@@ -799,6 +799,35 @@
  },
  {
   "kind": "doc",
+  "title": "Tool attack suite",
+  "href": "/docs/tool-attacks"
+ },
+ {
+  "kind": "heading",
+  "title": "How it works",
+  "href": "/docs/tool-attacks#how",
+  "parent": "Tool attack suite"
+ },
+ {
+  "kind": "heading",
+  "title": "Run it against your agent",
+  "href": "/docs/tool-attacks#run",
+  "parent": "Tool attack suite"
+ },
+ {
+  "kind": "heading",
+  "title": "Add a case",
+  "href": "/docs/tool-attacks#cases",
+  "parent": "Tool attack suite"
+ },
+ {
+  "kind": "heading",
+  "title": "What stops each attack",
+  "href": "/docs/tool-attacks#what",
+  "parent": "Tool attack suite"
+ },
+ {
+  "kind": "doc",
   "title": "Treasury guard",
   "href": "/docs/treasury-guard"
  },

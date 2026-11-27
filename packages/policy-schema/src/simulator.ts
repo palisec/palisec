@@ -66,6 +66,9 @@ const LIVE_CHECKS: Omit<CheckResult, "status" | "detail">[] = [
   { id: "submit", label: "Bundler submission and receipt reconciliation", enforcement: "live" },
 ];
 
+/** setApprovalForAll(address,bool). */
+export const SET_APPROVAL_FOR_ALL = "0xa22cb465";
+
 export function evaluate(
   policy: Policy | null,
   intent: Intent,
@@ -162,6 +165,10 @@ export function evaluate(
 
   run("method", "Function selector", () => {
     if (!selector) return { status: "pass", detail: "Native transfer (no calldata)." };
+    // setApprovalForAll(operator, true) lets the operator move every token of the collection: an unlimited
+    // approval, denied even when the contract and the selector are allowlisted. Revoking (false) stays allowed.
+    if (selector === SET_APPROVAL_FOR_ALL && /[1-9a-f]/.test(intent.data.slice(74, 138).toLowerCase()))
+      return { status: "fail", code: "PS_APPROVAL_001", detail: "setApprovalForAll grants an operator every token of the collection; it is denied like an unlimited approval." };
     if (entry!.selectors.includes(selector as `0x${string}`)) return { status: "pass", detail: `Selector ${selector} is allowed.` };
     if (policy!.human_approval.require_for_unknown_methods)
       return { status: "review", code: "PS_HUMAN_001", detail: `Selector ${selector} is not allowlisted; policy routes unknown methods to human review.` };

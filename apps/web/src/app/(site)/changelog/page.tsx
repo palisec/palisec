@@ -12,6 +12,15 @@ export const metadata: Metadata = {
 
 const ENTRIES = [
   {
+    version: "1.13.0",
+    date: "2026-11-27",
+    tag: "Tool attacks",
+    changes: [
+      "Tool attack suite: attacks planted in what an agent reads (tool descriptions, skills, tool results, urgent messages) are run against our own demo agent on Robinhood Chain mainnet. The test agent follows every order; Palisec denied all of them and nothing reached the chain. Results with decision IDs: /proof/tool-attacks. The attacks are data and the runner works against any agent (/docs/tool-attacks); it also runs in CI on every change.",
+      "setApprovalForAll(operator, true) counts as an unlimited approval and is denied (PS_APPROVAL_001) in both engines, even when the NFT contract and the selector are allowlisted. Revoking (false) stays allowed.",
+    ],
+  },
+  {
     version: "1.12.0",
     date: "2026-11-26",
     tag: "Treasury guard",

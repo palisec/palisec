@@ -100,6 +100,7 @@ jobs:
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/e2e-zolva.mjs
       # Hostile input: malformed, oversized and forged requests. Last, because its burst spends the rate limit.
       - run: BASE_URL=http://localhost:3000 node apps/web/scripts/adversarial.mjs
+      - run: BASE_URL=http://localhost:3000 node apps/web/scripts/attack-suite.mjs setup
       - if: failure()
         run: cat server.log
 
